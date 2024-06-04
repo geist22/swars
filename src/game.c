@@ -100,6 +100,7 @@
 #include "wadfile.h"
 #include "weapon.h"
 #include "wrcities.h"
+#include "agent_cosmetics.h"
 
 #include "timer.h"
 
