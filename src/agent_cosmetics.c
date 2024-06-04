@@ -25,7 +25,7 @@
 /******************************************************************************/
 
 enum AgentCosmeticsAgentConfigCmd {
-    ACAgentCmd_Agent1,
+    ACAgentCmd_Agent1=1,
     ACAgentCmd_Agent2,
     ACAgentCmd_Agent3,
     ACAgentCmd_Agent4,
@@ -41,10 +41,10 @@ const struct TbNamedEnum agent_cosmetics_agent_cmnds[] = {
 
 /* TODO find location where player zealot sprites are drawn
 enum AgentCosmeticsZealotConfigCmd {
-    ACZealotCmd_Zealot1 = 0,
-    ACZealotCmd_Zealot2 = 0,
-    ACZealotCmd_Zealot3 = 0,
-    ACZealotCmd_Zealot4 = 0,
+    ACZealotCmd_Zealot1 = 1,
+    ACZealotCmd_Zealot2,
+    ACZealotCmd_Zealot3,
+    ACZealotCmd_Zealot4,
 };
 
 const struct TbNamedEnum agent_cosmetics_zealot_cmnds[] = {
@@ -143,10 +143,8 @@ TbBool read_agent_cosmetics_file(void)
             PlayerAgentHeads[3] = k;
             CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)PlayerAgentHeads[3]);
             break;
-		/* TODO getting compile errors about duplicates while this is enabled - why?
         case 0: // comment
             break;
-		*/
         case -1: // end of buffer
         case -3: // end of section
             done = true;
