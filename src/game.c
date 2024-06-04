@@ -7015,7 +7015,7 @@ ubyte do_user_interface(void)
     {
         get_speed_control_inputs();
     }
-
+    /*
     // Toggle Scanner beep
     if (lbKeyOn[KC_S])
     {
@@ -7037,7 +7037,7 @@ ubyte do_user_interface(void)
         render_area_a = bound_render_area(render_area_a + n);
         render_area_b = bound_render_area(render_area_b + n);
     }
-
+    */
     // Entering pause screen
     if (!in_network_game)
     {
@@ -7049,7 +7049,7 @@ ubyte do_user_interface(void)
             }
         }
     }
-
+  
     // Scanner appearence control
     if (lbKeyOn[KC_NUMPAD6])
         ingame.Scanner.Brightness += 4;
