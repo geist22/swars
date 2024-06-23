@@ -99,6 +99,8 @@ swars_SOURCES = \
 	../bfariadne/src/delaunay.c \
 	../bfariadne/include/delaunay.h \
 	config.h \
+	agent_cosmetics.c \
+	agent_cosmetics.h \
 	bmbang.c \
 	bmbang.h \
 	bat.sx \

@@ -1,5 +1,6 @@
 confdir = $(prefix)/$(PACKAGE)/conf
 conf_DATA = \
+	agent_cosmetics.ini \
 	cities.ini \
 	cybmods_default.ini \
 	cybmods_original.ini \
