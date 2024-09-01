@@ -32,11 +32,11 @@ enum AgentCosmeticsAgentConfigCmd {
 };
 
 const struct TbNamedEnum agent_cosmetics_agent_cmnds[] = {
-  {"Agent1",	ACAgentCmd_Agent1},
-  {"Agent2",	ACAgentCmd_Agent2},
-  {"Agent3",	ACAgentCmd_Agent3},
-  {"Agent4",	ACAgentCmd_Agent4},
-  {NULL,		0},
+    {"Agent1",	ACAgentCmd_Agent1},
+    {"Agent2",	ACAgentCmd_Agent2},
+    {"Agent3",	ACAgentCmd_Agent3},
+    {"Agent4",	ACAgentCmd_Agent4},
+    {NULL,		0},
 };
 
 enum AgentCosmeticsZealotConfigCmd {
@@ -47,11 +47,11 @@ enum AgentCosmeticsZealotConfigCmd {
 };
 
 const struct TbNamedEnum agent_cosmetics_zealot_cmnds[] = {
-  {"Zealot1",	ACZealotCmd_Zealot1},
-  {"Zealot2",	ACZealotCmd_Zealot2},
-  {"Zealot3",	ACZealotCmd_Zealot3},
-  {"Zealot4",	ACZealotCmd_Zealot4},
-  {NULL,		0},
+	{"Zealot1",	ACZealotCmd_Zealot1},
+	{"Zealot2",	ACZealotCmd_Zealot2},
+	{"Zealot3",	ACZealotCmd_Zealot3},
+	{"Zealot4",	ACZealotCmd_Zealot4},
+	{NULL,		0},
 };
 
 short PlayerAgentHeads[] = {0,0,0,0};
@@ -116,10 +116,10 @@ TbBool read_agent_cosmetics_file(void)
             }
 	          if ((k >=0) && (k<= 3)) {
 		            PlayerAgentHeads[0] = k;
-	          }
-	          else {
-		            CONFWRNLOG("Invalid entry, appearance left at default.");
-	          }
+	        }
+	        else {
+		        CONFWRNLOG("Invalid entry, appearance left at default.");
+	        }
             CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)PlayerAgentHeads[0]);
             break;
         case ACAgentCmd_Agent2:
@@ -128,26 +128,26 @@ TbBool read_agent_cosmetics_file(void)
                 CONFWRNLOG("Could not read \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
                 break;
             }
-	          if ((k >=0) && (k<= 3)) {
-		            PlayerAgentHeads[1] = k;
-	          }
-	          else {
-		            CONFWRNLOG("Invalid entry, appearance left at default.");
-	          }
+	        if ((k >=0) && (k<= 3)) {
+		        PlayerAgentHeads[1] = k;
+	        }
+	        else {
+		        CONFWRNLOG("Invalid entry, appearance left at default.");
+	        }
             CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)PlayerAgentHeads[1]);
             break;
-		    case ACAgentCmd_Agent3:
+		case ACAgentCmd_Agent3:
             i = LbIniValueGetLongInt(&parser, &k);
             if (i <= 0) {
                 CONFWRNLOG("Could not read \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
                 break;
             }
-	          if ((k >=0) && (k<= 3)) {
-		            PlayerAgentHeads[2] = k;
-	          }
-	          else {
-		            CONFWRNLOG("Invalid entry, appearance left at default.");
-	          }
+	        if ((k >=0) && (k<= 3)) {
+		        PlayerAgentHeads[2] = k;
+	        }
+	        else {
+		           CONFWRNLOG("Invalid entry, appearance left at default.");
+	        }
             CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)PlayerAgentHeads[2]);
             break;
         case ACAgentCmd_Agent4:
@@ -156,12 +156,12 @@ TbBool read_agent_cosmetics_file(void)
                 CONFWRNLOG("Could not read \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
                 break;
             }
-	          if ((k >=0) && (k<= 3)) {
-		            PlayerAgentHeads[3] = k;
-	          }
-	          else {
-		            CONFWRNLOG("Invalid entry, appearance left at default.");
-	          }
+	        if ((k >=0) && (k<= 3)) {
+		        PlayerAgentHeads[3] = k;
+	        }
+	        else {
+		        CONFWRNLOG("Invalid entry, appearance left at default.");
+	        }
             CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)PlayerAgentHeads[3]);
             break;
         case 0: // comment
