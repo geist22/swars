@@ -199,45 +199,45 @@ TbBool read_agent_cosmetics_file(void)
         {
         case ACZealotCmd_Zealot1:
 	    i = LbIniValueGetLongInt(&parser, &k);
-	    if (i <= 0) {
+	   		if (i <= 0) {
                 CONFWRNLOG("Could not read \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
                 break;
             }
-	    if (k==1) {
-	        PlayerZealotIsHighPriest[0] = true;
+	    	if (k==1) {
+	        	PlayerZealotIsHighPriest[0] = true;
             }
             CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)PlayerZealotIsHighPriest[0]);
             break;
         case ACZealotCmd_Zealot2:
-	    i = LbIniValueGetLongInt(&parser, &k);
-	    if (i <= 0) {
+	    	i = LbIniValueGetLongInt(&parser, &k);
+	    	if (i <= 0) {
                 CONFWRNLOG("Could not read \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
                 break;
             }
-	    if (k==1) {
-	        PlayerZealotIsHighPriest[0] = true;
+	    	if (k==1) {
+	        	PlayerZealotIsHighPriest[1] = true;
             }
             CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)PlayerZealotIsHighPriest[1]);
             break;
         case ACZealotCmd_Zealot3:
-	    i = LbIniValueGetLongInt(&parser, &k);
-	    if (i <= 0) {
+	    	i = LbIniValueGetLongInt(&parser, &k);
+	    	if (i <= 0) {
                 CONFWRNLOG("Could not read \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
                 break;
             }
-	    if (k==1) {
-	        PlayerZealotIsHighPriest[0] = true;
+	    	if (k==1) {
+	        	PlayerZealotIsHighPriest[2] = true;
             }
             CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)PlayerZealotIsHighPriest[2]);
             break;
         case ACZealotCmd_Zealot4:
-	    i = LbIniValueGetLongInt(&parser, &k);
-	    if (i <= 0) {
+	    	i = LbIniValueGetLongInt(&parser, &k);
+	    	if (i <= 0) {
                 CONFWRNLOG("Could not read \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
                 break;
             }
-	    if (k==1) {
-	        PlayerZealotIsHighPriest[0] = true;
+	    	if (k==1) {
+	        	PlayerZealotIsHighPriest[3] = true;
             }
             CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)PlayerZealotIsHighPriest[3]);
             break;
