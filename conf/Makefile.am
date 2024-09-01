@@ -2,10 +2,12 @@ confdir = $(prefix)/$(PACKAGE)/conf
 conf_DATA = \
 	agent_cosmetics.ini \
 	cities.ini \
-	cybmods.ini \
+	cybmods_default.ini \
+	cybmods_original.ini \
 	people.ini \
 	rules.ini \
-	weapons.ini \
+	weapons_default.ini \
+	weapons_original.ini \
 	miss000.ini \
 	miss001.ini \
 	miss002.ini \

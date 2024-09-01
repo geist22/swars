@@ -1,15 +1,15 @@
 /******************************************************************************/
-// Bullfrog Engine Emulation Library - for use to remake classic games like
-// Syndicate Wars, Magic Carpet or Dungeon Keeper.
+// Bullfrog Engine Smacker Playback Library - for use to remake classic games
+// like Syndicate Wars, Magic Carpet, Genewars or Dungeon Keeper.
 /******************************************************************************/
-/** @file bflib_fmvids.h
- *     Header file for bflib_fmvids.c.
+/** @file smack2ail.h
+ *     Header file for smack2ail.c.
  * @par Purpose:
- *     Implement FMV playback support for games.
+ *     External interface of the smacker playback library.
  * @par Comment:
- *     Just a header file - #defines, typedefs, function prototypes etc.
+ *     None.
  * @author   Tomasz Lis
- * @date     19 Apr 2022 - 27 May 2022
+ * @date     12 Nov 2011 - 13 Jun 2024
  * @par  Copying and copyrights:
  *     This program is free software; you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -17,32 +17,33 @@
  *     (at your option) any later version.
  */
 /******************************************************************************/
-#ifndef BFLIB_FMVIDS_H
-#define BFLIB_FMVIDS_H
+#ifndef BFSMACKLIB_SMACK2AIL_H_
+#define BFSMACKLIB_SMACK2AIL_H_
 
-#include "bftypes.h"
+#include <stdint.h>
+#include "smack.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-/******************************************************************************/
-enum SmackerPlayFlags {
-    SMK_NoStopOnUserInput  = 0x0002,
-    SMK_PixelDoubleLine    = 0x0004,
-    SMK_InterlaceLine      = 0x0008,
-    SMK_WriteStatusFile    = 0x0040,
-    SMK_PixelDoubleWidth   = 0x0080,
-    SMK_UnknFlag100        = 0x0100,
-};
-
-typedef void (*SmackDrawCallback)(ubyte *frame_data, long width, long height);
 
 /******************************************************************************/
-extern SmackDrawCallback smack_draw_callback;
 
-TbResult play_smk(const char *fname, ulong smkflags, ushort plyflags);
+
 /******************************************************************************/
+
+/** Link Smacker audio output to AIL library interface.
+ *
+ * @param speed Frequency of the timer sending buffers to AIL output.
+ * @param digdrv Digital Audio Driver instance from the AIL library.
+ */
+uint8_t RADAPI SMACKSOUNDUSEMSS(uint32_t speed, void *digdrv);
+
+/******************************************************************************/
+
 #ifdef __cplusplus
-}
+};
 #endif
-#endif
+
+#endif // BFSMACKLIB_SMACK2AIL_H_
+/******************************************************************************/
