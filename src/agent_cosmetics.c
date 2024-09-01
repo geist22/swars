@@ -39,7 +39,6 @@ const struct TbNamedEnum agent_cosmetics_agent_cmnds[] = {
   {NULL,		0},
 };
 
-/* TODO find location where player zealot sprites are drawn
 enum AgentCosmeticsZealotConfigCmd {
     ACZealotCmd_Zealot1 = 1,
     ACZealotCmd_Zealot2,
@@ -54,9 +53,9 @@ const struct TbNamedEnum agent_cosmetics_zealot_cmnds[] = {
   {"Zealot4",	ACZealotCmd_Zealot4},
   {NULL,		0},
 };
-*/
 
 short PlayerAgentHeads[] = {0,0,0,0};
+bool PlayerZealotIsHighPriest[] = {false,false,false,false};
 
 TbBool read_agent_cosmetics_file(void)
 {
@@ -104,7 +103,9 @@ TbBool read_agent_cosmetics_file(void)
         // Finding command number in this line
         i = 0;
         cmd_num = LbIniRecognizeKey(&parser, agent_cosmetics_agent_cmnds);
+	    
         // Now store the config item in correct place
+        // TODO this part looks too big, can we put it in a 'for/while' instead?
         switch (cmd_num)
         {
         case ACAgentCmd_Agent1:
@@ -177,7 +178,6 @@ TbBool read_agent_cosmetics_file(void)
     }
 #undef COMMAND_TEXT
 
-/* church section, disabled until a way to replace their sprites is found
     // Parse the [Church] section of loaded file
     done = false;
     if (LbIniFindSection(&parser, "Church") != Lb_SUCCESS) {
@@ -192,44 +192,54 @@ TbBool read_agent_cosmetics_file(void)
         // Finding command number in this line
         i = 0;
         cmd_num = LbIniRecognizeKey(&parser, agent_cosmetics_zealot_cmnds);
+	    
         // Now store the config item in correct place
+        // TODO this part looks too big, can we put it in a 'for/while' instead?
         switch (cmd_num)
         {
         case ACZealotCmd_Zealot1:
-            i = LbIniValueGetLongInt(&parser, &k);
-            if (i <= 0) {
+	    i = LbIniValueGetLongInt(&parser, &k);
+	    if (i <= 0) {
                 CONFWRNLOG("Could not read \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
                 break;
             }
-            zealot1cosmetics = k;
-            CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)zealot1cosmetics);
+	    if (k==1) {
+	        PlayerZealotIsHighPriest[0] = true;
+            }
+            CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)PlayerZealotIsHighPriest[0]);
             break;
         case ACZealotCmd_Zealot2:
-            i = LbIniValueGetLongInt(&parser, &k);
-            if (i <= 0) {
+	    i = LbIniValueGetLongInt(&parser, &k);
+	    if (i <= 0) {
                 CONFWRNLOG("Could not read \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
                 break;
             }
-            zealot2cosmetics = k;
-            CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)zealot2cosmetics);
+	    if (k==1) {
+	        PlayerZealotIsHighPriest[0] = true;
+            }
+            CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)PlayerZealotIsHighPriest[1]);
             break;
-		case ACZealotCmd_Zealot3:
-            i = LbIniValueGetLongInt(&parser, &k);
-            if (i <= 0) {
+        case ACZealotCmd_Zealot3:
+	    i = LbIniValueGetLongInt(&parser, &k);
+	    if (i <= 0) {
                 CONFWRNLOG("Could not read \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
                 break;
             }
-            zealot3cosmetics = k;
-            CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)zealot3cosmetics);
+	    if (k==1) {
+	        PlayerZealotIsHighPriest[0] = true;
+            }
+            CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)PlayerZealotIsHighPriest[2]);
             break;
         case ACZealotCmd_Zealot4:
-            i = LbIniValueGetLongInt(&parser, &k);
-            if (i <= 0) {
+	    i = LbIniValueGetLongInt(&parser, &k);
+	    if (i <= 0) {
                 CONFWRNLOG("Could not read \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
                 break;
             }
-            zealot4cosmetics = k;
-            CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)zealot4cosmetics);
+	    if (k==1) {
+	        PlayerZealotIsHighPriest[0] = true;
+            }
+            CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)PlayerZealotIsHighPriest[3]);
             break;
         case 0: // comment
             break;
@@ -244,7 +254,6 @@ TbBool read_agent_cosmetics_file(void)
         LbIniSkipToNextLine(&parser);
     }
 #undef COMMAND_TEXT
-*/
 
     LbIniParseEnd(&parser);
     LbMemoryFree(conf_buf);
