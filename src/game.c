@@ -4796,7 +4796,6 @@ ushort make_group_into_players(ushort group, ushort plyr, ushort max_agent, shor
             // TODO this is a bad idea, fix this by changing animations instead of SubType - but how?
             p_person->SubType = SubTT_PERS_HIGH_PRIEST;
         }
-
       
         if (p_person->U.UPerson.CurrentWeapon == 0)
         {
