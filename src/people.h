@@ -188,6 +188,28 @@ TbBool person_carries_any_medikit(struct Thing *p_person);
 void set_person_stats_type(struct Thing *p_person, ushort type);
 void init_person_thing(struct Thing *p_person);
 void person_give_best_mods(struct Thing *p_person);
+short calc_person_speed(struct Thing *p_person);
+
+void check_persons_target(struct Thing *p_person);
+void check_persons_target2(struct Thing *p_person);
+void process_stamina(struct Thing *p_person);
+
+/** Bring killed person back to life.
+ */
+void person_resurrect(struct Thing *p_person);
+
+/** Artificially increases health and max health of a person to maximal reasonable value.
+ */
+void person_set_helath_to_max_limit(struct Thing *p_person);
+
+/** Artificially increases weapon energy and max energy of a person to maximal reasonable value.
+ */
+void person_set_energy_to_max_limit(struct Thing *p_person);
+
+/** Artificially increases persuasion power of a person to allow parsuade anyone.
+ */
+void person_set_persuade_power__to_allow_all(struct Thing *p_person);
+
 
 /** Switches AnimMode of a person without removing any shifts to current frame.
  */
@@ -196,6 +218,10 @@ void switch_person_anim_mode(struct Thing *p_person, ubyte animode);
 /** Sets new AnimMode of a person, replacing the old frame number.
  */
 void set_person_anim_mode(struct Thing *p_person, ubyte animode);
+
+/** Sets new direction angle of a person, replacing the old frame number.
+ */
+void change_player_angle(struct Thing *p_person, ushort angle);
 
 /** Resets Frame number of a person, using its current properties.
  */

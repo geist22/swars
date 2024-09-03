@@ -672,12 +672,28 @@ TbBool LbHwCheckIsModeAvailable(TbScreenMode mode)
         SDL_FreeSurface(draw_surface);
     }
 
-    closestBPP = SDL_VideoModeOK(mdinfo->Width, mdinfo->Height,
-      mdinfo->BitsPerPixel, sdlFlags);
+    closestBPP = SDL_VideoModeOK(mdWidth, mdHeight, mdinfo->BitsPerPixel, sdlFlags);
+
+    if ((closestBPP == 0) && (mdWidth == 640) && ((mdHeight == 400) || (mdHeight == 480)) &&
+      ((mdinfo->BitsPerPixel == 8) || (mdinfo->BitsPerPixel == 24)))
+    {
+        // The 640x400 and 640x480 must always be available, even if SDL will need to cheat to achieve that
+        closestBPP = 24;
+    }
 
     // Even if different colour depth is returned, as long as the value is
     // non-zero, SDL can simulate any bpp with additional internal surface
     firstSurfaceOk = (closestBPP != 0);
+
+    if (!firstSurfaceOk || !secondSurfaceOk)
+    {
+        const char *reason = NULL;
+        if (!firstSurfaceOk)
+            reason = "SDL says the mode is not OK";
+        if (!secondSurfaceOk)
+            reason = "cannot create second surface";
+        LOGDBG("Mode %s unavailable - %s", mdinfo->Desc, reason);
+    }
 
     return firstSurfaceOk && secondSurfaceOk;
 }
@@ -685,26 +701,26 @@ TbBool LbHwCheckIsModeAvailable(TbScreenMode mode)
 static void LbI_SDL_BlitScaled_to8bpp(long src_w, long src_h, ubyte *src_buf,
   long dst_w, long dst_h, ubyte *dst_buf)
 {
-    /* denominator of a (source) pixel's fraction part */
+    // denominator of a (source) pixel's fraction part
     const long denom_i = 2 * dst_h;
     const long denom_j = 2 * dst_w;
 
-    /* number of whole units in each (source) step */
+    // number of whole units in each (source) step
     const long dsrc_i = 2 * src_h / denom_i;
     const long dsrc_j = 2 * src_w / denom_j;
 
-    /* numerator of fractional part of each (source) step */
+    // numerator of fractional part of each (source) step
     const long dsrc_num_i = (2 * src_h) - dsrc_i * denom_i;
     const long dsrc_num_j = (2 * src_w) - dsrc_j * denom_j;
 
-    /* number of whole units in a (source) half-step */
+    // number of whole units in a (source) half-step
     const long halfdsrc_i = src_h / denom_i;
     const long halfdsrc_j = src_w / denom_j;
 
     long dst_offset = 0;
     long src_offset = halfdsrc_i * src_w + halfdsrc_j;
 
-    /* start at fractional part of each (source) half-step */
+    // start at fractional part of each (source) half-step
     long src_num_i =  src_h - halfdsrc_i * denom_i;
     long src_num_j = src_w - halfdsrc_j * denom_j;
 
@@ -732,26 +748,26 @@ static void LbI_SDL_BlitScaled_totcbpp(long src_w, long src_h, ubyte *src_buf,
   SDL_Color *pal, long rshift, long gshift, long bshift,
   long dst_w, long dst_h, long dst_bpp, ubyte *dst_buf)
 {
-    /* denominator of a (source) pixel's fraction part */
+    // denominator of a (source) pixel's fraction part
     const long denom_i = 2 * dst_h;
     const long denom_j = 2 * dst_w;
 
-    /* number of whole units in each (source) step */
+    // number of whole units in each (source) step
     const long dsrc_i = 2 * src_h / denom_i;
     const long dsrc_j = 2 * src_w / denom_j;
 
-    /* numerator of fractional part of each (source) step */
+    // numerator of fractional part of each (source) step
     const long dsrc_num_i = (2 * src_h) - dsrc_i * denom_i;
     const long dsrc_num_j = (2 * src_w) - dsrc_j * denom_j;
 
-    /* number of whole units in a (source) half-step */
+    // number of whole units in a (source) half-step
     const long halfdsrc_i = src_h / denom_i;
     const long halfdsrc_j = src_w / denom_j;
 
     long dst_offset = 0;
     long src_offset = halfdsrc_i * src_w + halfdsrc_j;
 
-    /* start at fractional part of each (source) half-step */
+    // start at fractional part of each (source) half-step
     long src_num_i =  src_h - halfdsrc_i * denom_i;
     long src_num_j = src_w - halfdsrc_j * denom_j;
 
@@ -784,7 +800,7 @@ int LbI_SDL_BlitScaled(SDL_Surface *src, SDL_Surface *dst)
 {
     long dst_bpp;
 
-    /* shortcircuit for 1:1 */
+    // shortcircuit for 1:1
     if (src->w == dst->w && src->h == dst->h)
         return SDL_BlitSurface(src, NULL, dst, NULL);
 
@@ -795,7 +811,7 @@ int LbI_SDL_BlitScaled(SDL_Surface *src, SDL_Surface *dst)
         LOGERR("cannot lock source surface: %s", SDL_GetError());
 
     if (SDL_MUSTLOCK(dst) && SDL_LockSurface(dst) < 0)
-            LOGERR("cannot lock destination Surface: %s", SDL_GetError());
+        LOGERR("cannot lock destination surface: %s", SDL_GetError());
 
     dst_bpp = dst->format->BytesPerPixel;
     if (dst_bpp == 1)
