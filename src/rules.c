@@ -61,7 +61,7 @@ enum RulesRevenueConfigCmd {
 };
 
 const struct TbNamedEnum rules_conf_research_cmnds[] = {
-  {"UseClassicResearch",	RResrchCmd_UseClassicReserarch},
+  {"UseClassicResearch",	RResrchCmd_UseClassicResearch},
   {"DailyScientistDeathChancePermil",	RResrchCmd_DailyScientistDeathChance},
   {"ScientistsPerGroup",			RResrchCmd_ScientistsPerGroup},
   {"WeaponDonateResearchIncrPermil",	RResrchCmd_WeaponDonateResearchIncrPermil},
