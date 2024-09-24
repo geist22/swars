@@ -108,6 +108,7 @@ struct WeaponDef {
   ubyte Category;
   ushort Cost;
   ushort Funding;
+  ushort FundingClassic;
   ubyte PercentPerDay;
 };
 
