@@ -25,23 +25,23 @@
 #include "swlog.h"
 /******************************************************************************/
 struct ModDef mod_defs[] = {
-    {0, 0,   0, 0, {0}, 0,  0,    0,  0, 0},
-    {3, 2,  30, 0, {0}, 0, 16,  300, 10, 0},
-    {5, 5, 120, 0, {0}, 0, 17, 1200, 10, 0},
-    {8, 8, 300, 0, {0}, 0, 19, 3000, 10, 0},
-    {2, 2,  25, 0, {0}, 0, 20,  250, 10, 0},
-    {4, 3, 100, 0, {0}, 0, 24, 1000, 10, 0},
-    {7, 6, 250, 0, {0}, 0, 21, 2500, 10, 0},
-    {3, 3,  50, 0, {0}, 0, 15,  500, 10, 0},
-    {5, 6, 200, 0, {0}, 0, 23, 2000, 10, 0},
-    {8, 8, 500, 0, {0}, 0, 29, 5000, 10, 0},
-    {1, 2,  45, 0, {0}, 0, 33,  450, 10, 0},
-    {2, 3, 180, 0, {0}, 0, 30, 1800, 10, 0},
-    {4, 6, 450, 0, {0}, 0, 27, 4500, 10, 0},
-    {1, 5, 200, 0, {0}, 1, 25, 2000, 10, 0},
-    {1, 4, 350, 0, {0}, 2, 25, 3500, 10, 0},
-    {1, 7, 600, 0, {0}, 3, 28, 6000, 10, 0},
-    {1, 2, 950, 0, {0}, 4, 35, 9500, 10, 0},
+    {0, 0,   0,   0, 0, {0}, 0,  0,    0,  0, 0},
+    {3, 2,  30,  30, 0, {0}, 0, 16,  300, 10, 0},
+    {5, 5, 120, 120, 0, {0}, 0, 17, 1200, 10, 0},
+    {8, 8, 300,  44, 0, {0}, 0, 19, 3000, 10, 0},
+    {2, 2,  25,  25, 0, {0}, 0, 20,  250, 10, 0},
+    {4, 3, 100, 100, 0, {0}, 0, 24, 1000, 10, 0},
+    {7, 6, 250, 250, 0, {0}, 0, 21, 2500, 10, 0},
+    {3, 3,  50,  50, 0, {0}, 0, 15,  500, 10, 0},
+    {5, 6, 200, 200, 0, {0}, 0, 23, 2000, 10, 0},
+    {8, 8, 500, 244, 0, {0}, 0, 29, 5000, 10, 0},
+    {1, 2,  45,  45, 0, {0}, 0, 33,  450, 10, 0},
+    {2, 3, 180, 180, 0, {0}, 0, 30, 1800, 10, 0},
+    {4, 6, 450, 194, 0, {0}, 0, 27, 4500, 10, 0},
+    {1, 5, 200, 200, 0, {0}, 1, 25, 2000, 10, 0},
+    {1, 4, 350,  94, 0, {0}, 2, 25, 3500, 10, 0},
+    {1, 7, 600,  88, 0, {0}, 3, 28, 6000, 10, 0},
+    {1, 2, 950, 182, 0, {0}, 4, 35, 9500, 10, 0},
 };
 
 ubyte mod_tech_level[17] = {
@@ -60,6 +60,7 @@ enum CybModsConfigCmd {
     CCMod_Sprite,
     CCMod_Cost,
     CCMod_Funding,
+	CCMod_FundingClassic,
     CCMod_PercentPerDay,
 };
 
@@ -76,6 +77,7 @@ const struct TbNamedEnum cybmods_conf_mod_cmds[] = {
   {"Sprite",		CCMod_Sprite},
   {"Cost",			CCMod_Cost},
   {"ResearchFunding",		CCMod_Funding},
+  {"ResearchFundingClassic",		CCMod_FundingClassic},
   {"ResearchPercentPerDay",	CCMod_PercentPerDay},
   {NULL,		0},
 };
@@ -236,6 +238,15 @@ void read_cybmods_conf_file(void)
                 }
                 mdef->Funding = k / 100;
                 CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)mdef->Funding);
+                break;
+            case CCMod_FundingClassic:
+                i = LbIniValueGetLongInt(&parser, &k);
+                if (i <= 0) {
+                    CONFWRNLOG("Could not read \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
+                    break;
+                }
+                mdef->FundingClassic = k / 100;
+                CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)mdef->FundingClassic);
                 break;
             case CCMod_PercentPerDay:
                 i = LbIniValueGetLongInt(&parser, &k);
