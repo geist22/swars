@@ -66,6 +66,7 @@ struct ModDef {
 	ushort PowerOutput;
 	ushort Resilience;
 	ushort Funding;
+	ushort FundingClassic;
 	ushort Flags;
     char field_8[9];
     uchar AdditProp;
