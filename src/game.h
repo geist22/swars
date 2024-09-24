@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "bflib_basics.h"
 #include "bffile.h"
 #include "globals.h"
 #include "scanner.h"
@@ -757,6 +756,7 @@ void process_sound_heap(void);
 void update_danger_music(ubyte a1);
 ushort my_draw_text(short x, short y, const char *text, ushort startline);
 void draw_text_transformed_at_ground(int a1, int a2, const char *text);
+void draw_text_transformed(int coord_x, int coord_y, int coord_z, const char *text);
 
 void draw_new_panel(void);
 

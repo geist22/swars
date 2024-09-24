@@ -181,6 +181,7 @@ const char *person_type_name(ushort ptype);
 void snprint_person_state(char *buf, ulong buflen, struct Thing *p_thing);
 
 TbBool person_is_dead(ThingIdx thing);
+TbBool person_is_dead_or_dying(ThingIdx thing);
 
 TbBool person_carries_weapon(struct Thing *p_person, ubyte weapon);
 TbBool person_carries_any_medikit(struct Thing *p_person);
@@ -193,6 +194,7 @@ short calc_person_speed(struct Thing *p_person);
 void check_persons_target(struct Thing *p_person);
 void check_persons_target2(struct Thing *p_person);
 void process_stamina(struct Thing *p_person);
+void process_person(struct Thing *p_person);
 
 /** Bring killed person back to life.
  */
