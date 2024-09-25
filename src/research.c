@@ -366,7 +366,9 @@ int research_daily_progress_for_type(ubyte rstype)
     int real_funding;
     short progress;
     struct ModDef *mdef;
+    struct ModDefAdd *mdefa;
     struct WeaponDef *wdef;
+	struct WeaponDefAdd *wdefa;
     int scientists_died;
 
     real_funding = 0;
@@ -380,8 +382,9 @@ int research_daily_progress_for_type(ubyte rstype)
         if (ingame.Credits < real_funding)
             real_funding = ingame.Credits;
         wdef = &weapon_defs[research.CurrentWeapon + 1];
-        if (use_classic_research == 1)
-			progress = research_unkn_func_004(wdef->PercentPerDay, wdef->FundingClassic, real_funding);
+		wdefa = &weapon_defs_a[research.CurrentWeapon + 1];
+        if (use_classic_research == 1) {
+			progress = research_unkn_func_004(wdef->PercentPerDay, wdefa->FundingClassic, real_funding);
 		}
 		else {
 			progress = research_unkn_func_004(wdef->PercentPerDay, wdef->Funding, real_funding);
@@ -407,8 +410,9 @@ int research_daily_progress_for_type(ubyte rstype)
         if (ingame.Credits < real_funding)
             real_funding = ingame.Credits;
         mdef = &mod_defs[research.CurrentMod + 1];
+		mdefa = &mod_defs_a[research.CurrentMod + 1];
         if (use_classic_research == 1) {
-			progress = research_unkn_func_004(mdef->PercentPerDay, mdef->FundingClassic, real_funding);
+			progress = research_unkn_func_004(mdef->PercentPerDay, mdefa->FundingClassic, real_funding);
 		}
 		else {
 			progress = research_unkn_func_004(mdef->PercentPerDay, mdef->Funding, real_funding);
