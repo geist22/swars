@@ -67,9 +67,9 @@ struct ModDef {
 	ushort Resilience;
 	ushort Funding;
 	ushort Flags;
-    char field_8[9];
-    uchar AdditProp;
-    short Sprite;
+    	char field_8[9];
+    	uchar AdditProp;
+    	short Sprite;
 	ushort Cost;
 	uchar PercentPerDay;
 	uchar Pad1;
