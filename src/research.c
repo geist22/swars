@@ -368,7 +368,7 @@ int research_daily_progress_for_type(ubyte rstype)
     struct ModDef *mdef;
     struct ModDefAdd *mdefa;
     struct WeaponDef *wdef;
-	struct WeaponDefAdd *wdefa;
+    struct WeaponDefAdd *wdefa;
     int scientists_died;
 
     real_funding = 0;
@@ -384,11 +384,11 @@ int research_daily_progress_for_type(ubyte rstype)
         wdef = &weapon_defs[research.CurrentWeapon + 1];
 		wdefa = &weapon_defs_a[research.CurrentWeapon + 1];
         if (use_classic_research == 1) {
-			progress = research_unkn_func_004(wdef->PercentPerDay, wdefa->FundingClassic, real_funding);
-		}
-		else {
-			progress = research_unkn_func_004(wdef->PercentPerDay, wdef->Funding, real_funding);
-		}
+	    progress = research_unkn_func_004(wdef->PercentPerDay, wdefa->FundingClassic, real_funding);
+	}
+	else {
+	    progress = research_unkn_func_004(wdef->PercentPerDay, wdef->Funding, real_funding);
+	}
         research_wep_store_daily_progress(progress);
         if (research_wep_get_progress(research.CurrentWeapon) < RESEARCH_COMPLETE_POINTS)
         {
@@ -412,11 +412,11 @@ int research_daily_progress_for_type(ubyte rstype)
         mdef = &mod_defs[research.CurrentMod + 1];
 		mdefa = &mod_defs_a[research.CurrentMod + 1];
         if (use_classic_research == 1) {
-			progress = research_unkn_func_004(mdef->PercentPerDay, mdefa->FundingClassic, real_funding);
-		}
-		else {
-			progress = research_unkn_func_004(mdef->PercentPerDay, mdef->Funding, real_funding);
-		}
+	    progress = research_unkn_func_004(mdef->PercentPerDay, mdefa->FundingClassic, real_funding);
+	}
+	else {
+	    progress = research_unkn_func_004(mdef->PercentPerDay, mdef->Funding, real_funding);
+	}
         research_cymod_store_daily_progress(progress);
         if (research_cymod_get_progress(research.CurrentMod) < RESEARCH_COMPLETE_POINTS)
         {
