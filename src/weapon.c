@@ -155,9 +155,9 @@ const struct TbNamedEnum weapons_conf_weapon_cmds[] = {
   {"TargetMode",	CCWep_TargetMode},
   {"Sprite",		CCWep_Sprite},
   {"Cost",			CCWep_Cost},
-  {"ResearchFunding",		    CCWep_Funding},
+  {"ResearchFunding",		CCWep_Funding},
   {"ResearchFundingClassic",    CCWep_FundingClassic},
-  {"ResearchPercentPerDay",	    CCWep_PercentPerDay},
+  {"ResearchPercentPerDay",	CCWep_PercentPerDay},
   {NULL,		0},
 };
 
