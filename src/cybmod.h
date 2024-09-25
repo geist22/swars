@@ -63,16 +63,16 @@ enum CyModGroupTypes
 };
 
 struct ModDef {
-	ushort PowerOutput;
-	ushort Resilience;
-	ushort Funding;
-	ushort Flags;
-    	char field_8[9];
-    	uchar AdditProp;
-    	short Sprite;
-	ushort Cost;
-	uchar PercentPerDay;
-	uchar Pad1;
+  ushort PowerOutput;
+  ushort Resilience;
+  ushort Funding;
+  ushort Flags;
+  char field_8[9];
+  uchar AdditProp;
+  short Sprite;
+  ushort Cost;
+  uchar PercentPerDay;
+  uchar Pad1;
 };
 
 /* Additional ModDef fields, to be later merged with that struct.
