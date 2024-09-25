@@ -79,7 +79,7 @@ enum CybModsConfigCmd {
     CCMod_Sprite,
     CCMod_Cost,
     CCMod_Funding,
-	CCMod_FundingClassic,
+    CCMod_FundingClassic,
     CCMod_PercentPerDay,
 };
 
@@ -96,7 +96,7 @@ const struct TbNamedEnum cybmods_conf_mod_cmds[] = {
   {"Sprite",		CCMod_Sprite},
   {"Cost",			CCMod_Cost},
   {"ResearchFunding",		CCMod_Funding},
-  {"ResearchFundingClassic",		CCMod_FundingClassic},
+  {"ResearchFundingClassic",	CCMod_FundingClassic},
   {"ResearchPercentPerDay",	CCMod_PercentPerDay},
   {NULL,		0},
 };
