@@ -66,7 +66,6 @@ struct ModDef {
 	ushort PowerOutput;
 	ushort Resilience;
 	ushort Funding;
-	ushort FundingClassic;
 	ushort Flags;
     char field_8[9];
     uchar AdditProp;
@@ -80,6 +79,7 @@ struct ModDef {
  */
 struct ModDefAdd {
   char Name[12];
+  short FundingClassic;
 };
 
 /** Person Modifications.
@@ -92,6 +92,7 @@ union Mod
 #pragma pack()
 /******************************************************************************/
 extern struct ModDef mod_defs[];
+extern struct ModDefAdd mod_defs_a[];
 extern struct TbNamedEnum mod_names[33];
 extern ubyte mod_tech_level[17];
 
