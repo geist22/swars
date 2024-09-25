@@ -222,12 +222,12 @@ TbBool read_rules_file(void)
         switch (cmd_num)
         {
         case RResrchCmd_UseClassicResearch:
-            i = LbIniValueGetLongInt(&parser, &k);
+            i = LbIniValueGetNamedEnum(&parser, rules_conf_any_bool);
             if (i <= 0) {
-                CONFWRNLOG("Could not read \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
+                CONFWRNLOG("Could not recognize \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
                 break;
             }
-            use_classic_research = k;
+            use_classic_research = (i == 1);
             CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)use_classic_research);
             break;
         case RResrchCmd_DailyScientistDeathChance:
