@@ -27,6 +27,7 @@
 #include "wadfile.h"
 #include "swlog.h"
 /******************************************************************************/
+TbBool use_classic_research = false;
 short daily_scientist_death_chance_permil = 20;
 short scientists_per_group = 4;
 short weapon_donate_research_incr_permil = 125;
@@ -365,7 +366,9 @@ int research_daily_progress_for_type(ubyte rstype)
     int real_funding;
     short progress;
     struct ModDef *mdef;
+    struct ModDefAdd *mdefa;
     struct WeaponDef *wdef;
+    struct WeaponDefAdd *wdefa;
     int scientists_died;
 
     real_funding = 0;
@@ -379,7 +382,15 @@ int research_daily_progress_for_type(ubyte rstype)
         if (ingame.Credits < real_funding)
             real_funding = ingame.Credits;
         wdef = &weapon_defs[research.CurrentWeapon + 1];
-        progress = research_unkn_func_004(wdef->PercentPerDay, wdef->Funding, real_funding);
+	wdefa = &weapon_defs_a[research.CurrentWeapon + 1];
+	if (use_classic_research)
+	{
+		progress = research_unkn_func_004(wdef->PercentPerDay, wdefa->FundingClassic, real_funding);
+	}
+	else
+	{
+		progress = research_unkn_func_004(wdef->PercentPerDay, wdef->Funding, real_funding);
+	}
         research_wep_store_daily_progress(progress);
         if (research_wep_get_progress(research.CurrentWeapon) < RESEARCH_COMPLETE_POINTS)
         {
@@ -401,7 +412,15 @@ int research_daily_progress_for_type(ubyte rstype)
         if (ingame.Credits < real_funding)
             real_funding = ingame.Credits;
         mdef = &mod_defs[research.CurrentMod + 1];
-        progress = research_unkn_func_004(mdef->PercentPerDay, mdef->Funding, real_funding);
+	mdefa = &mod_defs_a[research.CurrentMod + 1];
+	if (use_classic_research)
+	{
+		progress = research_unkn_func_004(mdef->PercentPerDay, mdefa->FundingClassic, real_funding);
+	}
+	else
+	{
+		progress = research_unkn_func_004(mdef->PercentPerDay, mdef->Funding, real_funding);
+	}
         research_cymod_store_daily_progress(progress);
         if (research_cymod_get_progress(research.CurrentMod) < RESEARCH_COMPLETE_POINTS)
         {
