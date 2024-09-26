@@ -56,7 +56,7 @@ const struct TbNamedEnum agent_cosmetics_zealot_cmnds[] = {
 };
 */
 
-short PlayerAgentHeads[] = {0,0,0,0};	// this should probably be elsewhere
+short PlayerAgentHeads[] = {0,0,0,0};
 
 TbBool read_agent_cosmetics_file(void)
 {
@@ -113,7 +113,9 @@ TbBool read_agent_cosmetics_file(void)
                 CONFWRNLOG("Could not read \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
                 break;
             }
-            PlayerAgentHeads[0] = k;
+            if ((k >=0) && (k<= 3)) {
+		PlayerAgentHeads[0] = k;
+	    }
             CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)PlayerAgentHeads[0]);
             break;
         case ACAgentCmd_Agent2:
@@ -122,7 +124,9 @@ TbBool read_agent_cosmetics_file(void)
                 CONFWRNLOG("Could not read \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
                 break;
             }
-            PlayerAgentHeads[1] = k;
+            if ((k >=0) && (k<= 3)) {
+		PlayerAgentHeads[1] = k;
+	    }
             CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)PlayerAgentHeads[1]);
             break;
 		case ACAgentCmd_Agent3:
@@ -131,7 +135,9 @@ TbBool read_agent_cosmetics_file(void)
                 CONFWRNLOG("Could not read \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
                 break;
             }
-            PlayerAgentHeads[2] = k;
+            if ((k >=0) && (k<= 3)) {
+		PlayerAgentHeads[2] = k;
+	    }
             CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)PlayerAgentHeads[2]);
             break;
         case ACAgentCmd_Agent4:
@@ -140,7 +146,9 @@ TbBool read_agent_cosmetics_file(void)
                 CONFWRNLOG("Could not read \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
                 break;
             }
-            PlayerAgentHeads[3] = k;
+            if ((k >=0) && (k<= 3)) {
+		PlayerAgentHeads[3] = k;
+	    }
             CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)PlayerAgentHeads[3]);
             break;
         case 0: // comment
