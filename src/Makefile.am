@@ -41,6 +41,8 @@ swars_SOURCES = \
 	linksmk.h \
 	linksmk.c \
 	config.h \
+	agent_cosmetics.c \
+	agent_cosmetics.h \
 	bmbang.c \
 	bmbang.h \
 	bat.sx \
