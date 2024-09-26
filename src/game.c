@@ -4757,7 +4757,15 @@ ushort make_group_into_players(ushort group, ushort plyr, ushort max_agent, shor
             reset_person_frame(p_person);
             break;
         }
-        p_person->U.UPerson.FrameId.Version[0] = 0;
+
+        // Set FrameId for Agents' heads
+        if (p_person->SubType == SubTT_PERS_AGENT) {
+            p_person->U.UPerson.FrameId.Version[0] = PlayerAgentHeads[plagent];
+        }
+        else {
+            p_person->U.UPerson.FrameId.Version[0] = 0;
+        }
+
         if (p_person->U.UPerson.CurrentWeapon == 0)
         {
             switch_person_anim_mode(p_person, 0);
