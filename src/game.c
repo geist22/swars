@@ -6,6 +6,7 @@
 #include <sys/types.h>
 
 #include "bfdata.h"
+#include "bfendian.h"
 #include "bfsprite.h"
 #include "bfscreen.h"
 #include "bfkeybd.h"
@@ -50,6 +51,7 @@
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"
 #include "enginpeff.h"
+#include "enginshadws.h"
 #include "engintrns.h"
 #include "enginzoom.h"
 #include "game_data.h"
@@ -184,13 +186,6 @@ extern long dword_1DDECC;
 extern struct GamePanel game_panel_lo[];
 extern struct GamePanel unknstrct7_arr2[];
 
-extern long dword_176CBC;
-extern long dword_176D0C;
-extern long dword_176D44;
-extern long dword_176D4C;
-extern long dword_176D54;
-extern long dword_176D64;
-
 extern long dword_19F4F8;
 
 extern ubyte execute_commands;
@@ -217,8 +212,9 @@ extern long dword_155018;
 extern short last_map_for_lights_func_11;
 
 extern short word_1552F8;
-extern long dword_152EEC;
 extern short word_152F00;
+
+extern long dword_176CBC;
 
 extern long dword_176D10;
 extern long dword_176D14;
@@ -1223,92 +1219,6 @@ void process_view_inputs(int thing)
     process_overall_scale(zoom);
 }
 
-void process_engine_unk1(void)
-{
-#if 0
-    asm volatile ("call ASM_process_engine_unk1\n"
-        :  :  : "eax" );
-    return;
-#endif
-    int angle;
-
-    dword_176D4C = 0;
-    dword_176D64 = -70;
-    dword_176D3C = vec_window_width / 2;
-    dword_176D40 = vec_window_height / 2;
-    engn_anglexz += dword_176D54;
-    dword_176D44 = 4 * (vec_window_width / 2) / 3;
-    angle = (engn_anglexz >> 5) & LbFPMath_AngleMask;
-    dword_176D0C = angle;
-    dword_176D14 = lbSinTable[angle + LbFPMath_PI/2];
-    dword_176D10 = lbSinTable[angle];
-    angle = dword_152EEC & LbFPMath_AngleMask;
-    dword_176D18 = lbSinTable[angle];
-    dword_176D1C = lbSinTable[angle + LbFPMath_PI/2];
-}
-
-void setup_engine_nullsub4(void)
-{
-}
-
-void calc_mouse_pos(void)
-{
-    asm volatile ("call ASM_calc_mouse_pos\n"
-        :  :  : "eax" );
-}
-
-void process_engine_unk2(void)
-{
-#if 0
-    asm volatile ("call ASM_process_engine_unk2\n"
-        :  :  : "eax" );
-    return;
-#endif
-    short msx, msy;
-    int offs_y;
-    int point_x, point_y;
-    int shift_x, shift_y;
-    int map_xc, map_yc;
-
-    if (ingame.DisplayMode == DpM_UNKN_32)
-      offs_y = overall_scale * engn_yc >> 8;
-    else
-      offs_y = 0;
-    msx = lbDisplay.GraphicsScreenHeight < 400 ? 2 * lbDisplay.MMouseX : lbDisplay.MMouseX;
-    msy = lbDisplay.GraphicsScreenHeight < 400 ? 2 * lbDisplay.MMouseY : lbDisplay.MMouseY;
-
-    if (lbDisplay.GraphicsScreenHeight < 400)
-    {
-        point_y = (msy >> 1) - offs_y;
-        point_x = msx >> 1;
-    }
-    else
-    {
-        point_y = msy - offs_y;
-        point_x = msx;
-    }
-    if (dword_176D18 != 0)
-    {
-        int shift_a;
-
-        shift_x = ((point_x - dword_176D3C) << 11) / overall_scale;
-        shift_a = ((point_y - dword_176D40) << 11) / overall_scale;
-        shift_y = -((shift_a << 16) / dword_176D18);
-    }
-    else
-    {
-        shift_x = 0;
-        shift_y = 0;
-    }
-    map_xc =  ((dword_176D14 * shift_x - dword_176D10 * shift_y) >> 16);
-    map_yc = -((dword_176D10 * shift_x + dword_176D14 * shift_y) >> 16);
-    mouse_map_x = engn_xc + map_xc;
-    mouse_map_z = engn_zc + map_yc;
-    if (ingame.DisplayMode == DpM_UNKN_32)
-        calc_mouse_pos();
-    setup_engine_nullsub4();
-}
-
 void draw_hud_target_mouse(short dcthing)
 {
     PlayerInfo *p_locplayer;
@@ -1489,15 +1399,6 @@ void func_6fd1c(int a1, int a2, int a3, int a4, int a5, int a6, ubyte a7)
       "push %4\n"
       "call ASM_func_6fd1c\n"
         : : "a" (a1), "d" (a2), "b" (a3), "c" (a4), "g" (a5), "g" (a6), "g" (a7));
-}
-
-void func_705bc(int a1, int a2, int a3, int a4, int a5, ubyte a6)
-{
-    asm volatile (
-      "push %5\n"
-      "push %4\n"
-      "call ASM_func_705bc\n"
-        : : "a" (a1), "d" (a2), "b" (a3), "c" (a4), "g" (a5), "g" (a6));
 }
 
 void draw_text_transformed_at_ground(int coord_x, int coord_z, const char *text)
@@ -1897,30 +1798,6 @@ short shpoint_compute_shade(struct ShEnginePoint *p_sp, struct MyMapElement *p_m
     return shd;
 }
 
-/** Bitwise shift left with rotation (wrapping the bits).
- *
- * This is under consideration to be added to bfendian.
- */
-static inline uint bw_rotl(uint n, ubyte c)
-{
-    const uint mask = (CHAR_BIT*sizeof(n) - 1);  // assumes width is a power of 2
-
-    c &= mask;
-    return (n<<c) | (n>>( (-c)&mask ));
-}
-
-/** Bitwise shift right with rotation (wrapping the bits).
- *
- * This is under consideration to be added to bfendian.
- */
-static inline uint bw_rotr(uint n, ubyte c)
-{
-    const uint mask = (CHAR_BIT*sizeof(n) - 1);
-
-    c &= mask;
-    return (n>>c) | (n<<( (-c)&mask ));
-}
-
 int shpoint_compute_coord_y(struct ShEnginePoint *p_sp, struct MyMapElement *p_mapel, int elcr_x, int elcr_z)
 {
     int elcr_y;
@@ -1942,7 +1819,7 @@ int shpoint_compute_coord_y(struct ShEnginePoint *p_sp, struct MyMapElement *p_m
         int wobble, dvfactor;
 
         elcr_y = 8 * p_mapel->Alt;
-        dvfactor = 140 + ((bw_rotl(0x5D3BA6C3, elcr_z >> 8) ^ bw_rotr(0xA7B4D8AC, elcr_x >> 8)) & 0x7F);
+        dvfactor = 140 + ((bw_rotl32(0x5D3BA6C3, elcr_z >> 8) ^ bw_rotr32(0xA7B4D8AC, elcr_x >> 8)) & 0x7F);
         wobble = (waft_table2[(gameturn + (elcr_x >> 7)) & 0x1F]
              + waft_table2[(gameturn + (elcr_z >> 7)) & 0x1F]
              + waft_table2[(32 * gameturn / dvfactor) & 0x1F]) >> 3;
@@ -3438,15 +3315,6 @@ void init_scanner(void)
     ingame.Scanner.Angle = 0;
     srm_scanner_size_update();
     SCANNER_init();
-}
-
-/** Prepare buffer with sprite shadows.
- * Clear the wscreen buffer before this call. Also make sure m_sprites are loaded.
- */
-void generate_shadows_for_multicolor_sprites(void)
-{
-    asm volatile ("call ASM_generate_shadows_for_multicolor_sprites\n"
-        :  :  : "eax" );
 }
 
 /**
@@ -5215,11 +5083,15 @@ void show_unkn3A_screen(int a1)
 void show_game_engine(void)
 {
     short dcthing;
+    int zoom;
 
     dcthing = players[local_player_no].DirectControl[0];
     process_view_inputs(dcthing);// inlined call gengine_ctrl
 
-    SCANNER_set_zoom((900 - overall_scale) >> 1);
+    zoom = 90 * 256 / (ingame.Scanner.X2 - ingame.Scanner.X1);
+    zoom += 128 * (user_zoom_max - get_unscaled_zoom(overall_scale)) / (get_overall_scale_max() - get_overall_scale_min());
+    SCANNER_set_zoom(zoom);
+
     process_engine_unk1();
     process_engine_unk2();
     process_engine_unk3();
@@ -9183,22 +9055,6 @@ void update_open_brief(void)
             open_brief = brief + 1;
             break;
         }
-    }
-}
-
-void copy_from_screen_ani(ubyte *buf)
-{
-    int y;
-    ubyte *o;
-    const ubyte *inp;
-
-    o = buf;
-    inp = lbDisplay.WScreen;
-    for (y = 0; y < 256; y++)
-    {
-        memcpy(o, inp, 256);
-        o += 256;
-        inp += lbDisplay.GraphicsScreenWidth;
     }
 }
 

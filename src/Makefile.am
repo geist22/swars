@@ -76,6 +76,8 @@ swars_SOURCES = \
 	enginsngobjs.h \
 	enginsngtxtr.c \
 	enginsngtxtr.h \
+	enginshadws.c \
+	enginshadws.h \
 	enginpeff.c \
 	enginpeff.h \
 	engintrns.c \
