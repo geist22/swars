@@ -1,8 +1,10 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <assert.h>
 
 #include "display.h"
+
 #include "bfscreen.h"
 #include "bfscrsurf.h"
 #include "bfpalette.h"
@@ -11,6 +13,8 @@
 #include "bfmouse.h"
 #include "bfutility.h"
 #include "poly.h"
+
+#include "game_sprts.h"
 #include "util.h"
 #include "swlog.h"
 

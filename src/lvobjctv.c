@@ -247,7 +247,6 @@ extern ulong dword_1C8460;
 extern ulong dword_1C8464;
 extern short draw_objectv_x;
 extern short draw_objectv_y;
-extern const char *scroll_text;
 
 char *objective_text[OBJECTIVE_TEXT_MAX];
 
@@ -613,7 +612,7 @@ void draw_objective(ushort objectv, ubyte flag)
             colk = dword_1C8460 & 7;
         else
             colk = 1;
-        draw_text(2 * draw_objectv_x, 2 * draw_objectv_y, locstr, colour_lookup[colk]);
+        draw_text(draw_objectv_x, draw_objectv_y, locstr, colour_lookup[colk]);
     }
 
     if (byte_1C844F) {
@@ -1630,7 +1629,7 @@ void snprint_netscan_objctv(char *buf, ulong buflen, struct NetscanObjective *p_
         nparams++;
     }
 
-    for (i = 0; i < 5; i++)
+    for (i = 0; i < NETSCAN_OBJECTIVE_POINTS; i++)
     {
         if ((p_nsobv->X[i]|p_nsobv->Z[i]) != 0) {
             if (nparams) { sprintf(s, ", "); s += strlen(s); }
