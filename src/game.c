@@ -46,6 +46,8 @@
 #include "dos.h"
 #include "drawtext.h"
 #include "enginbckt.h"
+#include "engindrwlst.h"
+#include "enginfexpl.h"
 #include "enginlights.h"
 #include "enginpriobjs.h"
 #include "enginpritxtr.h"
@@ -56,6 +58,7 @@
 #include "engintrns.h"
 #include "enginzoom.h"
 #include "game_data.h"
+#include "game_sprts.h"
 #include "guiboxes.h"
 #include "guitext.h"
 #include "femail.h"
@@ -126,36 +129,6 @@
 extern char *fadedat_fname;
 extern unsigned long unkn_buffer_04;
 char session_name[20] = "SWARA";
-
-extern ubyte *small_font_data;
-extern ubyte *small2_font_data;
-extern ubyte *small_med_font_data;
-extern ubyte *med_font_data;
-extern ubyte *med2_font_data;
-extern ubyte *big_font_data;
-
-extern ubyte *pointer_data;
-
-extern struct TbSprite *sprites_Icons0_0;
-extern struct TbSprite *sprites_Icons0_0_end;
-extern ubyte *sprites_Icons0_0_data;
-
-extern struct TbSprite *unk1_sprites;
-extern struct TbSprite *unk1_sprites_end;
-extern ubyte *unk1_sprites_data;
-
-extern struct TbSprite *unk3_sprites_end;
-extern ubyte *unk3_sprites_data;
-
-extern struct TbSprite *unk2_sprites_end;
-extern ubyte *unk2_sprites_data;
-
-extern struct TbSprite *pop1_sprites_end;
-extern ubyte *pop1_data;
-
-extern ubyte *m_spr_data;
-extern ubyte *m_spr_data_end;
-extern struct TbSprite *m_sprites_end;
 
 extern ulong stored_l3d_next_object[1];
 extern ulong stored_l3d_next_object_face[1];
@@ -257,9 +230,6 @@ extern long dword_1DC888;
 extern long dword_1DC88C;
 extern long dword_1DC890;
 extern long dword_1DC894;
-
-extern ubyte deep_radar_surface_col;
-extern ubyte deep_radar_line_col;
 
 extern ubyte unkn_changing_color_1;
 extern ubyte unkn_changing_color_2;
@@ -421,12 +391,6 @@ void load_prim_quad(void)
 void bang_init(void)
 {
     asm volatile ("call ASM_bang_init\n"
-        :  :  : "eax" );
-}
-
-void init_free_explode_faces(void)
-{
-    asm volatile ("call ASM_init_free_explode_faces\n"
         :  :  : "eax" );
 }
 
@@ -1024,9 +988,10 @@ void load_outro_sprites(void)
     next_pos += next_len;
     med2_font_end = (struct TbSprite *)&data_buf[next_pos];
 
-    LbSpriteSetup(med_font, med_font_end, med_font_data);
-    LbSpriteSetup(med2_font, med2_font_end, med2_font_data);
-    LbSpriteSetup(big_font, big_font_end, big_font_data);
+    setup_sprites_med_font();
+    setup_sprites_med2_font();
+    setup_sprites_big_font();
+
 
     outtxt_ptr = &data_buf[next_pos];
     next_len = load_outro_text(outtxt_ptr);
@@ -1476,13 +1441,6 @@ void draw_number_transformed(int coord_x, int coord_y, int coord_z, int num)
         sprintf(locstr, "%d", num);
         draw_text(ep.pp.X, ep.pp.Y, locstr, colour_lookup[3]);
     }
-}
-
-void LbSpriteDraw_2(int x, int y, struct TbSprite *spr)
-{
-    asm volatile (
-      "call ASM_LbSpriteDraw_2\n"
-        : : "a" (x), "d" (y), "b" (spr));
 }
 
 #define SUPER_QUICK_RADIUS 5
@@ -2667,9 +2625,9 @@ void func_218D3(void)
               p_floortl++;
               bckt += 5000 + bktalt;
                if ((p_mapel->Texture & 0x4000) != 0)
-                  ditype = 6;
+                  ditype = DrIT_Unkn6;
               else
-                  ditype = 4;
+                  ditype = DrIT_Unkn4;
               draw_item_add(ditype, word_152F00, bckt);
               p_sqlight = &p_sqlight[-render_area_a + 1];
               p_spcr += 2;
@@ -3504,83 +3462,148 @@ int joy_func_067(struct DevInput *dinp, int a2)
     return ret;
 }
 
-void setup_mouse_pointers(void)
+TbResult load_mapout(ubyte **pp_buf, const char *dir)
 {
-    struct TbSprite *spr;
-
-    LbSpriteSetup(pointer_sprites, pointer_sprites_end, pointer_data);
-    // Make mouse pointer sprite 1 an empty (zero size) sprite
-    spr = &pointer_sprites[1];
-    spr->SWidth = 0;
-    spr->SHeight = 0;
-}
-
-void reset_mouse_pointers(void)
-{
-    LbSpriteReset(pointer_sprites, pointer_sprites_end, pointer_data);
-}
-
-/** Sets up initially loaded multicolor sprites.
- * Use load_multicolor_sprites() for forther reloads.
- */
-void setup_multicolor_sprites(void)
-{
-    LbSpriteSetup(m_sprites, m_sprites_end, m_spr_data);
-}
-
-/** Loads and sets up multicolor sprites for currently set TrenchcoatPreference.
- */
-void load_multicolor_sprites(void)
-{
-    ulong sz;
-    char fname[100];
-
-    sprintf(fname, "data/mspr-%d.dat", ingame.TrenchcoatPreference);
-    LbFileLoadAt(fname, m_spr_data);
-    sprintf(fname, "data/mspr-%d.tab", ingame.TrenchcoatPreference);
-    sz = LbFileLoadAt(fname, m_sprites);
-    m_sprites_end = (struct TbSprite *)((ubyte *)m_sprites + sz);
-    LbSpriteSetup(m_sprites, m_sprites_end, m_spr_data);
-}
-
-void reset_multicolor_sprites(void)
-{
-    LbSpriteReset(m_sprites, m_sprites_end, m_spr_data);
-}
-
-void debug_multicolor_sprite(int idx)
-{
+    char locstr[52];
+    ubyte *p_buf;
+    long len;
     int i;
-    char strdata[100];
-    char *str;
-    struct TbSprite *spr;
-    unsigned char *ptr;
-    spr = &m_sprites[idx];
-    str = strdata;
-    sprintf(str, "spr %d width %d height %d ptr 0x%lx data",
-      idx, (int)spr->SWidth, (int)spr->SHeight, (ulong)spr->Data);
-    ptr = spr->Data;
-    for (i = 0; i < 10; i++)
+    TbResult ret;
+
+    p_buf = *pp_buf;
+    ret = Lb_OK;
+
+    for (i = 0; i < 6; i++)
     {
-        str = strdata + strlen(strdata);
-        sprintf(str, " %02x", (int)*ptr);
-        ptr++;
+        dword_1C529C[i] = (short *)p_buf;
+        sprintf(locstr, "%s/mapout%02d.dat", dir, i);
+        len = LbFileLoadAt(locstr, dword_1C529C[i]);
+        if (len == -1) {
+            LOGERR("Could not read file '%s'", locstr);
+            ret = Lb_FAIL;
+            len = 64;
+            LbMemorySet(p_buf, '\0', len);
+        }
+        p_buf += len;
     }
-    LOGDBG("m_sprites: %s", strdata);
+
+    landmap_2B4 = (short *)p_buf;
+    sprintf(locstr, "%s/mapinsid.dat", dir);
+    len = LbFileLoadAt(locstr, p_buf);
+    if (len == -1) {
+        ret = Lb_FAIL;
+        len = 64;
+        LbMemorySet(p_buf, '\0', len);
+    }
+    p_buf += len;
+
+    *pp_buf = p_buf;
+    return ret;
 }
 
-/** Loads and sets up panel sprites for currently set PanelPermutation.
- */
-void load_pop_sprites(void)
+TbResult init_read_all_sprite_files(void)
 {
-    char fname[DISKPATH_SIZE];
-    int file_len;
-    sprintf(fname, "data/pop%d-0.dat", -ingame.PanelPermutation - 1);
-    LbFileLoadAt(fname, pop1_data);
-    sprintf(fname, "data/pop%d-0.tab", -ingame.PanelPermutation - 1);
-    file_len = LbFileLoadAt(fname, pop1_sprites);
-    pop1_sprites_end = &pop1_sprites[file_len/sizeof(struct TbSprite)];
-    LbSpriteSetup(pop1_sprites, pop1_sprites_end, pop1_data);
+    PathInfo *pinfo;
+    ubyte *p_buf;
+    TbResult tret, ret;
+
+    pinfo = &game_dirs[DirPlace_Data];
+    p_buf = (ubyte *)&purple_draw_list[750];
+    tret = Lb_OK;
+
+    ret = load_sprites_icons(&p_buf, pinfo->directory);
+    if (tret == Lb_OK)
+        tret = ret;
+
+    ret = load_sprites_wicons(&p_buf, pinfo->directory);
+    if (tret == Lb_OK)
+        tret = ret;
+
+    ret = load_sprites_panel(&p_buf, pinfo->directory);
+    if (tret == Lb_OK)
+        tret = ret;
+
+    ret = load_sprites_mouse(&p_buf, pinfo->directory);
+    if (tret == Lb_OK)
+        tret = ret;
+
+    ret = load_sprites_med_font(&p_buf, pinfo->directory);
+    if (tret == Lb_OK)
+        tret = ret;
+
+    ret = load_sprites_big_font(&p_buf, pinfo->directory);
+    if (tret == Lb_OK)
+        tret = ret;
+
+    ret = load_sprites_small_med_font(&p_buf, pinfo->directory);
+    if (tret == Lb_OK)
+        tret = ret;
+
+    ret = load_sprites_med2_font(&p_buf, pinfo->directory);
+    if (tret == Lb_OK)
+        tret = ret;
+
+    ret = load_sprites_small2_font(&p_buf, pinfo->directory);
+    if (tret == Lb_OK)
+        tret = ret;
+
+    dword_1C6DE4 = p_buf;
+    p_buf += 24480;
+    dword_1C6DE8 = p_buf;
+    p_buf += 24480;
+
+    ret = load_mapout(&p_buf, pinfo->directory);
+    if (tret == Lb_OK)
+        tret = ret;
+
+    // TODO why adding this without remembering previous pointer?
+    p_buf += 41005;
+    back_buffer = p_buf;
+
+    setup_sprites_icons();
+    setup_sprites_wicons();
+    setup_sprites_panel();
+    setup_sprites_mouse();
+    setup_sprites_small_font();
+    setup_sprites_small2_font();
+    setup_sprites_small_med_font();
+    setup_sprites_med_font();
+    setup_sprites_med2_font();
+    setup_sprites_big_font();
+
+    if (tret == Lb_FAIL) {
+        LOGERR("Some files were not loaded successfully");
+        ingame.DisplayMode = DpM_UNKN_1;
+    }
+    return tret;
+}
+
+TbResult prep_multicolor_sprites(void)
+{
+    PathInfo *pinfo;
+    TbResult ret;
+
+    pinfo = &game_dirs[DirPlace_Data];
+    ret = load_multicolor_sprites(pinfo->directory);
+    setup_multicolor_sprites();
+    if (ret == Lb_FAIL) {
+        LOGERR("Some files were not loaded successfully");
+    }
+    return ret;
+}
+
+TbResult prep_pop_sprites(void)
+{
+    PathInfo *pinfo;
+    TbResult ret;
+
+    pinfo = &game_dirs[DirPlace_Data];
+    ret = load_pop_sprites(pinfo->directory);
+    setup_pop_sprites();
+    if (ret == Lb_FAIL) {
+        LOGERR("Some files were not loaded successfully");
+    }
+    return ret;
 }
 
 void setup_host(void)
@@ -3606,7 +3629,7 @@ void setup_host(void)
     ingame.TrenchcoatPreference = 0;
     setup_multicolor_sprites();
     ingame.PanelPermutation = -2;
-    load_pop_sprites();
+    prep_pop_sprites();
     game_panel = game_panel_lo;
     init_memory(mem_game);
 
@@ -4685,7 +4708,7 @@ void prep_single_mission(void)
     load_missions(background_type);
     load_objectives_text();
     init_game(0);
-    load_multicolor_sprites();
+    prep_multicolor_sprites();
     LbScreenClear(0);
     generate_shadows_for_multicolor_sprites();
     adjust_mission_engine_to_video_mode();
@@ -4886,7 +4909,7 @@ void game_setup(void)
     setup_color_lookups();
     init_things();
     debug_trace_setup(-2);
-    LbSpriteSetup(small_font, small_font_end, small_font_data);
+    setup_sprites_small_font();
     load_peep_type_stats();
     load_campaigns();
     players[local_player_no].MissionAgents = 0x0F;
@@ -5113,247 +5136,6 @@ void BAT_play(void)
 {
     asm volatile ("call ASM_BAT_play\n"
         :  :  : "eax" );
-}
-
-TbResult init_read_all_sprite_files(void)
-{
-#if 0
-    TbResult ret;
-    asm volatile ("call ASM_init_read_all_sprite_files\n"
-        : "=r" (ret) : );
-    return ret;
-#endif
-    char locstr[52];
-    PathInfo *pinfo;
-    ubyte *bufptr;
-    TbResult ret;
-    long len;
-    int i;
-
-    pinfo = &game_dirs[DirPlace_Data];
-    bufptr = (ubyte *)&purple_draw_list[750];
-    ret = Lb_OK;
-
-    sprites_Icons0_0_data = bufptr;
-    sprintf(locstr, "%s/icons0-0.dat", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 0;
-    }
-    bufptr += len;
-    sprites_Icons0_0 = (struct TbSprite *)bufptr;
-    sprintf(locstr, "%s/icons0-0.tab", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 32 * sizeof(struct TbSprite);
-        LbMemorySet(bufptr, '\0', len);
-    }
-    bufptr += len;
-    sprites_Icons0_0_end = (struct TbSprite *)bufptr;
-
-    unk1_sprites_data = bufptr;
-    sprintf(locstr, "%s/w-icons.dat", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 0;
-    }
-    bufptr += len;
-    unk1_sprites = (struct TbSprite *)bufptr;
-    sprintf(locstr, "%s/w-icons.tab", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 32 * sizeof(struct TbSprite);
-        LbMemorySet(bufptr, '\0', len);
-    }
-    bufptr += len;
-    unk1_sprites_end = (struct TbSprite *)bufptr;
-
-    unk2_sprites_data = bufptr;
-    sprintf(locstr, "%s/panel0-0.dat", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 0;
-    }
-    bufptr += len;
-    unk2_sprites = (struct TbSprite *)bufptr;
-    sprintf(locstr, "%s/panel0-0.tab", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 32 * sizeof(struct TbSprite);
-        LbMemorySet(bufptr, '\0', len);
-    }
-    bufptr += len;
-    unk2_sprites_end = (struct TbSprite *)bufptr;
-
-    unk3_sprites_data = bufptr;
-    sprintf(locstr, "%s/mouse-0.dat", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 0;
-    }
-    bufptr += len;
-    unk3_sprites = (struct TbSprite *)bufptr;
-    sprintf(locstr, "%s/mouse-0.tab", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 32 * sizeof(struct TbSprite);
-        LbMemorySet(bufptr, '\0', len);
-    }
-    bufptr += len;
-    unk3_sprites_end = (struct TbSprite *)bufptr;
-
-    med_font_data = bufptr;
-    sprintf(locstr, "%s/font0-1.dat", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 0;
-    }
-    bufptr += len;
-    med_font = (struct TbSprite *)bufptr;
-    sprintf(locstr, "%s/font0-1.tab", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 128 * sizeof(struct TbSprite);
-        LbMemorySet(bufptr, '\0', len);
-    }
-    bufptr += len;
-    med_font_end = (struct TbSprite *)bufptr;
-
-    big_font_data = bufptr;
-    sprintf(locstr, "%s/font0-2.dat", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 0;
-    }
-    bufptr += len;
-    big_font = (struct TbSprite *)bufptr;
-    sprintf(locstr, "%s/font0-2.tab", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 128 * sizeof(struct TbSprite);
-        LbMemorySet(bufptr, '\0', len);
-    }
-    bufptr += len;
-    big_font_end = (struct TbSprite *)bufptr;
-
-    small_med_font_data = bufptr;
-    sprintf(locstr, "%s/font0-3.dat", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 0;
-    }
-    bufptr += len;
-    small_med_font = (struct TbSprite *)bufptr;
-    sprintf(locstr, "%s/font0-3.tab", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 128 * sizeof(struct TbSprite);
-        LbMemorySet(bufptr, '\0', len);
-    }
-    bufptr += len;
-    small_med_font_end = (struct TbSprite *)bufptr;
-
-    med2_font_data = bufptr;
-    sprintf(locstr, "%s/font0-4.dat", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 0;
-    }
-    bufptr += len;
-    med2_font = (struct TbSprite *)bufptr;
-    sprintf(locstr, "%s/font0-4.tab", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 128 * sizeof(struct TbSprite);
-        LbMemorySet(bufptr, '\0', len);
-    }
-    bufptr += len;
-    med2_font_end = (struct TbSprite *)bufptr;
-
-    small2_font_data = bufptr;
-    sprintf(locstr, "%s/font0-5.dat", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 0;
-    }
-    bufptr += len;
-    small2_font = (struct TbSprite *)bufptr;
-    sprintf(locstr, "%s/font0-5.tab", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 128 * sizeof(struct TbSprite);
-        LbMemorySet(bufptr, '\0', len);
-    }
-    bufptr += len;
-    small2_font_end = (struct TbSprite *)bufptr;
-
-    dword_1C6DE4 = bufptr;
-    bufptr += 24480;
-    dword_1C6DE8 = bufptr;
-    bufptr += 24480;
-
-    for (i = 0; i < 6; i++)
-    {
-        dword_1C529C[i] = (short *)bufptr;
-        sprintf(locstr, "%s/mapout%02d.dat", pinfo->directory, i);
-        len = LbFileLoadAt(locstr, dword_1C529C[i]);
-        if (len == -1) {
-            LOGERR("Could not read file '%s'", locstr);
-            ret = Lb_FAIL;
-            len = 64;
-            LbMemorySet(bufptr, '\0', len);
-        }
-        bufptr += len;
-    }
-
-    landmap_2B4 = (short *)bufptr;
-    sprintf(locstr, "%s/mapinsid.dat", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 64;
-        LbMemorySet(bufptr, '\0', len);
-    }
-    bufptr += len;
-
-    // TODO why adding this without remembering previous pointer?
-    bufptr += 41005;
-    back_buffer = bufptr;
-
-    LbSpriteSetup(sprites_Icons0_0, sprites_Icons0_0_end, sprites_Icons0_0_data);
-    LbSpriteSetup(unk1_sprites, unk1_sprites_end, unk1_sprites_data);
-    LbSpriteSetup(unk2_sprites, unk2_sprites_end, unk2_sprites_data);
-    LbSpriteSetup(unk3_sprites, unk3_sprites_end, unk3_sprites_data);
-    LbSpriteSetup(small_font, small_font_end, small_font_data);
-    LbSpriteSetup(small2_font, small2_font_end, small2_font_data);
-    LbSpriteSetup(small_med_font, small_med_font_end, small_med_font_data);
-    LbSpriteSetup(med_font, med_font_end, med_font_data);
-    LbSpriteSetup(med2_font, med2_font_end, med2_font_data);
-    LbSpriteSetup(big_font, big_font_end, big_font_data);
-
-    if (ret == Lb_FAIL) {
-        LOGERR("Some files were not loaded successfully");
-        ingame.DisplayMode = DpM_UNKN_1;
-    }
-    return ret;
 }
 
 ubyte change_panel_permutation(ubyte click)
@@ -7309,7 +7091,7 @@ ubyte do_user_interface(void)
         StopCD();
         if (++ingame.TrenchcoatPreference > 5)
             ingame.TrenchcoatPreference = 0;
-        load_multicolor_sprites();
+        prep_multicolor_sprites();
     }
 
     // adjust palette brightness
@@ -9035,7 +8817,7 @@ void show_load_and_prep_mission(void)
     // Set up remaining graphics data and controls
     if ( start_into_mission )
     {
-        load_multicolor_sprites();
+        prep_multicolor_sprites();
         LbScreenClear(0);
         generate_shadows_for_multicolor_sprites();
         adjust_mission_engine_to_video_mode();

@@ -422,7 +422,6 @@ extern struct SingleObjectFace3 *game_special_object_faces;
 extern struct SingleObjectFace4 *game_special_object_faces4;
 extern struct FloorTile *game_floor_tiles;
 extern ubyte *game_user_heap;
-extern struct SpecialPoint *game_screen_point_pool;
 extern struct UnknBezEdit *bezier_pts;
 extern ushort next_bezier_pt;
 extern ubyte *spare_map_buffer;
@@ -431,12 +430,6 @@ extern ushort next_used_lvl_objective;
 extern struct LevelMisc *game_level_miscs;
 extern long target_old_frameno;
 extern ushort word_176E38;
-
-extern struct TbSprite *pop1_sprites;
-
-extern struct TbSprite *unk2_sprites;
-
-extern struct TbSprite *m_sprites;
 
 extern ubyte byte_1C4A7C;
 extern ubyte byte_1C4A9F;
@@ -507,8 +500,6 @@ extern char *weapon_text;
 extern ubyte *save_game_buffer;
 extern char save_active_desc[28];
 extern ubyte *unkn_buffer_05;
-extern ubyte *dword_1C6DE4;
-extern ubyte *dword_1C6DE8;
 extern ubyte scientists_lost;
 extern ulong new_mods_researched;
 extern ulong new_weapons_researched;
@@ -606,8 +597,6 @@ void game_transform_path (const char *file_name, char *result);
 const char *game_get_data_path (void);
 const char *game_get_user_path (void);
 
-void load_multicolor_sprites(void);
-
 void read_conf_file(void);
 void game_setup(void);
 void game_process(void);
@@ -638,7 +627,6 @@ void draw_new_panel(void);
 void update_map_thing_and_traffic_refs(void);
 void unkn_lights_processing(void);
 void bang_set_detail(int a1);
-void init_free_explode_faces(void);
 int sub_73C64(char *a1, ubyte a2);
 void func_6fe80(int a1, int a2, int a3, int a4, int a5, int a6, ubyte a7);
 void func_6fd1c(int a1, int a2, int a3, int a4, int a5, int a6, ubyte a7);

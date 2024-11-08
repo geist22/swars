@@ -9,8 +9,9 @@ swars_SOURCES = \
 	bflib_joyst_s.sx \
 	bflib_test_poly.c \
 	bflib_render_gpoly.c \
-	bflib_render_gpoly_s.sx \
 	bflib_render_plin_s.sx \
+	bflib_render_drspr.c \
+	bflib_render_drspr.h \
 	bflib_render_drspr_s.sx \
 	bflib_snd_mss_s.sx \
 	bflib_vidraw.c \
@@ -66,12 +67,16 @@ swars_SOURCES = \
 	enginbckt.h \
 	engindrwlst.c \
 	engindrwlst.h \
+	enginfexpl.c \
+	enginfexpl.h \
 	enginlights.c \
 	enginlights.h \
 	enginpriobjs.c \
 	enginpriobjs.h \
 	enginpritxtr.c \
 	enginpritxtr.h \
+	enginshrapn.c \
+	enginshrapn.h \
 	enginsngobjs.c \
 	enginsngobjs.h \
 	enginsngtxtr.c \
@@ -126,6 +131,8 @@ swars_SOURCES = \
 	game_data.h \
 	game_speed.c \
 	game_speed.h \
+	game_sprts.c \
+	game_sprts.h \
 	game.h \
 	globals.h \
 	hud_panel.c \
