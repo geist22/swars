@@ -21,9 +21,12 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include "bfscreen.h"
 #include "bfline.h"
 #include "bfutility.h"
+
+#include "engintrns.h"
 /******************************************************************************/
 
 extern ubyte byte_1DDC44[640];
@@ -32,11 +35,11 @@ extern ubyte byte_1C4B7F;// = 0;
 extern ubyte byte_1C6DED;// = 0;
 extern ubyte byte_155189;// = 0xF7;
 
-void LbDrawSlantBox(short x, short y, ushort w, ushort h)
+void draw_noise_box(short x, short y, ushort w, ushort h)
 {
 #if 0
     asm volatile (
-      "call ASM_LbDrawSlantBox\n"
+      "call ASM_draw_noise_box\n"
         :  : "a" (X), "d" (Y), "b" (a3), "c" (a4));
     return;
 #endif

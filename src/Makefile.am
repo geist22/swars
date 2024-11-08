@@ -9,8 +9,9 @@ swars_SOURCES = \
 	bflib_joyst_s.sx \
 	bflib_test_poly.c \
 	bflib_render_gpoly.c \
-	bflib_render_gpoly_s.sx \
 	bflib_render_plin_s.sx \
+	bflib_render_drspr.c \
+	bflib_render_drspr.h \
 	bflib_render_drspr_s.sx \
 	bflib_snd_mss_s.sx \
 	bflib_vidraw.c \
@@ -66,16 +67,22 @@ swars_SOURCES = \
 	enginbckt.h \
 	engindrwlst.c \
 	engindrwlst.h \
+	enginfexpl.c \
+	enginfexpl.h \
 	enginlights.c \
 	enginlights.h \
 	enginpriobjs.c \
 	enginpriobjs.h \
 	enginpritxtr.c \
 	enginpritxtr.h \
+	enginshrapn.c \
+	enginshrapn.h \
 	enginsngobjs.c \
 	enginsngobjs.h \
 	enginsngtxtr.c \
 	enginsngtxtr.h \
+	enginshadws.c \
+	enginshadws.h \
 	enginpeff.c \
 	enginpeff.h \
 	engintrns.c \
@@ -124,6 +131,8 @@ swars_SOURCES = \
 	game_data.h \
 	game_speed.c \
 	game_speed.h \
+	game_sprts.c \
+	game_sprts.h \
 	game.h \
 	globals.h \
 	hud_panel.c \
@@ -143,6 +152,8 @@ swars_SOURCES = \
 	matrix.h \
 	mouse.c \
 	mouse.h \
+	mydraw.c \
+	mydraw.h \
 	netipx1.sx \
 	netser1.sx \
 	network.c \
@@ -158,6 +169,10 @@ swars_SOURCES = \
 	pepgroup.h \
 	player.c \
 	player.h \
+	purpldrw.c \
+	purpldrw.h \
+	purpldrwlst.c \
+	purpldrwlst.h \
 	radica1.sx \
 	radica2.sx \
 	radica3.sx \
