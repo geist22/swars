@@ -28,7 +28,10 @@
 #include "guiboxes.h"
 #include "guitext.h"
 #include "display.h"
+#include "game_sprts.h"
 #include "game.h"
+#include "purpldrw.h"
+#include "purpldrwlst.h"
 #include "sound.h"
 #include "swlog.h"
 /******************************************************************************/

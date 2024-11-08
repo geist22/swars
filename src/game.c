@@ -6,6 +6,7 @@
 #include <sys/types.h>
 
 #include "bfdata.h"
+#include "bfendian.h"
 #include "bfsprite.h"
 #include "bfscreen.h"
 #include "bfkeybd.h"
@@ -31,27 +32,33 @@
 #include "bfscrsurf.h"
 #include "bfscrcopy.h"
 #include "bfsmack.h"
+#include "bftringl.h"
+#include "bfscd.h"
+
 #include "linksmk.h"
 #include "bmbang.h"
 #include "svesa.h"
 #include "swlog.h"
 #include "bflib_vidraw.h"
-#include "bfscd.h"
 #include "bflib_joyst.h"
 #include "ssampply.h"
 #include "matrix.h"
 #include "dos.h"
 #include "drawtext.h"
 #include "enginbckt.h"
+#include "engindrwlst.h"
+#include "enginfexpl.h"
 #include "enginlights.h"
 #include "enginpriobjs.h"
 #include "enginpritxtr.h"
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"
 #include "enginpeff.h"
+#include "enginshadws.h"
 #include "engintrns.h"
 #include "enginzoom.h"
 #include "game_data.h"
+#include "game_sprts.h"
 #include "guiboxes.h"
 #include "guitext.h"
 #include "femail.h"
@@ -69,6 +76,8 @@
 #include "feresearch.h"
 #include "festorage.h"
 #include "feworld.h"
+#include "purpldrw.h"
+#include "purpldrwlst.h"
 #include "building.h"
 #include "campaign.h"
 #include "cybmod.h"
@@ -86,6 +95,7 @@
 #include "hud_target.h"
 #include "keyboard.h"
 #include "mouse.h"
+#include "mydraw.h"
 #include "network.h"
 #include "sound.h"
 #include "unix.h"
@@ -119,36 +129,6 @@ extern char *fadedat_fname;
 extern unsigned long unkn_buffer_04;
 char session_name[20] = "SWARA";
 
-extern ubyte *small_font_data;
-extern ubyte *small2_font_data;
-extern ubyte *small_med_font_data;
-extern ubyte *med_font_data;
-extern ubyte *med2_font_data;
-extern ubyte *big_font_data;
-
-extern ubyte *pointer_data;
-
-extern struct TbSprite *sprites_Icons0_0;
-extern struct TbSprite *sprites_Icons0_0_end;
-extern ubyte *sprites_Icons0_0_data;
-
-extern struct TbSprite *unk1_sprites;
-extern struct TbSprite *unk1_sprites_end;
-extern ubyte *unk1_sprites_data;
-
-extern struct TbSprite *unk3_sprites_end;
-extern ubyte *unk3_sprites_data;
-
-extern struct TbSprite *unk2_sprites_end;
-extern ubyte *unk2_sprites_data;
-
-extern struct TbSprite *pop1_sprites_end;
-extern ubyte *pop1_data;
-
-extern ubyte *m_spr_data;
-extern ubyte *m_spr_data_end;
-extern struct TbSprite *m_sprites_end;
-
 extern ulong stored_l3d_next_object[1];
 extern ulong stored_l3d_next_object_face[1];
 extern ulong stored_l3d_next_object_face4[1];
@@ -177,19 +157,8 @@ extern short word_1C6E0A;
 
 extern long dword_1DDECC;
 
-extern struct ScreenPoint proj_origin;
-extern ubyte purple_joy_move;
-extern ushort purple_draw_index;
-
 extern struct GamePanel game_panel_lo[];
 extern struct GamePanel unknstrct7_arr2[];
-
-extern long dword_176CBC;
-extern long dword_176D0C;
-extern long dword_176D44;
-extern long dword_176D4C;
-extern long dword_176D54;
-extern long dword_176D64;
 
 extern long dword_19F4F8;
 
@@ -202,11 +171,6 @@ extern long gamep_unknval_14;
 extern long gamep_unknval_15;
 extern long gamep_unknval_16;
 
-extern ubyte player_unkn0C9[8];
-extern char player_unknCC9[8][128];
-extern long scanner_unkn370;
-extern long scanner_unkn3CC;
-
 extern ushort netgame_agent_pos_x[8][4];
 extern ushort netgame_agent_pos_y[8][4];
 
@@ -217,8 +181,9 @@ extern long dword_155018;
 extern short last_map_for_lights_func_11;
 
 extern short word_1552F8;
-extern long dword_152EEC;
 extern short word_152F00;
+
+extern long dword_176CBC;
 
 extern long dword_176D10;
 extern long dword_176D14;
@@ -264,9 +229,6 @@ extern long dword_1DC888;
 extern long dword_1DC88C;
 extern long dword_1DC890;
 extern long dword_1DC894;
-
-extern ubyte deep_radar_surface_col;
-extern ubyte deep_radar_line_col;
 
 extern ubyte unkn_changing_color_1;
 extern ubyte unkn_changing_color_2;
@@ -428,12 +390,6 @@ void load_prim_quad(void)
 void bang_init(void)
 {
     asm volatile ("call ASM_bang_init\n"
-        :  :  : "eax" );
-}
-
-void init_free_explode_faces(void)
-{
-    asm volatile ("call ASM_init_free_explode_faces\n"
         :  :  : "eax" );
 }
 
@@ -844,14 +800,6 @@ void screen_dark_curtain_down(void)
         :  :  : "eax" );
 }
 
-ubyte my_char_to_upper(ubyte c)
-{
-    ubyte ret;
-    asm volatile ("call ASM_my_char_to_upper\n"
-        : "=r" (ret) : "a" (c));
-    return ret;
-}
-
 int load_outro_text(ubyte *buf)
 {
     int totlen;
@@ -1039,9 +987,10 @@ void load_outro_sprites(void)
     next_pos += next_len;
     med2_font_end = (struct TbSprite *)&data_buf[next_pos];
 
-    LbSpriteSetup(med_font, med_font_end, med_font_data);
-    LbSpriteSetup(med2_font, med2_font_end, med2_font_data);
-    LbSpriteSetup(big_font, big_font_end, big_font_data);
+    setup_sprites_med_font();
+    setup_sprites_med2_font();
+    setup_sprites_big_font();
+
 
     outtxt_ptr = &data_buf[next_pos];
     next_len = load_outro_text(outtxt_ptr);
@@ -1221,92 +1170,6 @@ void process_view_inputs(int thing)
         zoom = ingame.UserZoom;
 
     process_overall_scale(zoom);
-}
-
-void process_engine_unk1(void)
-{
-#if 0
-    asm volatile ("call ASM_process_engine_unk1\n"
-        :  :  : "eax" );
-    return;
-#endif
-    int angle;
-
-    dword_176D4C = 0;
-    dword_176D64 = -70;
-    dword_176D3C = vec_window_width / 2;
-    dword_176D40 = vec_window_height / 2;
-    engn_anglexz += dword_176D54;
-    dword_176D44 = 4 * (vec_window_width / 2) / 3;
-    angle = (engn_anglexz >> 5) & LbFPMath_AngleMask;
-    dword_176D0C = angle;
-    dword_176D14 = lbSinTable[angle + LbFPMath_PI/2];
-    dword_176D10 = lbSinTable[angle];
-    angle = dword_152EEC & LbFPMath_AngleMask;
-    dword_176D18 = lbSinTable[angle];
-    dword_176D1C = lbSinTable[angle + LbFPMath_PI/2];
-}
-
-void setup_engine_nullsub4(void)
-{
-}
-
-void calc_mouse_pos(void)
-{
-    asm volatile ("call ASM_calc_mouse_pos\n"
-        :  :  : "eax" );
-}
-
-void process_engine_unk2(void)
-{
-#if 0
-    asm volatile ("call ASM_process_engine_unk2\n"
-        :  :  : "eax" );
-    return;
-#endif
-    short msx, msy;
-    int offs_y;
-    int point_x, point_y;
-    int shift_x, shift_y;
-    int map_xc, map_yc;
-
-    if (ingame.DisplayMode == DpM_UNKN_32)
-      offs_y = overall_scale * engn_yc >> 8;
-    else
-      offs_y = 0;
-    msx = lbDisplay.GraphicsScreenHeight < 400 ? 2 * lbDisplay.MMouseX : lbDisplay.MMouseX;
-    msy = lbDisplay.GraphicsScreenHeight < 400 ? 2 * lbDisplay.MMouseY : lbDisplay.MMouseY;
-
-    if (lbDisplay.GraphicsScreenHeight < 400)
-    {
-        point_y = (msy >> 1) - offs_y;
-        point_x = msx >> 1;
-    }
-    else
-    {
-        point_y = msy - offs_y;
-        point_x = msx;
-    }
-    if (dword_176D18 != 0)
-    {
-        int shift_a;
-
-        shift_x = ((point_x - dword_176D3C) << 11) / overall_scale;
-        shift_a = ((point_y - dword_176D40) << 11) / overall_scale;
-        shift_y = -((shift_a << 16) / dword_176D18);
-    }
-    else
-    {
-        shift_x = 0;
-        shift_y = 0;
-    }
-    map_xc =  ((dword_176D14 * shift_x - dword_176D10 * shift_y) >> 16);
-    map_yc = -((dword_176D10 * shift_x + dword_176D14 * shift_y) >> 16);
-    mouse_map_x = engn_xc + map_xc;
-    mouse_map_z = engn_zc + map_yc;
-    if (ingame.DisplayMode == DpM_UNKN_32)
-        calc_mouse_pos();
-    setup_engine_nullsub4();
 }
 
 void draw_hud_target_mouse(short dcthing)
@@ -1491,15 +1354,6 @@ void func_6fd1c(int a1, int a2, int a3, int a4, int a5, int a6, ubyte a7)
         : : "a" (a1), "d" (a2), "b" (a3), "c" (a4), "g" (a5), "g" (a6), "g" (a7));
 }
 
-void func_705bc(int a1, int a2, int a3, int a4, int a5, ubyte a6)
-{
-    asm volatile (
-      "push %5\n"
-      "push %4\n"
-      "call ASM_func_705bc\n"
-        : : "a" (a1), "d" (a2), "b" (a3), "c" (a4), "g" (a5), "g" (a6));
-}
-
 void draw_text_transformed_at_ground(int coord_x, int coord_z, const char *text)
 {
 #if 0
@@ -1586,120 +1440,6 @@ void draw_number_transformed(int coord_x, int coord_y, int coord_z, int num)
         sprintf(locstr, "%d", num);
         draw_text(ep.pp.X, ep.pp.Y, locstr, colour_lookup[3]);
     }
-}
-
-void SCANNER_unkn_func_200(struct TbSprite *spr, int x, int y, ubyte col)
-{
-    int xwind_beg;
-    int xwind_end;
-    int xwind_start;
-    sbyte *inp;
-    ubyte *oline;
-    int opitch;
-    int h;
-    TbBool needs_window_bounding;
-
-    xwind_beg = lbDisplay.GraphicsWindowX;
-    xwind_end = lbDisplay.GraphicsWindowX + lbDisplay.GraphicsWindowWidth;
-    xwind_start = lbDisplay.GraphicsWindowX + x;
-    inp = (sbyte *)spr->Data;
-    opitch = lbDisplay.GraphicsScreenWidth;
-    oline = &lbDisplay.WScreen[opitch * (lbDisplay.GraphicsWindowY + y) + lbDisplay.GraphicsWindowX + x];
-    if (xwind_start < lbDisplay.GraphicsWindowX) {
-        if (xwind_start + 2 * spr->SWidth <= lbDisplay.GraphicsWindowX)
-            return;
-        needs_window_bounding = true;
-    } else {
-        if (xwind_start >= xwind_end)
-            return;
-        needs_window_bounding = (xwind_start + 2 * spr->SWidth > xwind_end);
-    }
-
-    if (!needs_window_bounding)
-    {
-        // Simplified and faster drawing when we do not have to check bounds
-        for (h = 0; h < spr->SHeight; h++)
-        {
-            ubyte *o;
-
-            o = oline;
-            while (*inp)
-            {
-                int ival;
-                int i;
-
-                ival = *inp;
-                if (ival < 0)
-                {
-                    inp++;
-                    o -= 2 * ival;
-                    continue;
-                }
-                inp += ival + 1;
-                for (i = 0; i < ival; i++)
-                {
-                    o[0] = col;
-                    o[opitch + 0] = col;
-                    o[1] = col;
-                    o[opitch + 1] = col;
-                    o += 2;
-                }
-            }
-            inp++;
-            oline += 2 * opitch;
-        }
-    }
-    else
-    {
-        for (h = 0; h < spr->SHeight; h++)
-        {
-            ubyte *o;
-            int xwind_curr;
-
-            o = oline;
-            xwind_curr = xwind_start;
-            while (*inp)
-            {
-                int ival;
-                int i;
-
-                ival = *inp;
-                if (ival < 0)
-                {
-                    inp++;
-                    o -= 2 * ival;
-                    xwind_curr -= 2 * ival;
-                    continue;
-                }
-                inp += ival + 1;
-                for (i = 0; i < ival; i++)
-                {
-                    if (xwind_curr >= xwind_beg && xwind_curr < xwind_end) {
-                        o[0] = col;
-                        o[opitch] = col;
-                    }
-                    xwind_curr++;
-                    o++;
-                    if (xwind_curr >= xwind_beg && xwind_curr < xwind_end) {
-                        o[0] = col;
-                        o[opitch] = col;
-                    }
-                    xwind_curr++;
-                    o++;
-                }
-            }
-            inp++;
-            oline += 2 * opitch;
-        }
-    }
-}
-
-
-void LbSpriteDraw_2(int x, int y, struct TbSprite *spr)
-{
-    asm volatile (
-      "call ASM_LbSpriteDraw_2\n"
-        : : "a" (x), "d" (y), "b" (spr));
 }
 
 #define SUPER_QUICK_RADIUS 5
@@ -1897,30 +1637,6 @@ short shpoint_compute_shade(struct ShEnginePoint *p_sp, struct MyMapElement *p_m
     return shd;
 }
 
-/** Bitwise shift left with rotation (wrapping the bits).
- *
- * This is under consideration to be added to bfendian.
- */
-static inline uint bw_rotl(uint n, ubyte c)
-{
-    const uint mask = (CHAR_BIT*sizeof(n) - 1);  // assumes width is a power of 2
-
-    c &= mask;
-    return (n<<c) | (n>>( (-c)&mask ));
-}
-
-/** Bitwise shift right with rotation (wrapping the bits).
- *
- * This is under consideration to be added to bfendian.
- */
-static inline uint bw_rotr(uint n, ubyte c)
-{
-    const uint mask = (CHAR_BIT*sizeof(n) - 1);
-
-    c &= mask;
-    return (n>>c) | (n<<( (-c)&mask ));
-}
-
 int shpoint_compute_coord_y(struct ShEnginePoint *p_sp, struct MyMapElement *p_mapel, int elcr_x, int elcr_z)
 {
     int elcr_y;
@@ -1942,7 +1658,7 @@ int shpoint_compute_coord_y(struct ShEnginePoint *p_sp, struct MyMapElement *p_m
         int wobble, dvfactor;
 
         elcr_y = 8 * p_mapel->Alt;
-        dvfactor = 140 + ((bw_rotl(0x5D3BA6C3, elcr_z >> 8) ^ bw_rotr(0xA7B4D8AC, elcr_x >> 8)) & 0x7F);
+        dvfactor = 140 + ((bw_rotl32(0x5D3BA6C3, elcr_z >> 8) ^ bw_rotr32(0xA7B4D8AC, elcr_x >> 8)) & 0x7F);
         wobble = (waft_table2[(gameturn + (elcr_x >> 7)) & 0x1F]
              + waft_table2[(gameturn + (elcr_z >> 7)) & 0x1F]
              + waft_table2[(32 * gameturn / dvfactor) & 0x1F]) >> 3;
@@ -2908,9 +2624,9 @@ void func_218D3(void)
               p_floortl++;
               bckt += 5000 + bktalt;
                if ((p_mapel->Texture & 0x4000) != 0)
-                  ditype = 6;
+                  ditype = DrIT_Unkn6;
               else
-                  ditype = 4;
+                  ditype = DrIT_Unkn4;
               draw_item_add(ditype, word_152F00, bckt);
               p_sqlight = &p_sqlight[-render_area_a + 1];
               p_spcr += 2;
@@ -3407,12 +3123,11 @@ void srm_scanner_size_update(void)
 
     width = lbDisplay.GraphicsScreenWidth * scanner_width_pct / 100;
     height = lbDisplay.GraphicsScreenHeight * scanner_height_pct / 100;
+    margin = SCANNER_objective_info_height() + 2;
     if (lbDisplay.GraphicsScreenWidth >= 640) {
-        margin = 20;
         width = width * 101 / 100;
         height = height * 99 / 100;
     } else {
-        margin = 11;
         // width without change
         height = height * 124 / 100;
     }
@@ -3438,15 +3153,6 @@ void init_scanner(void)
     ingame.Scanner.Angle = 0;
     srm_scanner_size_update();
     SCANNER_init();
-}
-
-/** Prepare buffer with sprite shadows.
- * Clear the wscreen buffer before this call. Also make sure m_sprites are loaded.
- */
-void generate_shadows_for_multicolor_sprites(void)
-{
-    asm volatile ("call ASM_generate_shadows_for_multicolor_sprites\n"
-        :  :  : "eax" );
 }
 
 /**
@@ -3755,83 +3461,148 @@ int joy_func_067(struct DevInput *dinp, int a2)
     return ret;
 }
 
-void setup_mouse_pointers(void)
+TbResult load_mapout(ubyte **pp_buf, const char *dir)
 {
-    struct TbSprite *spr;
-
-    LbSpriteSetup(pointer_sprites, pointer_sprites_end, pointer_data);
-    // Make mouse pointer sprite 1 an empty (zero size) sprite
-    spr = &pointer_sprites[1];
-    spr->SWidth = 0;
-    spr->SHeight = 0;
-}
-
-void reset_mouse_pointers(void)
-{
-    LbSpriteReset(pointer_sprites, pointer_sprites_end, pointer_data);
-}
-
-/** Sets up initially loaded multicolor sprites.
- * Use load_multicolor_sprites() for forther reloads.
- */
-void setup_multicolor_sprites(void)
-{
-    LbSpriteSetup(m_sprites, m_sprites_end, m_spr_data);
-}
-
-/** Loads and sets up multicolor sprites for currently set TrenchcoatPreference.
- */
-void load_multicolor_sprites(void)
-{
-    ulong sz;
-    char fname[100];
-
-    sprintf(fname, "data/mspr-%d.dat", ingame.TrenchcoatPreference);
-    LbFileLoadAt(fname, m_spr_data);
-    sprintf(fname, "data/mspr-%d.tab", ingame.TrenchcoatPreference);
-    sz = LbFileLoadAt(fname, m_sprites);
-    m_sprites_end = (struct TbSprite *)((ubyte *)m_sprites + sz);
-    LbSpriteSetup(m_sprites, m_sprites_end, m_spr_data);
-}
-
-void reset_multicolor_sprites(void)
-{
-    LbSpriteReset(m_sprites, m_sprites_end, m_spr_data);
-}
-
-void debug_multicolor_sprite(int idx)
-{
+    char locstr[52];
+    ubyte *p_buf;
+    long len;
     int i;
-    char strdata[100];
-    char *str;
-    struct TbSprite *spr;
-    unsigned char *ptr;
-    spr = &m_sprites[idx];
-    str = strdata;
-    sprintf(str, "spr %d width %d height %d ptr 0x%lx data",
-      idx, (int)spr->SWidth, (int)spr->SHeight, (ulong)spr->Data);
-    ptr = spr->Data;
-    for (i = 0; i < 10; i++)
+    TbResult ret;
+
+    p_buf = *pp_buf;
+    ret = Lb_OK;
+
+    for (i = 0; i < 6; i++)
     {
-        str = strdata + strlen(strdata);
-        sprintf(str, " %02x", (int)*ptr);
-        ptr++;
+        dword_1C529C[i] = (short *)p_buf;
+        sprintf(locstr, "%s/mapout%02d.dat", dir, i);
+        len = LbFileLoadAt(locstr, dword_1C529C[i]);
+        if (len == -1) {
+            LOGERR("Could not read file '%s'", locstr);
+            ret = Lb_FAIL;
+            len = 64;
+            LbMemorySet(p_buf, '\0', len);
+        }
+        p_buf += len;
     }
-    LOGDBG("m_sprites: %s", strdata);
+
+    landmap_2B4 = (short *)p_buf;
+    sprintf(locstr, "%s/mapinsid.dat", dir);
+    len = LbFileLoadAt(locstr, p_buf);
+    if (len == -1) {
+        ret = Lb_FAIL;
+        len = 64;
+        LbMemorySet(p_buf, '\0', len);
+    }
+    p_buf += len;
+
+    *pp_buf = p_buf;
+    return ret;
 }
 
-/** Loads and sets up panel sprites for currently set PanelPermutation.
- */
-void load_pop_sprites(void)
+TbResult init_read_all_sprite_files(void)
 {
-    char fname[DISKPATH_SIZE];
-    int file_len;
-    sprintf(fname, "data/pop%d-0.dat", -ingame.PanelPermutation - 1);
-    LbFileLoadAt(fname, pop1_data);
-    sprintf(fname, "data/pop%d-0.tab", -ingame.PanelPermutation - 1);
-    file_len = LbFileLoadAt(fname, pop1_sprites);
-    pop1_sprites_end = &pop1_sprites[file_len/sizeof(struct TbSprite)];
-    LbSpriteSetup(pop1_sprites, pop1_sprites_end, pop1_data);
+    PathInfo *pinfo;
+    ubyte *p_buf;
+    TbResult tret, ret;
+
+    pinfo = &game_dirs[DirPlace_Data];
+    p_buf = (ubyte *)&purple_draw_list[750];
+    tret = Lb_OK;
+
+    ret = load_sprites_icons(&p_buf, pinfo->directory);
+    if (tret == Lb_OK)
+        tret = ret;
+
+    ret = load_sprites_wicons(&p_buf, pinfo->directory);
+    if (tret == Lb_OK)
+        tret = ret;
+
+    ret = load_sprites_panel(&p_buf, pinfo->directory);
+    if (tret == Lb_OK)
+        tret = ret;
+
+    ret = load_sprites_mouse(&p_buf, pinfo->directory);
+    if (tret == Lb_OK)
+        tret = ret;
+
+    ret = load_sprites_med_font(&p_buf, pinfo->directory);
+    if (tret == Lb_OK)
+        tret = ret;
+
+    ret = load_sprites_big_font(&p_buf, pinfo->directory);
+    if (tret == Lb_OK)
+        tret = ret;
+
+    ret = load_sprites_small_med_font(&p_buf, pinfo->directory);
+    if (tret == Lb_OK)
+        tret = ret;
+
+    ret = load_sprites_med2_font(&p_buf, pinfo->directory);
+    if (tret == Lb_OK)
+        tret = ret;
+
+    ret = load_sprites_small2_font(&p_buf, pinfo->directory);
+    if (tret == Lb_OK)
+        tret = ret;
+
+    dword_1C6DE4 = p_buf;
+    p_buf += 24480;
+    dword_1C6DE8 = p_buf;
+    p_buf += 24480;
+
+    ret = load_mapout(&p_buf, pinfo->directory);
+    if (tret == Lb_OK)
+        tret = ret;
+
+    // TODO why adding this without remembering previous pointer?
+    p_buf += 41005;
+    back_buffer = p_buf;
+
+    setup_sprites_icons();
+    setup_sprites_wicons();
+    setup_sprites_panel();
+    setup_sprites_mouse();
+    setup_sprites_small_font();
+    setup_sprites_small2_font();
+    setup_sprites_small_med_font();
+    setup_sprites_med_font();
+    setup_sprites_med2_font();
+    setup_sprites_big_font();
+
+    if (tret == Lb_FAIL) {
+        LOGERR("Some files were not loaded successfully");
+        ingame.DisplayMode = DpM_UNKN_1;
+    }
+    return tret;
+}
+
+TbResult prep_multicolor_sprites(void)
+{
+    PathInfo *pinfo;
+    TbResult ret;
+
+    pinfo = &game_dirs[DirPlace_Data];
+    ret = load_multicolor_sprites(pinfo->directory);
+    setup_multicolor_sprites();
+    if (ret == Lb_FAIL) {
+        LOGERR("Some files were not loaded successfully");
+    }
+    return ret;
+}
+
+TbResult prep_pop_sprites(void)
+{
+    PathInfo *pinfo;
+    TbResult ret;
+
+    pinfo = &game_dirs[DirPlace_Data];
+    ret = load_pop_sprites(pinfo->directory);
+    setup_pop_sprites();
+    if (ret == Lb_FAIL) {
+        LOGERR("Some files were not loaded successfully");
+    }
+    return ret;
 }
 
 void setup_host(void)
@@ -3857,7 +3628,7 @@ void setup_host(void)
     ingame.TrenchcoatPreference = 0;
     setup_multicolor_sprites();
     ingame.PanelPermutation = -2;
-    load_pop_sprites();
+    prep_pop_sprites();
     game_panel = game_panel_lo;
     init_memory(mem_game);
 
@@ -4922,7 +4693,7 @@ void prep_single_mission(void)
     load_missions(background_type);
     load_objectives_text();
     init_game(0);
-    load_multicolor_sprites();
+    prep_multicolor_sprites();
     LbScreenClear(0);
     generate_shadows_for_multicolor_sprites();
     adjust_mission_engine_to_video_mode();
@@ -5122,7 +4893,7 @@ void game_setup(void)
     setup_color_lookups();
     init_things();
     debug_trace_setup(-2);
-    LbSpriteSetup(small_font, small_font_end, small_font_data);
+    setup_sprites_small_font();
     load_peep_type_stats();
     load_campaigns();
     players[local_player_no].MissionAgents = 0x0F;
@@ -5197,81 +4968,20 @@ void show_unkn3A_screen(int a1)
     // Empty
 }
 
-void draw_line_purple_list(int x1, int y1, int x2, int y2, int colour)
+void compute_scanner_zoom(void)
 {
-    asm volatile (
-      "push %4\n"
-      "call ASM_draw_line_purple_list\n"
-        : : "a" (x1), "d" (y1), "b" (x2), "c" (y2), "g" (colour));
-}
+    short zoom, scmin, scmax;
 
-void draw_box_purple_list(int x, int y, ulong width, ulong height, int colour)
-{
-    asm volatile (
-      "push %4\n"
-      "call ASM_draw_box_purple_list\n"
-        : : "a" (x), "d" (y), "b" (width), "c" (height), "g" (colour));
-}
-
-void draw_text_purple_list2(int x, int y, const char *text, ushort line)
-{
-    asm volatile (
-      "call ASM_draw_text_purple_list2\n"
-        : : "a" (x), "d" (y), "b" (text), "c" (line));
-}
-
-void draw_sprite_purple_list(int x, int y, struct TbSprite *sprite)
-{
-    asm volatile (
-      "call ASM_draw_sprite_purple_list\n"
-        : : "a" (x), "d" (y), "b" (sprite));
-}
-
-void draw_trig_purple_list(long x2, long y2, long x3, long y3)
-{
-    asm volatile (
-      "call ASM_draw_trig_purple_list\n"
-        : : "a" (x2), "d" (y2), "b" (x3), "c" (y3));
-}
-
-void copy_box_purple_list(long x, long y, ulong width, ulong height)
-{
-    asm volatile (
-      "call ASM_copy_box_purple_list\n"
-        : : "a" (x), "d" (y), "b" (width), "c" (height));
-}
-
-void draw_hotspot_purple_list(int x, int y)
-{
-    asm volatile (
-      "call ASM_draw_hotspot_purple_list\n"
-        : : "a" (x), "d" (y));
-}
-
-ubyte flashy_draw_purple_shape(struct ScreenShape *shape)
-{
-    ubyte ret;
-    asm volatile ("call ASM_flashy_draw_purple_shape\n"
-        : "=r" (ret) : "a" (shape));
-    return ret;
-}
-
-ubyte flashy_draw_purple_button(struct ScreenButton *button)
-{
-    ubyte ret;
-    asm volatile ("call ASM_flashy_draw_purple_button\n"
-        : "=r" (ret) : "a" (button));
-    return ret;
-}
-
-void draw_triangle_purple_list(int x1, int y1, int x2, int y2, int x3, int y3, TbPixel colour)
-{
-    asm volatile (
-      "push %6\n"
-      "push %5\n"
-      "push %4\n"
-      "call ASM_draw_triangle_purple_list\n"
-        : : "a" (x1), "d" (y1), "b" (x2), "c" (y2), "g" (x3), "g" (y3), "g" (colour));
+    if (ingame.Scanner.X2 > ingame.Scanner.X1)
+        zoom = SCANNER_base_zoom_factor * 128 / (ingame.Scanner.X2 - ingame.Scanner.X1);
+    else
+        zoom = SCANNER_base_zoom_factor;
+    scmin = get_overall_scale_min();
+    scmax = get_overall_scale_max();
+    if (scmax <= scmin)
+        scmin = scmax - 1;
+    zoom += SCANNER_user_zoom_factor * (user_zoom_max - get_unscaled_zoom(overall_scale)) / (scmax - scmin);
+    SCANNER_set_zoom(zoom);
 }
 
 void show_game_engine(void)
@@ -5281,7 +4991,7 @@ void show_game_engine(void)
     dcthing = players[local_player_no].DirectControl[0];
     process_view_inputs(dcthing);// inlined call gengine_ctrl
 
-    SCANNER_set_zoom((900 - overall_scale) >> 1);
+    compute_scanner_zoom();
     process_engine_unk1();
     process_engine_unk2();
     process_engine_unk3();
@@ -5410,247 +5120,6 @@ void BAT_play(void)
 {
     asm volatile ("call ASM_BAT_play\n"
         :  :  : "eax" );
-}
-
-TbResult init_read_all_sprite_files(void)
-{
-#if 0
-    TbResult ret;
-    asm volatile ("call ASM_init_read_all_sprite_files\n"
-        : "=r" (ret) : );
-    return ret;
-#endif
-    char locstr[52];
-    PathInfo *pinfo;
-    ubyte *bufptr;
-    TbResult ret;
-    long len;
-    int i;
-
-    pinfo = &game_dirs[DirPlace_Data];
-    bufptr = (ubyte *)&purple_draw_list[750];
-    ret = Lb_OK;
-
-    sprites_Icons0_0_data = bufptr;
-    sprintf(locstr, "%s/icons0-0.dat", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 0;
-    }
-    bufptr += len;
-    sprites_Icons0_0 = (struct TbSprite *)bufptr;
-    sprintf(locstr, "%s/icons0-0.tab", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 32 * sizeof(struct TbSprite);
-        LbMemorySet(bufptr, '\0', len);
-    }
-    bufptr += len;
-    sprites_Icons0_0_end = (struct TbSprite *)bufptr;
-
-    unk1_sprites_data = bufptr;
-    sprintf(locstr, "%s/w-icons.dat", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 0;
-    }
-    bufptr += len;
-    unk1_sprites = (struct TbSprite *)bufptr;
-    sprintf(locstr, "%s/w-icons.tab", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 32 * sizeof(struct TbSprite);
-        LbMemorySet(bufptr, '\0', len);
-    }
-    bufptr += len;
-    unk1_sprites_end = (struct TbSprite *)bufptr;
-
-    unk2_sprites_data = bufptr;
-    sprintf(locstr, "%s/panel0-0.dat", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 0;
-    }
-    bufptr += len;
-    unk2_sprites = (struct TbSprite *)bufptr;
-    sprintf(locstr, "%s/panel0-0.tab", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 32 * sizeof(struct TbSprite);
-        LbMemorySet(bufptr, '\0', len);
-    }
-    bufptr += len;
-    unk2_sprites_end = (struct TbSprite *)bufptr;
-
-    unk3_sprites_data = bufptr;
-    sprintf(locstr, "%s/mouse-0.dat", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 0;
-    }
-    bufptr += len;
-    unk3_sprites = (struct TbSprite *)bufptr;
-    sprintf(locstr, "%s/mouse-0.tab", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 32 * sizeof(struct TbSprite);
-        LbMemorySet(bufptr, '\0', len);
-    }
-    bufptr += len;
-    unk3_sprites_end = (struct TbSprite *)bufptr;
-
-    med_font_data = bufptr;
-    sprintf(locstr, "%s/font0-1.dat", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 0;
-    }
-    bufptr += len;
-    med_font = (struct TbSprite *)bufptr;
-    sprintf(locstr, "%s/font0-1.tab", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 128 * sizeof(struct TbSprite);
-        LbMemorySet(bufptr, '\0', len);
-    }
-    bufptr += len;
-    med_font_end = (struct TbSprite *)bufptr;
-
-    big_font_data = bufptr;
-    sprintf(locstr, "%s/font0-2.dat", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 0;
-    }
-    bufptr += len;
-    big_font = (struct TbSprite *)bufptr;
-    sprintf(locstr, "%s/font0-2.tab", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 128 * sizeof(struct TbSprite);
-        LbMemorySet(bufptr, '\0', len);
-    }
-    bufptr += len;
-    big_font_end = (struct TbSprite *)bufptr;
-
-    small_med_font_data = bufptr;
-    sprintf(locstr, "%s/font0-3.dat", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 0;
-    }
-    bufptr += len;
-    small_med_font = (struct TbSprite *)bufptr;
-    sprintf(locstr, "%s/font0-3.tab", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 128 * sizeof(struct TbSprite);
-        LbMemorySet(bufptr, '\0', len);
-    }
-    bufptr += len;
-    small_med_font_end = (struct TbSprite *)bufptr;
-
-    med2_font_data = bufptr;
-    sprintf(locstr, "%s/font0-4.dat", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 0;
-    }
-    bufptr += len;
-    med2_font = (struct TbSprite *)bufptr;
-    sprintf(locstr, "%s/font0-4.tab", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 128 * sizeof(struct TbSprite);
-        LbMemorySet(bufptr, '\0', len);
-    }
-    bufptr += len;
-    med2_font_end = (struct TbSprite *)bufptr;
-
-    small2_font_data = bufptr;
-    sprintf(locstr, "%s/font0-5.dat", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 0;
-    }
-    bufptr += len;
-    small2_font = (struct TbSprite *)bufptr;
-    sprintf(locstr, "%s/font0-5.tab", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 128 * sizeof(struct TbSprite);
-        LbMemorySet(bufptr, '\0', len);
-    }
-    bufptr += len;
-    small2_font_end = (struct TbSprite *)bufptr;
-
-    dword_1C6DE4 = bufptr;
-    bufptr += 24480;
-    dword_1C6DE8 = bufptr;
-    bufptr += 24480;
-
-    for (i = 0; i < 6; i++)
-    {
-        dword_1C529C[i] = (short *)bufptr;
-        sprintf(locstr, "%s/mapout%02d.dat", pinfo->directory, i);
-        len = LbFileLoadAt(locstr, dword_1C529C[i]);
-        if (len == -1) {
-            LOGERR("Could not read file '%s'", locstr);
-            ret = Lb_FAIL;
-            len = 64;
-            LbMemorySet(bufptr, '\0', len);
-        }
-        bufptr += len;
-    }
-
-    landmap_2B4 = (short *)bufptr;
-    sprintf(locstr, "%s/mapinsid.dat", pinfo->directory);
-    len = LbFileLoadAt(locstr, bufptr);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 64;
-        LbMemorySet(bufptr, '\0', len);
-    }
-    bufptr += len;
-
-    // TODO why adding this without remembering previous pointer?
-    bufptr += 41005;
-    back_buffer = bufptr;
-
-    LbSpriteSetup(sprites_Icons0_0, sprites_Icons0_0_end, sprites_Icons0_0_data);
-    LbSpriteSetup(unk1_sprites, unk1_sprites_end, unk1_sprites_data);
-    LbSpriteSetup(unk2_sprites, unk2_sprites_end, unk2_sprites_data);
-    LbSpriteSetup(unk3_sprites, unk3_sprites_end, unk3_sprites_data);
-    LbSpriteSetup(small_font, small_font_end, small_font_data);
-    LbSpriteSetup(small2_font, small2_font_end, small2_font_data);
-    LbSpriteSetup(small_med_font, small_med_font_end, small_med_font_data);
-    LbSpriteSetup(med_font, med_font_end, med_font_data);
-    LbSpriteSetup(med2_font, med2_font_end, med2_font_data);
-    LbSpriteSetup(big_font, big_font_end, big_font_data);
-
-    if (ret == Lb_FAIL) {
-        LOGERR("Some files were not loaded successfully");
-        ingame.DisplayMode = DpM_UNKN_1;
-    }
-    return ret;
 }
 
 ubyte change_panel_permutation(ubyte click)
@@ -7098,14 +6567,6 @@ void local_to_worldr(int *dx, int *dy, int *dz)
         : : "a" (dx), "d" (dy), "b" (dz));
 }
 
-ushort my_draw_text(short x, short y, const char *text, ushort startline)
-{
-    ushort ret;
-    asm volatile ("call ASM_my_draw_text\n"
-        : "=r" (ret) : "a" (x), "d" (y), "b" (text), "c" (startline));
-    return ret;
-}
-
 void do_scroll_map(void)
 {
     PlayerInfo *p_locplayer;
@@ -7614,7 +7075,7 @@ ubyte do_user_interface(void)
         StopCD();
         if (++ingame.TrenchcoatPreference > 5)
             ingame.TrenchcoatPreference = 0;
-        load_multicolor_sprites();
+        prep_multicolor_sprites();
     }
 
     // adjust palette brightness
@@ -8672,12 +8133,6 @@ void init_net_players(void)
     }
 }
 
-void draw_flic_purple_list(void (*fn)())
-{
-    asm volatile ("call ASM_draw_flic_purple_list\n"
-        : : "a" (fn));
-}
-
 void update_mission_time(char a1)
 {
     asm volatile ("call ASM_update_mission_time\n"
@@ -9109,285 +8564,6 @@ void net_unkn_func_33(void)
     }
 }
 
-void draw_purple_screen_hotspots(ushort hsnext)
-{
-    lbDisplay.DrawFlags = 0;
-    if (purple_joy_move)
-    {
-        if (!joy.DigitalY[0] && !joy.DigitalX[0])
-            purple_joy_move = 0;
-    }
-    else if (joy.DigitalY[0] == 1)
-    {
-        ulong hmin;
-        short imin, i;
-
-        hmin = 0x80000000;
-        imin = 0;
-        for (i = 0; i < hsnext; i++)
-        {
-            short ms_x, ms_y;
-            short shift_w, shift_h;
-
-            ms_x = lbDisplay.GraphicsScreenHeight < 400 ? 2 * lbDisplay.MMouseX : lbDisplay.MMouseX;
-            ms_y = lbDisplay.GraphicsScreenHeight < 400 ? 2 * lbDisplay.MMouseY : lbDisplay.MMouseY;
-            shift_w = hotspot_buffer[i].X - ms_x;
-            shift_h = hotspot_buffer[i].Y - ms_y;
-            if ((shift_h > 0) && (shift_h > abs(shift_w)))
-            {
-                ulong hcur;
-                if (shift_h <= abs(shift_w))
-                    hcur = (shift_h >> 1) + abs(shift_w);
-                else
-                    hcur = shift_h + (abs(shift_w) >> 1);
-                if ((hcur < hmin) && (hcur != 0)) {
-                    hmin = hcur;
-                    imin = i;
-                }
-            }
-        }
-        if (hmin != 0x80000000)
-            LbMouseSetPosition(hotspot_buffer[imin].X, hotspot_buffer[imin].Y);
-        purple_joy_move = 1;
-    }
-    else if (joy.DigitalY[0] == -1)
-    {
-        ulong hmin;
-        short imin, i;
-
-        hmin = 0x80000000;
-        imin = 0;
-        for (i = 0; i < hsnext; i++)
-        {
-            short ms_x, ms_y;
-            short shift_w, shift_h;
-
-            ms_x = lbDisplay.GraphicsScreenHeight < 400 ? 2 * lbDisplay.MMouseX : lbDisplay.MMouseX;
-            ms_y = lbDisplay.GraphicsScreenHeight < 400 ? 2 * lbDisplay.MMouseY : lbDisplay.MMouseY;
-            shift_w = hotspot_buffer[i].X - ms_x;
-            shift_h = ms_y - hotspot_buffer[i].Y;
-            if ((shift_h > 0) && (shift_h > abs(shift_w)))
-            {
-                ulong hcur;
-                if (shift_h <= abs(shift_w))
-                    hcur = (shift_h >> 1) + abs(shift_w);
-                else
-                    hcur = shift_h + (abs(shift_w) >> 1);
-                if ((hcur < hmin) && (hcur != 0)) {
-                    hmin = hcur;
-                    imin = i;
-                }
-            }
-        }
-        if (hmin != 0x80000000)
-            LbMouseSetPosition(hotspot_buffer[imin].X, hotspot_buffer[imin].Y);
-        purple_joy_move = 1;
-    }
-    else if (joy.DigitalX[0] == 1)
-    {
-        ulong hmin;
-        short imin, i;
-
-        hmin = 0x80000000;
-        imin = 0;
-        for (i = 0; i < hsnext; i++)
-        {
-            short ms_x, ms_y;
-            short shift_w, shift_h;
-
-            ms_x = lbDisplay.GraphicsScreenHeight < 400 ? 2 * lbDisplay.MMouseX : lbDisplay.MMouseX;
-            ms_y = lbDisplay.GraphicsScreenHeight < 400 ? 2 * lbDisplay.MMouseY : lbDisplay.MMouseY;
-            shift_w = hotspot_buffer[i].X - ms_x;
-            shift_h = hotspot_buffer[i].Y - ms_y;
-            if ((shift_w > 0) && (shift_w > abs(shift_h)))
-            {
-                ulong hcur;
-                if (abs(shift_h) <= shift_w)
-                    hcur = shift_w + (abs(shift_h) >> 1);
-                else
-                    hcur = (shift_w >> 1) + abs(shift_h);
-                if ((hcur < hmin) && (hcur != 0)) {
-                    hmin = hcur;
-                    imin = i;
-                }
-            }
-        }
-        if (hmin != 0x80000000)
-            LbMouseSetPosition(hotspot_buffer[imin].X, hotspot_buffer[imin].Y);
-        purple_joy_move = 1;
-    }
-    else if (joy.DigitalX[0] == -1)
-    {
-        ulong hmin;
-        short imin, i;
-
-        hmin = 0x80000000;
-        imin = 0;
-        for (i = 0; i < hsnext; i++)
-        {
-            short ms_x, ms_y;
-            short shift_w, shift_h;
-
-            ms_x = lbDisplay.GraphicsScreenHeight < 400 ? 2 * lbDisplay.MMouseX : lbDisplay.MMouseX;
-            ms_y = lbDisplay.GraphicsScreenHeight < 400 ? 2 * lbDisplay.MMouseY : lbDisplay.MMouseY;
-            shift_w = ms_x - hotspot_buffer[i].X;
-            shift_h = hotspot_buffer[i].Y - ms_y;
-            if ((shift_w > 0) && (shift_w > abs(shift_h)))
-            {
-                ulong hcur;
-                if (abs(shift_h) <= shift_w)
-                    hcur = shift_w + (abs(shift_h) >> 1);
-                else
-                    hcur = (shift_w >> 1) + abs(shift_h);
-                if ((hcur < hmin) && (hcur != 0)) {
-                    hmin = hcur;
-                    imin = i;
-                }
-            }
-        }
-        if (hmin != 0x80000000)
-            LbMouseSetPosition(hotspot_buffer[imin].X, hotspot_buffer[imin].Y);
-        purple_joy_move = 1;
-    }
-}
-
-void draw_purple_screen(void)
-{
-    struct PurpleDrawItem *pditem;
-    struct PolyPoint point_a;
-    struct PolyPoint point_c;
-    struct PolyPoint point_b;
-    ushort hsnext;
-
-    short x, y;
-    short w, h;
-    short shift_w, shift_h;
-
-    LbScreenSetGraphicsWindow(0, 0, lbDisplay.GraphicsScreenWidth,
-        lbDisplay.GraphicsScreenHeight);
-    my_set_text_window(0, 0, lbDisplay.GraphicsScreenWidth,
-        lbDisplay.GraphicsScreenHeight);
-    hsnext = 0;
-    point_a.X = proj_origin.X;
-    point_a.Y = proj_origin.Y;
-    point_a.S = 0x200000;
-    point_c.S = 0x200000;
-    point_b.S = 0x8000;
-    vec_mode = 17;
-    for (pditem = purple_draw_list; pditem < &purple_draw_list[purple_draw_index]; pditem++)
-    {
-        lbDisplay.DrawFlags = pditem->Flags;
-
-        switch (pditem->Type)
-        {
-        case PuDT_BOX:
-            LbDrawBox(pditem->U.Box.X, pditem->U.Box.Y, pditem->U.Box.Width,
-                pditem->U.Box.Height, pditem->U.Box.Colour);
-            if ((lbDisplay.DrawFlags & 0x8000) != 0)
-            {
-                hotspot_buffer[hsnext].X = pditem->U.Box.X + (pditem->U.Box.Width >> 1);
-                hotspot_buffer[hsnext].Y = pditem->U.Box.Y + (pditem->U.Box.Height >> 1);
-                hsnext++;
-            }
-            break;
-        case PuDT_TEXT:
-            lbDisplay.DrawColour = pditem->U.Text.Colour;
-            lbFontPtr = pditem->U.Text.Font;
-            my_set_text_window(pditem->U.Text.WindowX, pditem->U.Text.WindowY,
-              pditem->U.Text.Width, pditem->U.Text.Height);
-            my_draw_text(pditem->U.Text.X, pditem->U.Text.Y,
-              pditem->U.Text.Text, pditem->U.Text.Line);
-            if ((lbDisplay.DrawFlags & 0x8000) != 0)
-            {
-                w = my_string_width(pditem->U.Text.Text);
-                if ((w >= pditem->U.Text.Width)
-                  || ((lbDisplay.DrawFlags & Lb_TEXT_HALIGN_CENTER)) != 0)
-                {
-                    x = pditem->U.Text.WindowX;
-                    shift_w = pditem->U.Text.Width >> 1;
-                }
-                else
-                {
-                    x = pditem->U.Text.X + pditem->U.Text.WindowX;
-                    shift_w = w >> 1;
-                }
-                shift_h = font_height('A') >> 1;
-                y = pditem->U.Text.Y + pditem->U.Text.WindowY;
-                hotspot_buffer[hsnext].X = x + shift_w;
-                hotspot_buffer[hsnext].Y = y + shift_h;
-                hsnext++;
-            }
-            break;
-        case PuDT_UNK03:
-            break;
-        case PuDT_COPYBOX:
-            x = pditem->U.Box.X;
-            y = pditem->U.Box.Y;
-            shift_w = pditem->U.Box.Width;
-            shift_h = pditem->U.Box.Height;
-            LbScreenCopyBox(lbDisplay.WScreen, back_buffer,
-                x, y, x, y, shift_w, shift_h);
-            break;
-        case PuDT_SPRITE:
-            lbDisplay.DrawColour = pditem->U.Box.Colour;
-            if ((lbDisplay.DrawFlags & Lb_TEXT_ONE_COLOR) != 0)
-                LbSpriteDrawOneColour(pditem->U.Sprite.X, pditem->U.Sprite.Y,
-                  pditem->U.Sprite.Sprite, lbDisplay.DrawColour);
-            else
-                LbSpriteDraw(pditem->U.Sprite.X, pditem->U.Sprite.Y,
-                  pditem->U.Sprite.Sprite);
-            if ((lbDisplay.DrawFlags & 0x8000) != 0)
-            {
-                w = pditem->U.Sprite.Sprite->SWidth;
-                h = pditem->U.Sprite.Sprite->SHeight;
-                hotspot_buffer[hsnext].X = pditem->U.Sprite.X + (w >> 1);
-                hotspot_buffer[hsnext].X = pditem->U.Sprite.Y + (h >> 1);
-                hsnext++;
-            }
-            break;
-        case PuDT_POTRIG:
-            vec_colour = pditem->U.Line.Colour;
-            point_c.X = pditem->U.Line.X1;
-            point_c.Y = pditem->U.Line.Y1;
-            point_b.X = pditem->U.Line.X2;
-            point_b.Y = pditem->U.Line.Y2;
-            if ((point_c.Y - point_b.Y) * (point_b.X - point_a.X)
-                - (point_b.Y - point_a.Y) * (point_c.X - point_b.X) > 0)
-                trig(&point_a, &point_b, &point_c);
-            else
-                trig(&point_a, &point_c, &point_b);
-            break;
-        case PuDT_FLIC:
-            pditem->U.Flic.Function();
-            break;
-        case PuDT_SLANTBOX:
-            LbDrawSlantBox(pditem->U.Box.X, pditem->U.Box.Y, pditem->U.Box.Width, pditem->U.Box.Height);
-            break;
-        case PuDT_LINE:
-            LbDrawLine(pditem->U.Line.X1, pditem->U.Line.Y1,
-                pditem->U.Line.X2, pditem->U.Line.Y2, pditem->U.Line.Colour);
-            break;
-        case PuDT_HVLINE:
-            LbDrawHVLine(pditem->U.Line.X1, pditem->U.Line.Y1,
-                pditem->U.Line.X2, pditem->U.Line.Y2, pditem->U.Line.Colour);
-            break;
-        case PuDT_TRIANGLE:
-            LbDrawTriangle(pditem->U.Triangle.X1, pditem->U.Triangle.Y1,
-                pditem->U.Triangle.X2, pditem->U.Triangle.Y2,
-                pditem->U.Triangle.X3, pditem->U.Triangle.Y3, pditem->U.Triangle.Colour);
-            break;
-        case PuDT_HOTSPOT:
-            hotspot_buffer[hsnext].X = pditem->U.Hotspot.X;
-            hotspot_buffer[hsnext].Y = pditem->U.Hotspot.Y;
-            hsnext++;
-            break;
-        }
-    }
-    purple_draw_index = 0;
-
-    draw_purple_screen_hotspots(hsnext);
-}
-
 void show_menu_screen_st2(void)
 {
     if ( in_network_game )
@@ -9541,22 +8717,6 @@ void update_open_brief(void)
     }
 }
 
-void copy_from_screen_ani(ubyte *buf)
-{
-    int y;
-    ubyte *o;
-    const ubyte *inp;
-
-    o = buf;
-    inp = lbDisplay.WScreen;
-    for (y = 0; y < 256; y++)
-    {
-        memcpy(o, inp, 256);
-        o += 256;
-        inp += lbDisplay.GraphicsScreenWidth;
-    }
-}
-
 void show_load_and_prep_mission(void)
 {
     init_random_seed();
@@ -9641,7 +8801,7 @@ void show_load_and_prep_mission(void)
     // Set up remaining graphics data and controls
     if ( start_into_mission )
     {
-        load_multicolor_sprites();
+        prep_multicolor_sprites();
         LbScreenClear(0);
         generate_shadows_for_multicolor_sprites();
         adjust_mission_engine_to_video_mode();

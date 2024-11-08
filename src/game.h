@@ -154,115 +154,7 @@ enum MissionFMVPlay {
     MPly_Outro,
 };
 
-enum PurpleDrawType {
-  PuDT_NONE = 0,
-  PuDT_BOX = 1,
-  PuDT_TEXT = 2,
-  PuDT_UNK03 = 3,
-  PuDT_COPYBOX = 4,
-  PuDT_SPRITE = 5,
-  PuDT_POTRIG = 6, /* Textured triangle from projector origin point to given line */
-  PuDT_FLIC = 7,
-  PuDT_SLANTBOX = 8,
-  PuDT_LINE = 9,
-  PuDT_HVLINE = 10,
-  PuDT_TRIANGLE = 11,
-  PuDT_HOTSPOT = 12,
-};
-
 struct Thing;
-
-struct ScreenPoint {
-	short X;
-	short Y;
-};
-
-struct SRect {
-	short x;
-	short y;
-	short w;
-	short h;
-};
-
-struct DITrig { // sizeof=48
-	ulong *vlcbuf[2];
-	long vlcid;
-	ushort *imgbuf;
-	struct SRect rect[2];
-	long rectid; // offs=0x20
-	struct SRect slice;
-	long isdone; // offs=0x2C
-};
-
-struct DITriangle {
-	short X1;
-	short Y1;
-	short X2;
-	short Y2;
-	short X3;
-	short Y3;
-	ubyte Colour;
-};
-
-struct DIBox {
-	short X;
-	short Y;
-	short Width;
-	short Height;
-	ubyte Colour;
-};
-
-struct DILine {
-	short X1;
-	short Y1;
-	short X2;
-	short Y2;
-	ubyte Colour;
-};
-
-struct DISprite { // sizeof=12
-	short X;
-	short Y;
-	struct TbSprite *Sprite;
-	ubyte Colour;
-};
-
-struct DIText { // sizeof=23
-	short WindowX;
-	short WindowY;
-	short Width;
-	short Height;
-	short X;
-	short Y; // offs=0x0A
-	char *Text;
-	struct TbSprite *Font;
-	ushort Line;
-	ubyte Colour; // offs=0x16
-};
-
-struct DIFlic {
-	void (*Function)();
-};
-
-struct DIHotspot {
-	short X;
-	short Y;
-};
-
-struct PurpleDrawItem { // sizeof=26
-	union {
-		//struct DITrig Trig; // unused? too large to be here
-		struct DITriangle Triangle;
-		struct DIBox Box;
-		struct DILine Line;
-		struct DISprite Sprite;
-		struct DIText Text;
-		struct DIFlic Flic;
-		struct DIHotspot Hotspot;
-	} U;
-	ubyte Type;
-	ushort Flags;
-};
 
 struct ColVect { // sizeof=14
   short X1;
@@ -350,7 +242,7 @@ struct InGame {
     ubyte UseMultiMedia;
     ubyte AutoResearch;
     ubyte GameOver;
-    struct Scanner Scanner;
+    struct Scanner Scanner; // offset=0x0C
     long Credits;
     short fld_unkC4B;
     short fld_unkC4D;
@@ -530,7 +422,6 @@ extern struct SingleObjectFace3 *game_special_object_faces;
 extern struct SingleObjectFace4 *game_special_object_faces4;
 extern struct FloorTile *game_floor_tiles;
 extern ubyte *game_user_heap;
-extern struct SpecialPoint *game_screen_point_pool;
 extern struct UnknBezEdit *bezier_pts;
 extern ushort next_bezier_pt;
 extern ubyte *spare_map_buffer;
@@ -539,12 +430,6 @@ extern ushort next_used_lvl_objective;
 extern struct LevelMisc *game_level_miscs;
 extern long target_old_frameno;
 extern ushort word_176E38;
-
-extern struct TbSprite *pop1_sprites;
-
-extern struct TbSprite *unk2_sprites;
-
-extern struct TbSprite *m_sprites;
 
 extern ubyte byte_1C4A7C;
 extern ubyte byte_1C4A9F;
@@ -612,12 +497,9 @@ extern sbyte mission_result;
 extern char *weapon_text;
 #define weapon_text_len 32768
 
-extern struct PurpleDrawItem *purple_draw_list;
 extern ubyte *save_game_buffer;
 extern char save_active_desc[28];
 extern ubyte *unkn_buffer_05;
-extern ubyte *dword_1C6DE4;
-extern ubyte *dword_1C6DE8;
 extern ubyte scientists_lost;
 extern ulong new_mods_researched;
 extern ulong new_weapons_researched;
@@ -686,9 +568,6 @@ extern uint mouse_map_y;
 extern uint mouse_map_z;
 extern void *scratch_malloc_mem;
 
-extern struct ScreenPoint *hotspot_buffer;
-#define hotspot_buffer_len 512
-
 extern ubyte game_gfx_advanced_lights;
 extern ubyte game_billboard_movies;
 extern ubyte game_gfx_deep_radar;
@@ -718,8 +597,6 @@ void game_transform_path (const char *file_name, char *result);
 const char *game_get_data_path (void);
 const char *game_get_user_path (void);
 
-void load_multicolor_sprites(void);
-
 void read_conf_file(void);
 void game_setup(void);
 void game_process(void);
@@ -729,18 +606,6 @@ void free_texturemaps(void);
 int xdo_next_frame(ubyte a1);
 
 void flic_unkn03(ubyte a1);
-
-void draw_text_purple_list2(int x, int y, const char *text, ushort line);
-void draw_sprite_purple_list(int x, int y, struct TbSprite *sprite);
-void draw_trig_purple_list(long x2, long y2, long x3, long y3);
-void copy_box_purple_list(long x, long y, ulong width, ulong height);
-void draw_box_purple_list(int x, int y, ulong width, ulong height, int colour);
-void draw_line_purple_list(int x1, int y1, int x2, int y2, int colour);
-void draw_triangle_purple_list(int x1, int y1, int x2, int y2, int x3, int y3, TbPixel colour);
-void draw_hotspot_purple_list(int x, int y);
-void draw_purple_screen(void);
-ubyte flashy_draw_purple_shape(struct ScreenShape *shape);
-void draw_flic_purple_list(void (*fn)());
 
 void reload_background(void);
 
@@ -754,7 +619,6 @@ void campaign_new_game_prepare(void);
 
 void process_sound_heap(void);
 void update_danger_music(ubyte a1);
-ushort my_draw_text(short x, short y, const char *text, ushort startline);
 void draw_text_transformed_at_ground(int a1, int a2, const char *text);
 void draw_text_transformed(int coord_x, int coord_y, int coord_z, const char *text);
 
@@ -763,7 +627,6 @@ void draw_new_panel(void);
 void update_map_thing_and_traffic_refs(void);
 void unkn_lights_processing(void);
 void bang_set_detail(int a1);
-void init_free_explode_faces(void);
 int sub_73C64(char *a1, ubyte a2);
 void func_6fe80(int a1, int a2, int a3, int a4, int a5, int a6, ubyte a7);
 void func_6fd1c(int a1, int a2, int a3, int a4, int a5, int a6, ubyte a7);

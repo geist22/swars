@@ -25,7 +25,10 @@
 #include "guitext.h"
 #include "display.h"
 #include "femain.h"
+#include "game_sprts.h"
 #include "game.h"
+#include "purpldrw.h"
+#include "purpldrwlst.h"
 #include "swlog.h"
 /******************************************************************************/
 
