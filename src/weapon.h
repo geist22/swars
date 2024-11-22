@@ -115,6 +115,7 @@ struct WeaponDef {
  */
 struct WeaponDefAdd {
   char Name[12];
+  short FundingClassic;
 };
 
 struct WeaponsFourPack {
@@ -124,6 +125,7 @@ struct WeaponsFourPack {
 #pragma pack()
 /******************************************************************************/
 extern struct WeaponDef weapon_defs[33];
+extern struct WeaponDefAdd weapon_defs_a[33];
 extern struct TbNamedEnum weapon_names[33];
 extern ubyte weapon_tech_level[33];
 extern short persuaded_person_weapons_sell_cost_permil;
