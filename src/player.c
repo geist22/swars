@@ -80,7 +80,7 @@ void cryo_update_agents_from_player(PlayerInfo *p_player)
         p_agent = p_player->MyAgent[plagent];
         if (p_agent->Type != TT_PERSON)
             continue;
-        if ((p_agent->Flag & TngF_Unkn0002) != 0) {
+        if ((p_agent->Flag & TngF_Destroyed) != 0) {
             remove_agent(plagent);
             ++nremoved;
             continue;
@@ -216,6 +216,15 @@ short direct_control_thing_for_player(short plyr)
     else
         dcthing = p_player->DirectControl[0];
     return dcthing;
+}
+
+void player_target_clear(short plyr)
+{
+    PlayerInfo *p_player;
+
+    p_player = &players[plyr];
+    p_player->Target = 0;
+    p_player->TargetType = 0;
 }
 
 /******************************************************************************/
