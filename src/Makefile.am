@@ -65,10 +65,14 @@ swars_SOURCES = \
 	drawtext.h \
 	enginbckt.c \
 	enginbckt.h \
-	engindrwlst.c \
-	engindrwlst.h \
+	engindrwlstm.c \
+	engindrwlstm.h \
+	engindrwlstx.c \
+	engindrwlstx.h \
 	enginfexpl.c \
 	enginfexpl.h \
+	enginfloor.c \
+	enginfloor.h \
 	enginlights.c \
 	enginlights.h \
 	enginpriobjs.c \
@@ -143,6 +147,8 @@ swars_SOURCES = \
 	joy_modul2.sx \
 	keyboard.c \
 	keyboard.h \
+	lvdraw3d.c \
+	lvdraw3d.h \
 	lvobjctv.c \
 	lvobjctv.h \
 	lvfiles.c \
@@ -194,6 +200,10 @@ swars_SOURCES = \
 	thing.h \
 	thing_debug.c \
 	thing_debug_s.sx \
+	tngcolisn.c \
+	tngcolisn.h \
+	tngobjdrw.c \
+	tngobjdrw.h \
 	timer.c \
 	timer.h \
 	unix.c \

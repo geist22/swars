@@ -29,6 +29,7 @@
 #include "matrix.h"
 #include "sound.h"
 #include "thing.h"
+#include "tngcolisn.h"
 #include "vehtraffic.h"
 #include "swlog.h"
 /******************************************************************************/
@@ -44,34 +45,6 @@ struct Thing *create_building_thing(int x, int y, int z, ushort obj, ushort nobj
       "call ASM_create_building_thing\n"
         : "=r" (ret) : "a" (x), "d" (y), "b" (z), "c" (obj), "g" (nobj), "g" (a6));
     return ret;
-}
-
-void set_dome_col(struct Thing *p_building, ubyte flag)
-{
-    struct ColVectList *p_cvlist;
-    ushort vl_beg, vl_end;
-    ushort  vl;
-
-    // The thing data contains properties with range of ColVectList
-    // which can switch the passability
-    vl_beg = p_building->U.UObject.BuildStartVect;
-    vl_end = vl_beg + p_building->U.UObject.BuildNumbVect;
-    if (flag)
-    {
-        for (vl = vl_beg; vl < vl_end; vl++)
-        {
-            p_cvlist = &game_col_vects_list[vl];
-            p_cvlist->NextColList |= 0x8000;
-        }
-    }
-    else
-    {
-        for (vl = vl_beg; vl < vl_end; vl++)
-        {
-            p_cvlist = &game_col_vects_list[vl];
-            p_cvlist->NextColList &= ~0x8000;
-        }
-    }
 }
 
 void do_dome_rotate1(struct Thing *p_building)
@@ -289,9 +262,9 @@ void collapse_building_shuttle_loader(short x, short y, short z, struct Thing *p
         else
         {
             p_thing = &things[thing];
-            if ((p_thing->Flag & TngF_Unkn0002) != 0)
+            if ((p_thing->Flag & TngF_Destroyed) != 0)
                 break;
-            p_thing->Flag |= TngF_Unkn0002;
+            p_thing->Flag |= TngF_Destroyed;
             explode_thing_building(thing, x, y, z);
             p_thing->Type = TT_UNKN55;
         }
@@ -316,9 +289,9 @@ void collapse_building_shuttle_loader(short x, short y, short z, struct Thing *p
         else
         {
             p_thing = &things[thing];
-            if ((p_thing->Flag & TngF_Unkn0002) != 0)
+            if ((p_thing->Flag & TngF_Destroyed) != 0)
                 break;
-            p_thing->Flag |= TngF_Unkn0002;
+            p_thing->Flag |= TngF_Destroyed;
             explode_thing_building(thing, x, y, z);
             p_thing->Type = TT_UNKN55;
         }
@@ -355,7 +328,7 @@ void collapse_building_station(struct Thing *p_building)
                     p_thing = &things[thing];
                     if ((p_thing->Type == TT_BUILDING)
                       && (p_thing->SubType == SubTT_BLD_1C)
-                      && ((p_thing->Flag & TngF_Unkn0002) == 0))
+                      && ((p_thing->Flag & TngF_Destroyed) == 0))
                     {
                         collapse_building(x << 8, 0, z << 8, p_thing);
                         break; // do not expect more than one building on a tile
@@ -420,12 +393,12 @@ void collapse_building(short x, short y, short z, struct Thing *p_building)
         break;
     }
 
-    if ((p_building->Flag & TngF_Unkn0002) == 0)
+    if ((p_building->Flag & TngF_Destroyed) == 0)
     {
         struct SingleObject *p_sobj;
 
         p_sobj = &game_objects[p_building->U.UObject.Object];
-        if (((p_sobj->field_1C[1] & 0x01) == 0) || current_map == 9)// // map009 Singapore on-water map
+        if (((p_sobj->field_1C & 0x0100) == 0) || current_map == 9) // map009 Singapore on-water map
         {
             quick_crater(p_building->X >> 16, p_building->Z >> 16, 3);
             for (i = 0; i < 32; i++)
@@ -439,7 +412,7 @@ void collapse_building(short x, short y, short z, struct Thing *p_building)
                 bang_new4(bang_x, 0, bang_z, 65);
             }
         }
-        p_building->Flag |= TngF_Unkn0002;
+        p_building->Flag |= TngF_Destroyed;
         explode_thing_building(thing, x, y, z);
         p_building->Type = TT_UNKN55;
     }
@@ -487,7 +460,7 @@ void process_building(struct Thing *p_building)
 #endif
     if ((p_building->Flag & TngF_Unkn00040000) != 0)
     {
-        if ((p_building->Flag & TngF_Unkn0002) != 0)
+        if ((p_building->Flag & TngF_Destroyed) != 0)
         {
             p_building->Flag &= ~TngF_Unkn00040000;
             return;
@@ -499,7 +472,7 @@ void process_building(struct Thing *p_building)
     switch (p_building->SubType)
     {
     case SubTT_BLD_SHUTLDR:
-        if ((p_building->Flag & TngF_Unkn0002) == 0)
+        if ((p_building->Flag & TngF_Destroyed) == 0)
         {
             if ((p_building->U.UObject.PrevThing == 0) && ((p_building->Flag & TngF_Unkn08000000) == 0)) {
                 process_shuttle_loader(p_building);
@@ -511,17 +484,17 @@ void process_building(struct Thing *p_building)
         }
         break;
     case SubTT_BLD_DOME:
-        if ((p_building->Flag & TngF_Unkn0002) == 0)
+        if ((p_building->Flag & TngF_Destroyed) == 0)
             process_dome1(p_building);
         break;
     case SubTT_BLD_MGUN:
-        if ((p_building->Flag & TngF_Unkn0002) == 0)
+        if ((p_building->Flag & TngF_Destroyed) == 0)
             process_mounted_gun(p_building);
         break;
     case SubTT_BLD_GATE:
         process_gate1(p_building);
         break;
-    case SubTT_BLD_36:
+    case SubTT_BLD_WIND_ROTOR:
         process_bld36(p_building);
         break;
     default:

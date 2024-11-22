@@ -27,6 +27,10 @@ extern ubyte *back_buffer;
 extern TbPixel fade_unaffected_colours[];
 extern TbPixel colour_lookup[];
 
+extern TbPixel colour_grey1;
+extern TbPixel colour_grey2;
+extern TbPixel colour_brown2;
+
 extern long engn_xc;
 extern long engn_yc;
 extern long engn_zc;
@@ -54,5 +58,7 @@ void show_black_screen(void);
 void my_set_text_window(ushort x1, ushort y1, ushort w, ushort h);
 ulong my_string_width(const char *text);
 ubyte font_height(uchar c);
+
+void change_brightness(short val);
 
 #endif
