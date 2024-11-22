@@ -2044,20 +2044,13 @@ void game_graphics_inputs(void)
         }
     }
 
-    if ((ingame.UserFlags & UsrF_Cheats) && !in_network_game)
+    if ((ingame.UserFlags & UsrF_Cheats) && !in_network_game && (lbKeyOn[KC_Q] && (lbShift == KMod_SHIFT)))
     {
-        if (lbKeyOn[KC_Q] && (lbShift == KMod_NONE))
-        {
-            lbKeyOn[KC_Q] = 0;
-            give_best_mods_to_all_agents(p_locplayer);
-            set_max_stats_to_all_agents(p_locplayer);
-        }
-        if (lbKeyOn[KC_Q] && (lbShift == KMod_SHIFT))
-        {
-            lbKeyOn[KC_Q] = 0;
-            resurrect_any_dead_agents(p_locplayer);
-            give_all_weapons_to_all_agents(p_locplayer);
-        }
+        lbKeyOn[KC_Q] = 0;
+        resurrect_any_dead_agents(p_locplayer);
+        give_all_weapons_to_all_agents(p_locplayer);
+        give_best_mods_to_all_agents(p_locplayer);
+        set_max_stats_to_all_agents(p_locplayer);
     }
 
     if (lbKeyOn[KC_F8])
@@ -5799,7 +5792,7 @@ ubyte do_user_interface(void)
     {
         get_speed_control_inputs();
     }
-
+/*
     // Toggle Scanner beep
     if (lbKeyOn[KC_S])
     {
@@ -5821,7 +5814,7 @@ ubyte do_user_interface(void)
         render_area_a = bound_render_area(render_area_a + n);
         render_area_b = bound_render_area(render_area_b + n);
     }
-
+*/
     // Entering pause screen
     if (!in_network_game)
     {
@@ -5929,20 +5922,13 @@ ubyte do_user_interface(void)
     }
 
     // Resurrection and best equipment cheat; why is it in two places?
-    if (p_locplayer->DoubleMode && (ingame.UserFlags & UsrF_Cheats) && !in_network_game)
+    if (p_locplayer->DoubleMode && (ingame.UserFlags & UsrF_Cheats) && !in_network_game && (lbKeyOn[KC_Q] && (lbShift == KMod_SHIFT)))
     {
-        if (lbKeyOn[KC_Q] && (lbShift == KMod_NONE))
-        {
-            lbKeyOn[KC_Q] = 0;
-            give_best_mods_to_all_agents(p_locplayer);
-            set_max_stats_to_all_agents(p_locplayer);
-        }
-        if (lbKeyOn[KC_Q] && (lbShift == KMod_SHIFT))
-        {
-            lbKeyOn[KC_Q] = 0;
-            resurrect_any_dead_agents(p_locplayer);
-            give_all_weapons_to_all_agents(p_locplayer);
-        }
+        lbKeyOn[KC_Q] = 0;
+        resurrect_any_dead_agents(p_locplayer);
+        give_all_weapons_to_all_agents(p_locplayer);
+        give_best_mods_to_all_agents(p_locplayer);
+        set_max_stats_to_all_agents(p_locplayer);
     }
 
     struct SpecialUserInput *p_usrinp;
