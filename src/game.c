@@ -94,6 +94,7 @@
 #include "game.h"
 #include "game_data.h"
 #include "game_speed.h"
+#include "game_sprani.h"
 #include "hud_panel.h"
 #include "hud_target.h"
 #include "keyboard.h"
@@ -255,8 +256,8 @@ struct TbLoadFiles unk02_load_files[] =
   { "data/nfra-0.ani",	(void **)&frame,			(void **)&frame_end,	0, 0, 0 },
   { "data/font0-0.dat",	(void **)&small_font_data,	(void **)NULL,			0, 0, 0 },
   { "data/font0-0.tab",	(void **)&small_font,		(void **)&small_font_end, 0, 0, 0 },
-  { "data/pointers.dat",(void **)&pointer_data,		(void **)NULL,			0, 0, 0 },
-  { "data/pointers.tab",(void **)&pointer_sprites,	(void **)&pointer_sprites_end, 0, 0, 0 },
+  { "data/pointr0-2.dat",(void **)&pointer_data,	(void **)NULL,			0, 0, 0 },
+  { "data/pointr0-2.tab",(void **)&pointer_sprites,	(void **)&pointer_sprites_end, 0, 0, 0 },
   { "qdata/pal.pal",	(void **)&display_palette,	(void **)NULL,			0, 0, 0 },
   { "",					(void **)NULL, 				(void **)NULL,			0, 0, 0 }
 };
@@ -1699,7 +1700,7 @@ void init_outro(void)
     show_black_screen();
     StopAllSamples();
     reset_heaps();
-    setup_heaps(100);
+    setup_heaps(SHSC_CreditsSnd, language_3str);
     play_sample_using_heap(0, 1, 127, 64, 100, -1, 3);
 
     data_197150 = 1;
@@ -1765,7 +1766,7 @@ void init_outro(void)
 
     StopAllSamples();
     reset_heaps();
-    setup_heaps(2);
+    setup_heaps(SHSC_GameSndBestQ, language_3str);
 }
 
 void srm_scanner_set_size_at_bottom_left(short margin, short width, short height)
@@ -1828,6 +1829,7 @@ void adjust_mission_engine_to_video_mode(void)
     // Set scale 15% over the min, to create a nice pan effect
     overall_scale = (get_overall_scale_min() * 295) >> 8;
     load_pop_sprites_for_current_mode();
+    load_mouse_pointers_sprites_for_current_mode();
     render_area_a = render_area_b = \
       get_render_area_for_zoom(user_zoom_min);
     srm_scanner_size_update();
@@ -2086,7 +2088,7 @@ void init_syndwars(void)
     fill_ail_sample_ids();
     if (GetSoundInstalled() && GetSoundAble() && GetSoundActive())
         ingame.Flags |= GamF_Unkn00020000;
-    setup_heaps(0);
+    setup_heaps(SHSC_GameSndAutoQ, language_3str);
 }
 
 void setup_host_sub6(void)
@@ -2179,7 +2181,7 @@ TbResult init_read_all_sprite_files(void)
     if (tret == Lb_OK)
         tret = ret;
 
-    ret = load_sprites_mouse(&p_buf, pinfo->directory);
+    ret = load_sprites_fe_mouse_pointers(&p_buf, pinfo->directory, 0, 0);
     if (tret == Lb_OK)
         tret = ret;
 
@@ -2219,7 +2221,7 @@ TbResult init_read_all_sprite_files(void)
     setup_sprites_icons();
     setup_sprites_wicons();
     setup_sprites_panel();
-    setup_sprites_mouse();
+    setup_sprites_fe_mouse_pointers();
     setup_sprites_small_font();
     setup_sprites_small2_font();
     setup_sprites_small_med_font();
@@ -2272,6 +2274,7 @@ void setup_host(void)
     setup_multicolor_sprites();
     ingame.PanelPermutation = -2;
     load_pop_sprites_for_current_mode();
+    load_mouse_pointers_sprites_for_current_mode();
     init_memory(mem_game);
 
     init_syndwars();
@@ -7345,7 +7348,7 @@ void engine_reset(void)
 void host_reset(void)
 {
     StopCD();
-    setup_heaps(1);
+    setup_heaps(SHSC_ResetGameSnd, language_3str);
     FreeAudio();
     engine_reset();
     reset_multicolor_sprites();
