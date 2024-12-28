@@ -6,6 +6,21 @@
 #include "bfscreen.h"
 #include "bfanywnd.h"
 
+enum ColourLookUp {
+    ColLU_UNKN0     = 0, // black?
+    ColLU_WHITE,
+    ColLU_RED,
+    ColLU_GREEN,
+    ColLU_BLUE,
+    ColLU_YELLOW,
+    ColLU_CYAN,
+    ColLU_PINK,
+    ColLU_GREYLT,//looks more like another white
+    ColLU_GREYMD,
+    ColLU_GREYDK,
+    ColLU_MULTI,
+};
+
 struct ScreenBufBkp {
     ubyte *WScreen;
     long PhysicalScreenWidth;

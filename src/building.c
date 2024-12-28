@@ -21,6 +21,7 @@
 #include "bfmath.h"
 #include "bfmemory.h"
 #include "bfutility.h"
+
 #include "bigmap.h"
 #include "bmbang.h"
 #include "enginsngobjs.h"
@@ -31,10 +32,105 @@
 #include "thing.h"
 #include "tngcolisn.h"
 #include "vehtraffic.h"
+#include "weapon.h"
 #include "swlog.h"
 /******************************************************************************/
 ubyte dome_open_speed = 4;
 
+struct BuildingStat bldng_type_stats[] = {
+  {"BLD_NONE",},
+  {"BLD_1",},
+  {"BLD_2",},
+  {"BLD_3",},
+  {"BLD_4",},
+  {"BLD_5",},
+  {"BLD_6",},
+  {"BLD_7",},
+  {"BLD_8",},
+  {"BLD_9",},
+  {"BLD_A",},
+  {"BLD_B",},
+  {"BLD_C",},
+  {"BLD_D",},
+  {"BLD_E",},
+  {"BLD_F",},
+  {"BLD_10",},
+  {"BLD_11",},
+  {"BLD_12",},
+  {"BLD_13",},
+  {"SHUTTL_LDR",},
+  {"BLD_15",},
+  {"BLD_16",},
+  {"BLD_17",},
+  {"DOME",},
+  {"BLD_19",},
+  {"BLD_1A",},
+  {"STANDRD BLD",},
+  {"TRAIN_TRACK",},
+  {"BLD_1D",},
+  {"BLD_1E",},
+  {"BLD_1F",},
+  {"MOUNT_GUN",},
+  {"BLD_21",},
+  {"BLD_22",},
+  {"BLD_23",},
+  {"BLD_24",},
+  {"BLD_GATE",},
+  {"BLD_26",},
+  {"BLD_27",},
+  {"BLD_28",},
+  {"BLD_29",},
+  {"BLD_2A",},
+  {"BLD_2B",},
+  {"BLD_2C",},
+  {"BLD_2D",},
+  {"BLD_2E",},
+  {"TRAIN_STATN",},
+  {"BLD_30",},
+  {"BLD_31",},
+  {"BLD_32",},
+  {"BLD_33",},
+  {"BLD_34",},
+  {"BLD_35",},
+  {"WIND_ROTOR",},
+  {"BLD_37",},
+  {"BLD_38",},
+  {"BLD_39",},
+  {"BLD_3A",},
+  {"BLD_3B",},
+  {"BLD_3C",},
+  {"BILLBOARD",},
+  {"BLD_3E",},
+  {"BLD_3F",},
+  {"BLD_40",},
+  {"BLD_41",},
+  {"BLD_42",},
+  {"BLD_43",},
+  {"BLD_44",},
+};
+
+
+const char *building_type_name(ushort btype)
+{
+    struct BuildingStat *p_bldstat;
+
+    p_bldstat = &bldng_type_stats[btype];
+    if (strlen(p_bldstat->Name) == 0)
+        return "OUTRNG_BLDNG";
+    return p_bldstat->Name;
+}
+
+TbBool building_can_transform_open(ThingIdx bldng)
+{
+    struct Thing *p_building;
+
+    p_building = &things[bldng];
+    if (p_building->Type != TT_BUILDING)
+        return false;
+    if ((p_building->Flag & TngF_Destroyed) != 0)
+        return false;
+    return (p_building->SubType == SubTT_BLD_DOME);
+}
 
 struct Thing *create_building_thing(int x, int y, int z, ushort obj, ushort nobj, ushort a6)
 {
@@ -92,7 +188,7 @@ void process_dome1(struct Thing *p_building)
 
     switch (p_building->State)
     {
-    case 1:
+    case BldSt_TRA_OPENING:
         timer0 = p_building->SubState - dome_open_speed;
         p_building->SubState = timer0;
         if (timer0 <= 127)
@@ -104,42 +200,45 @@ void process_dome1(struct Thing *p_building)
         }
         else
         {
+            play_dist_sample(p_building, 47, 127, 64, 100, 0, 3);
             p_building->SubState = 0;
             p_building->Timer1 = 100;
-            p_building->State = 7;
+            p_building->State = BldSt_TRA_OPENED;
         }
         break;
-    case 4:
+    case BldSt_TRA_CLOSING:
         timer0 = p_building->SubState + dome_open_speed;
         p_building->SubState = timer0;
         if (timer0 <= 127)
         {
-            if ((timer0 >= 112u) && (timer0 < 112u + dome_open_speed)) {
-                set_dome_col(p_building, 0);
-            }
             do_dome_rotate1(p_building);
         }
         else
         {
+            play_dist_sample(p_building, 47, 127, 64, 100, 0, 3);
             p_building->SubState = 127;
             p_building->Timer1 = 100;
-            p_building->State = 8;
+            p_building->State = BldSt_TRA_CLOSED;
         }
         break;
-    case 7:
-        if ((p_building->Flag & TngF_Unkn0080) != 0)
-            p_building->State = 4;
-        p_building->Flag &= ~(TngF_Unkn0080|TngF_Unkn0040);
+    case BldSt_TRA_OPENED:
+        if ((p_building->Flag & TngF_TransCloseRq) != 0) {
+            play_dist_sample(p_building, 100, 127, 64, 100, 0, 3);
+            p_building->State = BldSt_TRA_CLOSING;
+        }
+        p_building->Flag &= ~(TngF_TransCloseRq|TngF_TransOpenRq);
         break;
-    case 8:
-        if ((p_building->Flag & TngF_Unkn0040) != 0)
-            p_building->State = 1;
-        p_building->Flag &= ~(TngF_Unkn0080|TngF_Unkn0040);
+    case BldSt_TRA_CLOSED:
+        if ((p_building->Flag & TngF_TransOpenRq) != 0) {
+            play_dist_sample(p_building, 100, 127, 64, 100, 0, 3);
+            p_building->State = BldSt_TRA_OPENING;
+        }
+        p_building->Flag &= ~(TngF_TransCloseRq|TngF_TransOpenRq);
         break;
     default:
         p_building->SubState = 127;
         p_building->Timer1 = 100;
-        p_building->State = 8;
+        p_building->State = BldSt_TRA_CLOSED;
         break;
     }
 }
@@ -165,7 +264,7 @@ void collapse_building_process_tnodes(struct Thing *p_building)
         if (tnode != 0) {
             struct TrafficNode *p_tnode;
             p_tnode = &game_traffic_nodes[tnode];
-            p_tnode->Flags |= 0x3000;
+            p_tnode->Flags |= (0x2000|0x1000);
         }
     }
 
@@ -300,25 +399,27 @@ void collapse_building_shuttle_loader(short x, short y, short z, struct Thing *p
 
 void collapse_building_station(struct Thing *p_building)
 {
+    short cntr_cor_x, cntr_cor_z;
     short cntr_x, cntr_z;
     short x, z;
 
-    cntr_x = p_building->X >> 16;
-    cntr_z = p_building->Z >> 16;
+    get_thing_position_mapcoords(&cntr_cor_x, NULL, &cntr_cor_z, p_building->ThingOffset);
+    cntr_x = MAPCOORD_TO_TILE(cntr_cor_x);
+    cntr_z = MAPCOORD_TO_TILE(cntr_cor_z);
 
     for (x = cntr_x - 8; x <= cntr_x + 8; x++)
     {
-        if ((x < 0) || (x > 127))
+        if ((x < 0) || (x > MAP_TILE_WIDTH-1))
             continue;
         for (z = cntr_z - 8; z <= cntr_z + 8; z++)
         {
             struct MyMapElement *p_mapel;
             short thing;
 
-            if ((z < 0) || (z > 127))
+            if ((z < 0) || (z > MAP_TILE_HEIGHT-1))
                 continue;
 
-            p_mapel = &game_my_big_map[128 * z + x];
+            p_mapel = &game_my_big_map[MAP_TILE_WIDTH * z + x];
             thing = p_mapel->Child;
             while (thing != 0)
             {
@@ -327,10 +428,10 @@ void collapse_building_station(struct Thing *p_building)
                     struct Thing *p_thing;
                     p_thing = &things[thing];
                     if ((p_thing->Type == TT_BUILDING)
-                      && (p_thing->SubType == SubTT_BLD_1C)
+                      && (p_thing->SubType == SubTT_BLD_TRAINTRK)
                       && ((p_thing->Flag & TngF_Destroyed) == 0))
                     {
-                        collapse_building(x << 8, 0, z << 8, p_thing);
+                        collapse_building(TILE_TO_MAPCOORD(x,0), 0, TILE_TO_MAPCOORD(z,0), p_thing);
                         break; // do not expect more than one building on a tile
                     }
                     thing = p_thing->Next;
@@ -368,8 +469,10 @@ void collapse_building(short x, short y, short z, struct Thing *p_building)
     }
     else
     {
-        play_dist_sample(p_building, 0x2Du, 0x7Fu, 0x40u, 100, 0, 3);
-        p_sthing = create_sound_effect(p_building->X >> 8, p_building->Y >> 8, p_building->Z >> 8, 0x2Eu, 127, -1);
+        short tng_x, tng_y, tng_z;
+        get_thing_position_mapcoords(&tng_x, &tng_y, &tng_z, p_building->ThingOffset);
+        play_dist_sample(p_building, 0x2Du, 127, 64, 100, 0, 3);
+        p_sthing = create_sound_effect(tng_x, tng_y, tng_z, 0x2Eu, 127, -1);
         if (p_sthing != NULL)
         {
             p_sthing->State = 1;
@@ -384,7 +487,7 @@ void collapse_building(short x, short y, short z, struct Thing *p_building)
     {
     case SubTT_BLD_SHUTLDR:
     case SubTT_BLD_1D:
-    case SubTT_BLD_1C:
+    case SubTT_BLD_TRAINTRK:
     case SubTT_BLD_15:
         collapse_building_shuttle_loader(x, y, z, p_building);
         break;
@@ -400,7 +503,10 @@ void collapse_building(short x, short y, short z, struct Thing *p_building)
         p_sobj = &game_objects[p_building->U.UObject.Object];
         if (((p_sobj->field_1C & 0x0100) == 0) || current_map == 9) // map009 Singapore on-water map
         {
-            quick_crater(p_building->X >> 16, p_building->Z >> 16, 3);
+            short cra_cor_x, cra_cor_z;
+
+            get_thing_position_mapcoords(&cra_cor_x, NULL, &cra_cor_z, p_building->ThingOffset);
+            quick_crater(MAPCOORD_TO_TILE(cra_cor_x), MAPCOORD_TO_TILE(cra_cor_z), 3);
             for (i = 0; i < 32; i++)
             {
                 int dx, dz;
@@ -431,6 +537,113 @@ void process_shuttle_loader(struct Thing *p_building)
 {
     asm volatile ("call ASM_process_shuttle_loader\n"
         : : "a" (p_building));
+}
+
+void bul_hit_vector(int x, int y, int z, short col, int hp, int type)
+{
+    asm volatile (
+      "push %5\n"
+      "push %4\n"
+      "call ASM_bul_hit_vector\n"
+        : : "a" (x), "d" (y), "b" (z), "c" (col), "g" (hp), "g" (type));
+}
+
+void init_mgun_laser(struct Thing *p_owner, ushort bmsize)
+{
+#if 0
+    asm volatile (
+      "call ASM_init_mgun_laser\n"
+        : : "a" (p_owner), "d" (bmsize));
+    return;
+#endif
+    struct Thing *p_shot;
+    int prc_x, prc_y, prc_z;
+    int cor_x, cor_y, cor_z;
+    short tgtng_x, tgtng_y, tgtng_z;
+    u32 rhit;
+    short shottng;
+    short angle;
+    short damage;
+
+    if (p_owner->PTarget == NULL)
+        return;
+
+    shottng = get_new_thing();
+    if (shottng == 0) {
+        LOGERR("No thing slots for a shot");
+        return;
+    }
+    p_shot = &things[shottng];
+    if (p_owner->U.UMGun.ShotTurn != 0)
+        angle = p_owner->U.UMGun.AngleY + 48;
+    else
+        angle = p_owner->U.UMGun.AngleY - 48;
+
+    angle = (angle + 0x800) & 0x7FF;
+    prc_x = p_owner->X + 3 * lbSinTable[angle] / 2;
+    prc_z = p_owner->Z - 3 * lbSinTable[angle + 512] / 2;
+    prc_y = p_owner->Y;
+
+    if ((p_owner->PTarget > &things[0]) && (p_owner->PTarget < &things[THINGS_LIMIT]))
+        get_thing_position_mapcoords(&tgtng_x, &tgtng_y, &tgtng_z, p_owner->PTarget->ThingOffset);
+    else
+        tgtng_x = tgtng_y = tgtng_z = 0;
+
+    p_shot->U.UEffect.Angle = p_owner->U.UMGun.AngleY;
+    p_shot->Z = prc_z;
+    p_shot->Y = prc_y;
+    p_shot->X = prc_x;
+    p_shot->VX = tgtng_x;
+    p_shot->VY = (tgtng_y >> 3) + 10;
+    p_shot->VZ = tgtng_z;
+    p_shot->Radius = 50;
+    p_shot->Owner = p_owner->ThingOffset;
+
+    cor_x = PRCCOORD_TO_MAPCOORD(prc_x);
+    cor_y = PRCCOORD_TO_MAPCOORD(prc_y);
+    cor_z = PRCCOORD_TO_MAPCOORD(prc_z);
+
+    rhit = laser_hit_at(cor_x, cor_y, cor_z, &p_shot->VX, &p_shot->VY, &p_shot->VZ, p_shot);
+
+    if (bmsize > 15)
+        bmsize = 15;
+    if (bmsize < 5)
+        bmsize = 5;
+    damage = (bmsize - 4) * weapon_defs[WEP_LASER].HitDamage;
+
+    if ((rhit & 0x80000000) != 0) // hit 3D object collision vector
+    {
+        s32 hitvec;
+
+        hitvec = rhit;
+        bul_hit_vector(p_shot->VX, p_shot->VY, p_shot->VZ, -hitvec, 2 * bmsize, 0);
+    }
+    else if ((rhit & 0x40000000) != 0) // hit SimpleThing
+    {
+        struct SimpleThing *p_hitstng;
+        ThingIdx hittng;
+
+        hittng = (short)rhit;
+        p_hitstng = &sthings[-hittng];
+        //TODO is it really ok to use person hit function for hitting SimpleThings?
+        person_hit_by_bullet((struct Thing *)p_hitstng, damage, p_shot->VX - cor_x,
+          p_shot->VY - cor_y, p_shot->VZ - cor_z, p_owner, 4);
+    }
+    else if (rhit != 0) // hit normal thing
+    {
+        struct Thing *p_hittng;
+        ThingIdx hittng;
+
+        hittng = (short)rhit;
+        p_hittng = &things[hittng];
+        person_hit_by_bullet(p_hittng, damage, p_shot->VX - cor_x,
+          p_shot->VY - cor_y, p_shot->VZ - cor_z, p_owner, 4);
+    }
+    p_shot->StartTimer1 = bmsize;
+    p_shot->Timer1 = bmsize;
+    p_shot->Flag = TngF_Unkn0004;
+    p_shot->Type = TT_LASER11;
+    add_node_thing(p_shot->ThingOffset);
 }
 
 void process_mounted_gun(struct Thing *p_building)
@@ -498,7 +711,7 @@ void process_building(struct Thing *p_building)
         process_bld36(p_building);
         break;
     default:
-        if (p_building->State == 9) {
+        if (p_building->State == BldSt_OBJ_UNKN09) {
             collapse_building(p_building->X >> 8, p_building->Y >> 8, p_building->Z >> 8, p_building);
         }
         break;

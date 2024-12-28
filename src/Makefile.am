@@ -157,6 +157,8 @@ swars_SOURCES = \
 	main.c \
 	matrix.c \
 	matrix.h \
+	misstat.c \
+	misstat.h \
 	mouse.c \
 	mouse.h \
 	mydraw.c \
@@ -199,6 +201,8 @@ swars_SOURCES = \
 	swlog.h \
 	thing.c \
 	thing.h \
+	thing_search.c \
+	thing_search.h \
 	thing_debug.c \
 	thing_debug_s.sx \
 	tngcolisn.c \
