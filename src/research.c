@@ -383,14 +383,16 @@ int research_daily_progress_for_type(ubyte rstype)
             real_funding = ingame.Credits;
         wdef = &weapon_defs[research.CurrentWeapon + 1];
 	wdefa = &weapon_defs_a[research.CurrentWeapon + 1];
-	if (use_classic_research)
-	{
+
+	/* 1 *************************/
+	if (use_classic_research) {
 		progress = research_unkn_func_004(wdef->PercentPerDay, wdefa->FundingClassic, real_funding);
 	}
-	else
-	{
+	else {
 		progress = research_unkn_func_004(wdef->PercentPerDay, wdef->Funding, real_funding);
 	}
+	/* 1 *************************/
+
         research_wep_store_daily_progress(progress);
         if (research_wep_get_progress(research.CurrentWeapon) < RESEARCH_COMPLETE_POINTS)
         {
@@ -413,14 +415,16 @@ int research_daily_progress_for_type(ubyte rstype)
             real_funding = ingame.Credits;
         mdef = &mod_defs[research.CurrentMod + 1];
 	mdefa = &mod_defs_a[research.CurrentMod + 1];
-	if (use_classic_research)
-	{
+
+	/* 1 *************************/
+	if (use_classic_research) {
 		progress = research_unkn_func_004(mdef->PercentPerDay, mdefa->FundingClassic, real_funding);
 	}
-	else
-	{
+	else {
 		progress = research_unkn_func_004(mdef->PercentPerDay, mdef->Funding, real_funding);
 	}
+	/* 1 *************************/
+
         research_cymod_store_daily_progress(progress);
         if (research_cymod_get_progress(research.CurrentMod) < RESEARCH_COMPLETE_POINTS)
         {
