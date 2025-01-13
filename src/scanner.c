@@ -21,8 +21,9 @@
 #include "bfutility.h"
 #include "bigmap.h"
 #include "campaign.h"
-#include "thing.h"
 #include "player.h"
+#include "thing.h"
+#include "thing_search.h"
 #include "game.h"
 #include "game_speed.h"
 #include "lvobjctv.h"
@@ -167,13 +168,13 @@ ushort do_group_scanner(struct Objective *p_objectv, ushort next_signal)
     // Find thing in group close to dcthing
     if (objective_target_is_ally(p_objectv)) {
         nearthing = find_nearest_from_group(&things[dcthing],group, 0);
-        colr = colour_lookup[1];
+        colr = colour_lookup[ColLU_WHITE];
     } else if (objective_target_is_to_be_acquired(p_objectv)) {
         nearthing = find_nearest_from_group(&things[dcthing], group, 1);
-        colr = colour_lookup[3];
+        colr = colour_lookup[ColLU_GREEN];
     } else {
         nearthing = find_nearest_from_group(&things[dcthing], group, 0);
-        colr = colour_lookup[2];
+        colr = colour_lookup[ColLU_RED];
     }
     ingame.Scanner.NearThing1 = nearthing;
 
@@ -222,13 +223,13 @@ ushort do_group_near_thing_scanner(struct Objective *p_objectv, ushort next_sign
     // Find thing in group close to tgthing
     if (objective_target_is_ally(p_objectv)) {
         nearthing = find_nearest_from_group(&things[tgthing], group, 0);
-        colr = colour_lookup[1];
+        colr = colour_lookup[ColLU_WHITE];
     } else if (objective_target_is_to_be_acquired(p_objectv)) {
         nearthing = find_nearest_from_group(&things[tgthing], group, 1);
-        colr = colour_lookup[3];
+        colr = colour_lookup[ColLU_GREEN];
     } else {
         nearthing = find_nearest_from_group(&things[tgthing], group, 0);
-        colr = colour_lookup[2];
+        colr = colour_lookup[ColLU_RED];
     }
     ingame.Scanner.NearThing1 = nearthing;
 
@@ -268,9 +269,7 @@ ushort do_group_near_thing_scanner(struct Objective *p_objectv, ushort next_sign
         }
         else
         {
-            struct Thing *p_thing;
-            p_thing = &things[ingame.TrackThing];
-            if (((ingame.TrackThing == 0) || p_thing->Flag & TngF_PlayerAgent) && (ingame.Flags & GamF_HUDPanel))
+            if (((ingame.TrackThing == 0) || game_cam_tracked_thing_is_player_agent()) && (ingame.Flags & GamF_HUDPanel))
                 SCANNER_init_arcpoint(Z2, X2, Z1, X1, 1);
         }
         SCANNER_keep_arcs = 1;
@@ -299,11 +298,11 @@ ushort do_target_thing_scanner(struct Objective *p_objectv, ushort next_signal)
     thing = p_objectv->Thing;
 
     if (objective_target_is_ally(p_objectv))
-        colr = colour_lookup[1];
+        colr = colour_lookup[ColLU_WHITE];
     else if (objective_target_is_to_be_acquired(p_objectv))
-        colr = colour_lookup[3];
+        colr = colour_lookup[ColLU_GREEN];
     else
-        colr = colour_lookup[2];
+        colr = colour_lookup[ColLU_RED];
 
     n = next_signal;
     if (thing <= 0) {
@@ -334,11 +333,11 @@ ushort do_target_item_scanner(struct Objective *p_objectv, ushort next_signal)
     weapon = p_objectv->Arg2;
 
     if (objective_target_is_ally(p_objectv))
-        colr = colour_lookup[1];
+        colr = colour_lookup[ColLU_WHITE];
     else if (objective_target_is_to_be_acquired(p_objectv))
-        colr = colour_lookup[3];
+        colr = colour_lookup[ColLU_GREEN];
     else
-        colr = colour_lookup[2];
+        colr = colour_lookup[ColLU_RED];
 
     n = next_signal;
     if (thing <= 0)
@@ -382,11 +381,11 @@ ushort do_thing_arrive_area_scanner(struct Objective *p_objectv, ushort next_sig
     thing = p_objectv->Thing;
 
     if (objective_target_is_ally(p_objectv))
-        colr = colour_lookup[1];
+        colr = colour_lookup[ColLU_WHITE];
     else if (objective_target_is_to_be_acquired(p_objectv))
-        colr = colour_lookup[3];
+        colr = colour_lookup[ColLU_GREEN];
     else
-        colr = colour_lookup[2];
+        colr = colour_lookup[ColLU_RED];
 
     n = next_signal;
     SCANNER_init_blippoint(n, MAPCOORD_TO_PRCCOORD(p_objectv->X,0), MAPCOORD_TO_PRCCOORD(p_objectv->Z,0), colr);
@@ -410,9 +409,7 @@ ushort do_thing_arrive_area_scanner(struct Objective *p_objectv, ushort next_sig
     }
     else
     {
-        struct Thing *p_thing;
-        p_thing = &things[ingame.TrackThing];
-        if (((ingame.TrackThing == 0) || p_thing->Flag & TngF_PlayerAgent) && (ingame.Flags & GamF_HUDPanel))
+        if (((ingame.TrackThing == 0) || game_cam_tracked_thing_is_player_agent()) && (ingame.Flags & GamF_HUDPanel))
             SCANNER_init_arcpoint(Z, X,
               MAPCOORD_TO_PRCCOORD(p_objectv->Z,0),
               MAPCOORD_TO_PRCCOORD(p_objectv->X,0), 1);
@@ -433,11 +430,11 @@ ushort do_thing_near_thing_scanner(struct Objective *p_objectv, ushort next_sign
     thing2 = p_objectv->Y;
 
     if (objective_target_is_ally(p_objectv))
-        colr = colour_lookup[1];
+        colr = colour_lookup[ColLU_WHITE];
     else if (objective_target_is_to_be_acquired(p_objectv))
-        colr = colour_lookup[3];
+        colr = colour_lookup[ColLU_GREEN];
     else
-        colr = colour_lookup[2];
+        colr = colour_lookup[ColLU_RED];
 
     n = next_signal;
     if (thing1 <= 0) {
@@ -470,9 +467,7 @@ ushort do_thing_near_thing_scanner(struct Objective *p_objectv, ushort next_sign
     }
     else
     {
-        struct Thing *p_thing;
-        p_thing = &things[ingame.TrackThing];
-        if (((ingame.TrackThing == 0) || p_thing->Flag & TngF_PlayerAgent) && (ingame.Flags & GamF_HUDPanel))
+        if (((ingame.TrackThing == 0) || game_cam_tracked_thing_is_player_agent()) && (ingame.Flags & GamF_HUDPanel))
             SCANNER_init_arcpoint(Z2, X2, Z1, X1, 1);
     }
     SCANNER_keep_arcs = 1;
@@ -485,11 +480,11 @@ ushort do_group_arrive_area_scanner(struct Objective *p_objectv, ushort next_sig
     ubyte colr;
 
     if (objective_target_is_ally(p_objectv))
-        colr = colour_lookup[1];
+        colr = colour_lookup[ColLU_WHITE];
     else if (objective_target_is_to_be_acquired(p_objectv))
-        colr = colour_lookup[3];
+        colr = colour_lookup[ColLU_GREEN];
     else
-        colr = colour_lookup[2];
+        colr = colour_lookup[ColLU_RED];
 
     n = next_signal;
     SCANNER_init_blippoint(n, MAPCOORD_TO_PRCCOORD(p_objectv->X,0),

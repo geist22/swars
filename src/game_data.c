@@ -37,6 +37,7 @@
 #include "lvobjctv.h"
 #include "bigmap.h"
 #include "game.h"
+#include "lvfiles.h"
 #include "swlog.h"
 #include "tngcolisn.h"
 #include "unix.h"
@@ -101,7 +102,7 @@ PathInfo game_dirs[] = {
   {"maps",		1},
   {"levels",	1},
   {"intro",		1},
-  {"Sound",		1},
+  {"sound",		1},
   {"data/equip",1},
   {NULL,		0},
 };

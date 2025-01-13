@@ -33,6 +33,8 @@ extern "C" {
 #define THINGS_LIMIT 1000
 #define STHINGS_LIMIT 1500
 
+#define INVALID_THING &things[0]
+
 enum ThingType {
     TT_NONE = 0x0,
     TT_UNKN1 = 0x1,
@@ -127,6 +129,18 @@ enum ThingFlags {
     TngF_Unkn40000000 = 0x40000000,
 };
 
+/** Transformation into closed was requested on the building thing.
+ * A flag with meaning for people, is reused for different purpose
+ * when set on a building.
+ */
+#define TngF_TransOpenRq TngF_Unkn0040
+
+/** Transformation into open was requested on the building thing.
+ * A flag with meaning for people, is reused for different purpose
+ * when set on a building.
+ */
+#define TngF_TransCloseRq TngF_Unkn0080
+
 enum ThingFlags2 {
     TgF2_Unkn0001     = 0x0001,
     TgF2_Unkn0002     = 0x0002,
@@ -152,22 +166,32 @@ enum ThingFlags2 {
     TgF2_Unkn00200000 = 0x00200000,
     TgF2_Unkn00400000 = 0x00400000,
     TgF2_Unkn00800000 = 0x00800000,
-    /** The thing is added to map content lists and is visible.
+    /** The thing is not added to map content lists and is invisible.
      *
-     * If not set, the thing is invisible and on-map things cannot affect it.
+     * If set, the thing is invisible and on-map things cannot affect it.
      * Non-existent thing can still execute commands though, working as
      * invisible helper for creating level mechanics.
      * The flag can be controlled by CMD_PING_EXIST, spawning and despawning
      * the thing on the map.
      */
-    TgF2_ExistsOnMap = 0x01000000,
+    TgF2_ExistsOffMap = 0x01000000,
     TgF2_Unkn02000000 = 0x02000000,
-    TgF2_Unkn04000000 = 0x04000000,
+    TgF2_SoulDepleted = 0x04000000,
     TgF2_Unkn08000000 = 0x08000000,
     TgF2_Unkn10000000 = 0x10000000,
     TgF2_InsideBuilding = 0x20000000,
     TgF2_Unkn40000000 = 0x40000000,
+    TgF2_IgnoreEnemies = 0x80000000,
 };
+
+enum StateChangeResult {
+    StCh_ACCEPTED = 0,  /**< The new state was set to the world element. */
+    StCh_ALREADY,       /**< The conditions to finalize the state were already met, state not set as it is completed. */
+    StCh_DENIED,        /**< The current state of either target or other world elements prevents entering the state at this time. */
+    StCh_UNATTAIN,      /**< The current state of the world elements makes it impossible to ever enter that state, ie. target does not exist. */
+};
+
+typedef ubyte StateChRes;
 
 struct M33;
 
@@ -434,9 +458,9 @@ struct Thing { // sizeof=168
     ushort StartFrame;
     short Timer1;
     short StartTimer1;
-    long VX;
-    long VY;
-    long VZ;
+    s32 VX;
+    s32 VY;
+    s32 VZ;
     short Speed;
     short Health;
     short Owner;
@@ -534,17 +558,6 @@ struct SimpleThing
     short field_38;
     ushort UniqueID;
 };
-
-typedef struct {
-    short Arg1;
-    short Arg2;
-    short Arg3;
-    short Arg4;
-    long Arg5;
-} ThingFilterParams;
-
-/** Definition of a simple callback type which can only return true/false and has no memory of previous checks. */
-typedef TbBool (*ThingBoolFilter)(ThingIdx thing, ThingFilterParams *params);
 
 /** Old structure for storing State of any Thing.
  * Used only to allow reading old, pre-release levels.
@@ -919,6 +932,9 @@ extern short sthings_used_head;
 extern ushort sthings_used;
 
 extern TbBool debug_hud_things;
+extern ubyte debug_log_things;
+
+struct Thing *get_thing_safe(ThingIdx thing, ubyte ttype);
 
 void init_things(void);
 void refresh_old_thing_format(struct Thing *p_thing, struct ThingOldV9 *p_oldthing, ulong fmtver);
@@ -935,6 +951,21 @@ void snprint_thing(char *buf, ulong buflen, struct Thing *p_thing);
 /** Fill buffer with function-like declaration of simple thing properties.
  */
 void snprint_sthing(char *buf, ulong buflen, struct SimpleThing *p_sthing);
+
+/** Returns if given type represents SimpleThing rather than a full featured Thing.
+ */
+TbBool thing_type_is_simple(short ttype);
+
+/** Given thing index, sets its position in map coordinates to three variables.
+ *
+ * Different kinds of things have different quirks in regard to position on map.
+ * This function deals with all that and just gives the straight, simple position.
+ */
+void get_thing_position_mapcoords(short *x, short *y, short *z, ThingIdx thing);
+
+/** Get a string representing text name of a state change result.
+ */
+const char *state_change_result_name(StateChRes res);
 
 TbBool person_command_to_text(char *out, ushort cmd, ubyte a3);
 
@@ -974,36 +1005,8 @@ short get_thing_same_type_head(short ttype, short subtype);
 
 TbBool thing_is_within_circle(ThingIdx thing, short X, short Z, ushort R);
 
-/** Unified function to find a thing of given type within given circle and matching filter.
- *
- * Tries to use mapwho and same type list, and if cannot then just searches all used things.
- *
- * @param X Map coordinate in map units.
- * @param Z Map coordinate in map units.
- * @param R Circle radius in map units.
- * @param ttype Thing Type; need to be specific, no -1 allowed.
- * @param subtype Thing SubType; to catch all, use -1.
- * @param filter Filter callback function.
- * @param param Parameters for filter callback function.
- */
-ThingIdx find_thing_type_within_circle_with_filter(short X, short Z, ushort R,
-  short ttype, short subtype, ThingBoolFilter filter, ThingFilterParams *params);
-
-ThingIdx find_dropped_weapon_within_circle(short X, short Z, ushort R, short weapon);
-ThingIdx find_person_carrying_weapon_within_circle(short X, short Z, ushort R, short weapon);
-ThingIdx find_person_carrying_weapon(short weapon);
-
-ThingIdx find_nearest_from_group(struct Thing *p_person, ushort group, ubyte no_persuaded);
-ThingIdx search_things_for_index(short index);
-ThingIdx find_nearest_object2(short mx, short mz, ushort sub_type);
-short search_object_for_qface(ushort object, ubyte gflag, ubyte flag, ushort after);
-ThingIdx search_for_station(short x, short z);
-ThingIdx search_for_vehicle(short X, short Z);
-ThingIdx search_things_for_uniqueid(short index, ubyte flag);
-
 struct SimpleThing *create_sound_effect(int x, int y, int z, ushort sample, int vol, int loop);
 
-void shield_frames_init(void);
 /******************************************************************************/
 #ifdef __cplusplus
 }

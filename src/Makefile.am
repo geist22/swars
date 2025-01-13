@@ -7,7 +7,6 @@ swars_SOURCES = \
 	bflib_joyst.c \
 	bflib_joyst.h \
 	bflib_joyst_s.sx \
-	bflib_test_poly.c \
 	bflib_render_gpoly.c \
 	bflib_render_plin_s.sx \
 	bflib_render_drspr.c \
@@ -133,6 +132,8 @@ swars_SOURCES = \
 	game_data.h \
 	game_speed.c \
 	game_speed.h \
+	game_sprani.c \
+	game_sprani.h \
 	game_sprts.c \
 	game_sprts.h \
 	game.h \
@@ -154,6 +155,8 @@ swars_SOURCES = \
 	main.c \
 	matrix.c \
 	matrix.h \
+	misstat.c \
+	misstat.h \
 	mouse.c \
 	mouse.h \
 	mydraw.c \
@@ -196,6 +199,8 @@ swars_SOURCES = \
 	swlog.h \
 	thing.c \
 	thing.h \
+	thing_search.c \
+	thing_search.h \
 	thing_debug.c \
 	thing_debug_s.sx \
 	tngcolisn.c \
