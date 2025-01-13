@@ -107,13 +107,32 @@ enum PersonState {
   PerSt_CATCH_FERRY = 0x37,
   PerSt_EXIT_FERRY = 0x38,
   PerSt_AVOID_GROUP = 0x39,
-  PerSt_UNUSED_3A = 0x3A,
+  /** Init the current command on next state update.
+   * This is used internally to ensure the thing inits the current command
+   * rather than assuming that current means already initialised.
+   */
+  PerSt_INIT_COMMAND = 0x3A,
   PerSt_BEING_PERSUADED = 0x3B,
 };
 
-/** Max health of a person cannot safely go beyond that.
+enum PersonFlags3 {
+    PrsF3_Unkn01     = 0x01,
+    PrsF3_Unkn02     = 0x02,
+    PrsF3_Unkn04     = 0x04,
+    PrsF3_Unkn08     = 0x08,
+    PrsF3_Unkn10     = 0x10,
+    PrsF3_Unkn20     = 0x20,
+    PrsF3_Unkn40     = 0x40,
+    PrsF3_Unkn80     = 0x80,
+};
+
+/** Max health of a person; cannot safely go beyond that.
  */
 #define PERSON_MAX_HEALTH_LIMIT 16383
+
+/** Max weapon energy of a person; cannot safely go beyond that.
+ */
+#define PERSON_MAX_ENERGY_LIMIT 32255
 
 #define PERSON_MAX_SPEED 2048
 
@@ -153,6 +172,11 @@ struct MyPath {
     ushort Next;
 };
 
+struct Direction {
+  short DiX;
+  short DiY;
+};
+
 #pragma pack()
 /******************************************************************************/
 extern struct PeepStat peep_type_stats[];
@@ -176,6 +200,11 @@ void load_peep_type_stats(void);
  */
 const char *person_type_name(ushort ptype);
 
+/** Returns if a given type of person requires advanced persuadertron to be affected.
+ */
+TbBool person_type_only_affected_by_adv_persuader(ushort ptype);
+TbBool person_only_affected_by_adv_persuader(ThingIdx person);
+
 /** Print person state in function-like style to a buffer.
  */
 void snprint_person_state(char *buf, ulong buflen, struct Thing *p_thing);
@@ -189,6 +218,9 @@ TbBool person_carries_any_medikit(struct Thing *p_person);
 TbBool person_can_accept_control(ThingIdx person);
 
 void set_person_stats_type(struct Thing *p_person, ushort type);
+void set_person_health_shield_type(struct Thing *p_person, ushort stype);
+void set_person_energy_stamina_type(struct Thing *p_person, ushort stype);
+
 void init_person_thing(struct Thing *p_person);
 void person_give_best_mods(struct Thing *p_person);
 short calc_person_speed(struct Thing *p_person);
@@ -234,11 +266,48 @@ void reset_person_frame(struct Thing *p_person);
 int can_i_see_thing(struct Thing *p_me, struct Thing *p_him, int max_dist, ushort flags);
 TbBool can_i_enter_vehicle(struct Thing *p_me, struct Thing *p_vehicle);
 
+int limit_mood(struct Thing *p_thing, short mood);
+
+/** Init some commands which should be executed before the person is completely set up.
+ */
+void person_init_preplay_command(struct Thing *p_person);
+
+TbBool person_is_executing_commands(ThingIdx person);
+void person_start_executing_commands(struct Thing *p_person);
+
 TbBool person_is_persuaded(ThingIdx thing);
 TbBool person_is_persuaded_by_person(ThingIdx thing, ThingIdx owntng);
 TbBool person_is_persuaded_by_player(ThingIdx thing, ushort plyr);
 
+void player_change_person(short thing, ushort plyr);
+void make_peeps_scatter(struct Thing *p_person, int x, int z);
+int person_hit_by_bullet(struct Thing *p_person, short hp,
+  int vx, int vy, int vz, struct Thing *p_attacker, int type);
+
+/** Restores agents health by consuming a medikit, or just restores if no medikit available.
+ */
+TbBool person_use_medikit(struct Thing *p_person, PlayerIdx plyr);
+
 void set_person_persuaded(struct Thing *p_person, struct Thing *p_attacker, ushort energy);
+void person_init_drop(struct Thing *p_person, ThingIdx item);
+void person_init_pickup(struct Thing *p_person, ThingIdx item);
+void person_enter_vehicle(struct Thing *p_person, struct Thing *p_vehicle);
+void thing_shoot_at_thing(struct Thing *p_thing, short target);
+ubyte person_attempt_to_leave_vehicle(struct Thing *p_thing);
+void thing_shoot_at_point(struct Thing *p_thing, short x, short y, short z, uint fast_flag);
+void call_protect(struct Thing *p_thing, ushort plyr);
+ushort count_protect(struct Thing *p_thing, ushort plyr);
+void call_unprotect(struct Thing *p_thing, ushort plyr, ubyte flag);
+void person_init_get_item(struct Thing *p_person, short item, ushort plyr);
+void person_init_get_item_fast(struct Thing *p_person, short item, ushort plyr);
+void person_init_plant_mine_fast(struct Thing *p_thing, short x, short y, short z, int face);
+void person_init_plant_mine(struct Thing *p_person, short x, short y, short z, int face);
+int thing_select_specific_weapon(struct Thing *p_person, ushort weapon, uint flag);
+void person_go_enter_vehicle_fast(struct Thing *p_person, struct Thing *p_vehicle, ushort plyr);
+void person_go_enter_vehicle(struct Thing *p_person, struct Thing *p_vehicle);
+void person_init_follow_person(struct Thing *p_person, struct Thing *p_other);
+void person_shield_toggle(struct Thing *p_person, PlayerIdx plyr);
+void person_self_destruct(struct Thing *p_person);
 
 struct Thing *new_sim_person(int x, int y, int z, ubyte subtype);
 
