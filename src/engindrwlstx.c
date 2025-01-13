@@ -44,6 +44,7 @@
 #include "enginshrapn.h"
 #include "engintrns.h"
 #include "game_speed.h"
+#include "game_sprani.h"
 #include "game_sprts.h"
 #include "game.h"
 #include "player.h"
@@ -78,8 +79,6 @@ extern long dword_19F4FC;
 extern long dword_19F500;
 extern long dword_19F504;
 extern long dword_19F508;
-
-extern ushort shield_frm[4];
 
 extern short word_1A5834;
 extern short word_1A5836;
@@ -575,7 +574,7 @@ void draw_object_face3_textrd_dk(ushort face)
 
     if (game_perspective == 3)
     {
-        vec_colour = colour_lookup[3];
+        vec_colour = colour_lookup[ColLU_GREEN];
         if (!lbKeyOn[KC_RALT])
         {
             poly_line(&point1, &point3);
@@ -1871,20 +1870,20 @@ void draw_sort_sprite1b(int sspr)
         short dy;
         sprintf(locstr, "%d ", p_thing->U.UPerson.RecoilTimer);
         dy = (37 * overall_scale) >> 8;
-        draw_text(p_sspr->X, p_sspr->Y - dy, locstr, colour_lookup[2]);
+        draw_text(p_sspr->X, p_sspr->Y - dy, locstr, colour_lookup[ColLU_RED]);
     }
 
-    if ((p_thing->Flag2 & TgF2_ExistsOnMap) != 0) {
+    if ((p_thing->Flag2 & TgF2_ExistsOffMap) != 0) {
         short dx, dy;
         dx = (2 * overall_scale) >> 8;
         dy = (37 * overall_scale) >> 8;
-        draw_text(p_sspr->X - dx, p_sspr->Y - dy, "E", colour_lookup[2]);
+        draw_text(p_sspr->X - dx, p_sspr->Y - dy, "E", colour_lookup[ColLU_RED]);
     }
     if ((ingame.DisplayMode != 50) && ((p_thing->Flag2 & TgF2_InsideBuilding) != 0)) {
         short dx, dy;
         dx = (2 * overall_scale) >> 8;
         dy = (37 * overall_scale) >> 8;
-        draw_text(p_sspr->X + dx, p_sspr->Y - dy, "B", colour_lookup[2]);
+        draw_text(p_sspr->X + dx, p_sspr->Y - dy, "B", colour_lookup[ColLU_RED]);
     }
 }
 
@@ -2198,9 +2197,9 @@ void draw_object_face3_textrd(ushort face)
     if (game_perspective == 3)
     {
         vec_mode = 0;
-        vec_colour = pixmap.fade_table[256 * (point3.S >> 16) + colour_lookup[2]];
+        vec_colour = pixmap.fade_table[256 * (point3.S >> 16) + colour_lookup[ColLU_RED]];
         draw_trigpoly(&point1, &point2, &point3);
-        vec_colour = colour_lookup[3];
+        vec_colour = colour_lookup[ColLU_GREEN];
         if (!lbKeyOn[KC_RALT])
         {
             poly_line(&point1, &point3);
@@ -3248,7 +3247,7 @@ void draw_sort_sprite_number(ushort sspr)
 
     p_sspr = &game_sort_sprites[sspr];
     sprintf(locstr, "%d", (int)p_sspr->PThing);
-    draw_text(p_sspr->X, p_sspr->Y, locstr, colour_lookup[2]);
+    draw_text(p_sspr->X, p_sspr->Y, locstr, colour_lookup[ColLU_RED]);
 }
 
 void number_player(struct Thing *p_person, ubyte n)
@@ -3321,7 +3320,7 @@ void number_player(struct Thing *p_person, ubyte n)
             tng_cor_z = p_person->Z;
         }
         cor_x = PRCCOORD_TO_MAPCOORD(tng_cor_x) - engn_xc;
-        cor_y = (tng_cor_y >> 5) - (engn_yc >> 3);
+        cor_y = PRCCOORD_TO_YCOORD(tng_cor_y) - (engn_yc >> 3);
         cor_z = PRCCOORD_TO_MAPCOORD(tng_cor_z) - engn_zc;
     }
     {
