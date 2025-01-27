@@ -201,8 +201,10 @@ void draw_box_cutedge(struct ScreenBox *box, TbPixel colr1)
     LbDrawLine(box->X + 0, box->Y + 0, box->X + 0, box->Y + box->Height - cut - stp, colr1);
     LbDrawLine(box->X + box->Width, box->Y + cut, box->X + box->Width, box->Y + box->Height - stp, colr1);
     LbDrawLine(box->X + cut, box->Y + box->Height - stp, box->X + box->Width, box->Y + box->Height - stp, colr1);
-    LbDrawLine(box->X + box->Width - cut, box->Y + 0, box->X + box->Width, box->Y + cut, colr1);
-    LbDrawLine(box->X + stp, box->Y + box->Height - cut, box->X + cut, box->Height + cut + stp, colr1);
+    LbDrawLine(box->X + box->Width - cut, box->Y + 0,
+      box->X + box->Width, box->Y + cut, colr1);
+    LbDrawLine(box->X + stp, box->Y + box->Height - cut,
+      box->X + cut, box->Y + box->Height - stp, colr1);
 }
 
 void draw_slant_box(struct ScreenBox *box, TbPixel colr2)
@@ -261,10 +263,8 @@ void draw_slant_left_arrow(struct ScreenBox *box, TbPixel colr2)
     else
         colour = colr2;
 
-    if (lbDisplay.GraphicsScreenHeight < 400)
-        stp = 1;
-    else
-        stp = 2;
+    // We expect the rect to be a multiplication of 4x9; so we use height only
+    stp = (box->Height + 4) / 9;
 
     x = box->X;
     y = box->Y - stp;
@@ -284,10 +284,8 @@ void draw_slant_right_arrow(struct ScreenBox *box, TbPixel colr2)
     else
         colour = colr2;
 
-    if (lbDisplay.GraphicsScreenHeight < 400)
-        stp = 1;
-    else
-        stp = 2;
+    // We expect the rect to be a multiplication of 4x9; so we use height only
+    stp = (box->Height + 4) / 9;
 
     x = box->X;
     y = box->Y - stp;
@@ -355,17 +353,10 @@ void init_pause_screen_boxes(void)
         ingame_boxes_colr2 = 35;
     }
 
-    if (lbDisplay.GraphicsScreenHeight < 400) {
-        pause_main_box.Width = 233;
-        pause_main_box.Height = 122;
-        cutin_w = 5;
-        slider_h = 9;
-    } else {
-        pause_main_box.Width = 466;
-        pause_main_box.Height = 244;
-        cutin_w = 10;
-        slider_h = 18;
-    }
+    pause_main_box.Width = 233 * pop1_sprites_scale;
+    pause_main_box.Height = 122 * pop1_sprites_scale;
+    cutin_w = 5 * pop1_sprites_scale;
+    slider_h = 9 * pop1_sprites_scale;
 
     pause_main_box.X = (lbDisplay.GraphicsScreenWidth - pause_main_box.Width) / 2;
     pause_main_box.Y = (lbDisplay.GraphicsScreenHeight - pause_main_box.Height) / 2;

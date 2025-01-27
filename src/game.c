@@ -78,6 +78,8 @@
 #include "feresearch.h"
 #include "festorage.h"
 #include "feworld.h"
+#include "hud_panecfg.h"
+#include "hud_panel.h"
 #include "purpldrw.h"
 #include "purpldrwlst.h"
 #include "building.h"
@@ -95,7 +97,6 @@
 #include "game_data.h"
 #include "game_speed.h"
 #include "game_sprani.h"
-#include "hud_panel.h"
 #include "hud_target.h"
 #include "keyboard.h"
 #include "misstat.h"
@@ -247,31 +248,24 @@ struct TbLoadFiles unk02_load_files[] =
 #if 1 // !defined(LB_WSCREEN_CONTROL)
   { "*W_SCREEN",		(void **)&lbDisplay.WScreen,(void **)NULL,MAX_SUPPORTED_SCREEN_WIDTH*(MAX_SUPPORTED_SCREEN_HEIGHT+1), 0, 0 },
 #endif
-  { "data/pop2-1.dat",	(void **)&pop1_data,		(void **)NULL,			0, 0, 0 },
-  { "data/pop2-1.tab",	(void **)&pop1_sprites,		(void **)&pop1_sprites_end, 0, 0, 0 },
-  { "data/mspr-0.dat",	(void **)&m_spr_data,		(void **)&m_spr_data_end,0, 0, 0 },
-  { "data/mspr-0.tab",	(void **)&m_sprites,		(void **)&m_sprites_end,0, 0, 0 },
-  { "data/mele-0.ani",	(void **)&melement_ani,		(void **)&mele_ani_end,	0, 0, 0 },
-  { "data/nsta-0.ani",	(void **)&nstart_ani,		(void **)&nstart_ani_end,0, 0, 0 },
-  { "data/nfra-0.ani",	(void **)&frame,			(void **)&frame_end,	0, 0, 0 },
-  { "data/font0-0.dat",	(void **)&small_font_data,	(void **)NULL,			0, 0, 0 },
-  { "data/font0-0.tab",	(void **)&small_font,		(void **)&small_font_end, 0, 0, 0 },
-  { "data/pointr0-2.dat",(void **)&pointer_data,	(void **)NULL,			0, 0, 0 },
-  { "data/pointr0-2.tab",(void **)&pointer_sprites,	(void **)&pointer_sprites_end, 0, 0, 0 },
-  { "qdata/pal.pal",	(void **)&display_palette,	(void **)NULL,			0, 0, 0 },
-  { "",					(void **)NULL, 				(void **)NULL,			0, 0, 0 }
+  { "data/pop2-3.dat",	(void **)&pop1_data,		(void **)&pop1_data_end,	0, 0, 0 },
+  { "data/pop2-3.tab",	(void **)&pop1_sprites,		(void **)&pop1_sprites_end, 0, 0, 0 },
+  { "data/mspr-0.dat",	(void **)&m_spr_data,		(void **)&m_spr_data_end,	0, 0, 0 },
+  { "data/mspr-0.tab",	(void **)&m_sprites,		(void **)&m_sprites_end,	0, 0, 0 },
+  { "data/mele-0.ani",	(void **)&melement_ani,		(void **)&mele_ani_end,		0, 0, 0 },
+  { "data/nsta-0.ani",	(void **)&nstart_ani,		(void **)&nstart_ani_end,	0, 0, 0 },
+  { "data/nfra-0.ani",	(void **)&frame,			(void **)&frame_end,		0, 0, 0 },
+  { "data/font0-0.dat",	(void **)&small_font_data,	(void **)NULL,				0, 0, 0 },
+  { "data/font0-0.tab",	(void **)&small_font,		(void **)&small_font_end,	0, 0, 0 },
+  { "data/pointr0-3.dat",(void **)&pointer_data,	(void **)&pointer_data_end,	0, 0, 0 },
+  { "data/pointr0-3.tab",(void **)&pointer_sprites,	(void **)&pointer_sprites_end, 0, 0, 0 },
+  { "qdata/pal.pal",	(void **)&display_palette,	(void **)NULL,				0, 0, 0 },
+  { "",					(void **)NULL, 				(void **)NULL,				0, 0, 0 }
 };
 
 char unk_credits_text_s[] = "";
 char unk_credits_text_z[] = "";
 char unk_credits_text_p[] = "";
-
-// Original sizes of scanner in low res 64x62, high res 129x119
-
-/** Width of the scanner map area, in percentage of screen. */
-ubyte scanner_width_pct = 20;
-/** Height of the scanner map area, in percentage of screen. */
-ubyte scanner_height_pct = 25;
 
 void ac_purple_unkn1_data_to_screen(void);
 
@@ -1772,18 +1766,10 @@ void srm_scanner_set_size_at_bottom_left(short margin, short width, short height
 
 void srm_scanner_size_update(void)
 {
-    int margin, width, height;
+    short margin, width, height;
 
-    width = lbDisplay.GraphicsScreenWidth * scanner_width_pct / 100;
-    height = lbDisplay.GraphicsScreenHeight * scanner_height_pct / 100;
-    margin = SCANNER_objective_info_height() + 2;
-    if (lbDisplay.GraphicsScreenWidth >= 640) {
-        width = width * 101 / 100;
-        height = height * 99 / 100;
-    } else {
-        // width without change
-        height = height * 124 / 100;
-    }
+    panel_get_scanner_screen_size(&margin, &width, &height,
+      lbDisplay.GraphicsScreenWidth, lbDisplay.GraphicsScreenHeight, pop1_sprites_scale);
     srm_scanner_set_size_at_bottom_left(margin, width, height);
 }
 
@@ -2172,7 +2158,7 @@ TbResult init_read_all_sprite_files(void)
     if (tret == Lb_OK)
         tret = ret;
 
-    ret = load_sprites_panel(&p_buf, pinfo->directory);
+    ret = load_sprites_fepanel(&p_buf, pinfo->directory);
     if (tret == Lb_OK)
         tret = ret;
 
@@ -2215,7 +2201,7 @@ TbResult init_read_all_sprite_files(void)
 
     setup_sprites_icons();
     setup_sprites_wicons();
-    setup_sprites_panel();
+    setup_sprites_fepanel();
     setup_sprites_fe_mouse_pointers();
     setup_sprites_small_font();
     setup_sprites_small2_font();
@@ -3649,7 +3635,7 @@ void gproc3_unknsub2(void)
     if (!lbDisplay.MRightButton)
     {
         dword_155010 += lbSinTable[dword_1AAB74] >> 9;
-        dword_155014 += lbSinTable[dword_1AAB74 + 512] >> 9;
+        dword_155014 += lbSinTable[dword_1AAB74 + LbFPMath_PI/2] >> 9;
     }
 
     if (ms_y < 180)
@@ -5272,7 +5258,7 @@ void do_scroll_map(void)
     if (angle >= 0) {
         int wibl_x, wibl_y;
         wibl_x = dword_153194 * lbSinTable[angle] >> 8 >> dampr;
-        wibl_y = dword_153194 * lbSinTable[angle + 512] >> 8 >> dampr;
+        wibl_y = dword_153194 * lbSinTable[angle + LbFPMath_PI/2] >> 8 >> dampr;
         ingame.TrackX -= wibl_x;
         ingame.TrackZ += wibl_y;
         engn_xc -= wibl_x;
@@ -5286,7 +5272,7 @@ void do_scroll_map(void)
     if (angle >= 0) {
         int wibl_x, wibl_y;
         wibl_x = dword_153194 * lbSinTable[angle] >> 8 >> dampr;
-        wibl_y = dword_153194 * lbSinTable[angle + 512] >> 8 >> dampr;
+        wibl_y = dword_153194 * lbSinTable[angle + LbFPMath_PI/2] >> 8 >> dampr;
         ingame.TrackX -= wibl_x;
         ingame.TrackZ += wibl_y;
         engn_xc -= wibl_x;
