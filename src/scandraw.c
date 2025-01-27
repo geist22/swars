@@ -411,7 +411,6 @@ extern ulong SCANNER_keep_arcs;
 extern long scanner_blink; // = 1;
 
 extern struct scanstr3 SCANNER_arcpoint[20];
-extern TbPixel SCANNER_people_colours[15];
 
 void SCANNER_process_special_input(void)
 {
@@ -680,7 +679,7 @@ void SCANNER_draw_new_transparent_map(void)
     dt_x = (ingame.Scanner.X2 - ingame.Scanner.X1) >> 1;
     dt_y = (ingame.Scanner.Y2 - ingame.Scanner.Y1) >> 1;
     sh_y = (ingame.Scanner.Zoom * lbSinTable[ingame.Scanner.Angle]) >> 8;
-    sh_x = (ingame.Scanner.Zoom * lbSinTable[ingame.Scanner.Angle + 512]) >> 8;
+    sh_x = (ingame.Scanner.Zoom * lbSinTable[ingame.Scanner.Angle + LbFPMath_PI/2]) >> 8;
 
     SCANNER_dw07C = sh_y << 16;
     SCANNER_dw080 = sh_x << 16;
@@ -1105,7 +1104,15 @@ ushort SCANNER_scale_size(short base_size)
 {
     short sz;
 
-    sz = base_size * (450 - ingame.Scanner.Zoom) / 192;
+    if (!SCANNER_scale_dots)
+        return base_size;
+    // For lower resolutions, keep the smaller size for wider zoom range
+    // This assumes the game is played on a large monitor - in such case,
+    // switching to larger dots doesn't look that good
+    if (lbDisplay.GraphicsScreenHeight < 600)
+        sz = base_size * (450 - ingame.Scanner.Zoom) / 208;
+    else
+        sz = base_size * (450 - ingame.Scanner.Zoom) / 192;
     if (sz > 15)
         sz = 15;
     else if (sz < 1)
@@ -1189,8 +1196,8 @@ void SCANNER_draw_orientation_arrow(int pos_x1, int pos_y1, int range, int angle
 
     x1 = ((range * lbSinTable[angle]) >> 16) + pos_x1;
     len_y = (range * lbSinTable[angle]) >> 19;
-    y1 = ((range * -lbSinTable[angle + 512]) >> 16) + pos_y1;
-    len_x = (range * -lbSinTable[angle + 512]) >> 19;
+    y1 = ((range * -lbSinTable[angle + LbFPMath_PI/2]) >> 16) + pos_y1;
+    len_x = (range * -lbSinTable[angle + LbFPMath_PI/2]) >> 19;
     x2 = x1 - len_y;
     y2 = y1 - len_x;
     LbDrawLine(x1, y1, x2 - len_x, y2 + len_y, colour_lookup[ColLU_WHITE]);
@@ -1709,7 +1716,7 @@ void SCANNER_draw_signals(void)
         dt_x = (ingame.Scanner.X2 - ingame.Scanner.X1) >> 1;
         dt_y = (ingame.Scanner.Y2 - ingame.Scanner.Y1) >> 1;
         sh_y = (ingame.Scanner.Zoom * lbSinTable[ingame.Scanner.Angle]) >> 8;
-        sh_x = (ingame.Scanner.Zoom * lbSinTable[ingame.Scanner.Angle + 512]) >> 8;
+        sh_x = (ingame.Scanner.Zoom * lbSinTable[ingame.Scanner.Angle + LbFPMath_PI/2]) >> 8;
         pos_x1 = ingame.Scanner.X1 + dt_x;
         pos_y1 = ingame.Scanner.Y1 + dt_y;
         if (dt_x >= dt_y)
