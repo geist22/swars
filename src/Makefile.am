@@ -4,6 +4,10 @@ bindir = $(prefix)/$(PACKAGE)
 MKW = $(PYTHON) $(top_srcdir)/util/mkwrappers
 
 swars_SOURCES = \
+	app_spr_init.c \
+	ap_gspr_map.c \
+	ap_spr_smap.c \
+	app_sprite.h \
 	bflib_joyst.c \
 	bflib_joyst.h \
 	bflib_joyst_s.sx \
@@ -140,6 +144,8 @@ swars_SOURCES = \
 	game_sprts.h \
 	game.h \
 	globals.h \
+	hud_panecfg.c \
+	hud_panecfg.h \
 	hud_panel.c \
 	hud_panel.h \
 	hud_target.c \
