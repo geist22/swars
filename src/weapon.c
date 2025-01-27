@@ -233,6 +233,7 @@ void read_weapons_conf_file(void)
         LbIniSkipToNextLine(&parser);
     }
 #undef COMMAND_TEXT
+
     for (wtype = 0; wtype < weapons_count; wtype++)
     {
         char sect_name[16];
@@ -413,6 +414,7 @@ void read_weapons_conf_file(void)
         }
 #undef COMMAND_TEXT
     }
+
 #undef CONFDBGLOG
 #undef CONFWRNLOG
     LbIniParseEnd(&parser);
