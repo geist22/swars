@@ -23,9 +23,11 @@
 #include "bfmath.h"
 #include "bfmemut.h"
 #include "bfscrcopy.h"
+
 #include "campaign.h"
 #include "femail.h"
 #include "femain.h"
+#include "game_data.h"
 #include "guiboxes.h"
 #include "guitext.h"
 #include "purpldrw.h"
@@ -215,20 +217,28 @@ ubyte show_brief_netscan_box(struct ScreenTextBox *box)
     return 0;
 }
 
-void flic_netscan_open_anim(ubyte anim_no)
+void flic_netscan_open_anim(ubyte netno)
 {
-    ulong k;
+    struct Animation *p_anim;
+    PathInfo *pinfo;
+    int k;
+    ubyte anislot;
 
-    k = anim_slots[9];
-    sprintf(animations[k].Filename, "data/equip/net%02d.fli", anim_no);
-    flic_unkn03(9);
+    anislot = AniSl_NETSCAN;
+    k = anim_slots[anislot];
+    p_anim = &animations[k];
+    pinfo = &game_dirs[DirPlace_Equip];
+    anim_flic_set_fname(p_anim, "%s/net%02d.fli", pinfo->directory, netno);
+    flic_unkn03(anislot);
 }
 
 void purple_unkn2_data_to_screen(void)
 {
+    ubyte *buf;
+    buf = anim_type_get_output_buffer(AniSl_NETSCAN);
     LbScreenSetGraphicsWindow(brief_graphical_box.X + 1, brief_graphical_box.Y + 1,
       brief_graphical_box.Width - 2, brief_graphical_box.Height - 2);
-    LbScreenCopy(unkn_buffer_05, lbDisplay.GraphicsWindowPtr, lbDisplay.GraphicsWindowHeight);
+    LbScreenCopy(buf, lbDisplay.GraphicsWindowPtr, lbDisplay.GraphicsWindowHeight);
     LbScreenSetGraphicsWindow(0, 0, lbDisplay.GraphicsScreenWidth,
         lbDisplay.GraphicsScreenHeight);
 }
@@ -455,7 +465,7 @@ ubyte show_citymap_box(struct ScreenBox *box)
     {
         if (!netscan_objectives[selected_netscan_objective].AnimNo)
             byte_1C47D9 = 0;
-        if (xdo_next_frame(9))
+        if (xdo_next_frame(AniSl_NETSCAN))
             byte_1C47D9 = 0;
         draw_flic_purple_list(ac_purple_unkn2_data_to_screen);
     }
@@ -613,7 +623,7 @@ ubyte show_mission_screen(void)
                 brief_mission_text_box.Font = small_font;
               }
               brief_mission_text_box.Lines = 0;
-              brief_mission_text_box.BGColour = 0;
+              brief_mission_text_box.LineHeight = 0;
               brief_mission_text_box.Flags |= GBxFlg_Unkn0080;
             }
           }

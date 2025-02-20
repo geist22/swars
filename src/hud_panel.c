@@ -119,7 +119,7 @@ TbResult load_pop_sprites_for_current_mode(void)
     return ret;
 }
 
-TbResult load_small_font_for_current_mode(void)
+TbResult load_small_font_for_current_ingame_mode(void)
 {
     PathInfo *pinfo;
     short max_detail;
@@ -1791,7 +1791,7 @@ void draw_transparent_slant_bar(short x, short y, ushort w, ushort h)
     point4.pp.S = 0;
 
     vec_mode = 18;
-    vec_map = dword_1AA280;
+    vec_map = vec_tmap[2];
     draw_trigpoly(&point1.pp, &point4.pp, &point3.pp);
     if (vec_mode == 2)
         vec_mode = 27;

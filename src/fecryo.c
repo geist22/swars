@@ -25,6 +25,7 @@
 #include "bftext.h"
 #include "bflib_joyst.h"
 #include "ssampply.h"
+
 #include "specblit.h"
 #include "campaign.h"
 #include "cybmod.h"
@@ -34,6 +35,7 @@
 #include "guiboxes.h"
 #include "guitext.h"
 #include "keyboard.h"
+#include "game_data.h"
 #include "game_sprts.h"
 #include "game.h"
 #include "player.h"
@@ -58,10 +60,8 @@ extern ubyte byte_155180; // = 109;
 extern ubyte byte_155181[];
 extern ubyte byte_1551F4[5];
 extern ubyte cheat_research_cybmods;
-extern char byte_1C495C[20];
 extern ubyte byte_1C4978;
 extern ubyte byte_1C4979;
-extern ubyte byte_1C4AA0;
 
 // Shared with equip screen
 extern char equip_cost_text[20];
@@ -113,12 +113,211 @@ ubyte equip_blokey_static_width[] = {
      93, 47, 139, 93,
 };
 
+void update_cybmod_cost_text(void)
+{
+    struct ModDef *mdef;
+    int cost;
+
+    if (selected_mod == -1) // No mod selected
+    {
+        equip_cost_text[0] = 0;
+        return;
+    }
+
+    mdef = &mod_defs[selected_mod + 1];
+    cost = 10 * (int)mdef->Cost;
+    sprintf(equip_cost_text, "%d", cost);
+}
+
+void update_cybmod_name_text(void)
+{
+    ushort mtype;
+    ushort mdstr_id, lvstr_id;
+    ubyte modgrp, modlv;
+
+    if (selected_mod == -1) // No mod selected
+    {
+        cybmod_name_text[0] = 0;
+        return;
+    }
+
+    mtype = selected_mod + 1;
+
+    modgrp = cybmod_group_type(mtype);
+    modlv = cybmod_version(mtype);
+    mdstr_id = 70 + byte_1551F4[modgrp];
+    if (modgrp != MODGRP_EPIDERM)
+       lvstr_id = 76;
+    else
+       lvstr_id = 75;
+    sprintf(cybmod_name_text, "%s %s %d", gui_strings[mdstr_id], gui_strings[lvstr_id], modlv);
+}
+
+TbBool cybmod_has_display_anim(ubyte mod)
+{
+    return (1 << (mod - 1) < 0x1000);
+}
+
+void cryo_display_box_redraw(struct ScreenTextBox *p_box)
+{
+    ubyte real_dbcontent;
+
+    real_dbcontent = cybmod_has_display_anim(selected_mod + 1) ? display_box_content : DiBoxCt_TEXT;
+    switch (real_dbcontent)
+    {
+    case DiBoxCt_TEXT:
+        p_box->Flags |= GBxFlg_Unkn0080;
+        // Re-add scroll bars
+        p_box->Flags |= GBxFlg_RadioBtn;
+
+        p_box->field_38 = 0;
+        p_box->Lines = 0;
+        p_box->Text = &weapon_text[cybmod_text_index[selected_mod]];
+        lbFontPtr = small_font;
+        p_box->LineHeight = byte_197160 + font_height('A');
+        lbFontPtr = p_box->Font;
+        p_box->TextFadePos = -5;
+        break;
+    case DiBoxCt_ANIM:
+        // Remove scroll bars
+        p_box->Flags &= ~GBxFlg_RadioBtn;
+
+        init_weapon_anim(selected_mod + 32);
+        // Negative value saves the background before starting animation
+        p_box->TextFadePos = -2;
+        break;
+    }
+}
+
+void cryo_update_for_selected_cybmod(void)
+{
+    update_cybmod_name_text();
+    update_cybmod_cost_text();
+
+    if (selected_mod == -1) // No mod selected
+    {
+        cryo_cybmod_list_box.Flags |= 0x0080;
+        // Re-add scroll bars
+        cryo_cybmod_list_box.Flags |= GBxFlg_RadioBtn;
+        cryo_cybmod_list_box.Text = NULL;
+        return;
+    }
+
+    equip_name_box.TextFadePos = -5;
+    switch_equip_offer_to_buy();
+    cryo_display_box_redraw(&cryo_cybmod_list_box);
+}
+
 ubyte do_cryo_offer_cancel(ubyte click)
 {
+#if 0
     ubyte ret;
     asm volatile ("call ASM_do_cryo_offer_cancel\n"
         : "=r" (ret) : "a" (click));
     return ret;
+#endif
+    selected_mod = -1;
+    cryo_update_for_selected_cybmod();
+    refresh_equip_list = 1;
+    return 0;
+}
+
+TbBool mod_draw_update_on_change(ushort mtype)
+{
+    switch (cybmod_group_type(mtype))
+    {
+    case MODGRP_LEGS:
+        mod_draw_states[3] |= 0x08;
+        update_flic_mods(flic_mods);
+        break;
+    case MODGRP_ARMS:
+        mod_draw_states[2] |= 0x08;
+        update_flic_mods(flic_mods);
+        break;
+    case MODGRP_CHEST:
+        mod_draw_states[0] |= 0x08;
+        update_flic_mods(flic_mods);
+        break;
+    case MODGRP_BRAIN:
+        mod_draw_states[1] |= 0x08;
+        update_flic_mods(flic_mods);
+        break;
+    default:
+        return false;
+    }
+    return true;
+}
+
+ubyte do_equip_offer_buy_cybmod(ubyte click)
+{
+    struct ModDef *mdef;
+    ubyte nbought;
+
+    mdef = &mod_defs[selected_mod + 1];
+    nbought = 0;
+
+    if (selected_agent != 4)
+    {
+        long cost;
+        short nagent;
+        TbBool added;
+
+        cost = 10 * mdef->Cost;
+        nagent = selected_agent;
+
+        if (ingame.Credits - cost < 0)
+            added = false;
+        else
+            added = player_cryo_add_cybmod(nagent, selected_mod + 1);
+
+        if (added) {
+            mod_draw_update_on_change(selected_mod + 1);
+        }
+
+        if (added) {
+            ingame.Expenditure += cost;
+            ingame.Credits -= cost;
+            nbought++;
+        }
+    }
+    else
+    {
+        long cost;
+        short nagent;
+        TbBool added;
+
+        cost = 10 * mdef->Cost;
+
+        for (nagent = 0; nagent < 4; nagent++)
+        {
+            if (ingame.Credits - cost < 0)
+                break;
+
+            added = player_cryo_add_cybmod(nagent, selected_mod + 1);
+
+            if (added) {
+                mod_draw_update_on_change(selected_mod + 1);
+            }
+
+            if (added) {
+                ingame.Credits -= cost;
+                ingame.Expenditure += cost;
+                nbought++;
+            }
+        }
+    }
+
+    if (nbought > 0)
+    {
+        if ((login_control__State == 5) && ((unkn_flags_08 & 0x08) != 0)) {
+            net_players_copy_cryo();
+        }
+        selected_mod = -1;
+        cryo_update_for_selected_cybmod();
+        refresh_equip_list = 1;
+    }
+
+    return (nbought > 0);
 }
 
 #define PURPLE_MOD_AREA_WIDTH 139
@@ -127,10 +326,12 @@ ubyte do_cryo_offer_cancel(ubyte click)
 void init_next_blokey_flic(void)
 {
     struct Campaign *p_campgn;
+    struct Animation *p_anim;
     const char *campgn_mark;
-    const char *flic_dir;
-    ushort cmod, stage;
+    PathInfo *pinfo;
     int k;
+    ushort cmod, stage;
+    ubyte anislot;
 
     p_campgn = &campaigns[background_type];
     campgn_mark = p_campgn->ProjectorFnMk;
@@ -138,7 +339,7 @@ void init_next_blokey_flic(void)
     if (strcmp(campgn_mark, "s") == 0)
         campgn_mark = "m";
 
-    flic_dir = "qdata/equip";
+    pinfo = &game_dirs[DirPlace_QEquip];
 
     stage = 0;
 
@@ -186,6 +387,7 @@ void init_next_blokey_flic(void)
     switch (stage)
     {
     case 0:
+        anislot = AniSl_UNKN8;
         if (!byte_1DDC40)
         {
             byte_1DDC40 = 1;
@@ -193,9 +395,10 @@ void init_next_blokey_flic(void)
         }
         else if (!IsSamplePlaying(0, 134, 0))
         {
-            k = anim_slots[8];
-            sprintf(animations[k].Filename, "%s/%s%da%d.fli", flic_dir, campgn_mark, flic_mods[0], flic_mods[2]);
-            flic_unkn03(8u);
+            k = anim_slots[anislot];
+            p_anim = &animations[k];
+            anim_flic_set_fname(p_anim, "%s/%s%da%d.fli", pinfo->directory, campgn_mark, flic_mods[0], flic_mods[2]);
+            flic_unkn03(anislot);
             play_sample_using_heap(0, 126, 127, 64, 100, 0, 1u);
             current_frame = 0;
             new_current_drawing_mod = 4;
@@ -203,26 +406,28 @@ void init_next_blokey_flic(void)
         }
         break;
     case 1:
-        k = anim_slots[3];
+        anislot = AniSl_UNKN3;
+        k = anim_slots[anislot];
+        p_anim = &animations[k];
         switch (cmod)
         {
         case 0:
-            sprintf(animations[k].Filename, "%s/%s%dbo.fli", flic_dir, campgn_mark, old_flic_mods[0]);
+            anim_flic_set_fname(p_anim, "%s/%s%dbo.fli", pinfo->directory, campgn_mark, old_flic_mods[0]);
             break;
         case 1:
-            sprintf(animations[k].Filename, "%s/%s%dbbo.fli", flic_dir, campgn_mark, old_flic_mods[0]);
+            anim_flic_set_fname(p_anim, "%s/%s%dbbo.fli", pinfo->directory, campgn_mark, old_flic_mods[0]);
             break;
         case 2:
-            sprintf(animations[k].Filename, "%s/%s%da%do.fli", flic_dir, campgn_mark, old_flic_mods[0], old_flic_mods[2]);
+            anim_flic_set_fname(p_anim, "%s/%s%da%do.fli", pinfo->directory, campgn_mark, old_flic_mods[0], old_flic_mods[2]);
             break;
         case 3:
-            sprintf(animations[k].Filename, "%s/%s%dl%do.fli", flic_dir, campgn_mark, old_flic_mods[0], old_flic_mods[3]);
+            anim_flic_set_fname(p_anim, "%s/%s%dl%do.fli", pinfo->directory, campgn_mark, old_flic_mods[0], old_flic_mods[3]);
             break;
         default:
             assert(!"unreachable");
             break;
         }
-        flic_unkn03(3);
+        flic_unkn03(anislot);
         new_current_drawing_mod = cmod;
         mod_draw_states[cmod] |= 0x02;
         cryo_blokey_box.Flags &= ~GBxFlg_RadioBtn;
@@ -230,26 +435,28 @@ void init_next_blokey_flic(void)
         byte_1DDC40 = 0;
         break;
     case 2:
-        k = anim_slots[3];
+        anislot = AniSl_UNKN3;
+        k = anim_slots[anislot];
+        p_anim = &animations[k];
         switch (cmod)
         {
           case 0:
-            sprintf(animations[k].Filename, "%s/%s%dbi.fli", flic_dir, campgn_mark, flic_mods[0]);
+            anim_flic_set_fname(p_anim, "%s/%s%dbi.fli", pinfo->directory, campgn_mark, flic_mods[0]);
             break;
           case 1:
-            sprintf(animations[k].Filename, "%s/%s%dbbi.fli", flic_dir, campgn_mark, flic_mods[0]);
+            anim_flic_set_fname(p_anim, "%s/%s%dbbi.fli", pinfo->directory, campgn_mark, flic_mods[0]);
             break;
           case 2:
-            sprintf(animations[k].Filename, "%s/%s%da%di.fli", flic_dir, campgn_mark, flic_mods[0], flic_mods[2]);
+            anim_flic_set_fname(p_anim, "%s/%s%da%di.fli", pinfo->directory, campgn_mark, flic_mods[0], flic_mods[2]);
             break;
           case 3:
-            sprintf(animations[k].Filename, "%s/%s%dl%di.fli", flic_dir, campgn_mark, flic_mods[0], flic_mods[3]);
+            anim_flic_set_fname(p_anim, "%s/%s%dl%di.fli", pinfo->directory, campgn_mark, flic_mods[0], flic_mods[3]);
             break;
           default:
             assert(!"unreachable");
             break;
         }
-        flic_unkn03(3);
+        flic_unkn03(anislot);
         new_current_drawing_mod = cmod;
         mod_draw_states[cmod] |= 0x01;
         mod_draw_states[cmod] &= ~0x08;
@@ -267,7 +474,7 @@ void purple_mods_data_to_screen(void)
 {
     struct Campaign *p_campgn;
     const char *campgn_mark;
-    const char *flic_dir;
+    PathInfo *pinfo;
     char str[52];
     short x, y;
     ubyte *buf;
@@ -279,9 +486,8 @@ void purple_mods_data_to_screen(void)
     if (strcmp(campgn_mark, "s") == 0)
         campgn_mark = "";
 
-    flic_dir = "qdata/equip";
-
-    sprintf(str, "%s/bgman%s.dat", flic_dir, campgn_mark);
+    pinfo = &game_dirs[DirPlace_QEquip];
+    sprintf(str, "%s/bgman%s.dat", pinfo->directory, campgn_mark);
 
     buf = back_buffer - PURPLE_MOD_AREA_WIDTH*PURPLE_MOD_AREA_HEIGHT;
     LbFileLoadAt(str, buf);
@@ -305,7 +511,7 @@ void blokey_flic_data_to_screen(void)
     ushort dy, dx;
 
     cdm = current_drawing_mod;
-    iline = unkn_buffer_05 + 0x8000;
+    iline = anim_type_get_output_buffer(AniSl_UNKN3);
     dx = cryo_blokey_box.X + 63 + equip_blokey_pos[cdm].X;
     dy = cryo_blokey_box.Y + 1 + equip_blokey_pos[cdm].Y;
     oline = &lbDisplay.WScreen[dx + lbDisplay.GraphicsScreenWidth * dy];
@@ -330,7 +536,7 @@ void blokey_static_flic_data_to_screen(void)
 {
     struct Campaign *p_campgn;
     const char *campgn_mark;
-    const char *flic_dir;
+    PathInfo *pinfo;
     char str[52];
     ubyte *buf;
     ubyte *o[2];
@@ -342,7 +548,7 @@ void blokey_static_flic_data_to_screen(void)
     if (strcmp(campgn_mark, "s") == 0)
         campgn_mark = "m";
 
-    flic_dir = "qdata/equip";
+    pinfo = &game_dirs[DirPlace_QEquip];
 
     o[1] = back_buffer;
     o[0] = lbDisplay.WScreen;
@@ -358,20 +564,20 @@ void blokey_static_flic_data_to_screen(void)
         switch (cdm)
         {
         case 0:
-            sprintf(str, "%s/%s%db.dat", flic_dir, campgn_mark, flic_mods[0]);
+            sprintf(str, "%s/%s%db.dat", pinfo->directory, campgn_mark, flic_mods[0]);
             break;
         case 1:
-            sprintf(str, "%s/%s%dbb.dat", flic_dir, campgn_mark, flic_mods[0]);
+            sprintf(str, "%s/%s%dbb.dat", pinfo->directory, campgn_mark, flic_mods[0]);
             break;
         case 2:
-            sprintf(str, "%s/%s%da%d.dat", flic_dir, campgn_mark, flic_mods[0], flic_mods[2]);
+            sprintf(str, "%s/%s%da%d.dat", pinfo->directory, campgn_mark, flic_mods[0], flic_mods[2]);
             break;
         case 3:
-            sprintf(str, "%s/%s%dl%d.dat", flic_dir, campgn_mark, flic_mods[0], flic_mods[3]);
+            sprintf(str, "%s/%s%dl%d.dat", pinfo->directory, campgn_mark, flic_mods[0], flic_mods[3]);
             break;
         }
 
-        buf = unkn_buffer_05 + 0x8000;
+        buf = anim_type_get_output_buffer(AniSl_UNKN3);
         len = LbFileLoadAt(str, buf);
         if (len < 4) {
             LbMemorySet(buf, 0, equip_blokey_static_width[cdm] * equip_blokey_static_height[cdm]);
@@ -386,18 +592,13 @@ void blokey_static_flic_data_to_screen(void)
     }
 }
 
-void update_cybmod_cost_text(void)
-{
-    int cost;
-
-    cost = 10 * (int)mod_defs[selected_mod + 1].Cost;
-    sprintf(equip_cost_text, "%d", cost);
-}
-
 ubyte cryo_blokey_mod_level(ubyte cdm)
 {
     PlayerInfo *p_locplayer;
     ubyte cybmod_lv;
+
+    if (selected_agent < 0)
+        return 0;
 
     switch (cdm)
     {
@@ -491,7 +692,10 @@ ubyte show_cryo_blokey(struct ScreenBox *box)
     cx = box->X + 4;
     cy = box->Y + 20;
     hline = font_height('A');
-    //if (selected_agent != -1) -- this is always set to 0..4
+
+    if (selected_agent < 0)
+        return 0;
+
     {
         ubyte cdm;
 
@@ -500,7 +704,7 @@ ubyte show_cryo_blokey(struct ScreenBox *box)
         {
             ubyte cybmod_lv;
             char locstr[54];
-            char *text;
+            const char *text;
 
             cybmod_lv = cryo_blokey_mod_level(cdm);
 
@@ -513,18 +717,18 @@ ubyte show_cryo_blokey(struct ScreenBox *box)
                 continue;
             }
 
+            text = gui_strings[70 + cdm];
             lbDisplay.DrawColour = 247;
-            draw_text_purple_list2(cx, cy, gui_strings[70 + cdm], 0);
+            draw_text_purple_list2(cx, cy, text, 0);
             cy += hline + 3;
+
             if (cdm == 3)
                 snprintf(locstr, sizeof(locstr), "%s %d", gui_strings[75], cybmod_lv);
             else
                 snprintf(locstr, sizeof(locstr), "%s %d", gui_strings[76], cybmod_lv);
-            text = (char *)back_buffer + text_buf_pos;
-            strcpy(text, locstr);
+            text = loctext_to_gtext(locstr);
             draw_text_purple_list2(cx, cy, text, 0);
             lbDisplay.DrawFlags = 0;
-            text_buf_pos += strlen(locstr) + 1;
             if (cdm == 3)
             {
                 lbDisplay.DrawFlags = Lb_SPRITE_OUTLINE;
@@ -560,7 +764,9 @@ TbBool cybmod_available_for_purchase(short mtype)
       && ((login_control__State != 5) || mod_tech_level[mtype] > login_control__TechLevel))
         return false;
 
-    //if (selected_agent != -1) -- this is always set to 0..4
+    if (selected_agent < 0)
+        return false;
+
     if (selected_agent == 4)
     {
         ushort plagent;
@@ -589,11 +795,80 @@ TbBool cybmod_available_for_purchase(short mtype)
     return true;
 }
 
+void draw_display_box_content_mod(struct ScreenTextBox *p_box)
+{
+    ubyte real_dbcontent;
+
+    real_dbcontent = cybmod_has_display_anim(selected_mod + 1) ? display_box_content : DiBoxCt_TEXT;
+    switch (real_dbcontent)
+    {
+    case DiBoxCt_TEXT:
+        lbFontPtr = small_font;
+        my_set_text_window(p_box->X + 4, p_box->ScrollWindowOffset + p_box->Y + 4,
+          p_box->Width - 20, p_box->ScrollWindowHeight + 23);
+        flashy_draw_text(0, 0, p_box->Text, p_box->TextSpeed, p_box->field_38,
+          &p_box->TextFadePos, 0);
+        break;
+    case DiBoxCt_ANIM:
+        if (p_box->TextFadePos < 0)
+            // Mark that we should start animation frames the next time
+            p_box->TextFadePos++;
+        else
+            xdo_next_frame(AniSl_EQVIEW);
+        draw_flic_purple_list(ac_weapon_flic_data_to_screen);
+        break;
+    }
+}
+
+TbBool input_display_box_content_mod(struct ScreenTextBox *p_box)
+{
+    if (mouse_down_over_box_coords(p_box->X + 4, p_box->Y + 4,
+      p_box->X + p_box->Width - 4, p_box->Y + 4 + 140))
+    {
+        if (lbDisplay.LeftButton)
+        {
+            lbDisplay.LeftButton = 0;
+            display_box_content_state_switch();
+            cryo_display_box_redraw(p_box);
+            return true;
+        }
+    }
+    return false;
+}
+
+/** Get global text pointer to a mod group name string.
+ */
+static const char *cryo_gtext_cybmod_list_item_name(ushort mtype)
+{
+    ubyte modgrp;
+    ushort mdstr_id;
+
+    modgrp = cybmod_group_type(mtype);
+    mdstr_id = 70 + byte_1551F4[modgrp];
+    return gui_strings[mdstr_id];
+}
+
+/** Get global text pointer to a mod level string.
+ * @see loctext_to_gtext()
+ */
+static const char *cryo_gtext_cybmod_list_item_level(ushort mtype)
+{
+    char locstr[48];
+    ubyte modlv;
+    ushort lvstr_id;
+
+    modlv = cybmod_version(mtype);
+
+    if (cybmod_group_type(mtype) != MODGRP_EPIDERM)
+        lvstr_id = 76;
+    else
+        lvstr_id = 75;
+    sprintf(locstr, "%s %d", gui_strings[lvstr_id], modlv);
+    return loctext_to_gtext(locstr);
+}
+
 ubyte show_cryo_cybmod_list_box(struct ScreenTextBox *box)
 {
-    ubyte modstrings[5];
-
-    memcpy(modstrings, byte_1551F4, 5);
     struct ScreenBoxBase power_box = {box->X + 8, box->Y + 152, 192, 17};
     struct ScreenBoxBase resil_box = {box->X + 8, box->Y + 177, 192, 17};
     struct ScreenBoxBase addit_box = {box->X + 8, box->Y + 200, 192, 19};
@@ -601,10 +876,10 @@ ubyte show_cryo_cybmod_list_box(struct ScreenTextBox *box)
     if ((box->Flags & GBxFlg_BkgndDrawn) == 0)
     {
         lbDisplay.DrawFlags = Lb_SPRITE_TRANSPAR4;
-        draw_box_purple_list(text_window_x1, text_window_y1,
-          text_window_x2 - text_window_x1 + 1, text_window_y2 - text_window_y1 + 1, 56);
+        // Highlight behind both power_box and resil_box
         draw_box_purple_list(box->X + 4, box->Y + 149, box->Width - 8, 48, 56);
-        draw_box_purple_list(box->X + 4, box->Y + 210, box->Width - 8, 13, 56);
+        // Highlight in bottom part of additiional info box
+        draw_box_purple_list(addit_box.X - 4, addit_box.Y + 10, addit_box.Width + 8, addit_box.Height - 10 + 4, 56);
 
         draw_discrete_rects_bar_bk(&power_box, gui_strings[432], byte_155174);
         draw_discrete_rects_bar_bk(&resil_box, gui_strings[433], byte_155180);
@@ -628,6 +903,11 @@ ubyte show_cryo_cybmod_list_box(struct ScreenTextBox *box)
         short text_h;
         short cy;
 
+        lbDisplay.DrawFlags = Lb_SPRITE_TRANSPAR4;
+        // Highlight behind the main list
+        draw_box_purple_list(text_window_x1, text_window_y1,
+          text_window_x2 - text_window_x1 + 1, text_window_y2 - text_window_y1 + 1, 56);
+
         cy = 3;
         text_h = font_height('A');
         for (mtype = box->field_38+1; mtype < MOD_TYPES_COUNT; mtype++)
@@ -636,42 +916,16 @@ ubyte show_cryo_cybmod_list_box(struct ScreenTextBox *box)
                 return 0;
             if (cybmod_available_for_purchase(mtype))
             {
-                  char *text;
-                  ubyte modgrp, modlv;
-                  ushort mdstr_id, lvstr_id;
+                  const char *text;
 
                   if (mouse_down_over_box_coords(text_window_x1, cy + text_window_y1 - 1,
-                    text_window_x2, cy + text_window_y1 + 1 + text_h) && lbDisplay.LeftButton)
+                    text_window_x2, cy + text_window_y1 + 1 + text_h))
                   {
-                        lbDisplay.LeftButton = 0;
-                        selected_mod = mtype - 1;
-                        equip_name_box.TextFadePos = -5;
-                        modgrp = cybmod_group_type(mtype);
-                        modlv = cybmod_version(mtype);
-                        mdstr_id = 70 + modstrings[modgrp];
-                        if (cybmod_group_type(mtype) != MODGRP_EPIDERM)
-                           lvstr_id = 76;
-                        else
-                           lvstr_id = 75;
-                        sprintf(cybmod_name_text, "%s %s %d", gui_strings[mdstr_id], gui_strings[lvstr_id], modlv);
-                        sprintf(equip_cost_text, "%d", 10 * mod_defs[mtype].Cost);
-                        equip_offer_buy_button.Text = gui_strings[436];
-                        equip_offer_buy_button.CallBackFn = ac_do_equip_offer_buy;
-                        if (byte_1C4AA0 || (1 << selected_mod >= 0x1000))
-                        {
-                            box->TextFadePos = -5;
-                            box->field_38 = 0;
-                            box->Text = &weapon_text[cybmod_text_index[selected_mod]];
-                            box->Lines = 0;
-                            box->Flags |= GBxFlg_Unkn0080;
-                            lbFontPtr = small_font;
-                            box->BGColour = byte_197160 + font_height('A');
-                            lbFontPtr = box->Font;
-                        }
-                        else
-                        {
-                          init_weapon_anim(selected_mod + 32);
-                        }
+                      if (lbDisplay.LeftButton) {
+                          lbDisplay.LeftButton = 0;
+                          selected_mod = mtype - 1;
+                          cryo_update_for_selected_cybmod();
+                      }
                   }
                   if (selected_mod == mtype - 1) {
                       lbDisplay.DrawFlags = Lb_TEXT_ONE_COLOR;
@@ -679,23 +933,15 @@ ubyte show_cryo_cybmod_list_box(struct ScreenTextBox *box)
                   } else {
                       lbDisplay.DrawFlags = 0;
                   }
+
+                  text = cryo_gtext_cybmod_list_item_name(mtype);
                   lbDisplay.DrawFlags |= 0x8000;
-                  modgrp = cybmod_group_type(mtype);
-                  modlv = cybmod_version(mtype);
-                  mdstr_id = 70 + modstrings[modgrp];
-                  draw_text_purple_list2(3, cy + 1, gui_strings[mdstr_id], 0);
+                  draw_text_purple_list2(3, cy + 1, text, 0);
                   lbDisplay.DrawFlags &= ~(0x8000|Lb_TEXT_HALIGN_RIGHT);
 
+                  text = cryo_gtext_cybmod_list_item_level(mtype);
                   lbDisplay.DrawFlags |= Lb_TEXT_HALIGN_RIGHT;
-                  if (cybmod_group_type(mtype) != MODGRP_EPIDERM)
-                      lvstr_id = 76;
-                  else
-                      lvstr_id = 75;
-                  sprintf(byte_1C495C, "%s %d", gui_strings[lvstr_id], modlv);
-                  text = (char *)back_buffer + text_buf_pos;
-                  strcpy(text, byte_1C495C);
                   draw_text_purple_list2(-1, cy + 1, text, 0);
-                  text_buf_pos += strlen(byte_1C495C) + 1;
                   lbDisplay.DrawFlags = 0;
 
                   cy += text_h + box->LineSpacing;
@@ -715,43 +961,9 @@ ubyte show_cryo_cybmod_list_box(struct ScreenTextBox *box)
 
         // Add control hotspot for the view / description switch
         draw_hotspot_purple_list(box->X + box->Width / 2, box->Y + 104);
+        draw_display_box_content_mod(box);
+        input_display_box_content_mod(box);
 
-        if (byte_1C4AA0 || (1 << selected_mod >= 0x1000))
-        {
-            lbFontPtr = small_font;
-            my_set_text_window(box->X + 4, box->ScrollWindowOffset + box->Y + 4,
-              box->Width - 20, box->ScrollWindowHeight + 23);
-            flashy_draw_text(0, 0, box->Text, box->TextSpeed, box->field_38, &box->TextFadePos, 0);
-        }
-        else
-        {
-            xdo_next_frame(2);
-            draw_flic_purple_list(ac_weapon_flic_data_to_screen);
-        }
-        if (lbDisplay.LeftButton)
-        {
-            if (mouse_down_over_box_coords(box->X + 4,
-              box->Y + 4, box->X + box->Width - 4, box->Y + 4 + 140))
-            {
-                lbDisplay.LeftButton = 0;
-                byte_1C4AA0 = byte_1C4AA0 == 0;
-                if (byte_1C4AA0 || (1 << selected_mod >= 0x1000))
-                {
-                    box->TextFadePos = -5;
-                    box->Text = &weapon_text[cybmod_text_index[selected_mod]];
-                    box->field_38 = 0;
-                    box->Lines = 0;
-                    box->Flags |= GBxFlg_Unkn0080;
-                    lbFontPtr = small_font;
-                    box->BGColour = byte_197160 + font_height('A');
-                    lbFontPtr = box->Font;
-                }
-                else
-                {
-                    init_weapon_anim(selected_mod + 32);
-                }
-            }
-        }
         //equip_offer_buy_button.DrawFn(&equip_offer_buy_button); -- incompatible calling convention
         asm volatile ("call *%1\n"
             : : "a" (&equip_offer_buy_button), "g" (equip_offer_buy_button.DrawFn));
@@ -764,7 +976,7 @@ ubyte show_cryo_cybmod_list_box(struct ScreenTextBox *box)
 
         if (selected_mod == -1)
         {
-            equip_cost_box.Flags = (GBxFlg_Unkn0008|GBxFlg_Unkn0001);
+            equip_cost_box.Flags = (GBxFlg_NoBkCopy|GBxFlg_Unkn0001);
             equip_offer_buy_button.Flags |= GBxFlg_Unkn0001;
             cryo_offer_cancel_button.Flags |= GBxFlg_Unkn0001;
         }
@@ -937,7 +1149,7 @@ ubyte show_cryo_chamber_screen(void)
             }
         }
         cryo_cybmod_list_box.Flags |= GBxFlg_Unkn0080;
-        cryo_cybmod_list_box.BGColour = 0;
+        cryo_cybmod_list_box.LineHeight = 0;
         refresh_equip_list = 0;
     }
 
@@ -1043,7 +1255,7 @@ void init_cryo_screen_boxes(void)
 
     init_screen_text_box(&cryo_agent_list_box, 7u, 122u, 196u, 303, 6,
         small_med_font, 1);
-    cryo_agent_list_box.BGColour = 25;
+    cryo_agent_list_box.LineHeight = 25;
     cryo_agent_list_box.DrawTextFn = ac_show_cryo_agent_list;
     cryo_agent_list_box.ScrollWindowOffset += 27;
     cryo_agent_list_box.Flags |= (GBxFlg_RadioBtn|GBxFlg_IsMouseOver);
@@ -1078,11 +1290,10 @@ void switch_shared_equip_screen_buttons_to_cybmod(void)
     equip_cost_box.Y = 383;
     equip_name_box.Text = cybmod_name_text;
     equip_all_agents_button.CallBackFn = ac_do_cryo_all_agents_set;
-    if (selected_mod < 0)
-        cybmod_name_text[0] = '\0';
-    else
-        init_weapon_anim(selected_mod + 32);
+
+    update_cybmod_name_text();
     switch_equip_offer_to_buy();
+    cryo_display_box_redraw(&cryo_cybmod_list_box);
 }
 
 void set_flag01_cryo_screen_boxes(void)

@@ -136,7 +136,6 @@
 #define EXPECTED_LANG_TXT_SIZE 8000
 
 extern char *fadedat_fname;
-extern unsigned long unkn_buffer_04;
 char session_name[20] = "SWARA";
 
 extern ulong stored_l3d_next_object[1];
@@ -196,8 +195,11 @@ extern short word_1774E8[2 * 150];
 extern ushort word_1A7330[1000];
 extern ubyte byte_1A7B00[1000];
 extern ubyte byte_1A7EE8[8192];
+extern ubyte billboard_anim_no;
+extern ubyte byte_1AAA88;
 extern long dword_1AAB74;
 extern long dword_1AAB78;
+extern ubyte active_anim;
 extern ushort word_1AABD0;
 
 extern long mech_unkn_tile_x1;
@@ -213,10 +215,6 @@ extern long dword_1DC888;
 extern long dword_1DC88C;
 extern long dword_1DC890;
 extern long dword_1DC894;
-
-extern ubyte unkn_changing_color_1;
-extern ubyte unkn_changing_color_2;
-extern ulong unkn_changing_color_counter1;
 
 extern short brightness;
 
@@ -268,9 +266,15 @@ struct TbLoadFiles unk02_load_files[] =
   { "",					(void **)NULL, 				(void **)NULL,				0, 0, 0 }
 };
 
+ubyte byte_154BB4[] = {
+  220, 224, 224, 222, 220, 220,
+};
+
 char unk_credits_text_s[] = "";
 char unk_credits_text_z[] = "";
 char unk_credits_text_p[] = "";
+
+ubyte reload_menu_flag = false;
 
 void ac_purple_unkn1_data_to_screen(void);
 
@@ -361,7 +365,7 @@ void load_prim_quad(void)
     read_primveh_obj(primvehobj_fname, 1);
     read_textwalk();
     byte_19EC6F = 1;
-    ingame.DisplayMode = DpM_UNKN_37;
+    ingame.DisplayMode = DpM_PURPLEMNU;
     if (cmdln_param_bcg == 99)
         test_open(99);
     if (cmdln_param_bcg == 100)
@@ -443,10 +447,189 @@ void game_setup_stuff(void)
     colour_grey1 = LbPaletteFindColour(display_palette, 16, 16, 16);
 }
 
-void flic_unkn03(ubyte a1)
+void anim_show_FLI_SS2_NP(void)
 {
+#if 0
+    asm volatile ("call ASM_anim_show_FLI_SS2_NP\n"
+        :  : );
+    return;
+#endif
+    struct Animation *p_anim;
+
+    p_anim = &animations[active_anim];
+    anim_show_FLI_SS2(p_anim);
+}
+
+void anim_show_FLI_BRUN_NP(void)
+{
+#if 0
+    asm volatile ("call ASM_anim_show_FLI_BRUN_NP\n"
+        :  : );
+    return;
+#endif
+    struct Animation *p_anim;
+
+    p_anim = &animations[active_anim];
+    anim_show_FLI_BRUN(p_anim);
+}
+
+void anim_show_FLI_LC_NP(void)
+{
+#if 0
+    asm volatile ("call ASM_anim_show_FLI_LC_NP\n"
+        :  : );
+    return;
+#endif
+    struct Animation *p_anim;
+
+    p_anim = &animations[active_anim];
+    anim_show_FLI_LC(p_anim);
+}
+
+ubyte *anim_type_get_output_buffer(ubyte anislot)
+{
+    switch (anislot)
+    {
+    case AniSl_FULLSCREEN:
+    default:
+        return lbDisplay.WScreen;
+    case AniSl_BILLBOARD:
+        return vec_tmap[4];
+    case AniSl_EQVIEW:
+    case AniSl_UNKN4:
+    case AniSl_UNKN5:
+    case AniSl_UNKN6:
+    case AniSl_UNKN7:
+    case AniSl_NETSCAN:
+        return vec_tmap[5];
+    case AniSl_UNKN3:
+    case AniSl_UNKN8:
+        return vec_tmap[5] + 0x8000;
+    }
+}
+
+void anim_billboard_select_rand(void)
+{
+    ushort rnd;
+
+    rnd = LbRandomPosShort() & 7;
+    if (rnd <= 0)
+        billboard_anim_no = 1;
+    else if (rnd <= 2)
+        billboard_anim_no = 2;
+    else if (rnd <= 5)
+        billboard_anim_no = 0;
+    else
+        billboard_anim_no = 3;
+}
+
+void anim_billboard_select_next(void)
+{
+    billboard_anim_no++;
+    if (billboard_anim_no > 3)
+        billboard_anim_no = 0;
+}
+
+void anim_billboard_broadcast_sound(void)
+{
+    struct Thing *p_thing;
+    ushort rnd;
+    ubyte smpl_no;
+
+    if (in_network_game)
+        return;
+    if (ingame.VisibleBillboardThing == 0)
+        return;
+
+    p_thing = &things[ingame.VisibleBillboardThing];
+    smpl_no = byte_154BB4[billboard_anim_no];
+    rnd = LbRandomPosShort() & 1;
+    play_dist_sample(p_thing, smpl_no + rnd, 0x7Fu, 0x40, 100, 0, 1);
+}
+
+void flic_unkn03(ubyte anislot)
+{
+#if 0
     asm volatile ("call ASM_flic_unkn03\n"
-        : : "a" (a1));
+        : : "a" (anislot));
+#endif
+    struct Animation *p_anim;
+    ubyte *frmbuf;
+    PathInfo *pinfo;
+    int k;
+
+    k = anim_slots[anislot];
+    p_anim = &animations[k];
+    if (anim_is_opened(p_anim)) {
+        anim_flic_close(p_anim);
+    }
+
+    anim_scratch = scratch_buf1;
+    anim_flic_init(p_anim, anislot, 0x00);
+    frmbuf = anim_type_get_output_buffer(anislot);
+
+    switch (anislot)
+    {
+    case AniSl_BILLBOARD:
+        byte_1AAA88 = 0;
+        anim_flic_set_frame_buffer(p_anim, frmbuf, 0, 0, 0, 0x20);
+        anim_billboard_select_rand();
+        anim_billboard_broadcast_sound();
+        pinfo = &game_dirs[DirPlace_QData];
+        anim_flic_set_fname(p_anim, "%s/%s-1%d.fli", pinfo->directory, "demo", (int)billboard_anim_no);
+        anim_billboard_select_next();
+        break;
+    case AniSl_EQVIEW:
+        byte_1AAA88 = 0;
+        anim_flic_set_frame_buffer(p_anim, frmbuf, 0, 0, 0, 0x00);
+        break;
+    case AniSl_UNKN3:
+        byte_1AAA88 = 0;
+        anim_flic_set_frame_buffer(p_anim, frmbuf, 0, 0, 0, 0x00);
+        break;
+    case AniSl_UNKN4:
+        byte_1AAA88 = 1;
+        anim_flic_set_frame_buffer(p_anim, frmbuf, 0, 0, 0, 0x02);
+        pinfo = &game_dirs[DirPlace_Data];
+        anim_flic_set_fname(p_anim, "%s/%s.fli", pinfo->directory, "intro");
+        break;
+    case AniSl_UNKN5:
+        byte_1AAA88 = 0;
+        anim_flic_set_frame_buffer(p_anim, frmbuf, 10, 30, 0, 0x02);
+        pinfo = &game_dirs[DirPlace_Data];
+        anim_flic_set_fname(p_anim, "%s/%s.fli", pinfo->directory, "mcomp");
+        break;
+    case AniSl_UNKN6:
+        byte_1AAA88 = 0;
+        anim_flic_set_frame_buffer(p_anim, frmbuf, 10, 30, 0, 0x02);
+        pinfo = &game_dirs[DirPlace_Data];
+        anim_flic_set_fname(p_anim, "%s/%s.fli", pinfo->directory, "mcomp");
+        break;
+    case AniSl_UNKN7:
+        byte_1AAA88 = 0;
+        anim_flic_set_frame_buffer(p_anim, frmbuf, 10, 30, 0, 0x02);
+        pinfo = &game_dirs[DirPlace_Data];
+        anim_flic_set_fname(p_anim, "%s/%s.fli", pinfo->directory, "mcomp");
+        break;
+    case AniSl_UNKN8:
+        byte_1AAA88 = 0;
+        anim_flic_set_frame_buffer(p_anim, frmbuf, 0, 0, 0, 0x20);
+        break;
+    case AniSl_NETSCAN:
+        byte_1AAA88 = 0;
+        anim_flic_set_frame_buffer(p_anim, frmbuf, 0, 0, 0, 0x00);
+        break;
+      default:
+        break;
+    }
+
+    if (anim_flic_show_open(p_anim) == Lb_FAIL)
+    {
+        if (anislot == AniSl_BILLBOARD)
+            ingame.Flags &= ~GamF_BillboardMovies;
+        return;
+    }
+    p_anim->anfield_4 += 12;
 }
 
 void update_danger_music(ubyte a1)
@@ -1552,7 +1735,7 @@ void process_engine_unk3(void)
             if (!in_network_game && ((ingame.Flags & GamF_Unkn00040000) != 0))
             {
                 ingame.Flags &= ~GamF_Unkn00040000;
-                xdo_next_frame(1);
+                xdo_next_frame(AniSl_BILLBOARD);
             }
         }
     }
@@ -1809,7 +1992,7 @@ void adjust_mission_engine_to_video_mode(void)
     overall_scale = (get_overall_scale_min() * 295) >> 8;
     load_pop_sprites_for_current_mode();
     load_mouse_pointers_sprites_for_current_mode();
-    load_small_font_for_current_mode();
+    load_small_font_for_current_ingame_mode();
     render_area_a = render_area_b = \
       get_render_area_for_zoom(user_zoom_min);
     srm_scanner_size_update();
@@ -2002,7 +2185,7 @@ void game_graphics_inputs(void)
     PlayerInfo *p_locplayer;
 
     p_locplayer = &players[local_player_no];
-    if ((ingame.DisplayMode != DpM_UNKN_32) &&
+    if ((ingame.DisplayMode != DpM_ENGINEPLY) &&
         (ingame.DisplayMode != DpM_UNKN_3B))
         return;
     if (in_network_game && p_locplayer->PanelState[mouser] != 17)
@@ -2084,7 +2267,7 @@ void setup_debug_obj_trace(void)
     debug_trace_place(0);
 }
 
-void BAT_unknsub_20(int a1, int a2, int a3, int a4, unsigned long a5)
+void BAT_unknsub_20(int a1, int a2, int a3, int a4, ubyte *a5)
 {
     asm volatile (
       "push %4\n"
@@ -2232,7 +2415,7 @@ TbResult prep_multicolor_sprites(void)
 
 void setup_host(void)
 {
-    BAT_unknsub_20(0, 0, 0, 0, unkn_buffer_04 + 41024);
+    BAT_unknsub_20(0, 0, 0, 0, vec_tmap[4] + 41024);
     smack_malloc_setup();
     LOGDBG("&setup_host() = 0x%lx", (ulong)setup_host);
     setup_initial_screen_mode();
@@ -2255,7 +2438,7 @@ void setup_host(void)
     ingame.PanelPermutation = -2;
     load_pop_sprites_for_current_mode();
     load_mouse_pointers_sprites_for_current_mode();
-    load_small_font_for_current_mode();
+    load_small_font_for_current_ingame_mode();
     init_memory(mem_game);
 
     init_syndwars();
@@ -2275,7 +2458,7 @@ void setup_host(void)
         PacketRecord_OpenRead();
     }
     play_intro();
-    flic_unkn03(1u);
+    flic_unkn03(AniSl_BILLBOARD);
 }
 
 void set_default_game_keys(void)
@@ -2302,7 +2485,7 @@ void set_default_game_keys(void)
     kbkeys[GKey_UP] = KC_UP;
     kbkeys[GKey_DOWN] = KC_DOWN;
     kbkeys[GKey_GOTO_POINT] = KC_RCONTROL;
-    kbkeys[GKey_GROUP] = 86;
+    kbkeys[GKey_GROUP] = KC_OEM_102;
     kbkeys[GKey_LEFT] = KC_LEFT;
     kbkeys[GKey_ZOOM_OUT] = KC_HOME;
     kbkeys[GKey_SELF_DESTRUCT] = KC_D;
@@ -2530,12 +2713,6 @@ ubyte save_user_settings(void)
     LbFileWrite(fh, &save_mortal_salt, sizeof(save_mortal_salt));
     LbFileClose(fh);
     return 0;
-}
-
-void setup_color_lookups(void)
-{
-    asm volatile ("call ASM_setup_color_lookups\n"
-        :  :  : "eax" );
 }
 
 void init_engine(void)
@@ -3374,7 +3551,7 @@ void init_game(ubyte reload)
     init_player();
     debug_trace_setup(4);
     execute_commands = 1;
-    ingame.DisplayMode = DpM_UNKN_32;
+    ingame.DisplayMode = DpM_ENGINEPLY;
     debug_trace_setup(5);
 }
 
@@ -3613,8 +3790,10 @@ void game_setup(void)
     {
         prep_single_mission();
     }
-    if (in_network_game || cmdln_param_bcg)
-      ingame.DisplayMode = DpM_UNKN_37;
+    if (in_network_game || cmdln_param_bcg) {
+        ingame.DisplayMode = DpM_PURPLEMNU;
+        reload_menu_flag = true;
+    }
     debug_trace_setup(2);
     switch (cmdln_colour_tables)
     {
@@ -3627,12 +3806,54 @@ void game_setup(void)
     }
 }
 
-int xdo_next_frame(ubyte a1)
+void flic_creation_unkn01(void)
 {
-    int ret;
-    asm volatile ("call ASM_xdo_next_frame\n"
-        : "=r" (ret) : "a" (a1));
-    return ret;
+    ushort k;
+    ubyte pal_change;
+
+    k = active_anim;
+    pal_change = anim_show_frame(&animations[k]);
+
+    if (pal_change)
+    {
+        LbScreenWaitVbi();
+        if (byte_1AAA88) {
+            LbPaletteSet(anim_palette);
+        }
+    }
+}
+
+int xdo_next_frame(ubyte anislot)
+{
+    struct Animation *p_anim;
+    ushort k;
+
+    k = anim_slots[anislot];
+    active_anim = k;
+    p_anim = &animations[k];
+
+    if (anislot >= AniSl_EQVIEW && anislot <= AniSl_UNKN3)
+    {
+        if (p_anim->FrameNumber == 0) {
+            play_sample_using_heap(0, 135, 127, 64, 100, 0, 3u);
+        } else if (p_anim->FrameNumber == p_anim->FLCFileHeader.NumberOfFrames >> 1) {
+            play_sample_using_heap(0, 115, 127, 64, 100, 0, 3u);
+        }
+    }
+
+    if (p_anim->FrameNumber < p_anim->FLCFileHeader.NumberOfFrames)
+    {
+        anim_show_prep_next_frame(p_anim, anim_type_get_output_buffer(p_anim->Type));
+        flic_creation_unkn01();
+        p_anim->FrameNumber++;
+        return 0;
+    }
+
+    anim_flic_close(p_anim);
+    if ((p_anim->Flags & 0x20) != 0) {
+        flic_unkn03(p_anim->Type);
+    }
+    return 1;
 }
 
 void mapwho_unkn01(int a1, int a2)
@@ -4961,7 +5182,9 @@ void mission_over(void)
 {
     ubyte misend;
 
-    ingame.DisplayMode = DpM_UNKN_37;
+    ingame.DisplayMode = DpM_PURPLEMNU;
+    reload_menu_flag = true;
+
     LbMouseChangeSprite(0);
     StopCD();
     StopAllSamples();
@@ -5223,13 +5446,13 @@ void reload_background(void)
         }
     }
 
-    if (screentype == SCRT_EQUIP && selected_weapon != -1)
+    if (screentype == SCRT_EQUIP)
     {
-        init_weapon_anim(selected_weapon + 1 - 1);
+        equip_update_for_selected_weapon();
     }
-    if (screentype == SCRT_CRYO && selected_mod != -1)
+    if (screentype == SCRT_CRYO)
     {
-        init_weapon_anim(selected_mod + 32);
+        cryo_update_for_selected_cybmod();
     }
 }
 
@@ -6058,7 +6281,7 @@ void show_menu_screen_st0(void)
 
     init_brief_screen_scanner();
 
-    save_game_buffer = unkn_buffer_05;
+    save_game_buffer = vec_tmap[5];
 
     net_system_init0();
 }
@@ -6746,8 +6969,8 @@ void show_load_and_prep_mission(void)
         generate_shadows_for_multicolor_sprites();
         adjust_mission_engine_to_video_mode();
 
-        flic_unkn03(1);
-        xdo_next_frame(1);
+        flic_unkn03(AniSl_BILLBOARD);
+        xdo_next_frame(AniSl_BILLBOARD);
 
         if ( in_network_game )
         {
@@ -6778,6 +7001,77 @@ void mouse_sprite_animate(void)
     }
 }
 
+void net_players_copy_cryo(void)
+{
+    network_players[local_player_no].Type = 14;
+}
+
+void net_players_copy_equip_and_cryo(void)
+{
+    network_players[local_player_no].Type = 14;
+    net_unkn_func_33();
+    network_players[local_player_no].Type = 15;
+    gameturn++;
+}
+
+void net_players_copy_equip_and_cryo_now(void)
+{
+    network_players[local_player_no].Type = 14;
+    net_unkn_func_33();
+    network_players[local_player_no].Type = 15;
+    net_unkn_func_33();
+}
+
+void menu_screen_reload(void)
+{
+    load_small_font_for_current_purple_mode();
+    reload_background();
+}
+
+void menu_screen_redraw(void)
+{
+    mo_weapon = -1;
+    reload_background_flag = 1;
+    if (screentype == SCRT_WORLDMAP)
+    {
+        open_brief = old_mission_brief;
+        activate_cities(0);
+    }
+    else if (screentype == SCRT_MISSION)
+    {
+        activate_cities(open_brief);
+    }
+
+    reset_brief_screen_boxes_flags();
+    reset_heading_screen_boxes_flags();
+    reset_debrief_screen_boxes_flags();
+    reset_net_screen_boxes_flags();
+    reset_world_screen_boxes_flags();
+    reset_login_screen_boxes_flags();
+    reset_controls_screen_boxes_flags();
+    reset_storage_screen_boxes_flags();
+    reset_cryo_screen_boxes_flags();
+    reset_equip_screen_boxes_flags();
+    reset_research_screen_boxes_flags();
+    reset_system_menu_boxes_flags();
+
+    reset_options_screen_boxes_flags();
+
+    set_flag01_storage_screen_boxes();
+    set_flag01_login_screen_boxes();
+    set_flag01_main_screen_boxes();
+    set_flag01_cryo_screen_boxes();
+    set_flag01_research_screen_boxes();
+    set_flag01_net_screen_boxes();
+    set_flag01_equip_screen_boxes();
+    set_flag01_controls_screen_boxes();
+    set_flag01_brief_screen_boxes();
+    set_flag01_world_screen_boxes();
+
+    if (!game_projector_speed && screentype != SCRT_99)
+        play_sample_using_heap(0, 113, 127, 64, 100, 0, 3u);
+}
+
 void show_menu_screen(void)
 {
     switch (data_1c498d)
@@ -6793,12 +7087,19 @@ void show_menu_screen(void)
     default:
         break;
     }
+
     if (lbDisplay.ScreenMode != screen_mode_menu)
     {
         LbMouseReset();
         LbScreenClear(0);
         setup_screen_mode(screen_mode_menu);
-        reload_background();
+        reload_menu_flag = 1;
+    }
+
+    if (reload_menu_flag)
+    {
+        reload_menu_flag = 0;
+        menu_screen_reload();
         my_set_text_window(0, 0, lbDisplay.GraphicsScreenWidth, lbDisplay.GraphicsScreenHeight);
     }
 
@@ -6910,10 +7211,7 @@ void show_menu_screen(void)
         local_player_no = LbNetworkPlayerNumber();
         net_players_num = LbNetworkSessionNumberPlayers();
         switch_net_screen_boxes_to_initiate();
-        network_players[local_player_no].Type = 14;
-        net_unkn_func_33();
-        network_players[local_player_no].Type = 15;
-        net_unkn_func_33();
+        net_players_copy_equip_and_cryo_now();
         init_net_players();
     }
     if (data_1c498f && lbDisplay.LeftButton)
@@ -6975,7 +7273,7 @@ void show_menu_screen(void)
         {
             mod_draw_states[i] = 0;
             if (0 != flic_mods[i])
-                mod_draw_states[i] = 8;
+                mod_draw_states[i] = 0x08;
         }
         current_drawing_mod = 0;
         new_current_drawing_mod = 0;
@@ -7022,47 +7320,8 @@ void show_menu_screen(void)
 
     if (redraw_screen_flag && !edit_flag)
     {
-        mo_weapon = -1;
         redraw_screen_flag = 0;
-        reload_background_flag = 1;
-        if (screentype == SCRT_WORLDMAP)
-        {
-            open_brief = old_mission_brief;
-            activate_cities(0);
-        }
-        else if (screentype == SCRT_MISSION)
-        {
-            activate_cities(open_brief);
-        }
-
-        reset_brief_screen_boxes_flags();
-        reset_heading_screen_boxes_flags();
-        reset_debrief_screen_boxes_flags();
-        reset_net_screen_boxes_flags();
-        reset_world_screen_boxes_flags();
-        reset_login_screen_boxes_flags();
-        reset_controls_screen_boxes_flags();
-        reset_storage_screen_boxes_flags();
-        reset_cryo_screen_boxes_flags();
-        reset_equip_screen_boxes_flags();
-        reset_research_screen_boxes_flags();
-        reset_system_menu_boxes_flags();
-
-        reset_options_screen_boxes_flags();
-
-        set_flag01_storage_screen_boxes();
-        set_flag01_login_screen_boxes();
-        set_flag01_main_screen_boxes();
-        set_flag01_cryo_screen_boxes();
-        set_flag01_research_screen_boxes();
-        set_flag01_net_screen_boxes();
-        set_flag01_equip_screen_boxes();
-        set_flag01_controls_screen_boxes();
-        set_flag01_brief_screen_boxes();
-        set_flag01_world_screen_boxes();
-
-        if (!game_projector_speed && screentype != SCRT_99)
-            play_sample_using_heap(0, 113, 127, 64, 100, 0, 3u);
+        menu_screen_redraw();
     }
 
     mouse_sprite_animate();
@@ -7128,10 +7387,10 @@ void draw_game(void)
     case DpM_UNKN_1:
         // No action
         break;
-    case DpM_UNKN_32:
+    case DpM_ENGINEPLY:
         show_game_screen();
         break;
-    case DpM_UNKN_37:
+    case DpM_PURPLEMNU:
         show_menu_screen();
         break;
     case DpM_UNKN_3A:
@@ -7336,7 +7595,7 @@ void load_packet(void)
     }
 
     did_actn = 0;
-    if (ingame.DisplayMode == DpM_UNKN_32 || ingame.DisplayMode == DpM_UNKN_3B)
+    if (ingame.DisplayMode == DpM_ENGINEPLY || ingame.DisplayMode == DpM_UNKN_3B)
     {
         did_actn = do_user_interface();
         input_mission_cheats();
@@ -7678,7 +7937,7 @@ void net_player_leave(PlayerIdx plyr)
     kill_my_players(plyr);
     if ((plyr == net_host_player_no) || (plyr == local_player_no) || (nsvc.I.Type != 1))
     {
-        ingame.DisplayMode = DpM_UNKN_37;
+        ingame.DisplayMode = DpM_PURPLEMNU;
         StopCD();
         StopAllSamples();
         SetMusicVolume(100, 0);
@@ -8095,24 +8354,6 @@ void joy_input(void)
         :  :  : "eax" );
 }
 
-void update_unkn_changing_colors(void)
-{
-    ubyte col1, col2;
-
-    unkn_changing_color_counter1++;
-    if (unkn_changing_color_counter1 & 0x01)
-        col1 = colour_lookup[ColLU_YELLOW];
-    else
-        col1 = colour_lookup[0];
-    unkn_changing_color_1 = col1;
-
-    if (unkn_changing_color_counter1 & 0x01)
-        col2 = colour_lookup[ColLU_RED];
-    else
-        col2 = colour_lookup[ColLU_WHITE];
-    unkn_changing_color_2 = col2;
-}
-
 /** Orbital station explosion code.
  */
 void game_process_orbital_station_explode(void)
@@ -8152,7 +8393,7 @@ void game_process(void)
             navi2_unkn_counter_max = navi2_unkn_counter;
         if (keyboard_mode_direct)
             input_char = LbKeyboard();
-        if (ingame.DisplayMode == DpM_UNKN_37) {
+        if (ingame.DisplayMode == DpM_PURPLEMNU) {
             LOGDBG("id=%d  trial alloc = %d turn %lu", 0, triangulation, gameturn);
         }
         input();
@@ -8164,17 +8405,17 @@ void game_process(void)
           ((ingame.Flags & GamF_ThermalView) != 0) )
             LbPaletteSet(display_palette);
         active_flags_general_unkn01 = ingame.Flags;
-        if ((ingame.DisplayMode == DpM_UNKN_32)
+        if ((ingame.DisplayMode == DpM_ENGINEPLY)
           || (ingame.DisplayMode == DpM_UNKN_1)
           || (ingame.DisplayMode == DpM_UNKN_3B))
             process_things();
         if (debug_hud_things)
             things_debug_hud();
-        if (ingame.DisplayMode != DpM_UNKN_37)
+        if (ingame.DisplayMode != DpM_PURPLEMNU)
             process_packets();
         joy_input();
 
-        if (ingame.DisplayMode == DpM_UNKN_37)
+        if (ingame.DisplayMode == DpM_PURPLEMNU)
         {
             game_update();
             swap_wscreen();
