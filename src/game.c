@@ -449,11 +449,6 @@ void game_setup_stuff(void)
 
 void anim_show_FLI_SS2_NP(void)
 {
-#if 0
-    asm volatile ("call ASM_anim_show_FLI_SS2_NP\n"
-        :  : );
-    return;
-#endif
     struct Animation *p_anim;
 
     p_anim = &animations[active_anim];
@@ -462,11 +457,6 @@ void anim_show_FLI_SS2_NP(void)
 
 void anim_show_FLI_BRUN_NP(void)
 {
-#if 0
-    asm volatile ("call ASM_anim_show_FLI_BRUN_NP\n"
-        :  : );
-    return;
-#endif
     struct Animation *p_anim;
 
     p_anim = &animations[active_anim];
@@ -475,11 +465,6 @@ void anim_show_FLI_BRUN_NP(void)
 
 void anim_show_FLI_LC_NP(void)
 {
-#if 0
-    asm volatile ("call ASM_anim_show_FLI_LC_NP\n"
-        :  : );
-    return;
-#endif
     struct Animation *p_anim;
 
     p_anim = &animations[active_anim];
@@ -502,9 +487,11 @@ ubyte *anim_type_get_output_buffer(ubyte anislot)
     case AniSl_UNKN7:
     case AniSl_NETSCAN:
         return vec_tmap[5];
-    case AniSl_UNKN3:
-    case AniSl_UNKN8:
+    case AniSl_CYBORG_INOUT:
+    case AniSl_CYBORG_BRTH:
         return vec_tmap[5] + 0x8000;
+    case AniSl_SCRATCH:
+        return vec_tmap[4] + 0x8000;
     }
 }
 
@@ -583,7 +570,7 @@ void flic_unkn03(ubyte anislot)
         byte_1AAA88 = 0;
         anim_flic_set_frame_buffer(p_anim, frmbuf, 0, 0, 0, 0x00);
         break;
-    case AniSl_UNKN3:
+    case AniSl_CYBORG_INOUT:
         byte_1AAA88 = 0;
         anim_flic_set_frame_buffer(p_anim, frmbuf, 0, 0, 0, 0x00);
         break;
@@ -611,7 +598,7 @@ void flic_unkn03(ubyte anislot)
         pinfo = &game_dirs[DirPlace_Data];
         anim_flic_set_fname(p_anim, "%s/%s.fli", pinfo->directory, "mcomp");
         break;
-    case AniSl_UNKN8:
+    case AniSl_CYBORG_BRTH:
         byte_1AAA88 = 0;
         anim_flic_set_frame_buffer(p_anim, frmbuf, 0, 0, 0, 0x20);
         break;
@@ -2283,122 +2270,6 @@ int joy_func_067(struct DevInput *dinp, int a2)
     return ret;
 }
 
-TbResult load_mapout(ubyte **pp_buf, const char *dir)
-{
-    char locstr[52];
-    ubyte *p_buf;
-    long len;
-    int i;
-    TbResult ret;
-
-    p_buf = *pp_buf;
-    ret = Lb_OK;
-
-    for (i = 0; i < 6; i++)
-    {
-        dword_1C529C[i] = (short *)p_buf;
-        sprintf(locstr, "%s/mapout%02d.dat", dir, i);
-        len = LbFileLoadAt(locstr, dword_1C529C[i]);
-        if (len == -1) {
-            LOGERR("Could not read file '%s'", locstr);
-            ret = Lb_FAIL;
-            len = 64;
-            LbMemorySet(p_buf, '\0', len);
-        }
-        p_buf += len;
-    }
-
-    landmap_2B4 = (short *)p_buf;
-    sprintf(locstr, "%s/mapinsid.dat", dir);
-    len = LbFileLoadAt(locstr, p_buf);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 64;
-        LbMemorySet(p_buf, '\0', len);
-    }
-    p_buf += len;
-
-    *pp_buf = p_buf;
-    return ret;
-}
-
-TbResult init_read_all_sprite_files(void)
-{
-    PathInfo *pinfo;
-    ubyte *p_buf;
-    TbResult tret, ret;
-
-    pinfo = &game_dirs[DirPlace_Data];
-    p_buf = (ubyte *)&purple_draw_list[750];
-    tret = Lb_OK;
-
-    ret = load_sprites_icons(&p_buf, pinfo->directory);
-    if (tret == Lb_OK)
-        tret = ret;
-
-    ret = load_sprites_wicons(&p_buf, pinfo->directory);
-    if (tret == Lb_OK)
-        tret = ret;
-
-    ret = load_sprites_fepanel(&p_buf, pinfo->directory);
-    if (tret == Lb_OK)
-        tret = ret;
-
-    ret = load_sprites_fe_mouse_pointers(&p_buf, pinfo->directory, 0, 0);
-    if (tret == Lb_OK)
-        tret = ret;
-
-    ret = load_sprites_med_font(&p_buf, pinfo->directory);
-    if (tret == Lb_OK)
-        tret = ret;
-
-    ret = load_sprites_big_font(&p_buf, pinfo->directory);
-    if (tret == Lb_OK)
-        tret = ret;
-
-    ret = load_sprites_small_med_font(&p_buf, pinfo->directory);
-    if (tret == Lb_OK)
-        tret = ret;
-
-    ret = load_sprites_med2_font(&p_buf, pinfo->directory);
-    if (tret == Lb_OK)
-        tret = ret;
-
-    ret = load_sprites_small2_font(&p_buf, pinfo->directory);
-    if (tret == Lb_OK)
-        tret = ret;
-
-    dword_1C6DE4 = p_buf;
-    p_buf += 24480;
-    dword_1C6DE8 = p_buf;
-    p_buf += 24480;
-
-    ret = load_mapout(&p_buf, pinfo->directory);
-    if (tret == Lb_OK)
-        tret = ret;
-
-    // TODO why adding this without remembering previous pointer?
-    p_buf += 41005;
-    back_buffer = p_buf;
-
-    setup_sprites_icons();
-    setup_sprites_wicons();
-    setup_sprites_fepanel();
-    setup_sprites_fe_mouse_pointers();
-    setup_sprites_small_font();
-    setup_sprites_small2_font();
-    setup_sprites_small_med_font();
-    setup_sprites_med_font();
-    setup_sprites_med2_font();
-    setup_sprites_big_font();
-
-    if (tret == Lb_FAIL) {
-        LOGERR("Some files were not loaded successfully");
-        ingame.DisplayMode = DpM_UNKN_1;
-    }
-    return tret;
-}
-
 TbResult prep_multicolor_sprites(void)
 {
     PathInfo *pinfo;
@@ -2415,7 +2286,7 @@ TbResult prep_multicolor_sprites(void)
 
 void setup_host(void)
 {
-    BAT_unknsub_20(0, 0, 0, 0, vec_tmap[4] + 41024);
+    BAT_unknsub_20(0, 0, 0, 0, vec_tmap[4] + 160 * 256 + 64);
     smack_malloc_setup();
     LOGDBG("&setup_host() = 0x%lx", (ulong)setup_host);
     setup_initial_screen_mode();
@@ -3806,13 +3677,12 @@ void game_setup(void)
     }
 }
 
-void flic_creation_unkn01(void)
+void anim_show_draw_next_frame(struct Animation *p_anim)
 {
-    ushort k;
     ubyte pal_change;
 
-    k = active_anim;
-    pal_change = anim_show_frame(&animations[k]);
+    pal_change = anim_show_frame(p_anim);
+    p_anim->FrameNumber++;
 
     if (pal_change)
     {
@@ -3832,7 +3702,7 @@ int xdo_next_frame(ubyte anislot)
     active_anim = k;
     p_anim = &animations[k];
 
-    if (anislot >= AniSl_EQVIEW && anislot <= AniSl_UNKN3)
+    if (anislot >= AniSl_EQVIEW && anislot <= AniSl_CYBORG_INOUT)
     {
         if (p_anim->FrameNumber == 0) {
             play_sample_using_heap(0, 135, 127, 64, 100, 0, 3u);
@@ -3841,19 +3711,59 @@ int xdo_next_frame(ubyte anislot)
         }
     }
 
-    if (p_anim->FrameNumber < p_anim->FLCFileHeader.NumberOfFrames)
+    if (p_anim->FrameNumber >= p_anim->FLCFileHeader.NumberOfFrames)
     {
-        anim_show_prep_next_frame(p_anim, anim_type_get_output_buffer(p_anim->Type));
-        flic_creation_unkn01();
-        p_anim->FrameNumber++;
-        return 0;
+        anim_flic_close(p_anim);
+        if ((p_anim->Flags & 0x20) != 0) {
+            flic_unkn03(p_anim->Type);
+        }
+        return 1;
     }
 
-    anim_flic_close(p_anim);
-    if ((p_anim->Flags & 0x20) != 0) {
-        flic_unkn03(p_anim->Type);
+    anim_show_prep_next_frame(p_anim, anim_type_get_output_buffer(p_anim->Type));
+    anim_show_draw_next_frame(p_anim);
+
+    return 0;
+}
+
+int xdo_prev_frame(ubyte anislot)
+{
+    struct Animation *p_anim;
+    ubyte *p_frmbuf;
+    uint i, rq_frame;
+    ushort k;
+
+    k = anim_slots[anislot];
+    active_anim = k;
+    p_anim = &animations[k];
+
+    if (p_anim->FrameNumber == 0)
+        rq_frame = p_anim->FLCFileHeader.NumberOfFrames;
+    else
+        rq_frame = p_anim->FrameNumber - 1;
+
+    p_frmbuf = anim_type_get_output_buffer(p_anim->Type);
+
+    if (rq_frame == 0)
+    {
+        LbMemorySet(p_frmbuf, 0, p_anim->FLCFileHeader.Width * p_anim->FLCFileHeader.Height);
+        anim_flic_close(p_anim);
+        if ((p_anim->Flags & 0x20) != 0) {
+            flic_unkn03(p_anim->Type);
+        }
+        return 1;
     }
-    return 1;
+
+    anim_flic_show_replay(p_anim);
+    LbMemorySet(p_frmbuf, 0, p_anim->FLCFileHeader.Width * p_anim->FLCFileHeader.Height);
+    anim_show_prep_next_frame(p_anim, p_frmbuf);
+    anim_show_draw_next_frame(p_anim);
+    for (i = 1; i < rq_frame; i++)
+    {
+        anim_show_prep_next_frame(p_anim, NULL);
+        anim_show_draw_next_frame(p_anim);
+    }
+    return 0;
 }
 
 void mapwho_unkn01(int a1, int a2)
@@ -6246,38 +6156,32 @@ void show_menu_screen_st0(void)
         purple_draw_list = (struct PurpleDrawItem *)((ubyte *)scratch_malloc_mem + pos);
     }
 
-    init_read_all_sprite_files();
     ingame.Credits = 50000;
 
-    debug_trace_place(17);
-    LbColourTablesLoad(display_palette, "data/bgtables.dat");
-    LbGhostTableGenerate(display_palette, 66, "data/startgho.dat");
-    init_screen_boxes();
+    global_date.Day = 2;
+    global_date.Year = 74;
+    global_date.Month = 6;
+
     {
         PlayerInfo *p_locplayer;
         p_locplayer = &players[local_player_no];
         p_locplayer->MissionAgents = 0x0f;
     }
+
+    debug_trace_place(17);
+    init_menu_screen_colors_and_sprites();
+
+    debug_trace_place(18);
+    init_screen_boxes();
     load_city_data(0);
     load_city_txt();
 
-    debug_trace_place(18);
+    debug_trace_place(19);
     if ( in_network_game )
         screentype = SCRT_LOGIN;
     else
         screentype = SCRT_MAINMENU;
     data_1c498d = 1;
-
-    debug_trace_place(19);
-    LbFileLoadAt("data/s-proj.pal", display_palette);
-    show_black_screen();
-    show_black_screen();
-    LbPaletteSet(display_palette);
-    reload_background();
-
-    global_date.Day = 2;
-    global_date.Year = 74;
-    global_date.Month = 6;
 
     init_brief_screen_scanner();
 
@@ -6526,10 +6430,7 @@ void net_unkn_func_33_sub1(int plyr, int netplyr)
                 if (screentype == SCRT_CRYO)
                 {
                     update_flic_mods(flic_mods);
-                    for (i = 0; i < 4; i++) {
-                        if (flic_mods[i] != old_flic_mods[i])
-                            mod_draw_states[i] |= 0x08;
-                    }
+                    set_mod_draw_states_flag08();
                 }
             }
         } else {
@@ -6570,10 +6471,7 @@ void net_unkn_func_33_sub1(int plyr, int netplyr)
         if (screentype == SCRT_CRYO)
         {
             update_flic_mods(flic_mods);
-            for (i = 0; i < 4; i++) {
-                if (flic_mods[i] != old_flic_mods[i])
-                    mod_draw_states[i] |= 0x08;
-            }
+            set_mod_draw_states_flag08();
         }
         break;
     case 14:
@@ -6589,10 +6487,7 @@ void net_unkn_func_33_sub1(int plyr, int netplyr)
             if (net_host_player_no != netplyr)
             {
                 update_flic_mods(flic_mods);
-                for (i = 0; i < 4; i++) {
-                    if (flic_mods[i] != old_flic_mods[i])
-                        mod_draw_states[i] |= 0x08;
-                }
+                set_mod_draw_states_flag08();
             }
         }
         else if ((unkn_flags_08 & 0x08) == 0)
@@ -6784,22 +6679,14 @@ void show_menu_screen_st2(void)
       }
     }
 
-    LbColourTablesLoad(display_palette, "data/bgtables.dat");
-    LbGhostTableGenerate(display_palette, 66, "data/startgho.dat");
-    init_read_all_sprite_files();
     init_weapon_text();
     load_city_txt();
+
+    init_menu_screen_colors_and_sprites();
+
     data_1c498d = 1;
-    LbMouseChangeSpriteOffset(0, 0);
-    LbFileLoadAt("data/s-proj.pal", display_palette);
 
     update_options_screen_state();
-
-    show_black_screen();
-    show_black_screen();
-    LbPaletteSet(display_palette);
-    reload_background();
-
     init_brief_screen_scanner();
 
     if (new_mail)
@@ -7268,13 +7155,7 @@ void show_menu_screen(void)
 
         update_cybmod_cost_text();
         redraw_screen_flag = 1;
-        int i;
-        for (i = 0; i < 4; i++)
-        {
-            mod_draw_states[i] = 0;
-            if (0 != flic_mods[i])
-                mod_draw_states[i] = 0x08;
-        }
+        reset_mod_draw_states_flag08();
         current_drawing_mod = 0;
         new_current_drawing_mod = 0;
         edit_flag = 0;

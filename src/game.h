@@ -107,14 +107,15 @@ enum DisplayModes {
 enum AnimSlot {
   AniSl_FULLSCREEN = 0,
   AniSl_BILLBOARD = 1,
-  AniSl_EQVIEW = 2,
-  AniSl_UNKN3 = 3,
+  AniSl_EQVIEW = 2,	/**< equipment (weapon or mod) presentation in buy/sell window */
+  AniSl_CYBORG_INOUT = 3,	/**< cyborg mod insertion or removal anim */
   AniSl_UNKN4 = 4,
   AniSl_UNKN5 = 5,
   AniSl_UNKN6 = 6,
   AniSl_UNKN7 = 7,
-  AniSl_UNKN8 = 8,
+  AniSl_CYBORG_BRTH = 8,
   AniSl_NETSCAN = 9,
+  AniSl_SCRATCH = 10,	/**< scratch buffer for some transparent menu animations */
 };
 
 enum PacketRecordMode {
@@ -493,7 +494,11 @@ void game_handle_sdl_events (void);
 void game_update (void);
 int game_hacky_update(void);
 void game_quit (void);
+
+/** File name transform function, to be used only for DOS calls simulation.
+ */
 void game_transform_path (const char *file_name, char *result);
+
 const char *game_get_data_path (void);
 const char *game_get_user_path (void);
 
@@ -503,7 +508,18 @@ void game_process(void);
 void game_reset(void);
 void host_reset(void);
 void free_texturemaps(void);
-int xdo_next_frame(ubyte a1);
+
+/** Decode and draw next frame of the animation.
+ */
+int xdo_next_frame(ubyte anislot);
+
+/** Decode and draw previous frame of the animation.
+ *
+ * Note that printing a previous frame of the FLI file requires
+ * decoding all frames from start - these files do not use
+ * bi-directional FLIC format.
+ */
+int xdo_prev_frame(ubyte anislot);
 
 void flic_unkn03(ubyte a1);
 
