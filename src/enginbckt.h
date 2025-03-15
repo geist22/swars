@@ -31,7 +31,9 @@ extern "C" {
  * The buckets are a way of sorting draw items according to depth - like
  * a simplified replacement for the depth buffer.
  */
-#define BUCKETS_COUNT 10000
+#define BUCKETS_COUNT 24000
+
+#define BUCKET_MID (BUCKETS_COUNT / 2)
 
 /** Max amount of draw list elements within a bucket.
  */
