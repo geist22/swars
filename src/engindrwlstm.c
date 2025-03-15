@@ -161,16 +161,6 @@ struct FloorTile *draw_item_add_floor_tile(ubyte ditype, int bckt)
 
 ushort draw_mapwho_vect(int x1, int y1, int z1, int x2, int y2, int z2, int col)
 {
-#if 0
-    ushort ret;
-    asm volatile (
-      "push %7\n"
-      "push %6\n"
-      "push %5\n"
-      "call ASM_draw_mapwho_vect\n"
-        : "=r" (ret) : "a" (x1), "d" (y1), "b" (z1), "c" (x2), "g" (y2), "g" (z2), "g" (col));
-    return ret;
-#endif
     struct ShEnginePoint sp1, sp2;
     struct SortLine *p_sline;
     int bckt;
@@ -203,16 +193,6 @@ ushort draw_mapwho_vect(int x1, int y1, int z1, int x2, int y2, int z2, int col)
 
 void draw_mapwho_vect_len(int x1, int y1, int z1, int x2, int y2, int z2, int len, int col)
 {
-#if 0
-    asm volatile (
-      "push %7\n"
-      "push %6\n"
-      "push %5\n"
-      "push %4\n"
-      "call ASM_draw_mapwho_vect_len\n"
-        : : "a" (x1), "d" (y1), "b" (z1), "c" (x2), "g" (y2), "g" (z2), "g" (len), "g" (col));
-    return;
-#endif
     struct ShEnginePoint sp1, sp3;
     struct SortLine *p_sline;
     int dt_x, dt_y, dt_z;
@@ -251,15 +231,6 @@ void draw_mapwho_vect_len(int x1, int y1, int z1, int x2, int y2, int z2, int le
 
 void draw_e_graphic(int x, int y, int z, ushort frame, int radius, int intensity, struct Thing *p_thing)
 {
-#if 0
-    asm volatile (
-      "push %6\n"
-      "push %5\n"
-      "push %4\n"
-      "call ASM_draw_e_graphic\n"
-        : : "a" (x), "d" (y), "b" (z), "c" (frame), "g" (radius), "g" (intensity), "g" (p_thing));
-    return;
-#endif
     struct ShEnginePoint sp;
     struct SortSprite *p_sspr;
     int scr_depth;
@@ -271,7 +242,7 @@ void draw_e_graphic(int x, int y, int z, ushort frame, int radius, int intensity
 
     scr_depth = sp.Depth - radius;
     if ((ingame.DisplayMode != 50) && ((p_thing->Flag2 & TgF2_InsideBuilding) != 0))
-        scr_depth = 10000;
+        scr_depth += BUCKETS_COUNT;
 
     p_sspr = draw_item_add_sprite(DrIT_Unkn3, scr_depth + 5000);
     if (p_sspr == NULL)
@@ -288,15 +259,6 @@ void draw_e_graphic(int x, int y, int z, ushort frame, int radius, int intensity
 
 void draw_e_graphic_scale(int x, int y, int z, ushort frame, int radius, int intensity, int scale)
 {
-#if 0
-    asm volatile (
-      "push %6\n"
-      "push %5\n"
-      "push %4\n"
-      "call ASM_draw_e_graphic_scale\n"
-        : : "a" (x), "d" (y), "b" (z), "c" (frame), "g" (radius), "g" (intensity), "g" (scale));
-    return;
-#endif
     struct ShEnginePoint sp;
     struct SortSprite *p_sspr;
     int scr_depth;
@@ -323,15 +285,6 @@ void draw_e_graphic_scale(int x, int y, int z, ushort frame, int radius, int int
 
 void draw_pers_e_graphic(struct Thing *p_thing, int x, int y, int z, int frame, int radius, int intensity)
 {
-#if 0
-    asm volatile (
-      "push %6\n"
-      "push %5\n"
-      "push %4\n"
-      "call ASM_draw_pers_e_graphic\n"
-        : : "a" (p_thing), "d" (x), "b" (y), "c" (z), "g" (frame), "g" (radius), "g" (intensity));
-    return;
-#endif
     struct ShEnginePoint sp;
     struct SortSprite *p_sspr;
     int scr_depth;
@@ -350,13 +303,13 @@ void draw_pers_e_graphic(struct Thing *p_thing, int x, int y, int z, int frame, 
         if ((p_thing->Flag2 & TgF2_InsideBuilding) != 0) {
             if ((p_thing->Flag & TngF_Destroyed) != 0)
                 return;
-            scr_depth += 10000;
+            scr_depth += BUCKETS_COUNT;
         }
     }
     else
     {
         if ((p_thing->Flag2 & TgF2_InsideBuilding) != 0)
-            scr_depth = 10000;
+            scr_depth += BUCKETS_COUNT;
     }
 
     p_sspr = draw_item_add_sprite(DrIT_Unkn13, scr_depth + 5000);
@@ -385,11 +338,6 @@ void draw_pers_e_graphic(struct Thing *p_thing, int x, int y, int z, int frame, 
 
 void FIRE_draw_fire(struct SimpleThing *p_sthing)
 {
-#if 0
-    asm volatile ("call ASM_FIRE_draw_fire\n"
-        : : "a" (p_sthing));
-    return;
-#endif
     struct FireFlame *p_flame;
     ushort flm;
 
@@ -546,20 +494,8 @@ void draw_bang_shrapnel(struct SimpleThing *p_pow)
 }
 
 struct SingleObjectFace4 *build_polygon_slice(short x1, short y1, short x2, short y2,
-  int w1, int w2, int col, int sort_key, int flag) // short sort_key, ushort flag)
+  int w1, int w2, int col, int sort_key, ushort flag)
 {
-#if 0
-    struct SingleObjectFace4 *ret;
-    asm volatile (
-      "push %8\n"
-      "push %7\n"
-      "push %6\n"
-      "push %5\n"
-      "push %4\n"
-      "call ASM_build_polygon_slice\n"
-        : "=r" (ret) : "a" (x1), "d" (y1), "b" (x2), "c" (y2), "g" (w1), "g" (w2), "g" (col), "g" (sort_key), "g" (flag));
-    return ret;
-#endif
     struct SingleObjectFace4 *p_face4;
     struct SpecialPoint *p_specpt;
     int dx, dy;
@@ -689,11 +625,6 @@ ushort shrapnel_get_child_type_not_3(struct Shrapnel *p_shraparnt)
 
 void draw_bang_wobble_line(struct SimpleThing *p_pow)
 {
-#if 0
-    asm volatile ("call ASM_draw_bang_wobble_line\n"
-        : : "a" (p_pow));
-    return;
-#endif
     struct Shrapnel *p_shrapnel1;
     struct Shrapnel *p_shrapnel2;
     ushort shrap1, shrap2;
@@ -897,11 +828,6 @@ void build_laser(int x1, int y1, int z1, int x2, int y2, int z2, int itime, stru
 
 void draw_bang(struct SimpleThing *p_pow)
 {
-#if 0
-    asm volatile ("call ASM_draw_bang\n"
-        : : "a" (p_pow));
-    return;
-#endif
     if (p_pow->State != 0)
     {
         short st;
@@ -980,14 +906,6 @@ static void transform_rot_object_shpoint(struct ShEnginePoint *p_sp, int offset_
 
 short draw_rot_object(int offset_x, int offset_y, int offset_z, struct SingleObject *point_object, struct Thing *p_thing)
 {
-#if 0
-    ushort ret;
-    asm volatile (
-      "push %5\n"
-      "call ASM_draw_rot_object\n"
-        : "=r" (ret) : "a" (offset_x), "d" (offset_y), "b" (offset_z), "c" (point_object), "g" (p_thing));
-    return ret;
-#endif
     int i, bckt_max;
     int face_beg, face;
     short faces_num;
@@ -1223,14 +1141,6 @@ short draw_rot_object(int offset_x, int offset_y, int offset_z, struct SingleObj
 
 short draw_rot_object2(int offset_x, int offset_y, int offset_z, struct SingleObject *point_object, struct Thing *p_thing)
 {
-#if 0
-    ushort ret;
-    asm volatile (
-      "push %5\n"
-      "call ASM_draw_rot_object2\n"
-        : "=r" (ret) : "a" (offset_x), "d" (offset_y), "b" (offset_z), "c" (point_object), "g" (p_thing));
-    return ret;
-#endif
     int i, bckt_max;
     int face_beg, face;
     short faces_num;
@@ -1382,12 +1292,6 @@ short draw_rot_object2(int offset_x, int offset_y, int offset_z, struct SingleOb
 
 short draw_object(int x, int y, int z, struct SingleObject *point_object)
 {
-#if 0
-    ushort ret;
-    asm volatile ("call ASM_draw_object\n"
-        : "=r" (ret) : "a" (x), "d" (y), "b" (z), "c" (point_object));
-    return ret;
-#endif
     int i, bckt_max;
     int face;
     int snpoint;
@@ -1651,11 +1555,6 @@ short draw_object(int x, int y, int z, struct SingleObject *point_object)
 
 void draw_vehicle_health(struct Thing *p_thing)
 {
-#if 0
-    asm volatile ("call ASM_draw_vehicle_health\n"
-        : : "a" (p_thing));
-    return;
-#endif
     struct ShEnginePoint sp;
     int x, y, z;
     struct SortSprite *p_sspr;
@@ -1679,7 +1578,8 @@ void draw_vehicle_health(struct Thing *p_thing)
     p_sspr->PThing = p_thing;
 }
 
-void build_polygon_circle(int x1, int y1, int z1, int r1, int r2, int flag, struct SingleFloorTexture *p_tex, int col, int bright1, int bright2)
+void build_polygon_circle_2d(int x1, int y1, int r1, int r2, int flag,
+  struct SingleFloorTexture *p_tex, int col, int bright1, int bright2, int sort_key)
 {
 #if 0
     asm volatile (
@@ -1689,10 +1589,107 @@ void build_polygon_circle(int x1, int y1, int z1, int r1, int r2, int flag, stru
       "push %6\n"
       "push %5\n"
       "push %4\n"
-      "call ASM_build_polygon_circle\n"
-        : : "a" (x1), "d" (y1), "b" (z1), "c" (r1), "g" (r2), "g" (flag), "g" (p_tex), "g" (col), "g" (bright1), "g" (bright2));
+      "call ASM_build_polygon_circle_2d\n"
+        : : "a" (x1), "d" (y1), "b" (r1), "c" (r2), "g" (flag), "g" (p_tex), "g" (col), "g" (bright1), "g" (bright2), "g" (sort_key));
     return;
 #endif
+    int pt3, pt4;
+    int scrad1;
+    int cur_x, cur_y;
+    short angle, dt_angle, angle_detail;
+
+    pt4 = next_screen_point;
+    scrad1 = (overall_scale * r1) >> 8;
+    angle_detail = 128;
+    if ((scrad1 + x1 < 0) || (x1 - scrad1 > vec_window_width) || (scrad1 + y1 < 0) || (y1 - scrad1 > vec_window_height))
+        return;
+
+    if (scrad1 > 150)
+        angle_detail = 16;
+    else if (scrad1 > 50)
+        angle_detail = 32;
+    else if (scrad1 > 10)
+        angle_detail = 64;
+
+    cur_x = scrad1 + x1;
+    cur_y = y1;
+    pt4 = next_screen_point;
+    pt3 = pt4;
+    pt4++;
+
+    {
+        struct SpecialPoint *p_specpt3;
+        p_specpt3 = &game_screen_point_pool[pt3];
+        p_specpt3->X = x1;
+        p_specpt3->Y = y1;
+    }
+
+    dt_angle = 2 * angle_detail;
+    angle = dt_angle;
+    while (angle <= 2048)
+    {
+        struct SingleObjectFace4 *p_face4;
+        struct SpecialPoint *p_specpt1;
+        struct SpecialPoint *p_specpt2;
+        struct SpecialPoint *p_specpt4;
+        int nxt_x, nxt_y;
+        int sin_angl, half_angl, cos_angl;
+        int hlf_y, hlf_x;
+        ushort face;
+
+        half_angl = angle - angle_detail;
+        cos_angl = lbSinTable[(half_angl & 0x7FF) + LbFPMath_PI/2];
+        sin_angl = lbSinTable[(half_angl & 0x7FF)];
+        hlf_x = x1 + ((scrad1 * cos_angl) >> 16);
+        hlf_y = y1 + ((scrad1 * sin_angl) >> 16);
+        cos_angl = lbSinTable[(angle & 0x7FF) + LbFPMath_PI/2];
+        sin_angl = lbSinTable[angle & 0x7FF];
+        nxt_x = x1 + ((scrad1 * cos_angl) >> 16);
+        nxt_y = y1 + ((scrad1 * sin_angl) >> 16);
+
+        face = next_special_face4;
+        if (face >= mem_game[25].N)
+            break;
+        next_special_face4++;
+
+        p_face4 = &game_special_object_faces4[face];
+        p_face4->Flags = 17;
+        p_face4->PointNo[0] = pt4 + 2;
+        p_face4->PointNo[1] = pt4 + 1;
+        p_face4->PointNo[2] = pt3;
+        p_face4->PointNo[3] = pt4 + 0;
+        p_face4->Shade0 = bright1;
+        p_face4->Shade1 = bright1;
+        p_face4->Shade3 = bright1;
+        p_face4->Shade2 = bright2;
+        p_face4->GFlags = 0;
+        p_face4->ExCol = col;
+
+        p_specpt1 = &game_screen_point_pool[pt4 + 2];
+        p_specpt2 = &game_screen_point_pool[pt4 + 1];
+        p_specpt4 = &game_screen_point_pool[pt4 + 0];
+        pt4 += 3;
+
+        p_specpt4->X = cur_x;
+        p_specpt4->Y = cur_y;
+        p_specpt2->X = hlf_x;
+        p_specpt2->Y = hlf_y;
+        p_specpt1->X = nxt_x;
+        p_specpt1->Y = nxt_y;
+
+        if (!draw_item_add(DrIT_Unkn12, face, sort_key))
+            break;
+
+        cur_x = nxt_x;
+        cur_y = nxt_y;
+        angle += dt_angle;
+    }
+    next_screen_point = pt4;
+}
+
+void build_polygon_circle(int x1, int y1, int z1, int r1, int r2, int flag,
+  struct SingleFloorTexture *p_tex, int col, int bright1, int bright2)
+{
     int pp_X, pp_Y;
     int bckt;
     int scrad1;
@@ -1752,11 +1749,13 @@ void build_polygon_circle(int x1, int y1, int z1, int r1, int r2, int flag, stru
         int hlf_y, hlf_x;
         ushort face;
 
+        half_angl = angle - angle_detail;
+        cos_angl = lbSinTable[(half_angl & 0x7FF) + LbFPMath_PI/2];
+        sin_angl = lbSinTable[(half_angl & 0x7FF)];
+        hlf_x = pp_X + ((scrad1 * cos_angl) >> 16);
+        hlf_y = pp_Y + ((scrad1 * sin_angl) >> 16);
         cos_angl = lbSinTable[(angle & 0x7FF) + LbFPMath_PI/2];
         sin_angl = lbSinTable[angle & 0x7FF];
-        half_angl = (angle - angle_detail) & 0x7FF;
-        hlf_x = pp_X + ((scrad1 * lbSinTable[half_angl + LbFPMath_PI/2]) >> 16);
-        hlf_y = pp_Y + ((scrad1 * lbSinTable[half_angl]) >> 16);
         nxt_x = pp_X + ((scrad1 * cos_angl) >> 16);
         nxt_y = pp_Y + ((scrad1 * sin_angl) >> 16);
 
@@ -1781,6 +1780,7 @@ void build_polygon_circle(int x1, int y1, int z1, int r1, int r2, int flag, stru
         p_specpt1 = &game_screen_point_pool[pt4 + 2];
         p_specpt2 = &game_screen_point_pool[pt4 + 1];
         p_specpt4 = &game_screen_point_pool[pt4 + 0];
+        pt4 += 3;
 
         p_specpt4->X = cur_x;
         p_specpt4->Y = cur_y;
@@ -1788,8 +1788,6 @@ void build_polygon_circle(int x1, int y1, int z1, int r1, int r2, int flag, stru
         p_specpt2->Y = hlf_y;
         p_specpt1->X = nxt_x;
         p_specpt1->Y = nxt_y;
-
-        pt4 += 3;
 
         if (!draw_item_add(DrIT_Unkn12, face, bckt))
             break;

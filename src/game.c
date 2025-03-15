@@ -16,6 +16,7 @@
 #include "bfpalette.h"
 #include "bfmemory.h"
 #include "bfmemut.h"
+#include "bfstrut.h"
 #include "bffile.h"
 #include "bffont.h"
 #include "bfgentab.h"
@@ -679,36 +680,6 @@ void update_danger_music(ubyte a1)
     ingame.fld_unkC8B = 0;
 }
 
-void cover_screen_rect_with_sprite(short x, short y, ushort w, ushort h, struct TbSprite *spr)
-{
-    short cx, cy;
-
-    for (cy = y; cy < y+h; cy += spr->SHeight)
-    {
-        for (cx = x; cx < x+w; cx += spr->SWidth) {
-            LbSpriteDraw(cx, cy, spr);
-        }
-    }
-}
-
-void cover_screen_rect_with_raw_file(short x, short y, ushort w, ushort h, const char *fname)
-{
-    struct SSurface surf;
-    struct TbRect srect;
-    ubyte *inp_buf;
-
-    LbSetRect(&srect, 0, 0, w, h);
-    LbScreenSurfaceInit(&surf);
-    LbScreenSurfaceCreate(&surf, w, h);
-    inp_buf = LbScreenSurfaceLock(&surf);
-    LbFileLoadAt(fname, inp_buf);
-    LbScreenSurfaceUnlock(&surf);
-    LbScreenUnlock();
-    LbScreenSurfaceBlit(&surf, x, y, &srect, SSBlt_FLAG8 | SSBlt_FLAG4);
-    LbScreenSurfaceRelease(&surf);
-    LbScreenLock();
-}
-
 void ingame_palette_load(int pal_id)
 {
     char locstr[DISKPATH_SIZE];
@@ -729,6 +700,7 @@ void ingame_palette_reload(void)
 void sprint_fmv_filename(ushort vid_type, char *fnbuf, ulong buflen)
 {
     const char *fname;
+    PathInfo *pinfo;
     struct Campaign *p_campgn;
 
     fname = NULL;
@@ -737,8 +709,9 @@ void sprint_fmv_filename(ushort vid_type, char *fnbuf, ulong buflen)
     case MPly_Intro:
         // Intro name is hard-coded, as it is played before any campaign is loaded
         fname = "intro.smk";
+        pinfo = &game_dirs[DirPlace_LangData];
         if (game_dirs[DirPlace_Sound].use_cd == 1)
-            sprintf(fnbuf, "%slanguage/%s/%s", cd_drive, language_3str, fname);
+            sprintf(fnbuf, "%s%s/%s", cd_drive, pinfo->directory, fname);
         else
             sprintf(fnbuf, "intro/%s", fname);
         break;
@@ -766,8 +739,9 @@ void sprint_fmv_filename(ushort vid_type, char *fnbuf, ulong buflen)
             if (current_map == 46)
             {
                 fname = "syn_ele.smk";
+                pinfo = &game_dirs[DirPlace_LangData];
                 if (game_dirs[DirPlace_Data].use_cd == 1)
-                    sprintf(fnbuf, "%slanguage/%s/%s", cd_drive, language_3str, fname);
+                    sprintf(fnbuf, "%s%s/%s", cd_drive, pinfo->directory, fname);
                 else
                     sprintf(fnbuf, "data/%s", fname);
             }
@@ -781,8 +755,9 @@ void sprint_fmv_filename(ushort vid_type, char *fnbuf, ulong buflen)
             if (current_map == 46)
             {
                 fname = "chu_ele.smk";
+                pinfo = &game_dirs[DirPlace_LangData];
                 if (game_dirs[DirPlace_Data].use_cd == 1)
-                    sprintf(fnbuf, "%slanguage/%s/%s", cd_drive, language_3str, fname);
+                    sprintf(fnbuf, "%s%s/%s", cd_drive, pinfo->directory, fname);
                 else
                     sprintf(fnbuf, "data/%s", fname);
             }
@@ -1691,11 +1666,6 @@ TbBool get_engine_inputs(void)
 
 void process_engine_unk3(void)
 {
-#if 0
-    asm volatile ("call ASM_process_engine_unk3\n"
-        :  :  : "eax" );
-    return;
-#endif
     PlayerInfo *p_locplayer;
 
     get_engine_inputs();
@@ -2453,6 +2423,38 @@ void set_default_user_settings(void)
     apply_user_settings();
 }
 
+void resave_salt_to_keys(void)
+{
+    TbFileHandle fh;
+    int i;
+
+    fh = LbFileOpen("qdata/keys.dat", Lb_FILE_MODE_OLD);
+    if (fh == INVALID_FILE)
+    {
+        return;
+    }
+    i = sizeof(save_mortal_salt);
+    LbFileSeek(fh, -i, Lb_FILE_SEEK_END);
+    LbFileWrite(fh, &save_mortal_salt, i);
+    LbFileClose(fh);
+}
+
+void reload_salt_from_keys(void)
+{
+    TbFileHandle fh;
+    int i;
+
+    fh = LbFileOpen("qdata/keys.dat", Lb_FILE_MODE_READ_ONLY);
+    if (fh == INVALID_FILE)
+    {
+        return;
+    }
+    i = sizeof(save_mortal_salt);
+    LbFileSeek(fh, -i, Lb_FILE_SEEK_END);
+    LbFileRead(fh, &save_mortal_salt, i);
+    LbFileClose(fh);
+}
+
 void read_user_settings(void)
 {
     char fname[52];
@@ -2524,14 +2526,7 @@ void read_user_settings(void)
     if (read_mortal_salt_backup)
     {
         // Read mortal game encryption salt from backup
-        fh = LbFileOpen("qdata/keys.dat", Lb_FILE_MODE_READ_ONLY);
-        if (fh != INVALID_FILE)
-        {
-            i = sizeof(save_mortal_salt);
-            LbFileSeek(fh, -i, Lb_FILE_SEEK_END);
-            LbFileRead(fh, &save_mortal_salt, i);
-            LbFileClose(fh);
-        }
+        reload_salt_from_keys();
     }
 
     i = -1;
@@ -4014,90 +4009,114 @@ ulong save_crypto_transform3(ubyte a1)
     return ret;
 }
 
-TbBool save_game_decrypt_and_verify(ulong fmtver, int slot, ubyte *save_buf, ulong save_buf_len, ulong decrypt_verify)
+u32 save_buffer_hash(ubyte *save_buf, u32 save_buf_len)
+{
+    u32 *cpos;
+    u32 clen, hash;
+    u32 i;
+
+    if (save_buf_len & 3)
+        clen = save_buf_len + 4;
+    else
+        clen = save_buf_len;
+    clen >>= 2;
+    cpos = (u32 *)save_game_buffer;
+
+    hash = *cpos;
+    for (i = 1; i < clen; i++) {
+        cpos++;
+        hash ^= *cpos;
+    }
+
+    return hash;
+}
+
+void save_crypto_docrypt(ubyte *save_buf, u32 save_buf_len)
+{
+    ubyte *gbpos;
+    ubyte *gbend;
+
+    gbpos = save_game_buffer;
+    gbend = &save_game_buffer[4 * (save_buf_len >> 2)];
+    while (gbpos < gbend)
+    {
+        u32 key, keysel;
+        u32 *cryptpos;
+        keysel = (save_crypto_data_state[1] << 8) | (save_crypto_data_state[0] << 16) | save_crypto_data_state[2];
+        cryptpos = (u32 *)gbpos;
+        switch (keysel)
+        {
+        case 0x00001:
+        case 0x10100:
+            key = save_crypto_transform1(1);
+            key ^= save_crypto_transform2(1);
+            key ^= save_crypto_transform3(0);
+            break;
+        case 0x00100:
+        case 0x10001:
+            key = save_crypto_transform1(1);
+            key ^= save_crypto_transform2(0);
+            key ^= save_crypto_transform3(1);
+            break;
+        case 0x00000:
+        case 0x10101:
+            key = save_crypto_transform1(1);
+            key ^= save_crypto_transform2(1);
+            key ^= save_crypto_transform3(1);
+            break;
+        case 0x00101:
+        case 0x10000:
+            key = save_crypto_transform1(0);
+            key ^= save_crypto_transform2(1);
+            key ^= save_crypto_transform3(1);
+            break;
+        default:
+            key = 0;
+            break;
+        }
+        gbpos += 4;
+        *cryptpos ^= key;
+    }
+}
+
+TbBool save_game_decrypt_and_verify(u32 fmtver, TbBool simple_salt, ubyte *save_buf, u32 save_buf_len, u32 decrypt_verify)
 {
     if (fmtver >= 9)
     {
         // Decrypt the file
-        ubyte *gbpos;
-        ubyte *gbend;
-        save_crypto_make_hashtable(slot);
-        gbpos = save_game_buffer;
-        gbend = &save_game_buffer[4 * (save_buf_len >> 2)];
-        while (gbpos < gbend)
-        {
-            ulong key, keysel;
-            ulong *cryptpos;
-            keysel = (save_crypto_data_state[1] << 8) | (save_crypto_data_state[0] << 16) | save_crypto_data_state[2];
-            cryptpos = (ulong *)gbpos;
-            switch (keysel)
-            {
-            case 0x00001:
-            case 0x10100:
-                key = save_crypto_transform1(1);
-                key ^= save_crypto_transform2(1);
-                key ^= save_crypto_transform3(0);
-                break;
-            case 0x00100:
-            case 0x10001:
-                key = save_crypto_transform1(1);
-                key ^= save_crypto_transform2(0);
-                key ^= save_crypto_transform3(1);
-                break;
-            case 0x00000:
-            case 0x10101:
-                key = save_crypto_transform1(1);
-                key ^= save_crypto_transform2(1);
-                key ^= save_crypto_transform3(1);
-                break;
-            case 0x00101:
-            case 0x10000:
-                key = save_crypto_transform1(0);
-                key ^= save_crypto_transform2(1);
-                key ^= save_crypto_transform3(1);
-                break;
-            default:
-                key = 0;
-                break;
-            }
-            gbpos += 4;
-            *cryptpos ^= key;
-        }
+        save_crypto_make_hashtable(simple_salt);
+        save_crypto_docrypt(save_buf, save_buf_len);
     }
 
-    { // Verify data
-        ulong *cpos;
-        ulong clen, hash;
-        ulong i;
+    // Verify data
+    if (save_buffer_hash(save_buf, save_buf_len) != decrypt_verify)
+        return false;
 
-        if (save_buf_len & 3)
-            clen = save_buf_len + 4;
-        else
-            clen = save_buf_len;
-        clen >>= 2;
-        cpos = (ulong *)save_game_buffer;
-
-        hash = *cpos;
-        for (i = 1; i < clen; i++) {
-            cpos++;
-            hash ^= *cpos;
-        }
-        if (hash != decrypt_verify)
-            return false;
-    }
     return true;
+}
+
+u32 save_game_encrypt(u32 fmtver, TbBool simple_salt, ubyte *save_buf, u32 save_buf_len)
+{
+    u32 decrypt_verify;
+
+    decrypt_verify = save_buffer_hash(save_buf, save_buf_len);
+
+    save_crypto_make_hashtable(simple_salt);
+    save_crypto_docrypt(save_buf, save_buf_len);
+
+    return decrypt_verify;
 }
 
 ubyte load_game(int slot, char *desc)
 {
-    char str[52];
-    ulong gblen, fmtver, decrypt_verify;
+    char locstr[52];
+    u32 gblen, fmtver, decrypt_verify;
     TbFileHandle fh;
     TbBool ok;
 
-    get_saved_game_fname(str, slot);
+    get_saved_game_fname(locstr, slot);
 
-    fh = LbFileOpen(str, Lb_FILE_MODE_READ_ONLY);
+    fh = LbFileOpen(locstr, Lb_FILE_MODE_READ_ONLY);
     if (fh == INVALID_FILE)
         return 1;
     LbFileRead(fh, desc, 25);
@@ -4107,19 +4126,19 @@ ubyte load_game(int slot, char *desc)
     LbFileRead(fh, &decrypt_verify, 4);
     LbFileClose(fh);
 
-    ok = save_game_decrypt_and_verify(fmtver, slot, save_game_buffer, gblen, decrypt_verify);
+    ok = save_game_decrypt_and_verify(fmtver, slot != 0, save_game_buffer, gblen, decrypt_verify);
     if (!ok) return 2;
 
-    memcpy(&ingame.Credits, &save_game_buffer[0], sizeof(ingame.Credits));
+    gblen = 0;
+    memcpy(&ingame.Credits, &save_game_buffer[gblen], sizeof(ingame.Credits));
+    assert(sizeof(ingame.Credits) == 4);
+    gblen += sizeof(ingame.Credits);
 
-    gblen = 4;
     if (fmtver >= 5)
     {
         ushort cryo_no;
-        memcpy(&cryo_agents, &save_game_buffer[gblen], offsetof(struct AgentInfo, NumAgents));
-        gblen += offsetof(struct AgentInfo, NumAgents);
-        memcpy(&cryo_agents.NumAgents, &save_game_buffer[gblen], sizeof(cryo_agents.NumAgents));
-        gblen += sizeof(cryo_agents.NumAgents);
+        memcpy(&cryo_agents, &save_game_buffer[gblen], sizeof(struct AgentInfo));
+        gblen += sizeof(struct AgentInfo);
         for (cryo_no = 0; cryo_no < CRYO_PODS_MAX_COUNT; cryo_no++)
         {
             // Remove bad mod flags
@@ -4344,15 +4363,13 @@ ubyte load_game(int slot, char *desc)
         int i;
         for (i = 1; i < next_mission; i++)
         {
-            mission_list[i].SpecialTrigger[0] = save_game_buffer[gblen];
-            gblen++;
-            mission_list[i].SpecialTrigger[1] = save_game_buffer[gblen];
-            gblen++;
-            mission_list[i].SpecialTrigger[2] = save_game_buffer[gblen];
-            gblen++;
+            struct Mission *p_missi;
+            p_missi = &mission_list[i];
+            memcpy(p_missi->SpecialTrigger, &save_game_buffer[gblen], sizeof(p_missi->SpecialTrigger));
+            gblen += sizeof(p_missi->SpecialTrigger);
             if (fmtver > 1)
             {
-                mission_list[i].Complete = save_game_buffer[gblen];
+                p_missi->Complete = save_game_buffer[gblen];
                 gblen++;
             }
         }
@@ -5189,10 +5206,156 @@ void init_variables(void)
 
 int save_game_write(ubyte slot, char *desc)
 {
+#if 0
     int ret;
     asm volatile ("call ASM_save_game_write\n"
         : "=r" (ret) : "a" (slot), "d" (desc));
     return ret;
+#endif
+    char locstr[32];
+    PlayerInfo *p_locplyr;
+    TbFileHandle fh;
+    u32 gblen, fmtver;
+    u32 decrypt_verify;
+    TbBool simple_salt;
+    int i;
+
+    fmtver = 12;
+    gblen = 0;
+    memcpy(&save_game_buffer[gblen], &ingame.Credits, sizeof(ingame.Credits));
+    assert(sizeof(ingame.Credits) == 4);
+    gblen += sizeof(ingame.Credits);
+
+    memcpy(&save_game_buffer[gblen], &cryo_agents, sizeof(cryo_agents));
+    assert(sizeof(cryo_agents) == 389);
+    gblen += sizeof(cryo_agents);
+
+    memcpy(&save_game_buffer[gblen], &research, sizeof(research));
+    assert(sizeof(research) == 1372);
+    gblen += sizeof(research);
+
+    p_locplyr = &players[local_player_no];
+    memcpy(&save_game_buffer[gblen], p_locplyr, sizeof(PlayerInfo));
+    assert(sizeof(PlayerInfo) == 426);
+    gblen += sizeof(PlayerInfo);
+
+    memcpy(&save_game_buffer[gblen], &global_date, sizeof(global_date));
+    assert(sizeof(global_date) == 5);
+    gblen += sizeof(global_date);
+
+    memcpy(&save_game_buffer[gblen], &research_curr_wep_date, sizeof(research_curr_wep_date));
+    assert(sizeof(research_curr_wep_date) == 5);
+    gblen += sizeof(research_curr_wep_date);
+
+    memcpy(&save_game_buffer[gblen], &research_curr_mod_date, sizeof(research_curr_mod_date));
+    assert(sizeof(research_curr_mod_date) == 5);
+    gblen += sizeof(research_curr_mod_date);
+    assert(gblen == 2206);
+
+    save_game_buffer[gblen + 0] = next_email;
+    save_game_buffer[gblen + 2] = next_brief;
+    save_game_buffer[gblen + 4] = old_mission_brief;
+    save_game_buffer[gblen + 6] = open_brief;
+    save_game_buffer[gblen + 8] = next_ref;
+    save_game_buffer[gblen + 10] = new_mail;
+    save_game_buffer[gblen + 11] = background_type;
+    gblen += 12;
+
+    memcpy(&save_game_buffer[gblen], &mission_status[open_brief], sizeof(mission_status[0]));
+    assert(sizeof(mission_status[0]) == 40);
+    gblen += sizeof(mission_status[0]);
+
+    memcpy(&save_game_buffer[gblen], email_store, sizeof(struct EmailItem) * next_email);
+    assert(sizeof(struct EmailItem) == 5);
+    gblen += sizeof(struct EmailItem) * next_email;
+    memcpy(&save_game_buffer[gblen], brief_store, sizeof(struct EmailItem) * next_brief);
+    gblen += sizeof(struct EmailItem) * next_brief;
+    memcpy(&save_game_buffer[gblen], newmail_store, sizeof(struct EmailItem) * new_mail);
+    gblen += sizeof(struct EmailItem) * new_mail;
+
+    memcpy(&save_game_buffer[gblen], &ingame.MissionStatus, sizeof(ingame.MissionStatus));
+    assert(sizeof(ingame.MissionStatus) == 2);
+    gblen += sizeof(ingame.MissionStatus);
+
+    memcpy(&save_game_buffer[gblen], mission_open, sizeof(mission_open));
+    assert(sizeof(mission_open) == 2 * 50);
+    gblen += sizeof(mission_open);
+
+    memcpy(&save_game_buffer[gblen], mission_state, sizeof(mission_state));
+    assert(sizeof(mission_state) == 2 * 50);
+    gblen += sizeof(mission_state);
+
+    memcpy(&save_game_buffer[gblen], &next_mission, sizeof(next_mission));
+    assert(sizeof(next_mission) == 2);
+    gblen += sizeof(next_mission);
+
+    for (i = 1; i < next_mission; i++)
+    {
+        struct Mission *p_missi;
+        p_missi = &mission_list[i];
+        memcpy(&save_game_buffer[gblen], p_missi->SpecialTrigger, sizeof(p_missi->SpecialTrigger));
+        gblen += sizeof(p_missi->SpecialTrigger);
+        save_game_buffer[gblen] = p_missi->Complete;
+        gblen += 1;
+    }
+
+    memcpy(&save_game_buffer[gblen], login_name, sizeof(login_name));
+    gblen += sizeof(login_name);
+
+    for (i = 0; i < num_cities; i++)
+    {
+        save_game_buffer[gblen] = cities[i].Info;
+        gblen += 1;
+    }
+
+    save_game_buffer[gblen] = ingame.AutoResearch;
+    gblen += 1;
+
+    if (((ingame.Flags & 0x10) != 0) || (desc[0] == '\0'))
+    {
+        struct Campaign *p_campgn;
+        p_campgn = &campaigns[background_type];
+        sprintf(desc, "%s %02d:%02d:%02d NC", p_campgn->TextName,
+          global_date.Day, global_date.Month, global_date.Year);
+        LbStringToUpper(desc);
+    }
+  
+    while ((gblen & 7) != 0)
+    {
+        save_game_buffer[gblen] = 0;
+        gblen += 1;
+    }
+
+    if ((ingame.Flags & 0x10) != 0)
+    {
+        save_mortal_salt = time(0);
+        resave_salt_to_keys();
+    }
+
+    simple_salt = ((ingame.Flags & 0x10) == 0);
+    decrypt_verify = save_game_encrypt(fmtver, simple_salt, save_game_buffer, gblen);
+
+    if ((ingame.Flags & 0x10) != 0)
+        sprintf(locstr, "qdata/savegame/synwarsm.sav");
+    else if (slot >= 9)
+        sprintf(locstr, "qdata/savegame/swars%03d.sav", slot - 1);
+    else
+        sprintf(locstr, "qdata/savegame/synwars%d.sav", slot - 1);
+
+    fh = LbFileOpen(locstr, Lb_FILE_MODE_NEW);
+    if (fh == INVALID_FILE) {
+        return 1;
+    }
+    LbFileWrite(fh, desc, 25);
+    LbFileWrite(fh, &gblen, sizeof(gblen));
+    LbFileWrite(fh, &fmtver, sizeof(fmtver));
+    LbFileWrite(fh, save_game_buffer, gblen);
+    LbFileWrite(fh, &decrypt_verify, sizeof(decrypt_verify));
+    LbFileClose(fh);
+
+    save_user_settings();
+
+    return 0;
 }
 
 void campaign_new_game_prepare(void)
@@ -5240,7 +5403,7 @@ ubyte do_storage_NEW_MORTAL(ubyte click)
 
     campaign_new_game_prepare();
 
-    if( save_game_write(0, save_active_desc)) {
+    if (save_game_write(0, save_active_desc)) {
         show_alert = 1;
         sprintf(alert_text, "%s", gui_strings[566]);
     }
@@ -5298,72 +5461,6 @@ void init_screen_boxes(void)
     init_cryo_screen_boxes();
     init_research_screen_boxes();
     init_equip_screen_shapes();
-}
-
-void reload_background(void)
-{
-    struct ScreenBufBkp bkp;
-
-    proj_origin.X = lbDisplay.GraphicsScreenWidth / 2 - 1;
-    proj_origin.Y = ((480 * 143) >> 8) + 1;
-    if (screentype == SCRT_MAINMENU || screentype == SCRT_LOGIN || restore_savegame)
-    {
-        screen_switch_to_custom_buffer(&bkp, back_buffer,
-          lbDisplay.GraphicsScreenWidth, lbDisplay.GraphicsScreenHeight);
-
-        cover_screen_rect_with_sprite(0, 0, lbDisplay.GraphicsScreenWidth,
-          lbDisplay.GraphicsScreenHeight, &sprites_Icons0_0[168]);
-
-        screen_load_backup_buffer(&bkp);
-    }
-    else
-    {
-        struct Campaign *p_campgn;
-        char str[52];
-        const char *campgn_mark;
-        const char *bkdata_dir;
-
-        p_campgn = &campaigns[background_type];
-        campgn_mark = p_campgn->ProjectorFnMk;
-        bkdata_dir = "qdata";
-
-        sprintf(str, "%s/%s-proj.dat", bkdata_dir, campgn_mark);
-
-        if ((lbDisplay.GraphicsScreenWidth == 640) &&
-          (lbDisplay.GraphicsScreenHeight == 480))
-        {
-            // If resolution matches, load the background in a simplified way
-            LbFileLoadAt(str, back_buffer);
-        }
-        else
-        {
-            short raw_w, raw_h;
-            short x, y;
-
-            raw_w = 640;
-            raw_h = 480;
-            x = (lbDisplay.GraphicsScreenWidth - raw_w) / 2;
-            y = 0;
-
-            screen_switch_to_custom_buffer(&bkp, back_buffer,
-              lbDisplay.GraphicsScreenWidth, lbDisplay.GraphicsScreenHeight);
-
-            LbScreenClear(0);
-            // TODO menu scaling, maybe?
-            cover_screen_rect_with_raw_file(x, y, raw_w, raw_h, str);
-
-            screen_load_backup_buffer(&bkp);
-        }
-    }
-
-    if (screentype == SCRT_EQUIP)
-    {
-        equip_update_for_selected_weapon();
-    }
-    if (screentype == SCRT_CRYO)
-    {
-        cryo_update_for_selected_cybmod();
-    }
 }
 
 void players_init_control_mode(void)
@@ -6884,7 +6981,7 @@ void mouse_sprite_animate(void)
     {
       if (++mouse_sprite_anim_frame > 7)
           mouse_sprite_anim_frame = 0;
-      LbMouseChangeSprite(&unk3_sprites[mouse_sprite_anim_frame + 1]);
+      LbMouseChangeSprite(&fe_mouseptr_sprites[mouse_sprite_anim_frame + 1]);
     }
 }
 

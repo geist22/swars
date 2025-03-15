@@ -48,6 +48,7 @@
 
 static char data_path_user[DISKPATH_SIZE] = "";
 static char data_path_hdd[DISKPATH_SIZE] = "";
+static char game_dir_language[64] = "language/eng";
 static char game_dir_savegame[] = "qdata/savegame";
 static char game_dir_screenshots[] = "qdata/screenshots";
 
@@ -57,7 +58,7 @@ MemSystem mem_game[] = {
   { "my_big_map",		(void **)&game_my_big_map,		18u, 16513, 0, 0, 0 },
   { "textures",			(void **)&game_textures,		18u, 4512, 0, 0, 0 },
   { "face_textures",	(void **)&game_face_textures,	16u, 4000, 0, 0, 0 },
-  { "object_points",	(void **)&game_object_points,    10u, 20000, 0, 0, 0 },
+  { "object_points",	(void **)&game_object_points,	10u, 20000, 0, 0, 0 },
   { "object_faces",		(void **)&game_object_faces,	32u, 15000, 0, 0, 0 },
   { "objects",			(void **)&game_objects,			36u, 2000, 0, 0, 0 },
   { "quick_lights",		(void **)&game_quick_lights,	6u, 64000, 0, 0, 0 },
@@ -105,7 +106,10 @@ PathInfo game_dirs[] = {
   {"sound",		1},
   {"data/equip",1},
   {"qdata/equip",0},
+  {game_dir_language,	0},
   {"conf",		0},
+  {game_dir_savegame,	0},
+  {game_dir_screenshots,0},
   {NULL,		0},
 };
 
@@ -173,7 +177,7 @@ GetDirPlaceFromPath(const char *fname)
         }
     }
     // Second pass - match starting part of the path
-    for (dir_place = 0; dir_place < (int)(sizeof(game_dirs)/sizeof(game_dirs[0])); dir_place++)
+    for (dir_place = sizeof(game_dirs)/sizeof(game_dirs[0]) - 1; dir_place >= 0; dir_place--)
     {
         PathInfo *pinfo;
         pinfo = &game_dirs[dir_place];
@@ -230,8 +234,10 @@ void SyndFileNameTransform(char *out_fname, const char *inp_fname)
     // Special file name switch for using language-specific files from CD
     if ( (dir_place == DirPlace_Data) && game_dirs[dir_place].use_cd &&
       (strcasecmp(inp_fname, "data/text.dat") == 0) ) {
+        PathInfo *pinfo;
+        pinfo = &game_dirs[DirPlace_LangData];
         // we can use '/' as separators here - these are converted later
-        snprintf(fs_fname, DISKPATH_SIZE, "language/%s/text.dat", language_3str);
+        snprintf(fs_fname, DISKPATH_SIZE, "%s/text.dat", pinfo->directory);
     } else {
         strncpy(fs_fname, inp_fname, DISKPATH_SIZE);
     }
@@ -253,34 +259,51 @@ void setup_file_names(void)
     GetDirectoryUser();
 }
 
+void setup_language_file_names(void)
+{
+    snprintf(game_dir_language, sizeof(game_dir_language), "language/%s", language_3str);
+}
+
 int get_highest_used_packet_record_no(int campgn, int missi)
 {
     char fname[DISKPATH_SIZE];
-    sprintf(fname, "%s/rc%02dm%03d.s*", game_dir_savegame, campgn, missi);
-    return get_highest_file_no(fname, strrchr(fname, '*') - fname, game_dir_savegame);
+    PathInfo *pinfo;
+
+    pinfo = &game_dirs[DirPlace_Savegame];
+    sprintf(fname, "%s/rc%02dm%03d.s*", pinfo->directory, campgn, missi);
+    return get_highest_file_no(fname, strrchr(fname, '*') - fname, pinfo->directory);
 }
 
 void get_packet_record_fname(char *fname, int campgn, int missi, int file_no)
 {
-    sprintf(fname, "%s/rc%02dm%03d.s%02d", game_dir_savegame, campgn, missi, file_no);
+    PathInfo *pinfo;
+
+    pinfo = &game_dirs[DirPlace_Savegame];
+    sprintf(fname, "%s/rc%02dm%03d.s%02d", pinfo->directory, campgn, missi, file_no);
 }
 
 void get_user_settings_fname(char *fname, const char *name)
 {
+    PathInfo *pinfo;
+
+    pinfo = &game_dirs[DirPlace_Savegame];
     if (strlen(name) == 0)
         name = "default";
-    sprintf(fname, "%s/%.8s.ini", game_dir_savegame, name);
-    LbStringToLower(fname+strlen(game_dir_savegame));
+    sprintf(fname, "%s/%.8s.ini", pinfo->directory, name);
+    LbStringToLower(fname+strlen(pinfo->directory));
 }
 
 void get_saved_game_fname(char *fname, ushort slot)
 {
+    PathInfo *pinfo;
+
+    pinfo = &game_dirs[DirPlace_Savegame];
     if (slot == 0)
-        sprintf(fname, "%s/synwarsm.sav", game_dir_savegame);
+        sprintf(fname, "%s/synwarsm.sav", pinfo->directory);
     else if (slot < 9)
-        sprintf(fname, "%s/synwars%d.sav", game_dir_savegame, (int)slot - 1);
+        sprintf(fname, "%s/synwars%d.sav", pinfo->directory, (int)slot - 1);
     else
-        sprintf(fname, "%s/swars%03d.sav", game_dir_savegame, (int)slot - 1);
+        sprintf(fname, "%s/swars%03d.sav", pinfo->directory, (int)slot - 1);
 }
 
 int get_memory_ptr_index(void **mgptr)
