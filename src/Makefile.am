@@ -138,6 +138,8 @@ swars_SOURCES = \
 	game_bstype.h \
 	game_data.c \
 	game_data.h \
+	game_save.c \
+	game_save.h \
 	game_speed.c \
 	game_speed.h \
 	game_sprani.c \
@@ -221,8 +223,8 @@ swars_SOURCES = \
 	tngobjdrw.h \
 	timer.c \
 	timer.h \
-	unix.c \
-	unix.h \
+	osunix.c \
+	osunix.h \
 	util.c \
 	util.h \
 	vehicle.c \
@@ -233,8 +235,8 @@ swars_SOURCES = \
 	wadfile.h \
 	weapon.c \
 	weapon.h \
-	windows.c \
-	windows.h \
+	oswindws.c \
+	oswindws.h \
 	wrcities.c \
 	wrcities.h
 
