@@ -189,12 +189,13 @@ void resave_salt_to_keys(void)
         return;
     }
     i = sizeof(save_mortal_salt);
-    LbFileSeek(fh, -i, Lb_FILE_SEEK_END);
+    // Add salts at end, storing all salts ever used with this copy
+    LbFileSeek(fh, 0, Lb_FILE_SEEK_END);
     LbFileWrite(fh, &save_mortal_salt, i);
     LbFileClose(fh);
 }
 
-void reload_salt_from_keys(void)
+TbResult reload_salt_from_keys(void)
 {
     char locstr[DISKPATH_SIZE];
     PathInfo *pinfo;
@@ -203,15 +204,20 @@ void reload_salt_from_keys(void)
 
     pinfo = &game_dirs[DirPlace_Savegame];
     snprintf(locstr, sizeof(locstr), "%s/keys.dat", pinfo->directory);
+    if (!LbFileExists(locstr))
+    {
+        return Lb_FAIL;
+    }
     fh = LbFileOpen(locstr, Lb_FILE_MODE_READ_ONLY);
     if (fh == INVALID_FILE)
     {
-        return;
+        return Lb_FAIL;
     }
     i = sizeof(save_mortal_salt);
     LbFileSeek(fh, -i, Lb_FILE_SEEK_END);
     LbFileRead(fh, &save_mortal_salt, i);
     LbFileClose(fh);
+    return Lb_SUCCESS;
 }
 
 void apply_user_settings(void)
@@ -232,7 +238,9 @@ void apply_user_settings(void)
         ingame.Flags &= ~GamF_DeepRadar;
 
     bang_set_detail(ingame.DetailLevel == 0);
-    apply_user_sfx_settings();
+    sfx_apply_samplevol();
+    sfx_apply_midivol();
+    sfx_apply_cdvolume();
 }
 
 void set_default_user_settings(void)
@@ -524,9 +532,39 @@ int save_game_write(ubyte slot, char *desc)
     return 0;
 }
 
+void load_save_slot_names(void)
+{
+    char locstr[DISKPATH_SIZE];
+    int i;
+
+    for (i = 0; i < 8; i++)
+    {
+        TbFileHandle fh;
+        int slot;
+
+        slot = save_slot_base + i;
+        get_saved_game_fname(locstr, slot);
+
+        if (!LbFileExists(locstr)) {
+            save_slot_names[i][0] = '\0';
+            continue;
+        }
+
+        fh = LbFileOpen(locstr, Lb_FILE_MODE_READ_ONLY);
+        if (fh == INVALID_FILE) {
+            save_slot_names[i][0] = '\0';
+            continue;
+        }
+
+        if (LbFileRead(fh, save_slot_names[i], 25) != 25)
+            save_slot_names[i][0] = '\0';
+        LbFileClose(fh);
+    }
+}
+
 ubyte load_game(int slot, char *desc)
 {
-    char locstr[52];
+    char locstr[DISKPATH_SIZE];
     u32 gblen, fmtver, decrypt_verify;
     TbFileHandle fh;
     TbBool ok;

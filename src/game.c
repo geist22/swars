@@ -156,9 +156,6 @@ extern int data_1c8428;
 extern const char *primvehobj_fname;
 extern unsigned char textwalk_data[640];
 
-extern short save_slot; // = -1;
-extern char save_slot_names[8][25];
-extern long save_slot_base;
 extern short word_1C6E08;
 extern short word_1C6E0A;
 
@@ -536,10 +533,6 @@ void anim_billboard_broadcast_sound(void)
 
 void flic_unkn03(ubyte anislot)
 {
-#if 0
-    asm volatile ("call ASM_flic_unkn03\n"
-        : : "a" (anislot));
-#endif
     struct Animation *p_anim;
     ubyte *frmbuf;
     PathInfo *pinfo;
@@ -4906,9 +4899,7 @@ void do_music_user_input(void)
             startscr_midivol += 1;
         else
             startscr_midivol += 10;
-        if (startscr_midivol > 322)
-            startscr_midivol = 322;
-        SetMusicMasterVolume(127 * startscr_midivol / 322);
+        sfx_apply_midivol();
     }
     if (lbKeyOn[KC_NUMPAD2])
     {
@@ -4916,9 +4907,7 @@ void do_music_user_input(void)
             startscr_midivol -= 1;
         else
             startscr_midivol -= 10;
-        if (startscr_midivol < 0)
-            startscr_midivol = 0;
-        SetMusicMasterVolume(127 * startscr_midivol / 322);
+        sfx_apply_midivol();
     }
 
     // Sample volume control
@@ -4928,9 +4917,7 @@ void do_music_user_input(void)
             startscr_samplevol += 1;
         else
             startscr_samplevol += 10;
-        if (startscr_samplevol > 322)
-            startscr_samplevol = 322;
-        SetSoundMasterVolume(127 * startscr_samplevol / 322);
+        sfx_apply_samplevol();
     }
     if (lbKeyOn[KC_NUMPAD1])
     {
@@ -4938,9 +4925,7 @@ void do_music_user_input(void)
             startscr_samplevol -= 1;
         else
             startscr_samplevol -= 10;
-        if (startscr_samplevol < 0)
-            startscr_samplevol = 0;
-        SetSoundMasterVolume(127 * startscr_samplevol / 322);
+        sfx_apply_samplevol();
     }
 
     // CD Music volume control
@@ -4950,9 +4935,7 @@ void do_music_user_input(void)
             startscr_cdvolume += 1;
         else
             startscr_cdvolume += 10;
-        if (startscr_cdvolume > 322)
-            startscr_cdvolume = 322;
-        SetCDVolume(70 * (127 * startscr_cdvolume / 322) / 100);
+        sfx_apply_cdvolume();
     }
     if (lbKeyOn[KC_NUMPAD3])
     {
@@ -4960,9 +4943,7 @@ void do_music_user_input(void)
             startscr_cdvolume -= 1;
         else
             startscr_cdvolume -= 10;
-        if (startscr_cdvolume < 0)
-            startscr_cdvolume = 0;
-        SetCDVolume(70 * (127 * startscr_cdvolume / 322) / 100);
+        sfx_apply_cdvolume();
     }
 
     // Music track control
