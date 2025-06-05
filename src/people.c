@@ -3526,9 +3526,7 @@ void thing_shoot_at_point(struct Thing *p_thing, short x, short y, short z, uint
     return;
 #endif
     PlayerInfo *p_player;
-    int dtx, dty, dtz;
-    int dist_x, dist_z;
-    int dist;
+    short src_x, src_y, src_z;
     int weapon_range;
     short face;
     PlayerIdx plyr;
@@ -3548,20 +3546,23 @@ void thing_shoot_at_point(struct Thing *p_thing, short x, short y, short z, uint
         y = (height >> 8) + 20;
     }
 
-    p_thing->Flag |= 0x0800;
-    if ((p_thing->Flag & 0x10000000) != 0)
-        things[p_thing->U.UPerson.Vehicle].Flag |= 0x01000000;
+    p_thing->Flag |= TngF_Unkn0800;
+    if ((p_thing->Flag & TngF_InVehicle) != 0) {
+        struct Thing *p_vehicle;
+        p_vehicle = &things[p_thing->U.UPerson.Vehicle];
+        p_vehicle->Flag |= TngF_Unkn01000000;
+    }
 
-    if ((p_thing->Flag & (0x40000000|0x0200|0x0002)) != 0)
+    if ((p_thing->Flag & (TngF_Unkn40000000|TngF_StationrSht|TngF_Destroyed)) != 0)
         return;
 
-    if ((p_thing->Flag2 & 0x0001) != 0)
+    if ((p_thing->Flag2 & TgF2_Unkn0001) != 0)
         finalise_razor_wire(p_thing);
 
     if (p_thing->State == PerSt_DROP_ITEM || p_thing->State == PerSt_PICKUP_ITEM ||
       p_thing->State == PerSt_DEAD || p_thing->State == PerSt_DIEING)
         return;
-    if ((p_thing->Flag & 0x0002) != 0)
+    if ((p_thing->Flag & TngF_Destroyed) != 0)
         return;
 
     angle = angle_between_points(PRCCOORD_TO_MAPCOORD(p_thing->X),
@@ -3569,53 +3570,41 @@ void thing_shoot_at_point(struct Thing *p_thing, short x, short y, short z, uint
     change_player_angle(p_thing, (((angle + 128) >> 8) + 8) & 7);
 
     p_thing->PTarget = 0;
-    p_thing->Flag |= 0x20000000|0x0800;
-
-    dtx = x - PRCCOORD_TO_MAPCOORD(p_thing->X);
-    dty = y - PRCCOORD_TO_MAPCOORD(p_thing->Y);
-    dtz = z - PRCCOORD_TO_MAPCOORD(p_thing->Z);
-    dist_z = abs(dtz);
-    dist_x = abs(dtx);
-    if (dist_x >= dist_z)
-        dist = (dist_z >> 7) + (dist_z >> 2) + dist_x - (dist_x >> 5) - (dist_x >> 7) + (dist_z >> 3) + (dist_z >> 6);
-    else
-        dist = (dist_x >> 6) + (dist_x >> 2) + dist_z - (dist_z >> 5) - (dist_z >> 7) + (dist_x >> 3) + (dist_x >> 7);
+    p_thing->Flag |= TngF_Unkn20000000|TngF_Unkn0800;
 
     plyr = p_thing->U.UPerson.ComCur >> 2;
     plagent = p_thing->U.UPerson.ComCur & 3;
     p_player = &players[plyr];
 
-    if ((p_thing->Flag & 0x2000) != 0)
+    if ((p_thing->Flag & TngF_PlayerAgent) != 0)
     {
         p_player->SpecialItems[0] = x;
         p_player->SpecialItems[1] = y;
         p_player->SpecialItems[2] = z;
     }
-    weapon_range = get_weapon_range(p_thing);
-    if (dist > weapon_range)
-    {
-        if (dist == 0)
-          dist = 1;
-        x = PRCCOORD_TO_MAPCOORD(p_thing->X) + dtx * weapon_range / dist;
-        y = PRCCOORD_TO_MAPCOORD(p_thing->Y) + dty * weapon_range / dist;
-        z = PRCCOORD_TO_MAPCOORD(p_thing->Z) + dtz * weapon_range / dist;
-    }
 
-    if ((p_thing->Flag2 & 0x1000000) == 0)
+    src_x = PRCCOORD_TO_MAPCOORD(p_thing->X);
+    src_y = PRCCOORD_TO_MAPCOORD(p_thing->Y);
+    src_z = PRCCOORD_TO_MAPCOORD(p_thing->Z);
+    weapon_range = get_weapon_range(p_thing);
+    map_limit_distance_to_target_fast(src_x, src_y, src_z,
+      &x, &y, &z, weapon_range);
+
+    if ((p_thing->Flag2 & TgF2_ExistsOffMap) == 0)
         alert_peeps(x, y, z, p_thing);
 
-    if ((p_thing->Flag & 0x2000) != 0)
+    if ((p_thing->Flag & TngF_PlayerAgent) != 0)
     {
-        p_player->field_19A[plagent] = x;
-        p_player->field_1A2[plagent] = z;
-        p_player->field_E8[plagent] = y;
+        p_player->UserVX[plagent] = x;
+        p_player->UserVZ[plagent] = z;
+        p_player->UserVY[plagent] = y;
     }
     else
     {
         p_thing->VX = x;
         p_thing->VY = y;
         p_thing->VZ = z;
-        p_thing->State = 0;
+        p_thing->State = PerSt_NONE;
     }
 
     switch (p_thing->U.UPerson.CurrentWeapon)
@@ -4391,7 +4380,7 @@ void adjust_speed_for_colvect_collision(int *p_speed_x, int *p_speed_z, struct T
     struct ColVect *p_colvect;
     s64 ldt;
     int dvdr;
-    int dist_x, dist_z;
+    int dt_x, dt_z;
     int dist_sum;
     s64 chk_z, chk_x;
     int sgnhi;
@@ -4402,13 +4391,10 @@ void adjust_speed_for_colvect_collision(int *p_speed_x, int *p_speed_z, struct T
     TbBool lower_z, v34;
 
     p_colvect = &game_col_vects[colvect];
-    dist_z = abs((p_colvect->Z2 - p_colvect->Z1) << 8);
-    dist_x = abs((p_colvect->X2 - p_colvect->X1) << 8);
 
-    if (dist_x >= dist_z)
-        dvdr = dist_x + (dist_z >> 2) + (dist_z >> 3) - (dist_x >> 5) + (dist_z >> 6) - (dist_x >> 7) + (dist_z >> 7);
-    else
-        dvdr = dist_z + (dist_x >> 2) + (dist_x >> 3) - (dist_z >> 5) + (dist_x >> 6) + (dist_x >> 7) - (dist_z >> 7);
+    dt_x = (p_colvect->X2 - p_colvect->X1) << 8;
+    dt_z = (p_colvect->Z2 - p_colvect->Z1) << 8;
+    dvdr = map_distance_deltas_fast(dt_x, 0, dt_z);
     if (dvdr < 10)
       dvdr = 10;
     ldt = (s64)(p_colvect->X2 - p_colvect->X1) << 24;
