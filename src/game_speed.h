@@ -19,13 +19,13 @@
 #ifndef GAME_SPEED_H
 #define GAME_SPEED_H
 
+#include "bftypes.h"
+#include "game_bstype.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 /******************************************************************************/
-
-#include "bftypes.h"
-#include "game_bstype.h"
 
 /******************************************************************************/
 extern ulong curr_tick_time;
