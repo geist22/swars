@@ -5,6 +5,7 @@
 #include <stddef.h>
 
 #include "bffile.h"
+#include "bfflic.h"
 #include "globals.h"
 #include "scanner.h"
 #include "people.h"
@@ -92,15 +93,29 @@ enum DisplayModes {
   DpM_UNKN_1 = 0x1,
   DpM_2 = 0x2,
   DpM_31 = 0x31,
-  DpM_UNKN_32 = 0x32,
+  DpM_ENGINEPLY = 0x32,
   DpM_UNKN_33 = 0x33,
   DpM_34 = 0x34,
   DpM_36 = 0x36,
-  DpM_UNKN_37 = 0x37,
+  DpM_PURPLEMNU = 0x37,
   DpM_38 = 0x38,
   DpM_39 = 0x39,
   DpM_UNKN_3A = 0x3A,
   DpM_UNKN_3B = 0x3B,
+};
+
+enum AnimSlot {
+  AniSl_FULLSCREEN = 0,
+  AniSl_BILLBOARD = 1,
+  AniSl_EQVIEW = 2,	/**< equipment (weapon or mod) presentation in buy/sell window */
+  AniSl_CYBORG_INOUT = 3,	/**< cyborg mod insertion or removal anim */
+  AniSl_UNKN4 = 4,
+  AniSl_UNKN5 = 5,
+  AniSl_UNKN6 = 6,
+  AniSl_UNKN7 = 7,
+  AniSl_CYBORG_BRTH = 8,
+  AniSl_NETSCAN = 9,
+  AniSl_SCRATCH = 10,	/**< scratch buffer for some transparent menu animations */
 };
 
 enum PacketRecordMode {
@@ -241,36 +256,11 @@ struct InGame {
     long Expenditure;
 };
 
-struct Animation {
-  ubyte *OutBuf;
-  long field_4;
-  short PosX;
-  short PosY;
-  short field_C;
-  ushort Flags;
-  long field_10;
-  long field_14;
-  short field_18;
-  short field_1A[1];
-  short field_1C[1];
-  short field_1E[1];
-  long field_20;
-  short field_24;
-  short field_26[5];
-  long field_30;
-  long field_34;
-  long FileHandle;
-  char Filename[48];
-  short anonymous_15;
-  short field_6E;
-};
-
 #pragma pack()
 
 extern char session_name[20];
 extern char user_name[50];
 extern char unkn2_names[8][16];
-extern char login_name[16];
 
 extern ubyte in_network_game;
 extern ubyte is_single_game;
@@ -372,7 +362,6 @@ extern ubyte byte_1C6DDC[5];
 extern ushort word_1C8446;
 extern ushort unkn3de_len;
 extern ubyte byte_19EC6F;
-extern ulong save_mortal_salt;
 
 extern ushort weapon_text_index[32];
 extern ushort cybmod_text_index[16];
@@ -405,9 +394,6 @@ extern char *people_credits_groups[];
 
 extern ubyte playable_agents;
 
-extern ubyte save_crypto_tables_state[3];
-extern ubyte save_crypto_data_state[3];
-
 extern char *mission_briefing_text;
 #define mission_briefing_text_len 16384
 
@@ -416,9 +402,6 @@ extern sbyte mission_result;
 extern char *weapon_text;
 #define weapon_text_len 32768
 
-extern ubyte *save_game_buffer;
-extern char save_active_desc[28];
-extern ubyte *unkn_buffer_05;
 extern ubyte scientists_lost;
 extern ulong new_mods_researched;
 extern ulong new_weapons_researched;
@@ -440,7 +423,6 @@ extern ubyte data_1c4990;
 extern ubyte data_1c4991;
 extern ubyte data_1c4aa2;
 extern ubyte start_into_mission;
-extern ulong text_buf_pos;
 extern ubyte edit_flag;
 extern ubyte change_screen;
 extern ubyte restore_savegame;
@@ -459,7 +441,6 @@ extern struct LevelDef level_def;
 extern long dword_17710C;
 extern long dword_177110;
 extern ubyte mouser;
-extern ubyte *dword_1AA280;
 extern long dword_1AA5C4;
 extern long dword_1AA5C8;
 
@@ -472,7 +453,7 @@ extern ushort replay_intro_timer;
 extern ubyte show_alert;
 extern sbyte mo_weapon;
 
-extern ubyte selected_agent;
+extern sbyte selected_agent;
 
 extern int mouse_map_x;
 extern int mouse_map_y;
@@ -491,10 +472,6 @@ extern const char *misc_text[5];
 extern ubyte game_system_screen;
 extern char alert_text[200];
 extern ubyte byte_197160;
-extern ushort text_window_x1;
-extern ushort text_window_y1;
-extern ushort text_window_x2;
-extern ushort text_window_y2;
 
 extern ubyte execute_commands;
 
@@ -506,7 +483,11 @@ void game_handle_sdl_events (void);
 void game_update (void);
 int game_hacky_update(void);
 void game_quit (void);
+
+/** File name transform function, to be used only for DOS calls simulation.
+ */
 void game_transform_path (const char *file_name, char *result);
+
 const char *game_get_data_path (void);
 const char *game_get_user_path (void);
 
@@ -516,15 +497,23 @@ void game_process(void);
 void game_reset(void);
 void host_reset(void);
 void free_texturemaps(void);
-int xdo_next_frame(ubyte a1);
+
+/** Decode and draw next frame of the animation.
+ */
+int xdo_next_frame(ubyte anislot);
+
+/** Decode and draw previous frame of the animation.
+ *
+ * Note that printing a previous frame of the FLI file requires
+ * decoding all frames from start - these files do not use
+ * bi-directional FLIC format.
+ */
+int xdo_prev_frame(ubyte anislot);
 
 void flic_unkn03(ubyte a1);
 
-void reload_background(void);
-
 void my_preprocess_text(char *text);
 ushort my_count_lines(const char *text);
-void read_user_settings(void);
 
 TbBool player_try_spend_money(long cost);
 TbBool is_unkn_current_player(void);
@@ -543,10 +532,24 @@ void unkn_lights_processing(void);
 void bang_set_detail(int a1);
 int sub_73C64(char *a1, ubyte a2);
 void func_6fd1c(int a1, int a2, int a3, int a4, int a5, int a6, ubyte a7);
+void show_goto_point(uint flag);
 
 void ingame_palette_reload(void);
 void game_set_cam_track_thing_xz(ThingIdx thing);
 TbBool game_cam_tracked_thing_is_player_agent(void);
+
+void local_to_worldr(int *dx, int *dy, int *dz);
+ubyte process_send_person(ushort player, int i);
+
+ubyte *anim_type_get_output_buffer(ubyte anislot);
+
+void net_unkn_func_33(void);
+void net_players_copy_equip_and_cryo(void);
+void net_players_copy_cryo(void);
+
+void set_default_gfx_settings(void);
+void set_default_visual_prefernces(void);
+void set_default_audio_tracks(void);
 
 #ifdef __cplusplus
 };
