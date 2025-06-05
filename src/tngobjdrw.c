@@ -23,10 +23,13 @@
 #include "bigmap.h"
 #include "building.h"
 #include "display.h"
+#include "enginbckt.h"
 #include "engindrwlstm.h"
+#include "engindrwlstx.h"
 #include "enginshadws.h"
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"
+#include "engintrns.h"
 #include "enginzoom.h"
 #include "game.h"
 #include "game_speed.h"
@@ -182,15 +185,6 @@ void build_person(struct Thing *p_thing)
       frame, p_thing->Radius, bri);
 }
 
-struct SingleObjectFace4 *build_glare(short x1, short y1, short z1, short r1)
-{
-    struct SingleObjectFace4 *ret;
-    asm volatile (
-      "call ASM_build_glare\n"
-        : "=r" (ret) : "a" (x1), "d" (y1), "b" (z1), "c" (r1));
-    return ret;
-}
-
 void build_rocket(struct Thing *p_thing)
 {
     struct SingleObject *p_sobj;
@@ -240,7 +234,7 @@ void build_building(struct Thing *p_thing)
 {
     struct SingleObject *p_sobj;
 
-    if ((ingame.DisplayMode == DpM_UNKN_32) && (lbKeyOn[KC_B]))
+    if ((ingame.DisplayMode == DpM_ENGINEPLY) && (lbKeyOn[KC_B]))
         return;
     if (gameturn == p_thing->U.UObject.DrawTurn)
         return;
@@ -557,12 +551,6 @@ void build_stasis_pod(struct SimpleThing *p_sthing)
 
 short draw_thing_object(struct Thing *p_thing)
 {
-#if 0
-    short ret;
-    asm volatile ("call ASM_draw_thing_object\n"
-        : "=r" (ret) : "a" (p_thing));
-    return ret;
-#endif
     struct SimpleThing *p_sthing;
 
     p_sthing = (struct SimpleThing *)p_thing;
