@@ -72,7 +72,6 @@ extern short word_1C6E08;
 extern short word_1C6E0A;
 
 ubyte ac_show_world_city_info_box(struct ScreenTextBox *box);
-ubyte ac_show_world_landmap_box(struct ScreenBox *box);
 ubyte ac_do_unkn2_CANCEL(ubyte click);
 ubyte ac_do_unkn2_ACCEPT(ubyte click);
 
@@ -476,9 +475,9 @@ ubyte show_world_landmap_box(struct ScreenBox *box)
         box->Flags &= ~GBxFlg_Unkn0080;
     }
 
-    if (lbKeyOn[KC_C])
+    if (is_key_pressed(KC_C, KMod_DONTCARE))
     {
-        lbKeyOn[KC_C] = 0;
+        clear_key_pressed(KC_C);
         if (unkn_city_no == -1)
         {
             for (i = 0; i < num_cities; i++)
@@ -669,7 +668,7 @@ void init_world_screen_boxes(void)
     world_city_info_box.Flags |= GBxFlg_TextCenter;
     world_info_CANCEL_button.CallBackFn = ac_do_unkn2_CANCEL;
     world_info_ACCEPT_button.CallBackFn = ac_do_unkn2_ACCEPT;
-    world_landmap_box.SpecialDrawFn = ac_show_world_landmap_box;
+    world_landmap_box.SpecialDrawFn = show_world_landmap_box;
 
     start_x = (scr_w - world_landmap_box.Width - world_city_info_box.Width - 23) / 2;
 

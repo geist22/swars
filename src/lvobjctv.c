@@ -25,11 +25,12 @@
 #include "bfmemory.h"
 #include "bfmemut.h"
 #include "bfini.h"
-#include "bfkeybd.h"
 
 #include "bigmap.h"
 #include "campaign.h"
 #include "drawtext.h"
+#include "keyboard.h"
+#include "lvfiles.h"
 #include "thing.h"
 #include "thing_search.h"
 #include "pepgroup.h"
@@ -245,6 +246,9 @@ const struct TbNamedEnum missions_conf_netscan_objctv_params[] = {
 
 struct NetscanObjective mission_netscan_objectives[MISSION_NETSCAN_OBV_COUNT];
 ushort next_mission_netscan_objective;
+
+ushort next_objective = 1;
+ushort next_used_objective = 1;
 
 extern ulong dword_1C8460;
 extern ulong dword_1C8464;
@@ -1127,9 +1131,9 @@ short test_objective(ushort objectv, ushort show_obj)
     {
         p_objectv = &game_used_lvl_objectives[objectv];
         if (((ingame.UserFlags & UsrF_Cheats) != 0) &&
-          (p_objectv->Status != ObvStatu_FAILED) && lbKeyOn[KC_SLASH] && (lbShift & KMod_ALT))
+          (p_objectv->Status != ObvStatu_FAILED) && is_key_pressed(KC_SLASH, KMod_ALT))
         {
-            lbKeyOn[KC_SLASH] = 0;
+            clear_key_pressed(KC_SLASH);
             p_objectv->Status = ObvStatu_FAILED;
         }
         if (p_objectv->Status == ObvStatu_FAILED)
@@ -1141,9 +1145,9 @@ short test_objective(ushort objectv, ushort show_obj)
     {
         p_objectv = &game_used_objectives[objectv];
         if (((ingame.UserFlags & UsrF_Cheats) != 0) &&
-          (p_objectv->Status != ObvStatu_FAILED) && lbKeyOn[KC_SLASH] && (lbShift & KMod_ALT))
+          (p_objectv->Status != ObvStatu_FAILED) && is_key_pressed(KC_SLASH, KMod_ALT))
         {
-            lbKeyOn[KC_SLASH] = 0;
+            clear_key_pressed(KC_SLASH);
             p_objectv->Status = ObvStatu_FAILED;
         }
         if (p_objectv->Status == ObvStatu_FAILED)

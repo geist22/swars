@@ -44,8 +44,6 @@ extern struct ScreenButton login_abort_button;
 
 ubyte ac_do_abort_2(ubyte click);
 ubyte ac_do_login_2(ubyte click);
-ubyte ac_show_campaigns_list(struct ScreenBox *box);
-ubyte ac_show_login_name(struct ScreenBox *box);
 
 ubyte do_login_2(ubyte click)
 {
@@ -121,7 +119,7 @@ ubyte show_campaigns_list(struct ScreenBox *box)
             lbDisplay.DrawFlags = Lb_TEXT_HALIGN_CENTER;
         hbeg = cy - (4 * nlines - 4 + nlines * line_height) / 2;
         lbDisplay.DrawFlags |= 0x8000;
-        text = gui_strings[642 + campgn];
+        text = gui_strings[GSTR_CPG_CAMPAIGN_NAME + 100 * campgn];
         draw_text_purple_list2(0, hbeg, text, 0);
         lbDisplay.DrawFlags &= ~0x8000;
         cy += campgn_height;
@@ -215,12 +213,13 @@ void init_login_screen_boxes(void)
     login_continue_button.X = (scr_w - login_continue_button.Width) / 2 - 1;
     login_abort_button.X = (scr_w - login_abort_button.Width) / 2  - 1;
 
-    login_continue_button.AccelKey = 28;
-    login_abort_button.AccelKey = 1;
     login_continue_button.CallBackFn = ac_do_login_2;
     login_abort_button.CallBackFn = ac_do_abort_2;
-    login_campaigns_box.SpecialDrawFn = ac_show_campaigns_list;
-    login_name_box.SpecialDrawFn = ac_show_login_name;
+    login_campaigns_box.SpecialDrawFn = show_campaigns_list;
+    login_name_box.SpecialDrawFn = show_login_name;
+
+    login_continue_button.AccelKey = KC_RETURN;
+    login_abort_button.AccelKey = KC_ESCAPE;
 }
 
 void reset_login_screen_boxes_flags(void)

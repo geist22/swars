@@ -35,10 +35,11 @@
 #include "enginpritxtr.h"
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"
-#include "lvobjctv.h"
 #include "bigmap.h"
 #include "game.h"
 #include "lvfiles.h"
+#include "lvobjctv.h"
+#include "lvwalk.h"
 #include "swlog.h"
 #include "tngcolisn.h"
 #include "osunix.h"
@@ -229,21 +230,12 @@ void SyndFileNameTransform(char *out_fname, const char *inp_fname)
         base_dir = GetDirectoryHdd();
     }
 
-    // Special file name switch for using language-specific files from CD
-    if ( (dir_place == DirPlace_Data) && game_dirs[dir_place].use_cd &&
-      (strcasecmp(inp_fname, "data/text.dat") == 0) ) {
-        PathInfo *pinfo;
-        pinfo = &game_dirs[DirPlace_LangData];
-        // we can use '/' as separators here - these are converted later
-        snprintf(fs_fname, DISKPATH_SIZE, "%s/text.dat", pinfo->directory);
-    } else {
-        strncpy(fs_fname, inp_fname, DISKPATH_SIZE);
-    }
+    strncpy(fs_fname, inp_fname, DISKPATH_SIZE);
     // Switch the input folder separators to proper ones for current os
     replace_fs_separator_to_native(fs_fname);
     // Add base path only if the input one is not absolute
     if (fs_fname[0] == FS_SEP || (strlen(fs_fname) >= 2 && fs_fname[1] == ':')) {
-        snprintf (out_fname, FILENAME_MAX-1, "%s", fs_fname);
+        snprintf(out_fname, FILENAME_MAX-1, "%s", fs_fname);
     } else {
         snprintf(out_fname, FILENAME_MAX-1, "%s" FS_SEP_STR "%s", base_dir, fs_fname);
     }

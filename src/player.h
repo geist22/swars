@@ -39,6 +39,17 @@ extern "C" {
 
 struct Thing;
 
+enum PlrTargetType {
+    TrgTp_NONE = 0,
+    TrgTp_Unkn1,
+    TrgTp_Unkn2,
+    TrgTp_Unkn3,
+    TrgTp_Unkn4,
+    TrgTp_DroppedTng,
+    TrgTp_Unkn6,
+    TrgTp_Unkn7,
+};
+
 //TODO would make more sense to have a struct for each agent, and then a merging struct
 struct AgentInfo {
     ulong Weapons[CRYO_PODS_MAX_COUNT];
@@ -72,6 +83,7 @@ typedef struct {
     ubyte SubState[4]; /* offs=0xC2 */
     ubyte PrevState[4];
     ubyte SubStateTimer[4];
+    /** Double mode is multiple players using the same computer (controlling individual agents). */
     ubyte DoubleMode;
     ubyte PlayerNo;
     ulong Weapons[AGENTS_SQUAD_MAX_COUNT];
@@ -118,6 +130,7 @@ void remove_agent(ubyte cryo_no);
 void add_agent(ulong weapons, ushort mods);
 
 void player_agents_init_prev_weapon(PlayerIdx plyr);
+void player_agents_add_random_epidermises(PlayerInfo *p_player);
 void player_agent_update_prev_weapon(struct Thing *p_agent);
 short player_agent_current_or_prev_weapon(PlayerIdx plyr, ushort plagent);
 TbBool player_agent_has_weapon(PlayerIdx plyr, ushort plagent, ubyte weapon);

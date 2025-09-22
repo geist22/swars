@@ -45,9 +45,9 @@ void do_user_input_bits_direction_from_kbd(struct SpecialUserInput *p_usrinp)
 {
     sbyte k;
 
-    k = (lbKeyOn[kbkeys[GKey_RIGHT]] & 1) - (lbKeyOn[kbkeys[GKey_LEFT]] & 1);
+    k = (is_gamekey_kbd_pressed(GKey_RIGHT) & 1) - (is_gamekey_kbd_pressed(GKey_LEFT) & 1);
     p_usrinp->Bits |= ((ubyte)k & 0xFF) << 0;
-    k = (lbKeyOn[kbkeys[GKey_UP]] & 1) - (lbKeyOn[kbkeys[GKey_DOWN]] & 1);
+    k = (is_gamekey_kbd_pressed(GKey_UP) & 1) - (is_gamekey_kbd_pressed(GKey_DOWN) & 1);
     p_usrinp->Bits |= ((ubyte)k & 0xFF) << 8;
 }
 
@@ -59,95 +59,83 @@ void do_user_input_bits_direction_from_joy(struct SpecialUserInput *p_usrinp, ub
         p_usrinp->Bits |= ((ubyte)(-joy.DigitalY[channel]) & 0xFF) << 8;
 }
 
+/** Input function for a user controlling the cyborgs via keyboard only.
+ */
 void do_user_input_bits_actions_from_kbd(struct SpecialUserInput *p_usrinp)
 {
-    if (lbKeyOn[kbkeys[GKey_FIRE]])
+    if (is_gamekey_kbd_pressed(GKey_FIRE)) {
         p_usrinp->Bits |= SpUIn_DoTrigger;
-    if (lbKeyOn[kbkeys[GKey_CHANGE_MD_WP]])
+    }
+    if (is_gamekey_kbd_pressed(GKey_CHANGE_MD_WP)) {
         p_usrinp->Bits |= SpUIn_ChangeMoodOrWep;
-    if (lbKeyOn[kbkeys[GKey_CHANGE_AGENT]])
+    }
+    if (is_gamekey_kbd_pressed(GKey_CHANGE_AGENT)) {
         p_usrinp->Bits |= SpUIn_ChangeAgent;
-    if (lbKeyOn[kbkeys[GKey_DROP_WEAPON]]) {
-        lbKeyOn[kbkeys[GKey_DROP_WEAPON]] = 0;
+    }
+    if (is_gamekey_kbd_pressed(GKey_DROP_WEAPON)) {
+        clear_gamekey_kbd_pressed(GKey_DROP_WEAPON);
         p_usrinp->Bits |= SpUIn_DoDropOrGoOut;
     }
-    if (lbKeyOn[kbkeys[GKey_SELF_DESTRUCT]] && lbShift == KMod_CONTROL) {
-        lbKeyOn[kbkeys[GKey_SELF_DESTRUCT]] = 0;
+    if (is_gamekey_kbd_pressed(GKey_SELF_DESTRUCT)) {
+        clear_gamekey_kbd_pressed(GKey_SELF_DESTRUCT);
         p_usrinp->Bits |= SpUIn_SelfDestruct;
     }
 }
 
+/** Input function for an extra user controlling the cyborgs via joystick only.
+ */
 void do_user_input_bits_actions_from_joy(struct SpecialUserInput *p_usrinp, ubyte channel)
 {
-    if (jskeys[GKey_FIRE]
-      && (jskeys[GKey_FIRE] & joy.Buttons[channel]) == jskeys[GKey_FIRE])
+    if (is_gamekey_joy_pressed(GKey_FIRE, channel)) {
         p_usrinp->Bits |= SpUIn_DoTrigger;
-    if (jskeys[GKey_CHANGE_MD_WP]
-      && (jskeys[GKey_CHANGE_MD_WP] & joy.Buttons[channel]) == jskeys[GKey_CHANGE_MD_WP])
+    }
+    if (is_gamekey_joy_pressed(GKey_CHANGE_MD_WP, channel)) {
         p_usrinp->Bits |= SpUIn_ChangeMoodOrWep;
-    if (jskeys[GKey_DROP_WEAPON]
-      && (jskeys[GKey_DROP_WEAPON] & joy.Buttons[channel]) == jskeys[GKey_DROP_WEAPON])
+    }
+    if (is_gamekey_joy_pressed(GKey_DROP_WEAPON, channel)) {
+        clear_gamekey_joy_pressed(GKey_DROP_WEAPON, channel);
         p_usrinp->Bits |= SpUIn_DoDropOrGoOut;
-    if (jskeys[GKey_SELF_DESTRUCT]
-      && (jskeys[GKey_SELF_DESTRUCT] & joy.Buttons[channel]) == jskeys[GKey_SELF_DESTRUCT])
+    }
+    if (is_gamekey_joy_pressed(GKey_SELF_DESTRUCT, channel)) {
+        clear_gamekey_joy_pressed(GKey_SELF_DESTRUCT, channel);
         p_usrinp->Bits |= SpUIn_SelfDestruct;
+    }
 }
 
+/** Input function for a single user controlling the cyborgs via both keyboard and one joystick.
+ */
 void do_user_input_bits_actions_from_joy_and_kbd(struct SpecialUserInput *p_usrinp)
 {
-    //TODO can we get rid of this funtion, using the two separate functs instead?
-    //do_user_input_bits_actions_from_kbd(p_usrinp);
-    //do_user_input_bits_actions_from_joy(p_usrinp);
-
-    if (lbKeyOn[kbkeys[GKey_FIRE]])
+    if (is_gamekey_pressed(GKey_FIRE)) {
         p_usrinp->Bits |= SpUIn_DoTrigger;
-    if (lbKeyOn[kbkeys[GKey_CHANGE_MD_WP]])
+    }
+    if (is_gamekey_pressed(GKey_CHANGE_MD_WP)) {
         p_usrinp->Bits |= SpUIn_ChangeMoodOrWep;
-    if (lbKeyOn[kbkeys[GKey_CHANGE_AGENT]])
+    }
+    if (is_gamekey_pressed(GKey_CHANGE_AGENT)) {
         p_usrinp->Bits |= SpUIn_ChangeAgent;
-    if (lbKeyOn[kbkeys[GKey_GOTO_POINT]]) {
-        lbKeyOn[kbkeys[GKey_GOTO_POINT]] = 0;
+    }
+    if (is_gamekey_pressed(GKey_GOTO_POINT)) {
+        clear_gamekey_pressed(GKey_GOTO_POINT);
         p_usrinp->Bits |= SpUIn_GotoPoint;
     }
     // TODO remove hard-coded BACKSLASH and make sure GKey_GROUP works for all keyboard layouts
-    if (lbKeyOn[KC_BACKSLASH] || lbKeyOn[kbkeys[GKey_GROUP]]) {
-        if (lbKeyOn[KC_BACKSLASH])
-            lbKeyOn[KC_BACKSLASH] = 0;
-        if (lbKeyOn[kbkeys[GKey_GROUP]])
-            lbKeyOn[kbkeys[GKey_GROUP]] = 0;
+    if (is_key_pressed(KC_BACKSLASH, KMod_DONTCARE)) {
+        clear_key_pressed(KC_BACKSLASH);
         p_usrinp->Bits |= SpUIn_GroupingInc;
     }
-    if (lbKeyOn[kbkeys[GKey_DROP_WEAPON]]) {
-        lbKeyOn[kbkeys[GKey_DROP_WEAPON]] = 0;
-        p_usrinp->Bits |= SpUIn_DoDropOrGoOut;
-    }
-    //TODO why different self destruct?
-    if (lbKeyOn[kbkeys[GKey_SELF_DESTRUCT]] && lbShift == KMod_ALT) {
-        lbKeyOn[kbkeys[GKey_SELF_DESTRUCT]] = 0;
-        p_usrinp->Bits |= SpUIn_SelfDestruct;
-    }
-
-    if (jskeys[GKey_FIRE]
-      && (jskeys[GKey_FIRE] & joy.Buttons[0]) == jskeys[GKey_FIRE])
-        p_usrinp->Bits |= SpUIn_DoTrigger;
-    if (jskeys[GKey_CHANGE_MD_WP]
-      && (jskeys[GKey_CHANGE_MD_WP] & joy.Buttons[0]) == jskeys[GKey_CHANGE_MD_WP])
-        p_usrinp->Bits |= SpUIn_ChangeMoodOrWep;
-    if (jskeys[GKey_CHANGE_AGENT]
-      && (jskeys[GKey_CHANGE_AGENT] & joy.Buttons[0]) == jskeys[GKey_CHANGE_AGENT])
-        p_usrinp->Bits |= SpUIn_ChangeAgent;
-    if (jskeys[GKey_GOTO_POINT]
-      && (jskeys[GKey_GOTO_POINT] & joy.Buttons[0]) == jskeys[GKey_GOTO_POINT])
-        p_usrinp->Bits |= SpUIn_GotoPoint;
-    if (jskeys[GKey_GROUP]
-      && (jskeys[GKey_GROUP] & joy.Buttons[0]) == jskeys[GKey_GROUP])
+    if (is_gamekey_pressed(GKey_GROUP)) {
+        clear_gamekey_pressed(GKey_GROUP);
         p_usrinp->Bits |= SpUIn_GroupingInc;
-    if (jskeys[GKey_DROP_WEAPON]
-      && (jskeys[GKey_DROP_WEAPON] & joy.Buttons[0]) == jskeys[GKey_DROP_WEAPON])
+    }
+    if (is_gamekey_pressed(GKey_DROP_WEAPON)) {
+        clear_gamekey_pressed(GKey_DROP_WEAPON);
         p_usrinp->Bits |= SpUIn_DoDropOrGoOut;
-    if (jskeys[GKey_SELF_DESTRUCT]
-      && (jskeys[GKey_SELF_DESTRUCT] & joy.Buttons[0]) == jskeys[GKey_SELF_DESTRUCT])
+    }
+    if (is_gamekey_pressed(GKey_SELF_DESTRUCT)) {
+        clear_gamekey_pressed(GKey_SELF_DESTRUCT);
         p_usrinp->Bits |= SpUIn_SelfDestruct;
+    }
 }
 
 short get_agent_move_direction_delta_x(const struct SpecialUserInput *p_usrinp)
@@ -279,7 +267,7 @@ void input_user_control_agent(ushort plyr, short dmuser)
         {
             p_player->UserInput[dmuser].Bits &= ~SpUIn_DoTrigger;
             loc_build_packet(p_pckt, PAct_PICKUP, dcthing,
-              p_dcthing->U.UPerson.Vehicle, 0, 0);
+              p_dcthing->U.UPerson.StandOnThing, 0, 0);
             return;
         }
     }

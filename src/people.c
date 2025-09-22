@@ -33,6 +33,7 @@
 #include "drawtext.h"
 #include "enginsngobjs.h"
 #include "engintrns.h"
+#include "febrief.h"
 #include "game.h"
 #include "game_data.h"
 #include "game_speed.h"
@@ -285,7 +286,7 @@ void read_people_conf_file(void)
 #undef COMMAND_TEXT
     for (ptype = 0; ptype < peep_count; ptype++)
     {
-        char sect_name[16];
+        char sect_name[32];
         struct PeepStat *p_pestat;
         struct PeepStatAdd *p_pestata;
 
@@ -1954,7 +1955,7 @@ StateChRes person_init_cmd_get_item(struct Thing *p_person, short target)
     p_person->State = PerSt_GET_ITEM;
     p_person->U.UPerson.GotoX = tgtng_x;
     p_person->U.UPerson.GotoZ = tgtng_z;
-    p_person->U.UPerson.Vehicle = 0;
+    p_person->U.UPerson.StandOnThing = 0;
     p_person->U.UPerson.ComTimer = -1;
     p_person->SubState = 0;
     p_person->U.UPerson.ComRange = 0;
@@ -3933,7 +3934,7 @@ void person_wait(struct Thing *p_person)
         reset_person_frame(p_person);
     }
     p_person->Flag &= ~TngF_Unkn0001;
-    if (((p_person->Flag & TngF_Unkn0400) != 0) || (p_person->U.UPerson.WeaponTurn != 0))
+    if (((p_person->Flag & TngF_WepCharging) != 0) || (p_person->U.UPerson.WeaponTurn != 0))
     {
         if (p_person->U.UPerson.AnimMode == 14 || p_person->U.UPerson.AnimMode == 15)
         {
@@ -4047,7 +4048,7 @@ void person_persuade_person(struct Thing *p_person)
     else
         weapon_range = get_hand_weapon_range(p_person, WEP_PERSUADRTRN);
 
-    if (((p_person->Flag & (TngF_Unkn0800|TngF_Unkn0400)) != 0) &&
+    if (((p_person->Flag & (TngF_Unkn0800|TngF_WepCharging)) != 0) &&
       (p_person->U.UPerson.WeaponTimer > 5)) {
         p_person->Flag &= ~TngF_Unkn0800;
     }
@@ -4182,7 +4183,7 @@ void person_destroy_building(struct Thing *p_person)
     struct Thing *p_target;
     TbBool in_range;
 
-    if (((p_person->Flag & (TngF_Unkn0800|TngF_Unkn0400)) != 0) &&
+    if (((p_person->Flag & (TngF_Unkn0800|TngF_WepCharging)) != 0) &&
       (p_person->U.UPerson.WeaponTimer > 5))
         p_person->Flag &= ~TngF_Unkn0800;
 

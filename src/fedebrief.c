@@ -24,6 +24,7 @@
 
 #include "campaign.h"
 #include "display.h"
+#include "febrief.h"
 #include "guiboxes.h"
 #include "guitext.h"
 #include "game_sprts.h"
@@ -52,9 +53,6 @@ extern struct ScreenTextBox world_city_info_box;
 extern ushort word_1C4846[8];
 extern ushort word_1C4856[8];
 
-ubyte ac_show_mission_stats(struct ScreenBox *box);
-ubyte ac_show_mission_people_stats(struct ScreenBox *box);
-
 void show_debrief_screen(void)
 {
     asm volatile ("call ASM_show_debrief_screen\n"
@@ -81,39 +79,39 @@ void draw_mission_stats_names_column(struct ScreenBox *box,
     y = sepheight;
 
     // Reference no
-    draw_text_purple_list2(x, y, gui_strings[611], 0);
+    draw_text_purple_list2(x, y, gui_strings[GSTR_MTR_MISSION_REF], 0);
     y += lnheight;
 
     // Status
-    draw_text_purple_list2(x, y, gui_strings[612], 0);
+    draw_text_purple_list2(x, y, gui_strings[GSTR_MTR_MISSION_STATUS], 0);
     y += lnheight;
 
     // City time
-    draw_text_purple_list2(x, y, gui_strings[614], 0);
+    draw_text_purple_list2(x, y, gui_strings[GSTR_MTR_CITY_NAME], 0);
     y += lnheight;
 
     // Mission time
-    draw_text_purple_list2(x, y, gui_strings[615], 0);
+    draw_text_purple_list2(x, y, gui_strings[GSTR_MTR_MISS_TIME_ELP], 0);
     y += lnheight;
     y += sepheight;
 
     // Income
-    draw_text_purple_list2(x, y, gui_strings[633], 0);
+    draw_text_purple_list2(x, y, gui_strings[GSTR_MTR_CREDS_INCOME], 0);
     y += lnheight;
 
     // Expenditure
-    draw_text_purple_list2(x, y, gui_strings[632], 0);
+    draw_text_purple_list2(x, y, gui_strings[GSTR_MTR_CREDS_EXPENDIT], 0);
     y += lnheight;
 
     if (research_ln > 0)
     {
-        draw_text_purple_list2(x, y, gui_strings[631], 0);
+        draw_text_purple_list2(x, y, gui_strings[GSTR_MTR_RESEARCH_DONE], 0);
         y += lnheight * research_ln;
     }
     if (scilost_ln > 0)
     {
         // Scientists lost
-        draw_text_purple_list2(x, y, gui_strings[537], 0);
+        draw_text_purple_list2(x, y, gui_strings[GSTR_MTR_SCIENTISTS_DEAD], 0);
         y += lnheight * scilost_ln;
     }
 }
@@ -147,7 +145,7 @@ void draw_mission_stats_vals_static(struct ScreenBox *box,
     draw_text_purple_list2(x, y, text, 0);
     y += lnheight;
 
-    snprintf(locstr, sizeof(locstr), "%s", gui_strings[635 + p_rep->Status]);
+    snprintf(locstr, sizeof(locstr), "%s", gui_strings[GSTR_ENM_MISSION_STATUS + 1 + p_rep->Status]);
     text = loctext_to_gtext(locstr);
     draw_text_purple_list2(x, y, text, 0);
     y += lnheight;
@@ -415,30 +413,30 @@ void draw_mission_people_stats_names_column(struct ScreenBox *box,
     x = 20;
     y = lnheight;
 
-    draw_text_purple_list2(x, y, gui_strings[618], 0);
+    draw_text_purple_list2(x, y, gui_strings[GSTR_MTR_PERSD_CIVIL], 0);
     y += lnheight;
 
-    draw_text_purple_list2(x, y, gui_strings[619], 0);
+    draw_text_purple_list2(x, y, gui_strings[GSTR_MTR_PERSD_MILIT], 0);
     y += lnheight;
 
-    draw_text_purple_list2(x, y, gui_strings[620], 0);
-    y += lnheight;
-    y += lnheight;
-
-    draw_text_purple_list2(x, y, gui_strings[621], 0);
-    y += lnheight;
-
-    draw_text_purple_list2(x, y, gui_strings[622], 0);
-    y += lnheight;
-
-    draw_text_purple_list2(x, y, gui_strings[623], 0);
+    draw_text_purple_list2(x, y, gui_strings[GSTR_MTR_PERSD_ADVERS], 0);
     y += lnheight;
     y += lnheight;
 
-    draw_text_purple_list2(x, y, gui_strings[624], 0);
+    draw_text_purple_list2(x, y, gui_strings[GSTR_MTR_KILLD_CIVIL], 0);
     y += lnheight;
 
-    draw_text_purple_list2(x, y, gui_strings[630], 0);
+    draw_text_purple_list2(x, y, gui_strings[GSTR_MTR_KILLD_MILIT], 0);
+    y += lnheight;
+
+    draw_text_purple_list2(x, y, gui_strings[GSTR_MTR_KILLD_ADVERS], 0);
+    y += lnheight;
+    y += lnheight;
+
+    draw_text_purple_list2(x, y, gui_strings[GSTR_MTR_CYBORGS_LOST], 0);
+    y += lnheight;
+
+    draw_text_purple_list2(x, y, gui_strings[GSTR_MTR_CYBORGS_GAIN], 0);
     y += lnheight;
 }
 
@@ -688,10 +686,10 @@ void init_debrief_screen_boxes(void)
     scr_w = lbDisplay.GraphicsWindowWidth;
 
     init_screen_box(&debrief_mission_box, 7u, 72u, 518u, 172, 6);
-    debrief_mission_box.SpecialDrawFn = ac_show_mission_stats;
+    debrief_mission_box.SpecialDrawFn = show_mission_stats;
 
     init_screen_box(&debrief_people_box, 7u, 253u, 518u, 173, 6);
-    debrief_people_box.SpecialDrawFn = ac_show_mission_people_stats;
+    debrief_people_box.SpecialDrawFn = show_mission_people_stats;
 
     start_x = (scr_w - debrief_mission_box.Width - world_city_info_box.Width - 23) / 2;
 

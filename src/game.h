@@ -59,6 +59,7 @@ enum GameFlags {
 };
 
 enum UserFlags {
+    UsrF_WonBAT       =  0x0001,
     UsrF_Cheats       =  0x0004,
 };
 
@@ -175,11 +176,6 @@ struct Thing;
 
 struct ColColumn { // sizeof=16
     uint QBits[4];
-};
-
-struct WalkHeader { // sizeof=4
-    ushort Count;
-    ushort StartItem;
 };
 
 struct BezierPt { // sizeof=28
@@ -314,23 +310,6 @@ extern ubyte game_level_unkn2[40];
 
 extern ushort word_1531E0;
 
-/** Header linking a face to a list of walk items.
- *
- * Some SingleObjectFace* instances have a WalkHeader assigned.
- * If they do, that defines a range of walk items containing
- * neighbor faces, to which it is possible to walk.
- *
- */
-extern struct WalkHeader *game_walk_headers;
-extern ushort next_walk_header;
-
-/** List of faces which can be walked to from a specific face.
- *
- * Each entry is a face index which has at least corner very close
- * to a corner of current face, allowing walking between the faces.
- */
-extern short *game_walk_items;
-extern ushort next_walk_item;
 extern struct ColColumn *game_col_columns;
 extern ushort next_col_column;
 extern struct SingleObjectFace3 *game_special_object_faces;
@@ -339,13 +318,10 @@ extern ubyte *game_user_heap;
 extern struct UnknBezEdit *bezier_pts;
 extern ushort next_bezier_pt;
 extern ubyte *spare_map_buffer;
-extern struct Objective *game_used_lvl_objectives;
-extern ushort next_used_lvl_objective;
 extern long target_old_frameno;
 extern ushort word_176E38;
 
 extern ubyte byte_1C4A7C;
-extern ubyte byte_1C4A9F;
 extern ubyte linear_vec_pal[256];
 extern ulong nsta_size;
 
@@ -377,7 +353,7 @@ extern long data_197150;
 extern long data_1dd91c;
 extern ubyte unkn_flags_01;
 extern ushort palette_brightness;
-extern long outro_unkn01;
+extern long outro_credits_enabled;
 extern long outro_unkn02;
 extern long outro_unkn03;
 extern long people_groups_count;
@@ -388,6 +364,13 @@ extern ubyte debug_hud_collision;
 
 extern void *dword_177750;
 extern void *unkn_mech_arr7;
+
+extern long mech_unkn_dw_1DC880;
+extern long mech_unkn_dw_1DC884;
+extern long mech_unkn_dw_1DC888;
+extern long mech_unkn_dw_1DC88C;
+extern long mech_unkn_dw_1DC890;
+extern long mech_unkn_dw_1DC894;
 
 extern char *people_credits_desc[];
 extern char *people_credits_groups[];
@@ -418,9 +401,6 @@ extern sbyte unkn_city_no;
 extern ubyte group_types[8];
 extern ubyte byte_1C4AA3;
 extern ubyte net_unkn_pos_02;
-extern ubyte data_1c498f;
-extern ubyte data_1c4990;
-extern ubyte data_1c4991;
 extern ubyte data_1c4aa2;
 extern ubyte start_into_mission;
 extern ubyte edit_flag;
@@ -444,9 +424,6 @@ extern ubyte mouser;
 extern long dword_1AA5C4;
 extern long dword_1AA5C8;
 
-extern short old_mission_brief;
-extern short open_brief;
-extern short next_brief;
 extern short next_ref;
 extern ushort next_mission;
 extern ushort replay_intro_timer;
@@ -467,10 +444,9 @@ extern ubyte byte_1C4A6F;
 
 extern char net_unkn2_text[];
 extern char brief_netscan_cost_text[];
-extern const char *misc_text[5];
+extern char *misc_text[5];
 
 extern ubyte game_system_screen;
-extern char alert_text[200];
 extern ubyte byte_197160;
 
 extern ubyte execute_commands;
