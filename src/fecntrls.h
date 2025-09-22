@@ -27,14 +27,15 @@ extern "C" {
 /******************************************************************************/
 #pragma pack(1)
 
-
 #pragma pack()
 /******************************************************************************/
+extern ubyte net_unkn_pos_01b;
 
 void init_controls_screen_boxes(void);
 void reset_controls_screen_boxes_flags(void);
+ubyte show_options_controls_screen(void);
 void set_flag01_controls_screen_boxes(void);
-void clear_someflags_controls_screen_boxes(void);
+void set_flag02_controls_screen_boxes(void);
 
 /******************************************************************************/
 #ifdef __cplusplus

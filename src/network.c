@@ -23,11 +23,12 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "bfkeybd.h"
 #include "bfdos.h"
 #include "bfmemory.h"
 #include "bftime.h"
+
 #include "display.h"
+#include "keyboard.h"
 #include "swlog.h"
 /******************************************************************************/
 #pragma pack(1)
@@ -76,6 +77,8 @@ extern ulong ipx_send_packet_count[8][8];
 extern ulong ipx_got_player_send_packet_count[8];
 extern struct TbIPXPlayerHeader loggon_header;
 extern ubyte player_loggon;
+
+ubyte net_players_num = 1;
 
 extern struct ComHandlerInfo com_dev[4];
 extern struct IPXDatagramBackup datagram_backup[8];
@@ -2162,7 +2165,7 @@ TbResult LbModemReadConfig(const char *fname)
 int my_net_session_callback()
 {
     swap_wscreen();
-    if (lbKeyOn[KC_ESCAPE])
+    if (is_key_pressed(KC_ESCAPE, KMod_DONTCARE))
         return -7;
     return 0;
 }

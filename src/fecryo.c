@@ -81,7 +81,6 @@ extern struct TbSprite *fe_icons_sprites;
 ubyte ac_do_cryo_offer_cancel(ubyte click);
 ubyte ac_show_cryo_agent_list(struct ScreenTextBox *box);
 ubyte ac_show_cryo_cybmod_list_box(struct ScreenTextBox *box);
-ubyte ac_show_cryo_blokey(struct ScreenBox *box);
 ubyte ac_do_cryo_all_agents_set(ubyte click);
 void ac_weapon_flic_data_to_screen(void);
 ubyte ac_do_equip_offer_buy(ubyte click);
@@ -980,9 +979,9 @@ void draw_blokey_body_mods(void)
         cryo_cyborg_part_buf_blokey_static_load_all(old_flic_mods);
 
     current_drawing_mod = new_current_drawing_mod;
-    if ((lbKeyOn[KC_SPACE] || game_projector_speed) && (cryo_blokey_box.Flags & GBxFlg_RadioBtn) == 0)
+    if ((is_key_pressed(KC_SPACE, KMod_DONTCARE) || game_projector_speed) && (cryo_blokey_box.Flags & GBxFlg_RadioBtn) == 0)
     {
-        lbKeyOn[KC_SPACE] = 0;
+        clear_key_pressed(KC_SPACE);
         cryo_cyborg_part_buf_blokey_static_reload();
         update_flic_mods(old_flic_mods);
         update_flic_mods(flic_mods);
@@ -1356,7 +1355,7 @@ ubyte show_cryo_cybmod_list_box(struct ScreenTextBox *box)
 
         draw_discrete_rects_bar_lv(&power_box, mdef->PowerOutput, 8, byte_155175);
         draw_discrete_rects_bar_lv(&resil_box, mdef->Resilience, 8, byte_155181);
-        draw_text_property_lv(&addit_box, gui_strings[645 + mdef->AdditProp]);
+        draw_text_property_lv(&addit_box, gui_strings[GSTR_MOD_EPIDERMIS + mdef->AdditProp]);
         lbDisplay.DrawFlags = 0;
 
         // Add control hotspot for the view / description switch
@@ -1415,9 +1414,9 @@ ubyte input_cryo_agent_panel_shape(struct ScreenShape *shape, sbyte nagent)
 {
     ubyte gbstate;
 
-    if (lbKeyOn[KC_1 + nagent])
+    if (is_key_pressed(KC_1 + nagent, KMod_DONTCARE))
     {
-        lbKeyOn[KC_1 + nagent] = 0;
+        clear_key_pressed(KC_1 + nagent);
         if (nagent < cryo_agents.NumAgents)
         {
             selected_agent = nagent;
@@ -1494,9 +1493,9 @@ ubyte input_cryo_all_agents_button(struct ScreenButton *button)
     sbyte nagent = 4;
 
     gbstate = GBxSta_NORMAL;
-    if (lbKeyOn[KC_1 + nagent])
+    if (is_key_pressed(KC_1 + nagent, KMod_DONTCARE))
     {
-        lbKeyOn[KC_1 + nagent] = 0;
+        clear_key_pressed(KC_1 + nagent);
         selected_agent = nagent;
         check_buy_sell_button();
         update_flic_mods(flic_mods);
@@ -1528,9 +1527,9 @@ ubyte show_cryo_chamber_screen(void)
     }
     if ((ingame.UserFlags & UsrF_Cheats) != 0)
     {
-        if (lbKeyOn[KC_0])
+        if (is_key_pressed(KC_0, KMod_DONTCARE))
         {
-            lbKeyOn[KC_0] = 0;
+            clear_key_pressed(KC_0);
             refresh_equip_list = 1;
             research_cymod_complete(cheat_research_cybmods + 1);
             cheat_research_cybmods++;
@@ -1662,7 +1661,7 @@ void init_cryo_screen_boxes(void)
     cryo_agent_list_box.ScrollWindowHeight -= 27;
 
     init_screen_box(&cryo_blokey_box, 212u, 122u, 203u, 303, 6);
-    cryo_blokey_box.SpecialDrawFn = ac_show_cryo_blokey;
+    cryo_blokey_box.SpecialDrawFn = show_cryo_blokey;
 
     init_screen_text_box(&cryo_cybmod_list_box, 425u, 153u, 208u, 272,
       6, small_med_font, 1);

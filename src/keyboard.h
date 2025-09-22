@@ -22,6 +22,7 @@
 
 #include "bftypes.h"
 #include "bfkeybd.h"
+#include "game_bstype.h"
 
 enum GameKeys
 {
@@ -49,7 +50,42 @@ enum GameKeys
   GKey_SEL_AGENT_2 = 21,
   GKey_SEL_AGENT_3 = 22,
   GKey_SEL_AGENT_4 = 23,
+  GKey_CAMERA_PERSPECTV = 24,
+  GKey_SCANNER_PULSE = 25,
+  GKey_TRANS_OBJ_SURF_COL = 26,
+  GKey_TRANS_OBJ_LINE_COL = 27,
+  GKey_TRANS_OBJECTS = 28,
   GKey_KEYS_COUNT,
+};
+
+enum JoystickType
+{
+  JTyp_NONE = 0,
+  JTyp_ANALG_2BTN,
+  JTyp_ANALG_4BTN,
+  JTyp_ANALG_2BTN_HT,
+  JTyp_ANALG_4BTN_HT,
+  JTyp_GRAVIS_PAD,
+  JTyp_CREATV_PAD,
+  JTyp_WINGMAN_EXTRM,
+  JTyp_WINGMAN_NEW,
+  JTyp_PHANTOM_2I,
+  JTyp_VIRTUAL_IO,
+  JTyp_VFX1,
+  JTyp_DIGTL_2BTN,
+  JTyp_DIGTL_4BTN,
+  JTyp_DIGTL_2BTN_HT,
+  JTyp_DIGTL_4BTN_HT,
+  JTyp_AUTO_DETECT,
+  JTyp_EXT_DRIVER,
+  JTyp_GRAVIS_GRIP,
+  JTyp_SPACEBALL_AVN,
+  JTyp_GRAVIS_THNBRD,
+  JTyp_MS_SIDEWINDER,
+  JTyp_VFX1_PUCK,
+  JTyp_ANALG_2JSTCKS,
+  JTyp_DIGTL_2JSTCKS,
+  JTyp_TYPES_COUNT,
 };
 
 /******************************************************************************/
@@ -59,10 +95,15 @@ extern ushort kbkeys[GKey_KEYS_COUNT];
 /** Array of joystick button bindings; uses GKey_* enum members as index.
  */
 extern ushort jskeys[GKey_KEYS_COUNT];
+/** Type of joystick selected with controls.
+ */
+extern ubyte ctl_joystick_type;
 
 void init_buffered_keys(void);
 void reset_buffered_keys(void);
 ulong next_buffered_key(void);
+
+void input(void);
 
 /**
  * Checks if a specific key is pressed.
@@ -73,9 +114,66 @@ ulong next_buffered_key(void);
 ubyte is_key_pressed(TbKeyCode key, TbKeyMods kmodif);
 
 /**
+ * Checks if a specific joystick key is pressed.
+ *
+ * @param jkeys Flags marking the buttons to check.
+ * @param channel Joystick channel selection, for multiple joysticks connected.
+ */
+ubyte is_joy_pressed(ushort jkeys, ubyte channel);
+
+/**
+ * Print joystick buttons combination as text.
+ *
+ * @param ostr Output string buffer.
+ * @param buttons_num Amount of buttons supported by the device.
+ * @param jkeys Flags marking the buttons to print.
+ */
+void sprint_joy_key(char *ostr, int buttons_num, ushort jkeys);
+
+/**
  * Clears the marking that a specific key was pressed.
  */
 void clear_key_pressed(TbKeyCode key);
+void simulate_key_press(TbKeyCode key);
+
+/**
+ * Clears the marking that specific joystick buttons were pressed.
+ *
+ * @param jkeys Flags marking the buttons to clear.
+ * @param channel Joystick channel selection, for multiple joysticks connected.
+ */
+void clear_joy_pressed(ushort jkeys, ubyte channel);
+
+/**
+ * Checks if a mapped game key is pressed.
+ *
+ * @param gkey Game key number, from enumeration.
+ */
+ubyte is_gamekey_pressed(GameKey gkey);
+
+ubyte is_gamekey_kbd_pressed(GameKey gkey);
+ubyte is_gamekey_joy_pressed(GameKey gkey, ubyte channel);
+
+/**
+ * Clears the marking that a mapped game key was pressed.
+ */
+void clear_gamekey_pressed(GameKey gkey);
+
+void clear_gamekey_kbd_pressed(GameKey gkey);
+void clear_gamekey_joy_pressed(GameKey gkey, ubyte channel);
+
+/**
+ * Set new keyboard key assigned to the game key.
+ */
+void set_gamekey_kbd(GameKey gkey, TbKeyCode key);
+
+/**
+ * Set new joystick key assigned to the game key.
+ */
+void set_gamekey_joy(GameKey gkey, ushort jkey);
+
+void sprint_gamekey_combination_joy(char *ostr, GameKey gkey);
+void sprint_gamekey_combination_kbd(char *ostr, GameKey gkey);
 
 void set_default_game_keys(void);
 

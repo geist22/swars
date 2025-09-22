@@ -27,6 +27,7 @@
 #include "campaign.h"
 #include "display.h"
 #include "engindrwlstm.h"
+#include "febrief.h"
 #include "femail.h"
 #include "femain.h"
 #include "game_data.h"
@@ -245,10 +246,6 @@ void apply_user_settings(void)
 
 void set_default_user_settings(void)
 {
-#if 0
-    asm volatile ("call ASM_set_default_user_settings\n"
-        :  :  : "eax" );
-#endif
     set_default_game_keys();
     set_default_player_control();
     set_default_sfx_settings();
@@ -262,6 +259,7 @@ void read_user_settings(void)
 {
     char fname[DISKPATH_SIZE];
     TbFileHandle fh;
+    u32 fmtver;
     TbBool read_mortal_salt_backup;
     int i;
 
@@ -290,9 +288,22 @@ void read_user_settings(void)
 
         assert(sizeof(locflags) == sizeof(ingame.UserFlags));
 
-        LbFileRead(fh, kbkeys, 23 * sizeof(ushort));
-        LbFileRead(fh, jskeys, 23 * sizeof(ushort));
-        LbFileRead(fh, &byte_1C4A9F, 1);
+        if (LbFileLengthHandle(fh) > 126)
+            LbFileRead(fh, &fmtver, 4);
+        else
+            fmtver = 0;
+
+        if (fmtver == 0) {
+            // In original game, the last key (agent 4 select) is not saved at all
+            set_default_game_keys();
+            LbFileRead(fh, kbkeys, 23 * sizeof(ushort));
+            LbFileRead(fh, jskeys, 23 * sizeof(ushort));
+        } else {
+            LbFileRead(fh, kbkeys, GKey_KEYS_COUNT * sizeof(ushort));
+            LbFileRead(fh, jskeys, GKey_KEYS_COUNT * sizeof(ushort));
+        }
+
+        LbFileRead(fh, &ctl_joystick_type, sizeof(ctl_joystick_type));
         LbFileRead(fh, &players[local_player_no].DoubleMode,
           sizeof(players[local_player_no].DoubleMode));
         for (i = 0; i != 4; i++)
@@ -333,30 +344,33 @@ void read_user_settings(void)
     }
 
     i = -1;
-    if (byte_1C4A9F)
-        i = joy_func_067(&joy, byte_1C4A9F);
+    if (ctl_joystick_type)
+        i = joy_func_067(&joy, ctl_joystick_type);
     if (i != 1)
-        byte_1C4A9F = 0;
+        ctl_joystick_type = JTyp_NONE;
 }
 
 TbBool save_user_settings(void)
 {
     char fname[DISKPATH_SIZE];
     TbFileHandle fh;
+    u32 fmtver;
     int i;
 
     get_user_settings_fname(fname, login_name);
+    fmtver = 1;
 
     fh = LbFileOpen(fname, Lb_FILE_MODE_NEW);
     if (fh == INVALID_FILE)
         return 1;
 
-    LbFileWrite(fh, kbkeys, 23 * sizeof(ushort));
-    LbFileWrite(fh, jskeys, 23 * sizeof(ushort));
-    LbFileWrite(fh, &byte_1C4A9F, sizeof(byte_1C4A9F));
+    LbFileWrite(fh, &fmtver, sizeof(fmtver));
+    LbFileWrite(fh, kbkeys, GKey_KEYS_COUNT * sizeof(ushort));
+    LbFileWrite(fh, jskeys, GKey_KEYS_COUNT * sizeof(ushort));
+    LbFileWrite(fh, &ctl_joystick_type, sizeof(ctl_joystick_type));
     LbFileWrite(fh, &players[local_player_no].DoubleMode,
       sizeof(players[local_player_no].DoubleMode));
-    for (i = 0; i != 4; i++)
+    for (i = 0; i < 4; i++)
     {
         PlayerInfo *p_locplayer;
         p_locplayer = &players[local_player_no];
@@ -485,7 +499,7 @@ int save_game_write(ubyte slot, char *desc)
     save_game_buffer[gblen] = ingame.AutoResearch;
     gblen += 1;
 
-    if (((ingame.Flags & 0x10) != 0) || (desc[0] == '\0'))
+    if (((ingame.Flags & GamF_MortalGame) != 0) || (desc[0] == '\0'))
     {
         struct Campaign *p_campgn;
         p_campgn = &campaigns[background_type];
@@ -500,16 +514,16 @@ int save_game_write(ubyte slot, char *desc)
         gblen += 1;
     }
 
-    if ((ingame.Flags & 0x10) != 0)
+    if ((ingame.Flags & GamF_MortalGame) != 0)
     {
         save_mortal_salt = time(0);
         resave_salt_to_keys();
     }
 
-    simple_salt = ((ingame.Flags & 0x10) == 0);
+    simple_salt = ((ingame.Flags & GamF_MortalGame) == 0);
     decrypt_verify = save_game_encrypt(fmtver, simple_salt, save_game_buffer, gblen);
 
-    if ((ingame.Flags & 0x10) != 0)
+    if ((ingame.Flags & GamF_MortalGame) != 0)
         sprintf(locstr, "qdata/savegame/synwarsm.sav");
     else if (slot >= 9)
         sprintf(locstr, "qdata/savegame/swars%03d.sav", slot - 1);
@@ -537,12 +551,15 @@ void load_save_slot_names(void)
     char locstr[DISKPATH_SIZE];
     int i;
 
-    for (i = 0; i < 8; i++)
+    for (i = 0; i < 9; i++)
     {
         TbFileHandle fh;
         int slot;
 
-        slot = save_slot_base + i + 1;
+        if (i == 8)
+            slot = 0;
+        else
+            slot = save_slot_base + i + 1;
         get_saved_game_fname(locstr, slot);
 
         if (!LbFileExists(locstr)) {

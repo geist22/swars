@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include "bfconfig.h"
 #include "bfdata.h"
 #include "bfendian.h"
 #include "bfsprite.h"
@@ -29,6 +30,7 @@
 #include "bfaudio.h"
 #include "bfmusic.h"
 #include "bfsound.h"
+#include "bfdanger.h"
 #include "bfplanar.h"
 #include "bfscrsurf.h"
 #include "bfscrcopy.h"
@@ -37,6 +39,7 @@
 #include "bfscd.h"
 
 #include "linksmk.h"
+#include "bat.h"
 #include "bmbang.h"
 #include "svesa.h"
 #include "swlog.h"
@@ -78,6 +81,7 @@
 #include "fepause.h"
 #include "fepanet.h"
 #include "feresearch.h"
+#include "feshared.h"
 #include "festorage.h"
 #include "feworld.h"
 #include "hud_panecfg.h"
@@ -135,8 +139,21 @@
  */
 #define EXPECTED_LANG_TXT_SIZE 8000
 
+enum PostRenderAction {
+    PRend_NONE = 0,
+    PRend_SaveScreenshot,
+};
+
 extern char *fadedat_fname;
 char session_name[20] = "SWARA";
+
+char user_name[50] = "TEMP";
+
+long dword_153194 = 0x100;
+
+ushort word_1531E0 = 1;
+
+ushort next_mission = 1;
 
 extern ulong stored_l3d_next_object[1];
 extern ulong stored_l3d_next_object_face[1];
@@ -161,6 +178,8 @@ extern short word_1C6E0A;
 
 extern long dword_1DDECC;
 
+ulong engine_mem_alloc_size = 5900000;
+
 extern struct GamePanel unknstrct7_arr2[];
 
 extern long gamep_unknval_10;
@@ -174,11 +193,20 @@ extern long gamep_unknval_16;
 extern ushort netgame_agent_pos_x[8][4];
 extern ushort netgame_agent_pos_z[8][4];
 
-extern char *data_15319c;
-
 extern long dword_155010;
 extern long dword_155014;
 extern long dword_155018;
+
+ubyte simulated_mouse_click;
+ubyte clear_left_button;
+ubyte clear_right_button;
+ubyte clear_wheel_up;
+ubyte clear_wheel_down;
+ubyte post_render_action;
+
+int mouse_map_x = 0x3200;
+int mouse_map_y = 0;
+int mouse_map_z = 0x3200;
 
 extern short last_map_for_lights_func_11;
 
@@ -188,6 +216,8 @@ extern long dword_176CBC;
 
 extern char unknmsg_str[100];
 extern short word_1774E8[2 * 150];
+
+char *data_15319c = unknmsg_str;
 
 extern ushort word_1A7330[1000];
 extern ubyte byte_1A7B00[1000];
@@ -206,13 +236,6 @@ extern long mech_unkn_tile_y2;
 extern long mech_unkn_tile_x3;
 extern long mech_unkn_tile_y3;
 
-extern long dword_1DC880;
-extern long dword_1DC884;
-extern long dword_1DC888;
-extern long dword_1DC88C;
-extern long dword_1DC890;
-extern long dword_1DC894;
-
 extern short brightness;
 
 //TODO this is not an extern only because I was unable to locate it in asm
@@ -228,7 +251,12 @@ const char *miss_end_sta_names[] = {
   "",
 };
 
-const char *misc_text[] = {
+/** Miscellaneous text strings.
+ *
+ * While initialized by constants, it cannot be const array
+ * due to where the items are used.
+ */
+char *misc_text[] = {
   "0",
   "C",
   "/",
@@ -903,7 +931,7 @@ void play_intro(void)
 
     LOGSYNC("Starting");
     lbDisplay.LeftButton = 0;
-    lbKeyOn[KC_ESCAPE] = 0;
+    clear_key_pressed(KC_ESCAPE);
     if ( (cmdln_param_bcg || is_single_game) &&
       ((ingame.Flags & GamF_SkipIntro) == 0))
     {
@@ -1130,10 +1158,6 @@ void load_outro_sprites(void)
     next_len = load_outro_text(outtxt_ptr);
     next_pos += next_len;
 
-    outro_unkn01 = 1;
-    outro_unkn02 = 0;
-    outro_unkn03 = 0;
-
     peptxt_ptr = &data_buf[next_pos];
     next_len = load_people_text(peptxt_ptr);
     next_pos += next_len;
@@ -1206,7 +1230,7 @@ void load_level_wrap(short level, short missi, ubyte reload)
     load_level_pc(level, missi, reload);
 
     // No idea what exactly pressing F during level load does
-    if (lbKeyOn[KC_F])
+    if (is_key_pressed(KC_F, KMod_DONTCARE))
         unkn_f_pressed_func();
 }
 
@@ -1317,12 +1341,12 @@ void draw_hud_target_mouse(short dcthing)
         weprange = current_hand_weapon_range(p_dcthing);
         switch (p_locplayer->TargetType)
         {
-        case 1:
-        case 2:
-        case 6:
-        case 7:
+        case TrgTp_Unkn1:
+        case TrgTp_Unkn2:
+        case TrgTp_Unkn6:
+        case TrgTp_Unkn7:
             p_locplayer->field_102 = p_locplayer->Target;
-            p_locplayer->TargetType = 7;
+            p_locplayer->TargetType = TrgTp_Unkn7;
             p_targtng = &things[p_locplayer->Target];
             range = weprange * weprange;
             if (can_i_see_thing(p_dcthing, p_targtng, range, 3) ) {
@@ -1332,11 +1356,11 @@ void draw_hud_target_mouse(short dcthing)
             }
             do_change_mouse(msspr);
             break;
-        case 3:
+        case TrgTp_Unkn3:
             p_locplayer->field_102 = p_locplayer->Target;
             do_change_mouse(7);
             break;
-        case 4:
+        case TrgTp_Unkn4:
             p_locplayer->field_102 = p_locplayer->Target;
             p_targtng = &things[p_locplayer->field_102];
             p_dcthing = &things[p_locplayer->DirectControl[mouser]];
@@ -1358,7 +1382,7 @@ void draw_hud_target_mouse(short dcthing)
     }
     else if (p_locplayer->Target < 0)
     {
-        if (p_locplayer->TargetType == 3) {
+        if (p_locplayer->TargetType == TrgTp_Unkn3) {
           p_locplayer->field_102 = p_locplayer->Target;
           do_change_mouse(7);
         } else {
@@ -1430,8 +1454,8 @@ void draw_hud(int dcthing)
             if ((p_agent->Flag & TngF_Unkn1000) != 0)
             {
                 short ctlmode;
-                ctlmode = p_locplayer->UserInput[plagent].ControlMode & 0x1FFF;
-                if (ctlmode != 1)
+                ctlmode = p_locplayer->UserInput[plagent].ControlMode & ~UInpCtr_AllFlagsMask;
+                if (ctlmode != UInpCtr_Mouse)
                 {
                     if (p_agent->PTarget != NULL)
                         draw_target_person(p_agent->PTarget, 2);
@@ -1633,25 +1657,27 @@ void engine_draw_things(int pos_beg_x, int pos_beg_z, int rend_beg_x, int rend_b
 
 TbBool get_engine_inputs(void)
 {
-    if ((lbKeyOn[KC_J]) && (lbShift & KMod_CONTROL))
+    if (is_gamekey_pressed(GKey_TRANS_OBJ_SURF_COL))
     {
         short i;
+
         if (lbShift & KMod_SHIFT)
             i = 1;
         else
             i = -1;
+        clear_gamekey_pressed(GKey_TRANS_OBJ_SURF_COL);
         deep_radar_surface_col += i;
-        lbKeyOn[KC_J] = 0;
     }
-    if ((lbKeyOn[KC_H]) && (lbShift & KMod_CONTROL))
+    if (is_gamekey_pressed(GKey_TRANS_OBJ_LINE_COL))
     {
         short i;
+
         if (lbShift & KMod_SHIFT)
             i = 1;
         else
             i = -1;
+        clear_gamekey_pressed(GKey_TRANS_OBJ_LINE_COL);
         deep_radar_line_col += i;
-        lbKeyOn[KC_H] = 0;
     }
     return false;
 }
@@ -1664,12 +1690,12 @@ void process_engine_unk3(void)
 
     reset_drawlist();
     player_target_clear(local_player_no);
-    dword_1DC880 = mech_unkn_tile_x1;
-    dword_1DC884 = mech_unkn_tile_y1;
-    dword_1DC888 = mech_unkn_tile_x2;
-    dword_1DC88C = mech_unkn_tile_y2;
-    dword_1DC890 = mech_unkn_tile_x3;
-    dword_1DC894 = mech_unkn_tile_y3;
+    mech_unkn_dw_1DC880 = mech_unkn_tile_x1;
+    mech_unkn_dw_1DC884 = mech_unkn_tile_y1;
+    mech_unkn_dw_1DC888 = mech_unkn_tile_x2;
+    mech_unkn_dw_1DC88C = mech_unkn_tile_y2;
+    mech_unkn_dw_1DC890 = mech_unkn_tile_x3;
+    mech_unkn_dw_1DC894 = mech_unkn_tile_y3;
 
     unkstruct03_process();
     func_13A78();
@@ -1770,31 +1796,69 @@ void screen_animate_draw_outro_text(void)
     func_cc638(text1, text2);
 }
 
-void screen_wait_seconds_or_until_continue_key(int sec)
+TbKeyCode screen_wait_seconds_or_until_continue_key(int sec)
 {
     int i;
+    TbKeyCode key;
 
+    clear_key_pressed(KC_SPACE);
+    clear_key_pressed(KC_ESCAPE);
+    clear_key_pressed(KC_RETURN);
+
+    key = KC_UNASSIGNED;
     for (i = sec*game_num_fps; i != 0; i--)
     {
-        if (is_key_pressed(KC_SPACE, KMod_DONTCARE))
+        if (is_key_pressed(KC_SPACE, KMod_DONTCARE)) {
+            key = KC_SPACE;
             break;
-        if (is_key_pressed(KC_ESCAPE, KMod_DONTCARE))
+        }
+        if (is_key_pressed(KC_ESCAPE, KMod_DONTCARE)) {
+            key = KC_ESCAPE;
             break;
-        if (is_key_pressed(KC_RETURN, KMod_DONTCARE))
+        }
+        if (is_key_pressed(KC_RETURN, KMod_DONTCARE)) {
+            key = KC_RETURN;
             break;
+        }
 
         swap_wscreen();
         game_update();
     }
-    clear_key_pressed(KC_SPACE);
-    clear_key_pressed(KC_ESCAPE);
-    clear_key_pressed(KC_RETURN);
+    clear_key_pressed(key);
+
+    return key;
+}
+
+TbKeyCode screen_wait_seconds_or_until_yesno_key(int sec)
+{
+    int i;
+    TbKeyCode key;
+
+    clear_key_pressed(KC_Y);
+    clear_key_pressed(KC_N);
+
+    key = KC_UNASSIGNED;
+    for (i = sec*game_num_fps; i != 0; i--)
+    {
+        if (is_key_pressed(KC_Y, KMod_DONTCARE)) {
+            key = KC_Y;
+            break;
+        }
+        if (is_key_pressed(KC_N, KMod_DONTCARE)) {
+            key = KC_N;
+            break;
+        }
+
+        swap_wscreen();
+        game_update();
+    }
+    clear_key_pressed(key);
+
+    return key;
 }
 
 void init_outro(void)
 {
-    int i;
-
     gamep_scene_effect_type = ScEff_NONE;
     gamep_scene_effect_intensity = 1000;
     StopAllSamples();
@@ -1809,6 +1873,11 @@ void init_outro(void)
     //TODO hard-coded map ID
     change_current_map(51);
     load_outro_sprites();
+
+    outro_credits_enabled = 0;
+    outro_unkn02 = 0;
+    outro_unkn03 = 0;
+    gameturn = 0;
 
     screen_animate_draw_outro_text();
     // Sleep for up to 10 seconds
@@ -1829,20 +1898,6 @@ void init_outro(void)
     palette_brightness = 0;
     change_brightness(-64);
 
-    for (i = 0; i < 128; i++)
-    {
-        if (i & 1)
-            change_brightness(1);
-        traffic_unkn_func_01();
-        process_engine_unk1();
-        process_sound_heap();
-        func_2e440();
-
-        swap_wscreen();
-        game_update();
-        LbScreenClear(0);
-    }
-
     while (1)
     {
         if (is_key_pressed(KC_SPACE, KMod_DONTCARE))
@@ -1852,22 +1907,31 @@ void init_outro(void)
         if (is_key_pressed(KC_RETURN, KMod_DONTCARE))
             break;
 
+        if (gameturn < 128)
+        {
+            // 64 steps of brightness increase - fade in
+            if (gameturn & 1)
+                change_brightness(1);
+            if (gameturn == 127)
+                outro_credits_enabled = 1;
+        } else {
+            // Randomly play seagull sample if applause is not currently playing
+            if (((LbRandomAnyShort() & 0xF) == 0) && (data_155704 == -1 || !IsSamplePlaying(0, data_155704, NULL)) )
+            {
+                play_sample_using_heap(0, 7 + (LbRandomAnyShort() % 5), 127, 64, 100, 0, 3u);
+            }
+        }
+
         gameturn++;
         traffic_unkn_func_01();
         process_engine_unk1();
-        // Play applause sample
-        if (((LbRandomAnyShort() & 0xF) == 0) && (data_155704 == -1 || !IsSamplePlaying(0, data_155704, NULL)) )
-        {
-            //TODO Why we're not storing new value of data_155704 ??
-            play_sample_using_heap(0, 7 + (LbRandomAnyShort() % 5), 127, 64, 100, 0, 3u);
-        }
         process_sound_heap();
         func_2e440();
-        if (outro_unkn01)
+        if (outro_credits_enabled)
         {
             outro_unkn02++;
             func_cc0d4((char **)&people_credits_groups[2 * outro_unkn03]);
-            if (data_1ddb68 + 50 < outro_unkn02)
+            if (outro_unkn02 > data_1ddb68 + 50)
             {
                 outro_unkn02 = 0;
                 outro_unkn03++;
@@ -2140,9 +2204,9 @@ void game_graphics_inputs(void)
     if (in_network_game && p_locplayer->PanelState[mouser] != 17)
         return;
 
-    if (lbKeyOn[KC_F] && (lbShift == KMod_NONE))
+    if (is_gamekey_pressed(GKey_CAMERA_PERSPECTV))
     {
-        lbKeyOn[KC_F] = 0;
+        clear_gamekey_pressed(GKey_CAMERA_PERSPECTV);
         if (game_perspective == 5)
             game_perspective = 0;
         else
@@ -2151,32 +2215,32 @@ void game_graphics_inputs(void)
 
     if ((ingame.UserFlags & UsrF_Cheats) != 0)
     {
-        if (lbKeyOn[KC_T] && (lbShift == KMod_ALT))
+        if (is_key_pressed(KC_T, KMod_ALT))
         {
-            lbKeyOn[KC_T] = 0;
+            clear_key_pressed(KC_T);
             teleport_current_agent(p_locplayer);
         }
     }
 
     if ((ingame.UserFlags & UsrF_Cheats) && !in_network_game)
     {
-        if (lbKeyOn[KC_Q] && (lbShift == KMod_NONE))
+        if (is_key_pressed(KC_Q, KMod_NONE))
         {
-            lbKeyOn[KC_Q] = 0;
+            clear_key_pressed(KC_Q);
             give_best_mods_to_all_agents(p_locplayer);
             set_max_stats_to_all_agents(p_locplayer);
         }
-        if (lbKeyOn[KC_Q] && (lbShift == KMod_SHIFT))
+        if (is_key_pressed(KC_Q, KMod_SHIFT))
         {
-            lbKeyOn[KC_Q] = 0;
+            clear_key_pressed(KC_Q);
             resurrect_any_dead_agents(p_locplayer);
             give_all_weapons_to_all_agents(p_locplayer);
         }
     }
 
-    if (lbKeyOn[KC_F8])
+    if (is_key_pressed(KC_F8, KMod_DONTCARE))
     {
-        lbKeyOn[KC_F8] = 0;
+        clear_key_pressed(KC_F8);
         screen_mode_switch_to_next();
     }
 }
@@ -3488,25 +3552,6 @@ void mapwho_unkn01(int a1, int a2)
         : : "a" (a1), "d" (a2));
 }
 
-void input(void)
-{
-    uint16_t n;
-    n = lbShift;
-    if ( lbKeyOn[KC_LSHIFT] || lbKeyOn[KC_RSHIFT] )
-        n |= KMod_SHIFT;
-    else
-        n &= ~KMod_SHIFT;
-    if ( lbKeyOn[KC_LCONTROL] || lbKeyOn[KC_RCONTROL] )
-        n |= KMod_CONTROL;
-    else
-        n &= ~KMod_CONTROL;
-    if ( lbKeyOn[KC_RALT] || lbKeyOn[KC_LALT] )
-        n |= KMod_ALT;
-    else
-        n &= ~KMod_ALT;
-    lbShift = n;
-}
-
 void show_unkn3A_screen(int a1)
 {
     // Empty
@@ -3563,7 +3608,7 @@ void gproc3_unknsub2(void)
     long bkp_engn_xc, bkp_engn_yc, bkp_engn_zc;
 
     ingame.Flags &= ~GamF_BillboardMovies;
-    if (lbKeyOn[KC_Q])
+    if (is_key_pressed(KC_Q, KMod_DONTCARE))
     {
         dword_155010 = 0x4000;
         dword_155014 = 0x4000;
@@ -3662,12 +3707,6 @@ void gproc3_unknsub2(void)
     process_engine_unk1();
 }
 
-void BAT_play(void)
-{
-    asm volatile ("call ASM_BAT_play\n"
-        :  :  : "eax" );
-}
-
 ubyte change_panel_permutation(ubyte click)
 {
     ubyte ret;
@@ -3710,8 +3749,7 @@ ubyte load_game_slot(ubyte click)
         return 0;
     }
     if (save_slot == -1) {
-        show_alert = 1;
-        sprintf(alert_text, "%s", gui_strings[564]);
+        alert_box_text_fmt("%s", gui_strings[564]);
         return 1;
     }
     if (save_slot != 0) {
@@ -3724,26 +3762,24 @@ ubyte load_game_slot(ubyte click)
 
     ret = load_game(ldslot, ldname);
     if (ret == 1) {
-        show_alert = 1;
-        sprintf(alert_text, "%s", gui_strings[565]);
+        alert_box_text_fmt("%s", gui_strings[565]);
         return 1;
     } else if (ret == 2) {
-        show_alert = 1;
-        sprintf(alert_text, "%s", gui_strings[567]);
+        alert_box_text_fmt("%s", gui_strings[567]);
         return 1;
     }
 
-    show_alert = 1;
-    sprintf(alert_text, "%s", gui_strings[572]);
+    alert_box_text_fmt("%s", gui_strings[572]);
 
     // Reading the save might have caused campaign switch
     reload_background_flag = 1;
     load_objectives_text();
     init_weapon_text();
 
-    clear_someflags_system_menu_screen_boxes();
-    clear_someflags_controls_screen_boxes();
-    clear_someflags_storage_screen_boxes();
+    mark_system_menu_screen_boxes_redraw();
+    mark_sys_scr_shared_header_box_redraw();
+    mark_sys_scr_shared_content_box_redraw();
+    mark_storage_screen_boxes_redraw();
     if (save_slot == 0) {
         ingame.Flags |= GamF_MortalGame;
     }
@@ -3752,7 +3788,7 @@ ubyte load_game_slot(ubyte click)
     word_1C6E0A = 0;
     word_1C6E08 = 0;
     screentype = SCRT_99;
-    game_system_screen = 0;
+    game_system_screen = SySc_NONE;
     if (restore_savegame) {
         restore_savegame = 0;
         sysmnu_button_enable(0, 5);
@@ -4503,7 +4539,7 @@ void campaign_new_game_prepare(void)
     p_campgn = &campaigns[background_type];
 
     screentype = SCRT_99;
-    game_system_screen = 0;
+    game_system_screen = SySc_NONE;
     {
         PlayerInfo *p_locplayer;
         p_locplayer = &players[local_player_no];
@@ -4542,8 +4578,7 @@ ubyte do_storage_NEW_MORTAL(ubyte click)
     campaign_new_game_prepare();
 
     if (save_game_write(0, save_active_desc)) {
-        show_alert = 1;
-        sprintf(alert_text, "%s", gui_strings[566]);
+        alert_box_text_fmt("%s", gui_strings[566]);
     }
 
     if (restore_savegame)  {
@@ -4561,31 +4596,13 @@ ubyte do_storage_NEW_MORTAL(ubyte click)
     return 1;
 }
 
-ubyte show_netgame_unkn1(struct ScreenBox *box)
-{
-    ubyte ret;
-    asm volatile ("call ASM_show_netgame_unkn1\n"
-        : "=r" (ret) : "a" (box));
-    return ret;
-}
-
-ubyte show_settings_controls_list(struct ScreenBox *box)
-{
-    ubyte ret;
-    asm volatile ("call ASM_show_settings_controls_list\n"
-        : "=r" (ret) : "a" (box));
-    return ret;
-}
-
-ubyte ac_show_netgame_unkn1(struct ScreenBox *box);
-ubyte ac_show_settings_controls_list(struct ScreenBox *box);
-
 void init_screen_boxes(void)
 {
     init_global_boxes();
     init_alert_screen_boxes();
     init_main_screen_boxes();
     init_system_menu_boxes();
+    init_sys_scr_shared_content_box();
     init_brief_screen_boxes();
     init_world_screen_boxes();
     init_debrief_screen_boxes();
@@ -4605,7 +4622,7 @@ void players_init_control_mode(void)
 {
     PlayerIdx plyr;
     for (plyr = 0; plyr < PLAYERS_LIMIT; plyr++) {
-      players[plyr].UserInput[0].ControlMode = 1;
+      players[plyr].UserInput[0].ControlMode = UInpCtr_Mouse;
     }
 }
 
@@ -4644,7 +4661,7 @@ void do_scroll_map(void)
 {
     PlayerInfo *p_locplayer;
     long engn_xc_orig, engn_zc_orig;
-    ushort md;
+    ushort ctlmode;
     long abase, angle;
     int dx, dy, dz;
     int dampr;
@@ -4678,8 +4695,8 @@ void do_scroll_map(void)
         }
         if (dcthing)
         {
-            md = p_locplayer->UserInput[0].ControlMode & 0x1FFF;
-            if (md == 1 || pktrec_mode == PktR_PLAYBACK)
+            ctlmode = p_locplayer->UserInput[0].ControlMode & ~UInpCtr_AllFlagsMask;
+            if (ctlmode == UInpCtr_Mouse || pktrec_mode == PktR_PLAYBACK)
                 move_camera(ingame.TrackX, engn_yc, ingame.TrackZ);
             else
                 track_player(dcthing);
@@ -4687,10 +4704,10 @@ void do_scroll_map(void)
     }
     dy = 0;
     dx = 0;
-    md = p_locplayer->UserInput[byte_153198-1].ControlMode & 0x1FFF;
+    ctlmode = p_locplayer->UserInput[byte_153198-1].ControlMode & ~UInpCtr_AllFlagsMask;
     engn_xc_orig = engn_xc;
     engn_zc_orig = engn_zc;
-    if (md == 1 || pktrec_mode == PktR_PLAYBACK)
+    if (ctlmode == UInpCtr_Mouse || pktrec_mode == PktR_PLAYBACK)
     {
         if (!p_locplayer->PanelState[mouser])
         {
@@ -4705,8 +4722,8 @@ void do_scroll_map(void)
 
             if (!p_locplayer->DoubleMode)
             {
-                dx = (lbKeyOn[kbkeys[GKey_RIGHT]] & 1) - (lbKeyOn[kbkeys[GKey_LEFT]] & 1);
-                dy = (lbKeyOn[kbkeys[GKey_DOWN]] & 1) - (lbKeyOn[kbkeys[GKey_UP]] & 1);
+                dx = (is_gamekey_kbd_pressed(GKey_RIGHT) & 1) - (is_gamekey_kbd_pressed(GKey_LEFT) & 1);
+                dy = (is_gamekey_kbd_pressed(GKey_DOWN) & 1) - (is_gamekey_kbd_pressed(GKey_UP) & 1);
             }
 
             if (dx == 0)
@@ -4819,7 +4836,7 @@ ubyte weapon_select_input(void)
     ushort weptype;
     int n;
 
-    static ushort sel_weapon_keys[] = {
+    static TbKeyCode sel_weapon_keys[] = {
         KC_5, KC_6, KC_7, KC_8, KC_9, KC_0,
     };
     static GameTurn last_sel_weapon_turn[WEAPONS_CARRIED_MAX_COUNT] = {0};
@@ -4834,9 +4851,9 @@ ubyte weapon_select_input(void)
     for (n = 0; n < (int)(sizeof(sel_weapon_keys)/sizeof(sel_weapon_keys[0])); n++)
     {
         ushort kkey = sel_weapon_keys[n];
-        if (lbKeyOn[kkey] && (lbShift == KMod_NONE))
+        if (is_key_pressed(kkey, KMod_NONE))
         {
-            lbKeyOn[kkey] = 0;
+            clear_key_pressed(kkey);
             weptype = find_nth_weapon_held(dcthing, n+1);
             if (weptype != WEP_NULL)
                 break;
@@ -4885,7 +4902,7 @@ TbResult read_palette_file(void)
 void do_music_user_input(void)
 {
     // MIDI Music (tension) volume control
-    if (lbKeyOn[KC_NUMPAD8])
+    if (is_key_pressed(KC_NUMPAD8, KMod_DONTCARE))
     {
         if (lbShift & KMod_SHIFT)
             startscr_midivol += 1;
@@ -4893,7 +4910,7 @@ void do_music_user_input(void)
             startscr_midivol += 10;
         sfx_apply_midivol();
     }
-    if (lbKeyOn[KC_NUMPAD2])
+    if (is_key_pressed(KC_NUMPAD2, KMod_DONTCARE))
     {
         if (lbShift & KMod_SHIFT)
             startscr_midivol -= 1;
@@ -4903,7 +4920,7 @@ void do_music_user_input(void)
     }
 
     // Sample volume control
-    if (lbKeyOn[KC_NUMPAD7])
+    if (is_key_pressed(KC_NUMPAD7, KMod_DONTCARE))
     {
         if (lbShift & KMod_SHIFT)
             startscr_samplevol += 1;
@@ -4911,7 +4928,7 @@ void do_music_user_input(void)
             startscr_samplevol += 10;
         sfx_apply_samplevol();
     }
-    if (lbKeyOn[KC_NUMPAD1])
+    if (is_key_pressed(KC_NUMPAD1, KMod_DONTCARE))
     {
         if (lbShift & KMod_SHIFT)
             startscr_samplevol -= 1;
@@ -4921,7 +4938,7 @@ void do_music_user_input(void)
     }
 
     // CD Music volume control
-    if (lbKeyOn[KC_NUMPAD9])
+    if (is_key_pressed(KC_NUMPAD9, KMod_DONTCARE))
     {
         if (lbShift & KMod_SHIFT)
             startscr_cdvolume += 1;
@@ -4929,7 +4946,7 @@ void do_music_user_input(void)
             startscr_cdvolume += 10;
         sfx_apply_cdvolume();
     }
-    if (lbKeyOn[KC_NUMPAD3])
+    if (is_key_pressed(KC_NUMPAD3, KMod_DONTCARE))
     {
         if (lbShift & KMod_SHIFT)
             startscr_cdvolume -= 1;
@@ -4939,15 +4956,15 @@ void do_music_user_input(void)
     }
 
     // Music track control
-    if (lbKeyOn[KC_NUMPAD5])
+    if (is_key_pressed(KC_NUMPAD5, KMod_DONTCARE))
     {
-        lbKeyOn[KC_NUMPAD5] = 0;
+        clear_key_pressed(KC_NUMPAD5);
         if (++ingame.CDTrack > 4)
             ingame.CDTrack = 2;
     }
-    if (lbKeyOn[KC_NUMPAD0])
+    if (is_key_pressed(KC_NUMPAD0, KMod_DONTCARE))
     {
-        lbKeyOn[KC_NUMPAD0] = 0;
+        clear_key_pressed(KC_NUMPAD0);
         ingame.DangerTrack = 2 - ingame.DangerTrack + 1;
     }
 
@@ -4964,9 +4981,9 @@ ubyte do_user_interface(void)
     do_rotate_map();
     if (in_network_game)
     {
-        if (lbKeyOn[KC_RETURN])
+        if (is_key_pressed(KC_RETURN, KMod_DONTCARE))
         {
-            lbKeyOn[KC_RETURN] = 0;
+            clear_key_pressed(KC_RETURN);
             if ((p_locplayer->PanelState[mouser] != 17) && (player_unkn0C9[local_player_no] <= 140))
             {
                 p_locplayer->PanelState[mouser] = 17;
@@ -4982,7 +4999,7 @@ ubyte do_user_interface(void)
         return process_mouse_imputs() != 0;
 
     // screenshot
-    if (lbKeyOn[KC_M])
+    if (is_key_pressed(KC_M, KMod_DONTCARE))
         LbPngSaveScreen("synII", lbDisplay.WScreen, display_palette, 0);
 
 #if 0
@@ -4990,30 +5007,27 @@ ubyte do_user_interface(void)
     // clearly unfinished; remove pending
     for (n = 0; n < 5; n++)
     {
-        if (lbKeyOn[KC_F1+n])
+        if (is_key_pressed(KC_F1+n, KMod_ALT))
         {
-            if (lbShift & KMod_ALT)
-            {
-                lbKeyOn[KC_F1+n] = 0;
-                my_build_packet(&packets[local_player_no], PAct_AGENT_UNKGROUP_ADD, n, 0, 0, 0);
-                return 1;
-            }
-            if (lbShift & KMod_SHIFT)
-            {
-                lbKeyOn[KC_F1+n] = 0;
-                my_build_packet(&packets[local_player_no], PAct_AGENT_UNKGROUP_PROT, n, 0, 0, 0);
-                return 1;
-            }
+            clear_key_pressed(KC_F1+n);
+            my_build_packet(&packets[local_player_no], PAct_AGENT_UNKGROUP_ADD, n, 0, 0, 0);
+            return 1;
+        }
+        if (is_key_pressed(KC_F1+n, KMod_SHIFT))
+        {
+            clear_key_pressed(KC_F1+n);
+            my_build_packet(&packets[local_player_no], PAct_AGENT_UNKGROUP_PROT, n, 0, 0, 0);
+            return 1;
         }
     }
 #endif
 
     // change panel style
-    if (lbKeyOn[KC_F9] && (lbShift == KMod_NONE))
+    if (is_key_pressed(KC_F9, KMod_NONE))
     {
         sbyte panperm;
 
-        lbKeyOn[KC_F9] = 0;
+        clear_key_pressed(KC_F9);
         StopCD();
         if (ingame.PanelPermutation >= 0)
         {
@@ -5042,9 +5056,9 @@ ubyte do_user_interface(void)
     }
 
     // change agents colours
-    if (lbKeyOn[KC_F10] && (lbShift == KMod_NONE))
+    if (is_key_pressed(KC_F10, KMod_NONE))
     {
-        lbKeyOn[KC_F10] = 0;
+        clear_key_pressed(KC_F10);
         StopCD();
         if (++ingame.TrenchcoatPreference > 5)
             ingame.TrenchcoatPreference = 0;
@@ -5052,69 +5066,66 @@ ubyte do_user_interface(void)
     }
 
     // adjust palette brightness
-    if (lbKeyOn[KC_F11])
+    if (is_key_pressed(KC_F11, KMod_CONTROL))
     {
-        lbKeyOn[KC_F11] = 0;
-        if (lbShift & KMod_CONTROL)
-        {
-            read_palette_file();
-        }
-        else if (lbShift & KMod_SHIFT)
-        {
-            change_brightness(-1);
-            brightness--;
-        }
-        else if (lbShift == KMod_NONE)
-        {
-            change_brightness(1);
-            brightness++;
-        }
+        clear_key_pressed(KC_F11);
+        read_palette_file();
+    }
+    if (is_key_pressed(KC_F11, KMod_SHIFT))
+    {
+        clear_key_pressed(KC_F11);
+        change_brightness(-1);
+        brightness--;
+    }
+    if (is_key_pressed(KC_F11, KMod_NONE))
+    {
+        change_brightness(1);
+        brightness++;
     }
 
-    // TODO No idea what these are doing
-    if (lbKeyOn[KC_F1] && (lbShift & KMod_CONTROL))
+    if (is_key_pressed(KC_F1, KMod_CONTROL))
     {
-        lbKeyOn[KC_F1] = 0;
+        clear_key_pressed(KC_F1);
         if ((ingame.Flags & GamF_BillboardMovies) != 0)
             ingame.Flags &= ~GamF_BillboardMovies;
         else
             ingame.Flags |= GamF_BillboardMovies;
     }
-    if (lbKeyOn[KC_F2] && (lbShift & KMod_CONTROL))
+    if (is_key_pressed(KC_F2, KMod_CONTROL))
     {
-        lbKeyOn[KC_F2] = 0;
+        clear_key_pressed(KC_F2);
         if (ingame.Flags & GamF_RenderScene)
             ingame.Flags &= ~GamF_RenderScene;
         else
             ingame.Flags |= GamF_RenderScene;
     }
-    if (lbKeyOn[KC_F3] && (lbShift & KMod_CONTROL))
+    if (is_key_pressed(KC_F3, KMod_CONTROL))
     {
-        lbKeyOn[KC_F3] = 0;
+        clear_key_pressed(KC_F3);
         if (ingame.Flags & GamF_StopThings)
             ingame.Flags &= ~GamF_StopThings;
         else
             ingame.Flags |= GamF_StopThings;
     }
-    if (lbKeyOn[KC_F4] && (lbShift & KMod_CONTROL))
+    if (is_key_pressed(KC_F4, KMod_CONTROL))
     {
-        lbKeyOn[KC_F4] = 0;
+        clear_key_pressed(KC_F4);
         if ((ingame.Flags & GamF_AdvLights) != 0)
             ingame.Flags &= ~GamF_AdvLights;
         else
             ingame.Flags |= GamF_AdvLights;
     }
-    if (lbKeyOn[KC_F6] && (lbShift & KMod_CONTROL))
+    if (is_key_pressed(KC_F6, KMod_CONTROL))
     {
-        lbKeyOn[KC_F6] = 0;
+        clear_key_pressed(KC_F6);
         if ((ingame.Flags & GamF_DeepRadar) != 0)
             ingame.Flags &= ~GamF_DeepRadar;
         else
             ingame.Flags |= GamF_DeepRadar;
     }
-    if ( lbKeyOn[KC_F10] && (lbShift & KMod_CONTROL))
+    if (is_key_pressed(KC_F10, KMod_CONTROL))
     {
-        lbKeyOn[KC_F10] = 0;
+        clear_key_pressed(KC_F10);
         if (ingame.Flags & GamF_HUDPanel)
             ingame.Flags &= ~GamF_HUDPanel;
         else
@@ -5128,8 +5139,9 @@ ubyte do_user_interface(void)
     }
 
     // Toggle Scanner beep
-    if (lbKeyOn[KC_S])
+    if (is_gamekey_pressed(GKey_SCANNER_PULSE))
     {
+        clear_gamekey_pressed(GKey_SCANNER_PULSE);
         if (ingame.Flags & GamF_NoScannerBeep)
             ingame.Flags &= ~GamF_NoScannerBeep;
         else
@@ -5137,23 +5149,23 @@ ubyte do_user_interface(void)
     }
 
     // Control map area to draw
-    if (lbKeyOn[KC_E])
+    if ((ingame.UserFlags & UsrF_Cheats) != 0)
     {
-        lbKeyOn[KC_E] = 0;
-
-        if (lbShift & KMod_SHIFT)
-            n = -2;
-        else
-            n = 2;
-        render_area_a = bound_render_area(render_area_a + n);
-        render_area_b = bound_render_area(render_area_b + n);
+        if (is_key_pressed(KC_E, KMod_DONTCARE))
+        {
+            if (lbShift & KMod_SHIFT)
+                n = -2;
+            else
+                n = 2;
+            render_area_a = bound_render_area(render_area_a + n);
+            render_area_b = bound_render_area(render_area_b + n);
+        }
     }
 
     // Entering pause screen
     if (!in_network_game)
     {
-        if (lbKeyOn[kbkeys[GKey_PAUSE]] ||
-            (jskeys[GKey_PAUSE] && jskeys[GKey_PAUSE] == joy.Buttons[0]))
+        if (is_gamekey_pressed(GKey_PAUSE))
         {
             if (pause_screen_handle()) {
                 return -1;
@@ -5162,9 +5174,9 @@ ubyte do_user_interface(void)
     }
 
     // Scanner appearence control
-    if (lbKeyOn[KC_NUMPAD6])
+    if (is_key_pressed(KC_NUMPAD6, KMod_DONTCARE))
         ingame.Scanner.Brightness += 4;
-    if (lbKeyOn[KC_NUMPAD4])
+    if (is_key_pressed(KC_NUMPAD4, KMod_DONTCARE))
         ingame.Scanner.Brightness -= 4;
     if (ingame.Scanner.Brightness < 0)
         ingame.Scanner.Brightness = 0;
@@ -5175,9 +5187,9 @@ ubyte do_user_interface(void)
     // Restart level
     if (!in_network_game && (ingame.Flags & GamF_MortalGame) == 0)
     {
-        if (lbKeyOn[KC_R])
+        if (is_key_pressed(KC_R, KMod_DONTCARE))
         {
-            lbKeyOn[KC_R] = 0;
+            clear_key_pressed(KC_R);
             StopCD();
             test_missions(1);
             init_level_3d(1);
@@ -5194,15 +5206,15 @@ ubyte do_user_interface(void)
         return 1;
     }
 
-    static ushort sel_agent_gkeys[] = {
+    static GameKey sel_agent_gkeys[] = {
         GKey_SEL_AGENT_1, GKey_SEL_AGENT_2, GKey_SEL_AGENT_3, GKey_SEL_AGENT_4
     };
     static GameTurn last_sel_agent_turn[AGENTS_SQUAD_MAX_COUNT] = {0};
     assert(sizeof(sel_agent_gkeys)/sizeof(sel_agent_gkeys[0]) <= AGENTS_SQUAD_MAX_COUNT);
     for (n = 0; n < (int)(sizeof(sel_agent_gkeys)/sizeof(sel_agent_gkeys[0])); n++)
     {
-        ulong gkey = sel_agent_gkeys[n];
-        if (lbKeyOn[kbkeys[gkey]] && (lbShift == KMod_NONE))
+        GameKey gkey = sel_agent_gkeys[n];
+        if (is_gamekey_pressed(gkey))
         {
             struct Thing *p_agent;
 
@@ -5211,7 +5223,7 @@ ubyte do_user_interface(void)
 
             if (person_can_accept_control(p_agent->ThingOffset) && ((p_agent->Flag2 & TgF2_KnockedOut) == 0))
             {
-                lbKeyOn[kbkeys[gkey]] = 0;
+                clear_key_pressed(gkey);
                 if (p_locplayer->DoubleMode)
                 {
                     byte_153198 = n+1;
@@ -5221,7 +5233,7 @@ ubyte do_user_interface(void)
                     short dcthing;
                     dcthing = p_locplayer->DirectControl[n];
                     my_build_packet(&packets[local_player_no], PAct_SELECT_AGENT, dcthing, p_agent->ThingOffset, 0, 0);
-                    p_locplayer->UserInput[0].ControlMode |= 0x8000;
+                    p_locplayer->UserInput[0].ControlMode |= UInpCtrF_Unkn8000;
                     // Double tapping - center view on the agent
                     if (gameturn - last_sel_agent_turn[n] < 7)
                     {
@@ -5257,15 +5269,15 @@ ubyte do_user_interface(void)
     // Resurrection and best equipment cheat; why is it in two places?
     if (p_locplayer->DoubleMode && (ingame.UserFlags & UsrF_Cheats) && !in_network_game)
     {
-        if (lbKeyOn[KC_Q] && (lbShift == KMod_NONE))
+        if (is_key_pressed(KC_Q, KMod_NONE))
         {
-            lbKeyOn[KC_Q] = 0;
+            clear_key_pressed(KC_Q);
             give_best_mods_to_all_agents(p_locplayer);
             set_max_stats_to_all_agents(p_locplayer);
         }
-        if (lbKeyOn[KC_Q] && (lbShift == KMod_SHIFT))
+        if (is_key_pressed(KC_Q, KMod_SHIFT))
         {
-            lbKeyOn[KC_Q] = 0;
+            clear_key_pressed(KC_Q);
             resurrect_any_dead_agents(p_locplayer);
             give_all_weapons_to_all_agents(p_locplayer);
         }
@@ -5282,8 +5294,8 @@ ubyte do_user_interface(void)
 
             p_usrinp = &p_locplayer->UserInput[n];
             p_usrinp->Bits &= 0x8000FFFF;
-            ctlmode = p_usrinp->ControlMode & 0x1FFF;
-            if (ctlmode == 1)
+            ctlmode = p_usrinp->ControlMode & ~UInpCtr_AllFlagsMask;
+            if (ctlmode == UInpCtr_Mouse)
             {
                 p_usrinp->Bits &= 0x0000FFFF;
                 process_mouse_imputs();
@@ -5308,8 +5320,8 @@ ubyte do_user_interface(void)
                 do_user_input_bits_direction_from_joy(p_usrinp, ctlmode - 2);
                 do_user_input_bits_actions_from_joy(p_usrinp, ctlmode - 2);
             }
-            ctlmode = p_usrinp->ControlMode & 0x1FFF;
-            if (ctlmode != 1)
+            ctlmode = p_usrinp->ControlMode & ~UInpCtr_AllFlagsMask;
+            if (ctlmode != UInpCtr_Mouse)
             {
                 update_agent_move_direction_deltas(p_usrinp);
             }
@@ -5320,11 +5332,12 @@ ubyte do_user_interface(void)
         short dcthing;
 
         p_usrinp = &p_locplayer->UserInput[0];
-        ctlmode = p_usrinp->ControlMode & 0x1FFF;
-        if ((ctlmode == 1) && lbKeyOn[kbkeys[GKey_KEY_CONTROL]])
+        ctlmode = p_usrinp->ControlMode & ~UInpCtr_AllFlagsMask;
+        if ((ctlmode == UInpCtr_Mouse) && is_gamekey_pressed(GKey_KEY_CONTROL))
         {
-            lbKeyOn[kbkeys[GKey_KEY_CONTROL]] = 0;
-            p_usrinp->ControlMode &= 0xE000;
+            clear_key_pressed(GKey_KEY_CONTROL);
+            p_usrinp->ControlMode &= UInpCtr_AllFlagsMask;
+            p_usrinp->ControlMode |= UInpCtr_Keyboard;
             do_change_mouse(8);
             p_locplayer->State[0] = 0;
         }
@@ -5341,8 +5354,8 @@ ubyte do_user_interface(void)
         {
             do_user_input_bits_actions_from_joy_and_kbd(p_usrinp);
 
-            ctlmode = p_usrinp->ControlMode & 0x1FFF;
-            if (ctlmode != 1)
+            ctlmode = p_usrinp->ControlMode & ~UInpCtr_AllFlagsMask;
+            if (ctlmode != UInpCtr_Mouse)
             {
                 do_user_input_bits_direction_clear(p_usrinp);
                 do_user_input_bits_direction_from_kbd(p_usrinp);
@@ -5876,7 +5889,7 @@ void show_menu_screen_st2(void)
       {
             memcpy(&mission_status[0], &mission_status[open_brief],
               sizeof(struct MissionStatus));
-            delete_mail(open_brief - 1, 1);
+            delete_mail(open_brief - 1, MlTp_Mission);
             open_brief = 0;
             old_mission_brief = 0;
             cities[unkn_city_no].Info = 0;
@@ -6159,6 +6172,9 @@ void menu_screen_redraw(void)
         activate_cities(open_brief);
     }
 
+    reset_system_menu_boxes_flags();
+    reset_sys_scr_shared_boxes_flags();
+
     reset_brief_screen_boxes_flags();
     reset_heading_screen_boxes_flags();
     reset_debrief_screen_boxes_flags();
@@ -6170,9 +6186,9 @@ void menu_screen_redraw(void)
     reset_cryo_screen_boxes_flags();
     reset_equip_screen_boxes_flags();
     reset_research_screen_boxes_flags();
-    reset_system_menu_boxes_flags();
 
-    reset_options_screen_boxes_flags();
+    reset_options_audio_boxes_flags();
+    reset_options_visual_boxes_flags();
 
     set_flag01_storage_screen_boxes();
     set_flag01_login_screen_boxes();
@@ -6187,6 +6203,70 @@ void menu_screen_redraw(void)
 
     if (!game_projector_speed && screentype != SCRT_99)
         play_sample_using_heap(0, 113, 127, 64, 100, 0, 3u);
+}
+
+/** Mark beginning of user input processing code.
+ */
+void input_processing_beg(void)
+{
+    if (joy.Buttons[0] && !net_unkn_pos_02)
+    {
+        if (!simulated_mouse_click)
+        {
+            int i;
+
+            simulated_mouse_click = 1;
+
+            // Simulate mouse click at current move position
+            lbDisplay.LeftButton = 1;
+            if (lbDisplay.GraphicsScreenWidth > 320)
+                i = lbDisplay.MMouseX * lbDisplay.GraphicsScreenWidth / 320;
+            else
+                i = lbDisplay.MMouseX;
+            lbDisplay.MouseX = i;
+            if (lbDisplay.GraphicsScreenHeight > 200)
+                i = lbDisplay.MMouseY * lbDisplay.GraphicsScreenHeight / 200;
+            else
+                i = lbDisplay.MMouseY;
+            lbDisplay.MouseY = i;
+        }
+    }
+    else if (simulated_mouse_click)
+    {
+        simulated_mouse_click = 0;
+    }
+
+    clear_left_button = lbDisplay.LeftButton;
+    clear_right_button = lbDisplay.RightButton;
+#if defined(LB_ENABLE_MOUSE_WHEEL)
+    clear_wheel_up = lbDisplay.WheelMoveUp;
+    clear_wheel_down = lbDisplay.WheelMoveDown;
+#endif
+}
+
+/** Mark end of user input processing code.
+ */
+void input_processing_end(void)
+{
+    if (clear_left_button && lbDisplay.LeftButton) {
+        clear_left_button = 0;
+        lbDisplay.LeftButton = 0;
+    }
+    if (clear_right_button && lbDisplay.RightButton) {
+        clear_right_button = 0;
+        lbDisplay.RightButton = 0;
+    }
+#if defined(LB_ENABLE_MOUSE_WHEEL)
+    // Clear cummulative inputs if they remained unused after processing all inputs
+    if (clear_wheel_up && lbDisplay.WheelMoveUp) {
+        clear_wheel_up = 0;
+        lbDisplay.WheelMoveUp = 0;
+    }
+    if (clear_wheel_down && lbDisplay.WheelMoveDown) {
+        clear_wheel_down = 0;
+        lbDisplay.WheelMoveDown = 0;
+    }
+#endif
 }
 
 void show_menu_screen(void)
@@ -6237,31 +6317,6 @@ void show_menu_screen(void)
     }
     text_buf_pos = lbDisplay.GraphicsScreenWidth * lbDisplay.GraphicsScreenHeight;
 
-    if ( !joy.Buttons[0] || net_unkn_pos_02 )
-    {
-        if ( data_1c4991 )
-            data_1c4991 = 0;
-    }
-    else if ( !data_1c4991 )
-    {
-        int i;
-        data_1c4991 = 1;
-        lbDisplay.LeftButton = 1;
-        // Scale mouse position in high resolutions
-        if (lbDisplay.GraphicsScreenWidth > 320)
-            i = lbDisplay.MMouseX * lbDisplay.GraphicsScreenWidth / 320;
-        else
-            i = lbDisplay.MMouseX;
-        lbDisplay.MouseX = i;
-        if (lbDisplay.GraphicsScreenHeight > 200)
-            i = lbDisplay.MMouseY * lbDisplay.GraphicsScreenHeight / 200;
-        else
-            i = lbDisplay.MMouseY;
-        lbDisplay.MouseY = i;
-    }
-
-    data_1c498f = lbDisplay.LeftButton;
-    data_1c4990 = lbDisplay.RightButton;
     show_date_time();
 
     if (is_purple_apps_selection_bar_visible())
@@ -6276,6 +6331,11 @@ void show_menu_screen(void)
         change_screen = ChSCRT_NONE;
     }
 
+    input_processing_beg();
+
+    input_date_time();
+
+    // TODO separate input functions from draw functions and update functions
     switch (screentype)
     {
     case SCRT_MISSION:
@@ -6316,6 +6376,16 @@ void show_menu_screen(void)
         break;
     }
 
+    if (is_purple_apps_selection_bar_visible() && !is_purple_alert_on_top())
+        input_purple_apps_selection_bar();
+
+    if (is_key_pressed(KC_F12, KMod_DONTCARE)) {
+        clear_key_pressed(KC_F12);
+        post_render_action = PRend_SaveScreenshot;
+    }
+
+    input_processing_end();
+
     if (login_control__State == 5)
     {
         net_unkn_func_33();
@@ -6331,26 +6401,20 @@ void show_menu_screen(void)
         net_players_copy_equip_and_cryo_now();
         init_net_players();
     }
-    if (data_1c498f && lbDisplay.LeftButton)
-    {
-        data_1c498f = 0;
-        lbDisplay.LeftButton = 0;
-    }
-    if (data_1c4990 && lbDisplay.RightButton)
-    {
-        data_1c4990 = 0;
-        lbDisplay.RightButton = 0;
-    }
+
     memcpy(lbDisplay.WScreen, back_buffer, lbDisplay.GraphicsScreenWidth * lbDisplay.GraphicsScreenHeight);
     draw_purple_screen();
 
-    if (is_purple_apps_selection_bar_visible() && !is_purple_alert_on_top())
-        get_purple_apps_selection_bar_inputs();
-
-    if (lbKeyOn[KC_F12]) {
-        lbKeyOn[KC_F12] = 0;
+    switch (post_render_action)
+    {
+    case PRend_SaveScreenshot:
         LbPngSaveScreen("synII", lbDisplay.WScreen, display_palette, 0);
+        break;
+    default:
+        break;
     }
+
+    update_date_time();
 
     if (change_screen == ChSCRT_SYSMENU)
     {
@@ -6513,12 +6577,59 @@ void draw_game(void)
     }
 }
 
+/** Draws simple purple rect directly, without drawlists.
+ */
+void draw_purple_rect(int x, int y, int w, int h, ubyte active)
+{
+    TbPixel col1, col2;
+
+    lbDisplay.DrawFlags &= ~0x0010;
+    if (active) {
+        col1 = 0x0E;
+        col2 = 0x0C;
+    } else {
+        col1 = 0x10;
+        col2 = 0x0E;
+    }
+    LbDrawBox(x, y, w, h, col1);
+    LbDrawLine(x, y, x + w - 2, y, col2);
+    LbDrawLine(x, y, x, y + h - 2, col2);
+}
+
 ubyte critical_action_input(void)
 {
+#if 0
     ubyte ret;
     asm volatile ("call ASM_critical_action_input\n"
         : "=r" (ret) : );
     return ret;
+#endif
+    char locstr[52];
+    TbKeyCode key;
+
+    strcpy(locstr, "Confirm Critical Action Y/N?");
+    DangerMusicFadeSwitch(2, 4u);
+    SetMusicTempo(110, 1000);
+    {
+        int x, y, w, h;
+        short tx_height;
+
+        tx_height = font_height('A');
+        w = my_string_width(locstr) + 2 * tx_height;
+        h = 3 * tx_height;
+        x = (lbDisplay.GraphicsWindowWidth - w) / 2;
+        y = (lbDisplay.GraphicsWindowHeight - h) / 2;
+
+        draw_purple_rect(x, y, w, h, 0);
+        draw_text(x + tx_height, y + tx_height, locstr, 0xC);
+    }
+
+    key = screen_wait_seconds_or_until_yesno_key(20);
+
+    DangerMusicFadeSwitch(1, 1);
+    SetMusicTempoNormal();
+
+    return (key == KC_Y);
 }
 
 ubyte process_send_person(ushort player, int i)
@@ -6538,9 +6649,9 @@ void input_packet_playback(void)
     p_locplayer = &players[local_player_no];
     p_pckt = &packets[local_player_no];
 
-    if (lbKeyOn[KC_ESCAPE] && (lbShift == KMod_SHIFT))
+    if (is_key_pressed(KC_ESCAPE, KMod_SHIFT))
     {
-        lbKeyOn[KC_ESCAPE] = 0;
+        clear_key_pressed(KC_ESCAPE);
         if (critical_action_input())
         {
             exit_game = 1;
@@ -6549,7 +6660,7 @@ void input_packet_playback(void)
     }
     do_scroll_map();
     do_rotate_map();
-    if (lbKeyOn[KC_1])
+    if (is_key_pressed(KC_1, KMod_DONTCARE))
     {
         p_agent = p_locplayer->MyAgent[0];
         ingame.TrackX = p_agent->X >> 8;
@@ -6557,7 +6668,7 @@ void input_packet_playback(void)
         engn_xc = ingame.TrackX;
         engn_zc = ingame.TrackZ;
     }
-    if (lbKeyOn[KC_2])
+    if (is_key_pressed(KC_2, KMod_DONTCARE))
     {
         p_agent = p_locplayer->MyAgent[1];
         ingame.TrackX = p_agent->X >> 8;
@@ -6565,7 +6676,7 @@ void input_packet_playback(void)
         engn_xc = ingame.TrackX;
         engn_zc = ingame.TrackZ;
     }
-    if (lbKeyOn[KC_3])
+    if (is_key_pressed(KC_3, KMod_DONTCARE))
     {
         p_agent = p_locplayer->MyAgent[2];
         ingame.TrackX = p_agent->X >> 8;
@@ -6573,7 +6684,7 @@ void input_packet_playback(void)
         engn_xc = ingame.TrackX;
         engn_zc = ingame.TrackZ;
     }
-    if (lbKeyOn[KC_4])
+    if (is_key_pressed(KC_4, KMod_DONTCARE))
     {
         p_agent = p_locplayer->MyAgent[3];
         ingame.TrackX = p_agent->X >> 8;
@@ -6585,14 +6696,14 @@ void input_packet_playback(void)
 
 void input_mission_cheats(void)
 {
-    if ((ingame.UserFlags & UsrF_Cheats) != 0 && lbKeyOn[KC_C] && lbShift == KMod_ALT)
+    if ((ingame.UserFlags & UsrF_Cheats) != 0 && is_key_pressed(KC_C, KMod_ALT))
     {
-        lbKeyOn[KC_C] = 0;
+        clear_key_pressed(KC_C);
         mission_result = 1;
     }
-    if ((ingame.UserFlags & UsrF_Cheats) != 0 && lbKeyOn[KC_F] && lbShift == KMod_ALT)
+    if ((ingame.UserFlags & UsrF_Cheats) != 0 && is_key_pressed(KC_F, KMod_ALT))
     {
-        lbKeyOn[KC_F] = 0;
+        clear_key_pressed(KC_F);
         mission_result = -1;
     }
 }
@@ -6605,7 +6716,8 @@ void draw_mission_concluded(void)
     tm = (dos_clock() - ingame.fld_unkC91) / 100;
     if (ingame.fld_unkCB5)
     {
-        sprintf(unknmsg_str, "%s %s: %s ", gui_strings[638], gui_strings[635 + ingame.MissionStatus], scroll_text);
+        sprintf(unknmsg_str, "%s %s: %s ", gui_strings[GSTR_CHK_MISSION_STA_PRE],
+          gui_strings[GSTR_ENM_MISSION_STATUS + 1 + ingame.MissionStatus], scroll_text);
         data_15319c = unknmsg_str;
     }
     else
@@ -6617,34 +6729,34 @@ void draw_mission_concluded(void)
         {
         case 'e':
         default:
-            sprintf(unknmsg_str, "%s %s %s Time %02d:%02d:%02d", gui_strings[638],
-              gui_strings[635 + ingame.MissionStatus], gui_strings[639],
-              tm_h, tm_m % 60, tm_s);
+            sprintf(unknmsg_str, "%s %s %s Time %02d:%02d:%02d", gui_strings[GSTR_CHK_MISSION_STA_PRE],
+              gui_strings[GSTR_ENM_MISSION_STATUS + 1 + ingame.MissionStatus],
+              gui_strings[GSTR_CHK_MISSION_STA_SUF_KEYS], tm_h, tm_m % 60, tm_s);
             break;
         case 'f':
-            sprintf(unknmsg_str, "%s %s %s Heure %02d:%02d:%02d", gui_strings[638],
-              gui_strings[635 + ingame.MissionStatus], gui_strings[639],
-              tm_h, tm_m % 60, tm_s);
+            sprintf(unknmsg_str, "%s %s %s Heure %02d:%02d:%02d", gui_strings[GSTR_CHK_MISSION_STA_PRE],
+              gui_strings[GSTR_ENM_MISSION_STATUS + 1 + ingame.MissionStatus],
+              gui_strings[GSTR_CHK_MISSION_STA_SUF_KEYS], tm_h, tm_m % 60, tm_s);
             break;
         case 'g':
-            sprintf(unknmsg_str, "%s %s %s Zeit %02d:%02d:%02d", gui_strings[638],
-              gui_strings[635 + ingame.MissionStatus], gui_strings[639],
-              tm_h, tm_m % 60, tm_s);
+            sprintf(unknmsg_str, "%s %s %s Zeit %02d:%02d:%02d", gui_strings[GSTR_CHK_MISSION_STA_PRE],
+              gui_strings[GSTR_ENM_MISSION_STATUS + 1 + ingame.MissionStatus],
+              gui_strings[GSTR_CHK_MISSION_STA_SUF_KEYS], tm_h, tm_m % 60, tm_s);
             break;
         case 'i':
-            sprintf(unknmsg_str, "%s %s %s Tempo %02d:%02d:%02d", gui_strings[638],
-              gui_strings[635 + ingame.MissionStatus], gui_strings[639],
-              tm_h, tm_m % 60, tm_s);
+            sprintf(unknmsg_str, "%s %s %s Tempo %02d:%02d:%02d", gui_strings[GSTR_CHK_MISSION_STA_PRE],
+              gui_strings[GSTR_ENM_MISSION_STATUS + 1 + ingame.MissionStatus],
+              gui_strings[GSTR_CHK_MISSION_STA_SUF_KEYS], tm_h, tm_m % 60, tm_s);
             break;
         case 's':
             if (language_3str[1] == 'p')
-              sprintf(unknmsg_str, "%s %s %s Tiempo %02d:%02d:%02d", gui_strings[638],
-                gui_strings[635 + ingame.MissionStatus], gui_strings[639],
-                tm_h, tm_m % 60, tm_s);
+              sprintf(unknmsg_str, "%s %s %s Tiempo %02d:%02d:%02d", gui_strings[GSTR_CHK_MISSION_STA_PRE],
+                gui_strings[GSTR_ENM_MISSION_STATUS + 1 + ingame.MissionStatus],
+                gui_strings[GSTR_CHK_MISSION_STA_SUF_KEYS], tm_h, tm_m % 60, tm_s);
             else
-              sprintf(unknmsg_str, "%s %s %s Tid %02d:%02d:%02d",  gui_strings[638],
-                gui_strings[635 + ingame.MissionStatus], gui_strings[639],
-                tm_h, tm_m % 60, tm_s);
+              sprintf(unknmsg_str, "%s %s %s Tid %02d:%02d:%02d",  gui_strings[GSTR_CHK_MISSION_STA_PRE],
+                gui_strings[GSTR_ENM_MISSION_STATUS + 1 + ingame.MissionStatus],
+                gui_strings[GSTR_CHK_MISSION_STA_SUF_KEYS], tm_h, tm_m % 60, tm_s);
             break;
         }
         data_15319c = unknmsg_str;
@@ -6664,20 +6776,22 @@ void draw_mission_concluded(void)
 
 void input_mission_concluded(void)
 {
-    if ( lbKeyOn[KC_RETURN] || lbKeyOn[KC_SPACE] || (lbKeyOn[KC_ESCAPE] && (lbShift & KMod_SHIFT) == 0))
+    if (is_key_pressed(KC_RETURN, KMod_DONTCARE) ||
+      is_key_pressed(KC_SPACE, KMod_DONTCARE) ||
+      is_key_pressed(KC_ESCAPE, KMod_NONE))
     {
-        if ( ingame.MissionStatus != -1 || lbKeyOn[KC_ESCAPE] )
+        if (ingame.MissionStatus != -1 || is_key_pressed(KC_ESCAPE, KMod_NONE))
         {
-          lbKeyOn[KC_ESCAPE] = 0;
-          lbKeyOn[KC_SPACE] = 0;
-          lbKeyOn[KC_RETURN] = 0;
+          clear_key_pressed(KC_ESCAPE);
+          clear_key_pressed(KC_SPACE);
+          clear_key_pressed(KC_RETURN);
           ingame.fld_unkC4F = 1;
         }
         else
         {
-          lbKeyOn[KC_R] = 1;
-          lbKeyOn[KC_SPACE] = 0;
-          lbKeyOn[KC_RETURN] = 0;
+          simulate_key_press(KC_R);
+          clear_key_pressed(KC_SPACE);
+          clear_key_pressed(KC_RETURN);
         }
     }
 }
@@ -6757,9 +6871,9 @@ void load_packet(void)
         for (dmuser = 0; dmuser < p_locplayer->DoubleMode + 1; dmuser++)
         {
             if (p_locplayer->DoubleMode != 0) {
-                ulong md;
-                md = p_locplayer->UserInput[dmuser].ControlMode & 0x1FFF;
-                if (md == 1)
+                ulong ctlmode;
+                ctlmode = p_locplayer->UserInput[dmuser].ControlMode & ~UInpCtr_AllFlagsMask;
+                if (ctlmode == UInpCtr_Mouse)
                     continue;
             }
             if (ingame.TrackThing != 0)
@@ -6771,16 +6885,16 @@ void load_packet(void)
 
     if (p_locplayer->PanelState[mouser] != 17)
     {
-        if (lbKeyOn[KC_ESCAPE] && (in_network_game || (ingame.UserFlags & UsrF_Cheats) != 0))
+        if (in_network_game || (ingame.UserFlags & UsrF_Cheats) != 0)
         {
-            if ((lbShift & KMod_CONTROL) != 0 && !in_network_game)
+            if (!in_network_game && is_key_pressed(KC_ESCAPE, KMod_CONTROL))
             {
-                lbKeyOn[KC_ESCAPE] = 0;
+                clear_key_pressed(KC_ESCAPE);
                 exit_game = 1;
             }
-            else if ((lbShift & KMod_SHIFT) != 0)
+            else if (is_key_pressed(KC_ESCAPE, KMod_SHIFT))
             {
-                lbKeyOn[KC_ESCAPE] = 0;
+                clear_key_pressed(KC_ESCAPE);
                 if (in_network_game || critical_action_input()) {
                     change_brightness(-32);
                     p_pckt->Action = 2;
@@ -6897,11 +7011,11 @@ game_transform_path_full(const char *file_name, char *buffer, size_t size)
     if (file_name[0] == '\\' || file_name[0] == '/'
         || (strlen (file_name) >= 2 && file_name[1] == ':'))
     {
-        snprintf (buffer, size, "%s", file_name);
+        snprintf(buffer, size, "%s", file_name);
         return;
     }
 
-    snprintf (buffer, size, "%s" FS_SEP_STR "%s", GetDirectoryHdd(), file_name);
+    snprintf(buffer, size, "%s" FS_SEP_STR "%s", GetDirectoryHdd(), file_name);
 }
 
 void game_transform_path(const char *file_name, char *result)

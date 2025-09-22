@@ -32,13 +32,20 @@
 #include "app_sprite.h"
 #include "campaign.h"
 #include "display.h"
+#include "febrief.h"
+#include "fecntrls.h"
+#include "fecryo.h"
 #include "feequip.h"
 #include "femail.h"
-#include "fecryo.h"
+#include "fenet.h"
+#include "feoptions.h"
 #include "feresearch.h"
+#include "feshared.h"
+#include "festorage.h"
 #include "guiboxes.h"
 #include "guitext.h"
 #include "game_data.h"
+#include "game_save.h"
 #include "game_speed.h"
 #include "game_sprts.h"
 #include "game.h"
@@ -91,6 +98,8 @@ extern ubyte enter_game;
 extern short word_1C6F3E;
 extern short word_1C6F40;
 extern ubyte mo_from_agent;
+extern char alert_text[200];
+extern short alert_textpos;
 
 struct ScreenBoxBase global_top_bar_box = {4, 4, 632, 15};
 struct ScreenBoxBase global_apps_bar_box = {3, 432, 634, 48};
@@ -245,18 +254,27 @@ void reload_background(void)
 
 ubyte main_do_my_quit(ubyte click)
 {
+#if 0
     ubyte ret;
     asm volatile ("call ASM_main_do_my_quit\n"
         : "=r" (ret) : "a" (click));
     return ret;
+#endif
+    stop_sample_using_heap(0, 122);
+    exit_game = 1;
+    return 1;
 }
 
 ubyte main_do_map_editor(ubyte click)
 {
+#if 0
     ubyte ret;
     asm volatile ("call ASM_main_do_map_editor\n"
         : "=r" (ret) : "a" (click));
     return ret;
+#endif
+    map_editor = 1;
+    return 1;
 }
 
 ubyte main_do_login_1(ubyte click)
@@ -325,8 +343,8 @@ void init_main_screen_boxes(void)
     main_quit_button.CallBackFn = ac_main_do_my_quit;
     main_load_button.CallBackFn = ac_goto_savegame;
 
-    main_login_button.AccelKey = 28;
-    main_quit_button.AccelKey = 1;
+    main_login_button.AccelKey = KC_RETURN;
+    main_quit_button.AccelKey = KC_ESCAPE;
 }
 
 void set_flag01_main_screen_boxes(void)
@@ -339,16 +357,54 @@ void set_flag01_main_screen_boxes(void)
 
 ubyte alert_OK(ubyte click)
 {
+#if 0
     ubyte ret;
     asm volatile ("call ASM_alert_OK\n"
         : "=r" (ret) : "a" (click));
     return ret;
+#endif
+    screentype = old_screentype;
+    redraw_screen_flag = 1;
+    if (old_screentype == SCRT_SYSMENU)
+        enter_game = 1;
+    return 1;
 }
 
 void show_alert_box(void)
 {
+#if 0
     asm volatile ("call ASM_show_alert_box\n"
         :  :  : "eax" );
+#endif
+    ubyte drawn = 0;
+
+    if ((alert_box.Flags & 0x01) != 0)
+    {
+        short nlines, lnheight;
+
+        lbFontPtr = small_med_font;
+        my_set_text_window(alert_box.X + 4, alert_box.Y + 4, alert_box.Width - 8, alert_box.Height - 8);
+        alert_textpos = -5;
+        my_preprocess_text(alert_text);
+        nlines = my_count_lines(alert_text);
+        lnheight = font_height('A') + 4;
+        alert_box.Y = alert_OK_button.Y - lnheight * nlines - 4;
+        alert_box.Height = alert_OK_button.Height + 8 + lnheight * nlines;
+    }
+    asm volatile ("call *%2\n"
+      : "=r" (drawn) : "a" (&alert_box), "g" (alert_box.DrawFn));
+    //drawn = alert_box.DrawFn(&alert_box);
+    if (drawn == 3)
+    {
+        lbFontPtr = small_med_font;
+        my_set_text_window(alert_box.X + 4, alert_box.Y + 4, alert_box.Width - 8, alert_box.Height - 8);
+        lbDisplay.DrawFlags = Lb_TEXT_HALIGN_CENTER;
+        flashy_draw_text(0, 0, alert_text, 3, 0, &alert_textpos, 0);
+        lbDisplay.DrawFlags = 0;
+        asm volatile ("call *%2\n"
+          : "=r" (drawn) : "a" (&alert_OK_button), "g" (alert_OK_button.DrawFn));
+        //alert_OK_button.DrawFn(&alert_OK_button);
+    }
 }
 
 void init_alert_screen_boxes(void)
@@ -376,7 +432,7 @@ void init_alert_screen_boxes(void)
 
     alert_box.X = (scr_w - alert_box.Width) / 2 - 1;
     alert_OK_button.X = (scr_w - alert_OK_button.Width) / 2 - 1;
-    alert_OK_button.AccelKey = 28;
+    alert_OK_button.AccelKey = KC_RETURN;
 }
 
 void reset_alert_screen_boxes_flags(void)
@@ -389,6 +445,29 @@ void set_flag01_alert_screen_boxes(void)
     alert_OK_button.Flags |= GBxFlg_Unkn0001;
 }
 
+void set_flag02_sysmenu_boxes(void)
+{
+    int i;
+
+    unkn13_SYSTEM_button.Flags |= GBxFlg_Unkn0002;
+    for (i = 0; i != SYSMNU_BUTTONS_COUNT; i++)
+        sysmnu_buttons[i].Flags |= GBxFlg_Unkn0002;
+}
+
+void alert_box_text_va(const char *fmt, va_list arg)
+{
+    vsnprintf(alert_text, sizeof(alert_text), fmt, arg);
+    show_alert = 1;
+}
+
+void alert_box_text_fmt(const char *fmt, ...)
+{
+    va_list val;
+    va_start(val, fmt);
+    alert_box_text_va(fmt, val);
+    va_end(val);
+}
+
 ubyte show_title_box(struct ScreenTextBox *box)
 {
     ubyte ret;
@@ -399,8 +478,145 @@ ubyte show_title_box(struct ScreenTextBox *box)
 
 void show_sysmenu_screen(void)
 {
-    asm volatile ("call ASM_show_sysmenu_screen\n"
-        :  :  : "eax" );
+    int i;
+    ubyte sysscrn_no;
+    ubyte drawn;
+    ubyte v2;
+
+    if ((game_projector_speed && is_sys_scr_shared_header_flag01()) || (is_key_pressed(KC_SPACE, KMod_DONTCARE) && !edit_flag))
+    {
+        clear_key_pressed(KC_SPACE);
+
+        set_flag02_sysmenu_boxes();
+        set_flag02_sys_scr_shared_boxes();
+        switch (game_system_screen)
+        {
+        case SySc_NETGAME:
+            set_flag02_net_screen_boxes();
+            break;
+        case SySc_STORAGE:
+            set_flag02_storage_screen_boxes();
+            break;
+        case SySc_CONTROLS:
+            set_flag02_controls_screen_boxes();
+            break;
+        case SySc_AUDIO_OPTS:
+            set_flag02_audio_screen_boxes();
+            break;
+        case SySc_GFX_OPTS:
+            set_flag02_gfx_screen_boxes();
+            break;
+        }
+    }
+
+    v2 = 1;
+    sysscrn_no = SySc_NONE;
+    if (enter_game) {
+        sysscrn_no = game_system_screen;
+        enter_game = 0;
+    }
+
+    //drawn = unkn13_SYSTEM_button.DrawFn(&unkn13_SYSTEM_button); -- incompatible calling convention
+    asm volatile ("call *%2\n"
+        : "=r" (drawn) : "a" (&unkn13_SYSTEM_button), "g" (unkn13_SYSTEM_button.DrawFn));
+    if (drawn)
+    {
+        for (i = 0; i < SYSMNU_BUTTONS_COUNT; i++)
+        {
+            if (((ingame.Flags & GamF_MortalGame) != 0) && (i == 1 || i == 2))
+                continue;
+            if (restore_savegame && i < 5)
+                continue;
+            //drawn = sysmnu_buttons[i].DrawFn(&sysmnu_buttons[i]); -- incompatible calling convention
+            asm volatile ("call *%2\n"
+                : "=r" (drawn) : "a" (&sysmnu_buttons[i]), "g" (sysmnu_buttons[i].DrawFn));
+            if (!drawn)
+                v2 = 0;
+            if (enter_game) {
+                sysscrn_no = i + 1;
+                enter_game = 0;
+            }
+        }
+        if (v2 && (game_system_screen != SySc_NONE) && (game_system_screen < SySc_TYPES_COUNT))
+        {
+            drawn = show_sys_scr_shared_header();
+            if (drawn)
+            {
+                switch (game_system_screen)
+                {
+                case SySc_NETGAME:
+                    show_netgame_unkn_case1();
+                    break;
+                case SySc_STORAGE:
+                    show_storage_screen();
+                    break;
+                case SySc_CONTROLS:
+                    show_options_controls_screen();
+                    break;
+                case SySc_AUDIO_OPTS:
+                    show_options_audio_screen();
+                    break;
+                case SySc_GFX_OPTS:
+                    show_options_visual_screen();
+                    break;
+                }
+            }
+        }
+    }
+
+    if (sysscrn_no != SySc_NONE)
+    {
+        game_system_screen = sysscrn_no;
+        unkn13_SYSTEM_button.Flags &= ~(GBxFlg_TextCopied|GBxFlg_BkCopied);
+        reset_sys_scr_shared_boxes_flags();
+        update_sys_scr_shared_header(sysscrn_no);
+        if (game_projector_speed)
+        {
+            set_flag02_sys_scr_shared_boxes();
+        }
+        switch (game_system_screen)
+        {
+        case SySc_NETGAME:
+            game_projector_speed = 1;
+            reset_net_screen_boxes_flags();
+            set_flag01_net_screen_boxes();
+            break;
+        case SySc_STORAGE:
+            save_slot_base = 0;
+            load_save_slot_names();
+            reset_storage_screen_boxes_flags();
+            break;
+        case SySc_CONTROLS:
+            reset_controls_screen_boxes_flags();
+            break;
+        case SySc_AUDIO_OPTS:
+            reset_options_audio_boxes_flags();
+            break;
+        case SySc_GFX_OPTS:
+            reset_options_visual_boxes_flags();
+            break;
+        case SySc_LOGOUT:
+            if (login_control__State == 5)
+            {
+                network_players[LbNetworkPlayerNumber()].Type = 13;
+                byte_15516D = -1;
+                byte_15516C = -1;
+                switch_net_screen_boxes_to_initiate();
+                net_unkn_func_33();
+            }
+            screentype = SCRT_MAINMENU;
+            if (restore_savegame) {
+                restore_savegame = 0;
+                sysmnu_buttons[5].Y += 150;
+            }
+            game_system_screen = SySc_NONE;
+            if ((ingame.Flags & GamF_MortalGame) != 0)
+                save_game_write(0, save_active_desc);
+            break;
+        }
+        edit_flag = 0;
+        reload_background_flag = 1;
+    }
 }
 
 ubyte do_sysmnu_button(ubyte click)
@@ -598,8 +814,8 @@ void global_date_inputs(void)
 {
     if ((ingame.UserFlags & UsrF_Cheats) != 0)
     {
-        if (lbKeyOn[KC_PERIOD]) {
-            lbKeyOn[KC_PERIOD] = 0;
+        if (is_key_pressed(KC_PERIOD, KMod_DONTCARE)) {
+            clear_key_pressed(KC_PERIOD);
             ingame.Credits += 10000;
         }
     }
@@ -806,10 +1022,17 @@ void show_date_time(void)
     }
 
     global_credits_box_draw();
+}
 
+void update_date_time(void)
+{
     global_date_tick();
-    global_date_inputs();
+}
 
+TbBool input_date_time(void)
+{
+    global_date_inputs();
+    return false;
 }
 
 void reset_system_menu_boxes_flags(void)
@@ -823,7 +1046,7 @@ void reset_system_menu_boxes_flags(void)
     }
 }
 
-void clear_someflags_system_menu_screen_boxes(void)
+void mark_system_menu_screen_boxes_redraw(void)
 {
     unkn13_SYSTEM_button.Flags &= ~(GBxFlg_BkgndDrawn|GBxFlg_TextRight|GBxFlg_BkCopied);
 }
@@ -994,12 +1217,12 @@ void draw_purple_app_unread_email_icon(short cx, short cy)
     struct TbSprite *spr;
 
     spr = &fe_icons_sprites[79];
-    if ((lbKeyOn[KC_RETURN]
-        && ((game_system_screen != SCRT_WORLDMAP && game_system_screen != SCRT_MISSION)
+    if ((is_key_pressed(KC_RETURN, KMod_DONTCARE)
+        && ((game_system_screen != SySc_CONTROLS && game_system_screen != SySc_NETGAME)
             || screentype != SCRT_SYSMENU) && !edit_flag)
         || mouse_move_over_rect(cx, cx + 1 + spr->SWidth, cy, cy + 1 + spr->SHeight))
     {
-        if (!byte_1C4980 && !lbKeyOn[KC_RETURN])
+        if (!byte_1C4980 && !is_key_pressed(KC_RETURN, KMod_DONTCARE))
         {
             byte_1C4980 = 1;
             play_sample_using_heap(0, 123, 127, 64, 100, 0, 1);
@@ -1037,8 +1260,8 @@ TbBool get_purple_app_unread_email_icon_inputs(short cx, short cy)
     const char *subtext;
 
     spr = &fe_icons_sprites[79];
-    if ((lbKeyOn[KC_RETURN]
-        && ((game_system_screen != SCRT_WORLDMAP && game_system_screen != SCRT_MISSION)
+    if ((is_key_pressed(KC_RETURN, KMod_DONTCARE)
+        && ((game_system_screen != SySc_CONTROLS && game_system_screen != SySc_NETGAME)
             || screentype != SCRT_SYSMENU) && !edit_flag)
         || mouse_move_over_rect(cx, cx + 1 + spr->SWidth, cy, cy + 1 + spr->SHeight))
     {
@@ -1049,10 +1272,10 @@ TbBool get_purple_app_unread_email_icon_inputs(short cx, short cy)
         }
         else
         {
-            if (word_1C498A == 50 || lbKeyOn[KC_RETURN])
+            if (word_1C498A == 50 || is_key_pressed(KC_RETURN, KMod_DONTCARE))
             {
                 word_1C498A = 0;
-                lbKeyOn[KC_RETURN] = 0;
+                clear_key_pressed(KC_RETURN);
                 if (!is_purple_alert_on_top())
                 {
                     if (activate_queued_mail() == 1)
@@ -1133,7 +1356,7 @@ void draw_purple_app_email_icon(short cx, short cy, short bri)
     lbFontPtr = small2_font;
     lbDisplay.DrawColour = 87;
     if (mission_remain_until_success(brief_store[bri].Mission))
-        lbDisplay.DrawFlags |= 0x0040;
+        lbDisplay.DrawFlags |= Lb_TEXT_ONE_COLOR;
     my_set_text_window(cx, cy, spr->SWidth + 2, spr->SHeight);
     draw_text_purple_list2(8, 3, misc_text[4], 0);
 
@@ -1253,7 +1476,7 @@ void show_purple_apps_selection_bar(void)
 
     // Show unread mail notification icon
     if (new_mail
-        && (game_system_screen != SCRT_MISSION || screentype != SCRT_SYSMENU))
+        && (game_system_screen != SySc_NETGAME || screentype != SCRT_SYSMENU))
     {
         draw_purple_app_unread_email_icon(cx, cy);
     }
@@ -1280,7 +1503,7 @@ void show_purple_apps_selection_bar(void)
     }
 }
 
-TbBool get_purple_apps_selection_bar_inputs(void)
+TbBool input_purple_apps_selection_bar(void)
 {
     short iconid;
     ushort bri;
@@ -1307,7 +1530,7 @@ TbBool get_purple_apps_selection_bar_inputs(void)
 
     // Get inputs from unread mail notification icon
     if (new_mail
-        && (game_system_screen != SCRT_MISSION || screentype != SCRT_SYSMENU))
+        && (game_system_screen != SySc_NETGAME || screentype != SCRT_SYSMENU))
     {
         get_purple_app_unread_email_icon_inputs(cx, cy);
     }
@@ -1335,35 +1558,35 @@ TbBool get_purple_apps_selection_bar_inputs(void)
 
     if (!net_unkn_pos_01b)
     {
-        if (lbKeyOn[KC_F1])
+        if (is_key_pressed(KC_F1, KMod_DONTCARE))
         {
-            lbKeyOn[KC_F1] = 0;
+            clear_key_pressed(KC_F1);
             change_screen = ChSCRT_SYSMENU;
         }
-        if (lbKeyOn[KC_F2])
+        if (is_key_pressed(KC_F2, KMod_DONTCARE))
         {
-            lbKeyOn[KC_F2] = 0;
+            clear_key_pressed(KC_F2);
             change_screen = ChSCRT_WORLDMAP;
         }
-        if (lbKeyOn[KC_F3])
+        if (is_key_pressed(KC_F3, KMod_DONTCARE))
         {
-            lbKeyOn[KC_F3] = 0;
+            clear_key_pressed(KC_F3);
             change_screen = ChSCRT_CRYO;
         }
-        if (lbKeyOn[KC_F4])
+        if (is_key_pressed(KC_F4, KMod_DONTCARE))
         {
-            lbKeyOn[KC_F4] = 0;
+            clear_key_pressed(KC_F4);
             change_screen = ChSCRT_EQUIP;
         }
-        if (lbKeyOn[KC_F5])
+        if (is_key_pressed(KC_F5, KMod_DONTCARE))
         {
-            lbKeyOn[KC_F5] = 0;
+            clear_key_pressed(KC_F5);
             if (research.NumBases > 0)
                 change_screen = ChSCRT_RESEARCH;
         }
-        if (lbKeyOn[KC_F6])
+        if (is_key_pressed(KC_F6, KMod_DONTCARE))
         {
-            lbKeyOn[KC_F6] = 0;
+            clear_key_pressed(KC_F6);
             if (open_brief != 0)
                 change_screen = ChSCRT_MISSION;
         }
