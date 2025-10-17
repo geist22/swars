@@ -65,7 +65,8 @@ const struct TbNamedEnum rules_conf_interface_cmnds[] = {
 };
 
 enum RulesResearchConfigCmd {
-    RResrchCmd_DailyScientistDeathChance = 1,
+    RResrchCmd_UseClassicResearch = 1,
+    RResrchCmd_DailyScientistDeathChance,
     RResrchCmd_ScientistsPerGroup,
     RResrchCmd_WeaponDonateResearchIncrPermil,
     RResrchCmd_DailyProgressRtcMinutes,
@@ -76,6 +77,7 @@ enum RulesRevenueConfigCmd {
 };
 
 const struct TbNamedEnum rules_conf_research_cmnds[] = {
+  {"UseClassicResearch",	RResrchCmd_UseClassicResearch},
   {"DailyScientistDeathChancePermil",	RResrchCmd_DailyScientistDeathChance},
   {"ScientistsPerGroup",			RResrchCmd_ScientistsPerGroup},
   {"WeaponDonateResearchIncrPermil",	RResrchCmd_WeaponDonateResearchIncrPermil},
@@ -295,6 +297,15 @@ TbBool read_rules_file(void)
         // Now store the config item in correct place
         switch (cmd_num)
         {
+        case RResrchCmd_UseClassicResearch:
+            i = LbIniValueGetNamedEnum(&parser, rules_conf_any_bool);
+            if (i <= 0) {
+                CONFWRNLOG("Could not recognize \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
+                break;
+            }
+            use_classic_research = (i == 1);
+            CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)use_classic_research);
+            break;
         case RResrchCmd_DailyScientistDeathChance:
             i = LbIniValueGetLongInt(&parser, &k);
             if (i <= 0) {
