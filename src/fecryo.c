@@ -74,7 +74,7 @@ extern struct ScreenTextBox equip_list_box;
 extern struct ScreenInfoBox equip_cost_box;
 extern struct ScreenButton equip_offer_buy_button;
 extern struct ScreenButton equip_all_agents_button;
-extern struct ScreenShape unk11_menu[5];
+extern struct ScreenShape equip_agent_select_shapes[5];
 
 extern struct TbSprite *fe_icons_sprites;
 
@@ -170,7 +170,7 @@ void cryo_display_box_redraw(struct ScreenTextBox *p_box)
         // Re-add scroll bars
         p_box->Flags |= GBxFlg_RadioBtn;
 
-        p_box->field_38 = 0;
+        p_box->TextTopLine = 0;
         p_box->Lines = 0;
         p_box->Text = &weapon_text[cybmod_text_index[selected_mod]];
         lbFontPtr = small_font;
@@ -1224,7 +1224,7 @@ void draw_display_box_content_mod(struct ScreenTextBox *p_box)
         lbFontPtr = small_font;
         my_set_text_window(p_box->X + 4, p_box->ScrollWindowOffset + p_box->Y + 4,
           p_box->Width - 20, p_box->ScrollWindowHeight + 23);
-        flashy_draw_text(0, 0, p_box->Text, p_box->TextSpeed, p_box->field_38,
+        flashy_draw_text(0, 0, p_box->Text, p_box->TextSpeed, p_box->TextTopLine,
           &p_box->TextFadePos, 0);
         break;
     case DiBoxCt_ANIM:
@@ -1309,7 +1309,7 @@ ubyte show_cryo_cybmod_list_box(struct ScreenTextBox *box)
 
         cy = 3;
         text_h = font_height('A');
-        for (mtype = box->field_38+1; mtype < MOD_TYPES_COUNT; mtype++)
+        for (mtype = box->TextTopLine + 1; mtype < MOD_TYPES_COUNT; mtype++)
         {
             if (text_h + cy >= box->ScrollWindowHeight + 23)
                 return 0;
@@ -1383,9 +1383,11 @@ ubyte show_cryo_cybmod_list_box(struct ScreenTextBox *box)
     return 0;
 }
 
-void set_flag02_cryo_screen_boxes(void)
+void skip_flashy_draw_cryo_chamber_screen_boxes(void)
 {
     short i;
+
+    skip_flashy_draw_heading_screen_boxes();
 
     cryo_agent_list_box.Flags |= GBxFlg_Unkn0002;
     cryo_blokey_box.Flags |= GBxFlg_Unkn0002;
@@ -1396,8 +1398,11 @@ void set_flag02_cryo_screen_boxes(void)
     cryo_offer_cancel_button.Flags |= GBxFlg_Unkn0002;
     equip_all_agents_button.Flags |= GBxFlg_Unkn0002;
     for (i = 0; i < 5; i++) {
-        unk11_menu[i].Flags = GBxFlg_Unkn0002;
+        equip_agent_select_shapes[i].Flags = GBxFlg_Unkn0002;
     }
+
+    byte_1C4978 = 1;
+    byte_1C4979 = 1;
 }
 
 ubyte do_cryo_all_agents_set(ubyte click)
@@ -1509,7 +1514,7 @@ ubyte show_cryo_chamber_screen(void)
 {
     ubyte drawn = true;
 
-    if ((unk11_menu[0].Flags & GBxFlg_Unkn0001) != 0)
+    if ((equip_agent_select_shapes[0].Flags & GBxFlg_Unkn0001) != 0)
     {
         byte_1C4978 = 0;
         byte_1C4979 = 0;
@@ -1520,10 +1525,7 @@ ubyte show_cryo_chamber_screen(void)
       (is_key_pressed(KC_SPACE, KMod_DONTCARE) && !edit_flag))
     {
         clear_key_pressed(KC_SPACE);
-        set_flag02_heading_screen_boxes();
-        set_flag02_cryo_screen_boxes();
-        byte_1C4978 = 1;
-        byte_1C4979 = 1;
+        skip_flashy_draw_cryo_chamber_screen_boxes();
     }
     if ((ingame.UserFlags & UsrF_Cheats) != 0)
     {
@@ -1567,7 +1569,7 @@ ubyte show_cryo_chamber_screen(void)
             struct ScreenShape *shape;
             ubyte gbstate;
 
-            shape = &unk11_menu[nagent];
+            shape = &equip_agent_select_shapes[nagent];
 
             if (nagent == 4) // agent name box
             {
@@ -1648,9 +1650,17 @@ ubyte show_cryo_chamber_screen(void)
 
 void init_cryo_screen_boxes(void)
 {
-    short scr_w, start_x;
+    ScrCoord scr_h, start_x, start_y;
+    short space_w, space_h, border;
 
-    scr_w = lbDisplay.GraphicsWindowWidth;
+    // Border value represents how much the box background goes
+    // out of the box area.
+    border = 3;
+#ifdef EXPERIMENTAL_MENU_CENTER_H
+    scr_h = global_apps_bar_box.Y;
+#else
+    scr_h = 432;
+#endif
 
     init_screen_text_box(&cryo_agent_list_box, 7u, 122u, 196u, 303, 6,
         small_med_font, 1);
@@ -1668,25 +1678,64 @@ void init_cryo_screen_boxes(void)
     cryo_cybmod_list_box.DrawTextFn = ac_show_cryo_cybmod_list_box;
     cryo_cybmod_list_box.Flags |= (GBxFlg_RadioBtn|GBxFlg_IsMouseOver);
     cryo_cybmod_list_box.ScrollWindowHeight = 117;
+    // Re-use equip_name_box above cryo_cybmod_list_box
+    // Re-use agests selection with equip_all_agents_button, agent name label, and sprites representing agents
 
     init_screen_button(&cryo_offer_cancel_button, 628u, 404u,
       gui_strings[437], 6, med2_font, 1, 0x80);
     cryo_offer_cancel_button.CallBackFn = ac_do_cryo_offer_cancel;
 
-    start_x = (scr_w - cryo_agent_list_box.Width - cryo_blokey_box.Width - cryo_cybmod_list_box.Width - 33) / 2;
+    // Reposition the components to current resolution
 
-    cryo_agent_list_box.X = start_x + 7;
-    cryo_blokey_box.X = cryo_agent_list_box.X + cryo_agent_list_box.Width + 9;
-    cryo_cybmod_list_box.X = cryo_blokey_box.X + cryo_blokey_box.Width + 10;
-    cryo_offer_cancel_button.X = cryo_cybmod_list_box.X + cryo_cybmod_list_box.Width - cryo_offer_cancel_button.Width - 5;
+    start_x = heading_box.X;
+    // On the X axis, we're going for aligning below heading box, to both left and right
+    space_w = heading_box.Width - cryo_agent_list_box.Width - cryo_blokey_box.Width - cryo_cybmod_list_box.Width;
+
+    start_y = heading_box.Y + heading_box.Height;
+    // On the top, we're aligning to spilled border of previous box; same goes inside.
+    // But on the bottom, we're aligning to hard border, without spilling. To compensate
+    // for that, add pixels for such border to the space.
+    // One re-used box - cyborg name - does not exist as global instance, so count all agents button twice.
+    space_h = scr_h - start_y - 2 * equip_all_agents_button.Height - cryo_blokey_box.Height + border;
+
+    // On the X axis, aligning to heading box left
+    cryo_agent_list_box.X = start_x;
+    cryo_blokey_box.X = cryo_agent_list_box.X + cryo_agent_list_box.Width + space_w / 2;
+    cryo_cybmod_list_box.X = cryo_blokey_box.X + cryo_blokey_box.Width + space_w - space_w / 2;
+
+    // There is one box only to Y-position in 1st column, so space goes into two parts - before and after
+    cryo_blokey_box.Y = start_y + 2 * equip_all_agents_button.Height + 3 * space_h / 4;
+    // The remaining boxes should be Y-aligned to the one box in 1st column
+    cryo_agent_list_box.Y = cryo_blokey_box.Y;
+    cryo_cybmod_list_box.Y = cryo_blokey_box.Y + cryo_blokey_box.Height - cryo_cybmod_list_box.Height;
+
+    // Boxes defining areas done; now reposition components inside
+
+    space_w = 5;
+    space_h = 5;
+    cryo_offer_cancel_button.X = cryo_cybmod_list_box.X + cryo_cybmod_list_box.Width - cryo_offer_cancel_button.Width - space_w;
+    cryo_offer_cancel_button.Y = cryo_cybmod_list_box.Y + cryo_cybmod_list_box.Height - cryo_offer_cancel_button.Height - space_h;
+    // No need to update equip_cost_box - that is done in switch_shared_equip_screen_buttons_to_cybmod()
+}
+
+void reset_cryo_screen_player_state(void)
+{
+    selected_mod = -1;
+    selected_agent = 0;
 }
 
 void switch_shared_equip_screen_buttons_to_cybmod(void)
 {
+    short space_w, space_h;
+
+    space_w = 5;
+    space_h = 5;
     set_heading_box_text(gui_strings[369]);
-    equip_cost_box.X = cryo_cybmod_list_box.X + 5;
-    equip_cost_box.Width = cryo_cybmod_list_box.Width - 10;
-    equip_cost_box.Y = 383;
+
+    equip_cost_box.X = cryo_cybmod_list_box.X + space_w;
+    equip_cost_box.Width = cryo_cybmod_list_box.Width - 2 * space_h;
+    equip_cost_box.Y = cryo_offer_cancel_button.Y - space_h - equip_cost_box.Height;
+
     equip_name_box.Text = cybmod_name_text;
     equip_all_agents_button.CallBackFn = ac_do_cryo_all_agents_set;
 

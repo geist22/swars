@@ -83,6 +83,8 @@ ubyte net_players_num = 1;
 extern struct ComHandlerInfo com_dev[4];
 extern struct IPXDatagramBackup datagram_backup[8];
 
+struct TbNetworkService NetworkServicePtr;
+
 extern struct TbSerialDev *data_1e85e3;
 
 const struct ModemResponse modem_response[] = {
@@ -104,13 +106,13 @@ struct ModemCommand modem_cmds[] = {
 };
 
 struct NetworkServiceInfo Network_Service_List[] = {
-    {0, 0, NetSvc_IPX, 0x02},
-    {0, 0, NetSvc_COM1, 0x01},
-    {0, 0, NetSvc_COM2, 0x01},
-    {0, 0, NetSvc_COM3, 0x01},
-    {0, 0, NetSvc_COM4, 0x01},
-    {0, 0, NetSvc_RADICA, 0x02},
-    {0, 0, 0, 0},
+    {0, 0, NetSvc_IPX, 0x02, 0},
+    {0, 0, NetSvc_COM1, 0x01, 0},
+    {0, 0, NetSvc_COM2, 0x01, 0},
+    {0, 0, NetSvc_COM3, 0x01, 0},
+    {0, 0, NetSvc_COM4, 0x01, 0},
+    {0, 0, NetSvc_RADICA, 0x02, 0},
+    {0, 0, 0, 0, 0},
 };
 
 TbResult LbNetworkSetSessionCreateFunction(void *func)
@@ -1339,13 +1341,13 @@ TbResult LbModemRingType(ushort dev_id, ubyte rtyp)
     return Lb_SUCCESS;
 }
 
-TbResult LbNetworkServiceStart(struct NetworkServiceInfo *nsvc)
+TbResult LbNetworkServiceStart(struct NetworkServiceInfo *p_nsvc)
 {
     TbResult ret;
     ulong k;
 
     ret = Lb_FAIL;
-    memcpy(&NetworkServicePtr.I, nsvc, sizeof(struct NetworkServiceInfo));
+    memcpy(&NetworkServicePtr.I, p_nsvc, sizeof(struct NetworkServiceInfo));
     switch (NetworkServicePtr.I.Type)
     {
     case NetSvc_IPX:
@@ -1359,8 +1361,8 @@ TbResult LbNetworkServiceStart(struct NetworkServiceInfo *nsvc)
         }
         memset(&IPXPlayer.Header, 0, sizeof(struct TbIPXPlayerHeader));
         memset(&IPXPlayer.Data, 0, sizeof(struct TbIPXPlayerData));
-        IPXPlayer.Header.field_2 = nsvc->GameId;
-        k = (nsvc->Flags >> 16) + 0x4545;
+        IPXPlayer.Header.field_2 = p_nsvc->GameId;
+        k = p_nsvc->Param + 0x4545;
         NetworkServicePtr.I.Id = &IPXPlayer.Header;
         if (k > 0x4FFF)
             k = 0x4FFF;
@@ -1380,7 +1382,7 @@ TbResult LbNetworkServiceStart(struct NetworkServiceInfo *nsvc)
         ret = Lb_SUCCESS;
         break;
     case NetSvc_RADICA:
-        ret = radica_service_init(nsvc);
+        ret = radica_service_init(p_nsvc);
         if (ret != Lb_SUCCESS) {
             LOGERR("RADICA service init failed");
             ret = Lb_FAIL;

@@ -25,6 +25,7 @@
 #include "campaign.h"
 #include "display.h"
 #include "febrief.h"
+#include "femain.h"
 #include "guiboxes.h"
 #include "guitext.h"
 #include "game_sprts.h"
@@ -681,9 +682,7 @@ ubyte show_mission_people_stats(struct ScreenBox *box)
 
 void init_debrief_screen_boxes(void)
 {
-    short scr_w, start_x;
-
-    scr_w = lbDisplay.GraphicsWindowWidth;
+    ScrCoord start_x, start_y;
 
     init_screen_box(&debrief_mission_box, 7u, 72u, 518u, 172, 6);
     debrief_mission_box.SpecialDrawFn = show_mission_stats;
@@ -691,10 +690,19 @@ void init_debrief_screen_boxes(void)
     init_screen_box(&debrief_people_box, 7u, 253u, 518u, 173, 6);
     debrief_people_box.SpecialDrawFn = show_mission_people_stats;
 
-    start_x = (scr_w - debrief_mission_box.Width - world_city_info_box.Width - 23) / 2;
+    // Reposition the components to current resolution
 
-    debrief_mission_box.X = start_x + 7;
-    debrief_people_box.X = start_x + 7;
+    // For this screen, we will just align to other pre-positioned boxes;
+    // No need to compute positions from scratch
+    start_x = heading_box.X;
+    start_y = world_city_info_box.Y;
+
+    // Expect world_city_info_box to be already set
+    debrief_mission_box.X = start_x;
+    debrief_mission_box.Y = start_y;
+
+    debrief_people_box.X = start_x;
+    debrief_people_box.Y = start_y + world_city_info_box.Height - debrief_people_box.Height;
 }
 
 void reset_debrief_screen_boxes_flags(void)

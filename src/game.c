@@ -34,6 +34,7 @@
 #include "bfplanar.h"
 #include "bfscrsurf.h"
 #include "bfscrcopy.h"
+#include "bfstrut.h"
 #include "bfsmack.h"
 #include "bftringl.h"
 #include "bfscd.h"
@@ -47,6 +48,7 @@
 #include "bflib_joyst.h"
 #include "ssampply.h"
 #include "matrix.h"
+#include "app_text_cw.h"
 #include "dos.h"
 #include "drawtext.h"
 #include "enginbckt.h"
@@ -119,6 +121,7 @@
 #include "plyr_packet.h"
 #include "research.h"
 #include "rules.h"
+#include "scandraw.h"
 #include "thing.h"
 #include "tngcolisn.h"
 #include "tngobjdrw.h"
@@ -2201,7 +2204,8 @@ void game_graphics_inputs(void)
     if ((ingame.DisplayMode != DpM_ENGINEPLY) &&
         (ingame.DisplayMode != DpM_UNKN_3B))
         return;
-    if (in_network_game && p_locplayer->PanelState[mouser] != 17)
+    if (in_network_game && p_locplayer->PanelState[mouser]
+      == PANEL_STATE_SEND_MESSAGE)
         return;
 
     if (is_gamekey_pressed(GKey_CAMERA_PERSPECTV))
@@ -2723,7 +2727,7 @@ void init_level(void)
             p_player->UserVZ[mouser] = 0;
             p_player->SpecialItems[mouser] = 0;
             p_player->PanelItem[mouser] = 0;
-            p_player->PanelState[mouser] = 0;
+            p_player->PanelState[mouser] = PANEL_STATE_NORMAL;
         }
         p_player->GotoFace = 0;
         p_player->field_102 = 0;
@@ -3417,11 +3421,7 @@ void game_setup(void)
     setup_sprites_small_font();
     load_peep_type_stats();
     load_campaigns();
-    {
-        PlayerInfo *p_locplayer;
-        p_locplayer = &players[local_player_no];
-        p_locplayer->MissionAgents = 0x0F;
-    }
+    player_mission_agents_reset(local_player_no);
     debug_trace_setup(-1);
     if ( is_single_game || cmdln_param_bcg )
     {
@@ -3778,15 +3778,12 @@ ubyte load_game_slot(ubyte click)
 
     mark_system_menu_screen_boxes_redraw();
     mark_sys_scr_shared_header_box_redraw();
-    mark_sys_scr_shared_content_box_redraw();
     mark_storage_screen_boxes_redraw();
     if (save_slot == 0) {
         ingame.Flags |= GamF_MortalGame;
     }
-    unkn_city_no = -1;
+    reset_world_screen_player_state();
     selected_agent = 0;
-    word_1C6E0A = 0;
-    word_1C6E08 = 0;
     screentype = SCRT_99;
     game_system_screen = SySc_NONE;
     if (restore_savegame) {
@@ -3807,18 +3804,49 @@ ubyte save_game_slot(ubyte click)
     return ret;
 }
 
-ubyte goto_savegame(ubyte click)
+void init_variables(void)
 {
-    ubyte ret;
-    asm volatile ("call ASM_goto_savegame\n"
-        : "=r" (ret) : "a" (click));
-    return ret;
+#if 0
+    asm volatile ("call ASM_init_variables\n"
+        :  :  : "eax" );
+#endif
+    selected_city_id = -1;
+    reset_equip_screen_player_state();
+    reset_cryo_screen_player_state();
+    reset_world_screen_player_state();
+    reset_brief_screen_player_state();
+    reset_research_screen_player_state();
+    clear_all_scanner_signals();
+    reset_app_bar_player_state();
+    //word_1C6F48 = 0; -- set but never used - remove pending
+    global_date.Day = 2;
+    global_date.Month = 6;
+    global_date.Year = 74;
+    //word_15518A = -1; -- set but never used - remove pending
+    ingame.MissionStatus = ObvStatu_COMPLETED;
+    login_control__Money = starting_cash_amounts[4];
+    if (login_control__State == 6)
+    {
+        ingame.Credits = 50000;
+        ingame.CashAtStart = 50000;
+    }
+    else
+    {
+        ingame.Credits = login_control__Money;
+        ingame.CashAtStart = login_control__Money;
+    }
+    ingame.Expenditure = 0;
+    login_control__City = 19;
+    login_control__State = 6;
+    byte_181189 = 0;
+    unkn_flags_08 = 0x3C;
+    login_control__TechLevel = 4;
 }
 
-void my_preprocess_text(char *text)
+void init_agents(void)
 {
-    asm volatile ("call ASM_my_preprocess_text\n"
-        :  : "a" (text));
+    asm volatile ("call ASM_init_agents\n"
+        :  :  : "eax" );
 }
 
 /** Initializes the research data for a new game.
@@ -3845,6 +3873,44 @@ void srm_reset_research(void)
     research.CurrentMod = -1;
     research.Scientists = 0;
     research.NumBases = 0;
+}
+
+ubyte goto_savegame(ubyte click)
+{
+#if 0
+    ubyte ret;
+    asm volatile ("call ASM_goto_savegame\n"
+        : "=r" (ret) : "a" (click));
+    return ret;
+#endif
+    restore_savegame = 1;
+    game_system_screen = SySc_STORAGE;
+    screentype = SCRT_SYSMENU;
+    sysmnu_button_disable(0, 5);
+    update_sys_scr_shared_header(game_system_screen);
+    ingame.Flags &= ~GamF_MortalGame;
+
+    load_city_data(0);
+    init_weapon_text();
+    load_city_txt();
+    player_mission_agents_reset(local_player_no);
+    init_variables();
+    srm_reset_research();
+    init_agents();
+
+    edit_flag = 0;
+    save_slot_base = 0;
+    redraw_screen_flag = 1;
+
+    load_save_slot_names();
+
+    return 1;
+}
+
+void my_preprocess_text(char *text)
+{
+    asm volatile ("call ASM_my_preprocess_text\n"
+        :  : "a" (text));
 }
 
 void research_unkn_func_006(ushort missi)
@@ -4043,12 +4109,6 @@ void update_player_cash(void)
 
     credits = mission_over_calculate_player_cash_gain_from_items();
     ingame.Credits += credits;
-}
-
-void init_agents(void)
-{
-    asm volatile ("call ASM_init_agents\n"
-        :  :  : "eax" );
 }
 
 void do_start_triggers(short missi)
@@ -4526,12 +4586,6 @@ TbBool player_try_spend_money(long cost)
     return true;
 }
 
-void init_variables(void)
-{
-    asm volatile ("call ASM_init_variables\n"
-        :  :  : "eax" );
-}
-
 void campaign_new_game_prepare(void)
 {
     struct Campaign *p_campgn;
@@ -4540,20 +4594,18 @@ void campaign_new_game_prepare(void)
 
     screentype = SCRT_99;
     game_system_screen = SySc_NONE;
-    {
-        PlayerInfo *p_locplayer;
-        p_locplayer = &players[local_player_no];
-        p_locplayer->MissionAgents = 0x0F;
-    }
-    init_weapon_text();
-    load_city_data(0);
-    load_city_txt();
-    init_variables();
-    init_agents();
+
     load_missions(background_type);
     clear_mission_state_slots();
     load_objectives_text();
+
+    load_city_data(0);
+    init_weapon_text();
+    load_city_txt();
+    player_mission_agents_reset(local_player_no);
+    init_variables();
     srm_reset_research();
+    init_agents();
 
     {
         open_new_mission(p_campgn->FirstTrigger);
@@ -4602,16 +4654,19 @@ void init_screen_boxes(void)
     init_alert_screen_boxes();
     init_main_screen_boxes();
     init_system_menu_boxes();
-    init_sys_scr_shared_content_box();
+
+    init_sys_scr_shared_boxes();
+    init_controls_screen_boxes();
+    init_options_audio_screen_boxes();
+    init_options_gfx_screen_boxes();
+    init_net_screen_boxes();
+    init_storage_screen_boxes();
+
+    init_login_screen_boxes();
+
     init_brief_screen_boxes();
     init_world_screen_boxes();
     init_debrief_screen_boxes();
-    init_controls_screen_boxes();
-    init_options_audio_screen_boxes();
-    init_options_visual_screen_boxes();
-    init_storage_screen_boxes();
-    init_net_screen_boxes();
-    init_login_screen_boxes();
     init_equip_screen_boxes();
     init_cryo_screen_boxes();
     init_research_screen_boxes();
@@ -4709,7 +4764,7 @@ void do_scroll_map(void)
     engn_zc_orig = engn_zc;
     if (ctlmode == UInpCtr_Mouse || pktrec_mode == PktR_PLAYBACK)
     {
-        if (!p_locplayer->PanelState[mouser])
+        if (p_locplayer->PanelState[mouser] == PANEL_STATE_NORMAL)
         {
             long cumm_alt;
             int mv_border;
@@ -4984,9 +5039,10 @@ ubyte do_user_interface(void)
         if (is_key_pressed(KC_RETURN, KMod_DONTCARE))
         {
             clear_key_pressed(KC_RETURN);
-            if ((p_locplayer->PanelState[mouser] != 17) && (player_unkn0C9[local_player_no] <= 140))
+            if ((p_locplayer->PanelState[mouser] != PANEL_STATE_SEND_MESSAGE)
+              && (player_unkn0C9[local_player_no] <= 140))
             {
-                p_locplayer->PanelState[mouser] = 17;
+                p_locplayer->PanelState[mouser] = PANEL_STATE_SEND_MESSAGE;
                 reset_buffered_keys();
                 player_unknCC9[local_player_no][0] = '\0';
                 player_unkn0C9[local_player_no] = 0;
@@ -4995,7 +5051,7 @@ ubyte do_user_interface(void)
             }
         }
     }
-    if (p_locplayer->PanelState[mouser] == 17)
+    if (p_locplayer->PanelState[mouser] == PANEL_STATE_SEND_MESSAGE)
         return process_mouse_imputs() != 0;
 
     // screenshot
@@ -5402,25 +5458,21 @@ void show_menu_screen_st0(void)
     ingame.Credits = 50000;
 
     global_date.Day = 2;
-    global_date.Year = 74;
     global_date.Month = 6;
-
-    {
-        PlayerInfo *p_locplayer;
-        p_locplayer = &players[local_player_no];
-        p_locplayer->MissionAgents = 0x0f;
-    }
+    global_date.Year = 74;
 
     debug_trace_place(17);
     init_menu_screen_colors_and_sprites();
 
     debug_trace_place(18);
     init_screen_boxes();
+
     load_city_data(0);
     load_city_txt();
+    player_mission_agents_reset(local_player_no);
 
     debug_trace_place(19);
-    if ( in_network_game )
+    if (in_network_game)
         screentype = SCRT_LOGIN;
     else
         screentype = SCRT_MAINMENU;
@@ -5469,11 +5521,11 @@ void net_new_game_prepare(void)
     ingame.Credits = 50000;
     ingame.CashAtStart = 50000;
     login_control__TechLevel = 4;
-    unkn_city_no = -1;
+    reset_world_screen_player_state();
     login_control__City = -1;
     ingame.Expenditure = 0;
-    unkn_flags_08 = 60;
-    login_control__Money = starting_cash_amounts[0];
+    unkn_flags_08 = 0x3C;
+    login_control__Money = starting_cash_amounts[4];
     init_agents();
     load_missions(background_type);
     load_objectives_text();
@@ -5802,7 +5854,7 @@ void net_unkn_func_33(void)
         // Fall through
     default:
         p_netplyr->U.Progress.SelectedCity = login_control__City;
-        if (((gameturn & 1) == 0) && (unkn_flags_08 & 8))
+        if (((gameturn & 1) == 0) && ((unkn_flags_08 & 0x08) != 0))
             p_netplyr->U.Progress.Credits = -ingame.Credits;
         else
             p_netplyr->U.Progress.Credits = login_control__Money;
@@ -6188,7 +6240,7 @@ void menu_screen_redraw(void)
     reset_research_screen_boxes_flags();
 
     reset_options_audio_boxes_flags();
-    reset_options_visual_boxes_flags();
+    reset_options_gfx_boxes_flags();
 
     set_flag01_storage_screen_boxes();
     set_flag01_login_screen_boxes();
@@ -6317,7 +6369,7 @@ void show_menu_screen(void)
     }
     text_buf_pos = lbDisplay.GraphicsScreenWidth * lbDisplay.GraphicsScreenHeight;
 
-    show_date_time();
+    show_purple_status_top_bar();
 
     if (is_purple_apps_selection_bar_visible())
           show_purple_apps_selection_bar();
@@ -6598,12 +6650,6 @@ void draw_purple_rect(int x, int y, int w, int h, ubyte active)
 
 ubyte critical_action_input(void)
 {
-#if 0
-    ubyte ret;
-    asm volatile ("call ASM_critical_action_input\n"
-        : "=r" (ret) : );
-    return ret;
-#endif
     char locstr[52];
     TbKeyCode key;
 
@@ -6711,7 +6757,6 @@ void input_mission_cheats(void)
 void draw_mission_concluded(void)
 {
     uint tm;
-    uint tm_h, tm_m, tm_s;
 
     tm = (dos_clock() - ingame.fld_unkC91) / 100;
     if (ingame.fld_unkCB5)
@@ -6722,6 +6767,9 @@ void draw_mission_concluded(void)
     }
     else
     {
+        const char *text_time;
+        uint tm_h, tm_m, tm_s;
+
         tm_h = tm / 3600;
         tm_m = tm / 60;
         tm_s = tm % 60;
@@ -6729,48 +6777,40 @@ void draw_mission_concluded(void)
         {
         case 'e':
         default:
-            sprintf(unknmsg_str, "%s %s %s Time %02d:%02d:%02d", gui_strings[GSTR_CHK_MISSION_STA_PRE],
-              gui_strings[GSTR_ENM_MISSION_STATUS + 1 + ingame.MissionStatus],
-              gui_strings[GSTR_CHK_MISSION_STA_SUF_KEYS], tm_h, tm_m % 60, tm_s);
+            text_time = "Time";
             break;
         case 'f':
-            sprintf(unknmsg_str, "%s %s %s Heure %02d:%02d:%02d", gui_strings[GSTR_CHK_MISSION_STA_PRE],
-              gui_strings[GSTR_ENM_MISSION_STATUS + 1 + ingame.MissionStatus],
-              gui_strings[GSTR_CHK_MISSION_STA_SUF_KEYS], tm_h, tm_m % 60, tm_s);
+            text_time = "Heure";
             break;
         case 'g':
-            sprintf(unknmsg_str, "%s %s %s Zeit %02d:%02d:%02d", gui_strings[GSTR_CHK_MISSION_STA_PRE],
-              gui_strings[GSTR_ENM_MISSION_STATUS + 1 + ingame.MissionStatus],
-              gui_strings[GSTR_CHK_MISSION_STA_SUF_KEYS], tm_h, tm_m % 60, tm_s);
+            text_time = "Zeit";
             break;
         case 'i':
-            sprintf(unknmsg_str, "%s %s %s Tempo %02d:%02d:%02d", gui_strings[GSTR_CHK_MISSION_STA_PRE],
-              gui_strings[GSTR_ENM_MISSION_STATUS + 1 + ingame.MissionStatus],
-              gui_strings[GSTR_CHK_MISSION_STA_SUF_KEYS], tm_h, tm_m % 60, tm_s);
+            text_time = "Tempo";
             break;
         case 's':
             if (language_3str[1] == 'p')
-              sprintf(unknmsg_str, "%s %s %s Tiempo %02d:%02d:%02d", gui_strings[GSTR_CHK_MISSION_STA_PRE],
-                gui_strings[GSTR_ENM_MISSION_STATUS + 1 + ingame.MissionStatus],
-                gui_strings[GSTR_CHK_MISSION_STA_SUF_KEYS], tm_h, tm_m % 60, tm_s);
+                text_time = "Tiempo";
             else
-              sprintf(unknmsg_str, "%s %s %s Tid %02d:%02d:%02d",  gui_strings[GSTR_CHK_MISSION_STA_PRE],
-                gui_strings[GSTR_ENM_MISSION_STATUS + 1 + ingame.MissionStatus],
-                gui_strings[GSTR_CHK_MISSION_STA_SUF_KEYS], tm_h, tm_m % 60, tm_s);
+                text_time = "Tid";
             break;
         }
+        sprintf(unknmsg_str, "%s %s %s %s %02d:%02d:%02d", gui_strings[GSTR_CHK_MISSION_STA_PRE],
+          gui_strings[GSTR_ENM_MISSION_STATUS + 1 + ingame.MissionStatus],
+          gui_strings[GSTR_CHK_MISSION_STA_SUF_KEYS], text_time, tm_h, tm_m % 60, tm_s);
         data_15319c = unknmsg_str;
         scroll_text = unknmsg_str;
+        LbStringToUpper(unknmsg_str);
     }
     {
         int scr_x, scr_y;
+
         // TODO the text position should be computed based on position of panels loaded from file
         scr_x = 11 * pop1_sprites_scale;
         scr_y = 26 * pop1_sprites_scale;
-        if (lbDisplay.GraphicsScreenHeight < 400)
-            draw_text_linewrap2b(scr_x, &scr_y, data_15319c);
-        else
-            draw_text_linewrap1b(scr_x, &scr_y, data_15319c);
+
+        lbDisplay.DrawColour = SCANNER_colour[0];
+        AppTextDrawMissionStatus(scr_x, scr_y, data_15319c);
     }
 }
 
@@ -6825,7 +6865,7 @@ void load_packet(void)
         did_actn = do_user_interface();
         input_mission_cheats();
         ingame.MissionStatus = test_missions(0);
-        if ((ingame.MissionStatus != 0) && !in_network_game)
+        if ((ingame.MissionStatus != ObvStatu_UNDECIDED) && !in_network_game)
         {
             draw_mission_concluded();
             input_mission_concluded();
@@ -6858,7 +6898,7 @@ void load_packet(void)
             exit_game = 1;
         } else {
             init_level_3d(1u);
-            if (ingame.MissionStatus != 1)
+            if (ingame.MissionStatus != ObvStatu_COMPLETED)
                 ingame.MissionStatus = -1;
             mission_over();
         }
@@ -6883,7 +6923,7 @@ void load_packet(void)
         }
     }
 
-    if (p_locplayer->PanelState[mouser] != 17)
+    if (p_locplayer->PanelState[mouser] != PANEL_STATE_SEND_MESSAGE)
     {
         if (in_network_game || (ingame.UserFlags & UsrF_Cheats) != 0)
         {

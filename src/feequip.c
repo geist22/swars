@@ -54,15 +54,15 @@ extern struct ScreenTextBox equip_display_box;
 extern struct ScreenButton equip_offer_buy_button;
 extern struct ScreenInfoBox equip_cost_box;
 extern struct ScreenButton equip_all_agents_button;
-extern struct ScreenShape unk11_menu[5];
+extern struct ScreenShape equip_agent_select_shapes[5];
 
 extern ubyte byte_155174; // = 166;
 extern ubyte byte_155175[];
 extern ubyte byte_155180; // = 109;
 extern ubyte byte_155181[];
 extern ubyte cheat_research_weapon;
-extern ubyte byte_1C4975;
-extern ubyte byte_1C4976;
+extern ubyte equip_agents_panel_draw_state;
+extern ubyte equip_agent_name_draw_state;
 
 extern ubyte mo_from_agent;
 extern struct TbSprite *fe_icons_sprites;
@@ -73,15 +73,23 @@ extern ubyte weapon_nrg[31];
 extern ubyte weapon_range[31];
 extern ubyte weapon_damage[31];
 
+/* Points for shape of the agent selection buttons, X coords.
+ */
 short agent_panel_shape_points_x[] = {
-      0,  23, 120, 103,  35,  22,   7,   0,   0,
+      0,  23, 120, 103,  35,  22,   7,   0,
 };
+/* Points for shape of the agent selection buttons, Y coords.
+ */
 short agent_panel_shape_points_y[] = {
-     23,   0,   0,  17,  17,  30,  30,  23,  23,
+     23,   0,   0,  17,  17,  30,  30,  23,
 };
+/* Points for skewed rectangle with agent name, X coords.
+ */
 short agent_name_shape_points_x[] = {
       0, 181, 164,   0,   0,
 };
+/* Points for skewed rectangle with agent name, Y coords.
+ */
 short agent_name_shape_points_y[] = {
       0,   0,  17,  17,   0,
 };
@@ -326,9 +334,11 @@ void switch_equip_offer_to_sell(void)
     equip_offer_buy_button.CallBackFn = ac_sell_equipment;
 }
 
-void set_flag02_equipment_screen_boxes(void)
+void skip_flashy_draw_equipment_screen_boxes(void)
 {
     short i;
+
+    skip_flashy_draw_heading_screen_boxes();
 
     equip_list_head_box.Flags |= GBxFlg_Unkn0002;
     weapon_slots.Flags |= GBxFlg_Unkn0002;
@@ -339,8 +349,11 @@ void set_flag02_equipment_screen_boxes(void)
     equip_cost_box.Flags |= GBxFlg_Unkn0002;
     equip_all_agents_button.Flags |= GBxFlg_Unkn0002;
     for (i = 0; i < 5; i++) {
-        unk11_menu[i].Flags = GBxFlg_Unkn0002;
+        equip_agent_select_shapes[i].Flags = GBxFlg_Unkn0002;
     }
+
+    equip_agents_panel_draw_state = 1;
+    equip_agent_name_draw_state = 1;
 }
 
 TbBool weapon_available_for_purchase(short weapon)
@@ -597,19 +610,16 @@ ubyte show_equipment_screen(void)
 {
     ubyte drawn = true;
 
-    if ((unk11_menu[0].Flags & GBxFlg_Unkn0001) != 0)
+    if ((equip_agent_select_shapes[0].Flags & GBxFlg_Unkn0001) != 0)
     {
-        byte_1C4975 = 0;
-        byte_1C4976 = 0;
+        equip_agents_panel_draw_state = 0;
+        equip_agent_name_draw_state = 0;
     }
     if (((game_projector_speed != 0) && is_heading_flag01()) ||
       (is_key_pressed(KC_SPACE, KMod_DONTCARE) && !edit_flag))
     {
         clear_key_pressed(KC_SPACE);
-        set_flag02_heading_screen_boxes();
-        set_flag02_equipment_screen_boxes();
-        byte_1C4975 = 1;
-        byte_1C4976 = 1;
+        skip_flashy_draw_equipment_screen_boxes();
     }
     if ((ingame.UserFlags & UsrF_Cheats) != 0)
     {
@@ -652,7 +662,7 @@ ubyte show_equipment_screen(void)
             struct ScreenShape *p_shape;
             ubyte gbstate;
 
-            p_shape = &unk11_menu[nagent];
+            p_shape = &equip_agent_select_shapes[nagent];
 
             if (nagent == 4) // agent name box
             {
@@ -661,16 +671,16 @@ ubyte show_equipment_screen(void)
                 // Agents grouping has little to do with name box, but it's convienient to put here
                 gbstate = input_equip_all_agents_button(&equip_all_agents_button);
 
-                if (byte_1C4976 == 0)
+                if (equip_agent_name_draw_state == 0)
                 {
                     drawn = flashy_draw_draw_equip_agent_name_shape(p_shape, gbstate);
                 }
-                else if (byte_1C4976 == 1)
+                else if (equip_agent_name_draw_state == 1)
                 {
                     draw_equip_agent_name_shape(p_shape, gbstate);
                     drawn = 3;
                 }
-                byte_1C4976 = (drawn == 3);
+                equip_agent_name_draw_state = (drawn == 3);
             }
             else
             {
@@ -679,7 +689,7 @@ ubyte show_equipment_screen(void)
 
                 gbstate = input_equip_agent_panel_shape(p_shape, nagent);
 
-                if (byte_1C4975 == 0)
+                if (equip_agents_panel_draw_state == 0)
                 {
                     drawn = flashy_draw_agent_panel_shape(p_shape, gbstate);
                 }
@@ -696,8 +706,8 @@ ubyte show_equipment_screen(void)
             }
         }
 
-        if (byte_1C4975 == 0) {
-            byte_1C4975 = agnt[0] && agnt[1] && agnt[2] && agnt[3];
+        if (equip_agents_panel_draw_state == 0) {
+            equip_agents_panel_draw_state = agnt[0] && agnt[1] && agnt[2] && agnt[3];
         }
         drawn = boxes_drawn;
     }
@@ -812,19 +822,6 @@ TbBool input_display_box_content_wep(struct ScreenTextBox *p_box)
     return false;
 }
 
-void switch_shared_equip_screen_buttons_to_equip(void)
-{
-    set_heading_box_text(gui_strings[370]);
-    refresh_equip_list = 1;
-    equip_cost_box.X = equip_offer_buy_button.X + equip_offer_buy_button.Width + 4;
-    equip_cost_box.Width = equip_list_box.Width - 2 - equip_offer_buy_button.Width - 14;
-    equip_cost_box.Y = 404;
-    equip_all_agents_button.CallBackFn = ac_do_equip_all_agents_set;
-
-    equip_display_box_redraw(&equip_display_box);
-    equip_name_box_redraw(&equip_name_box);
-}
-
 /** Determines if buy or sell should be available in the equip weapon offer.
  *
  * @return Gives 0 if button unavailable, 1 for buy, 2 for sell.
@@ -890,7 +887,7 @@ void draw_display_box_content_wep(struct ScreenTextBox *p_box)
         lbFontPtr = p_box->Font;
         my_set_text_window(p_box->X + 4, p_box->ScrollWindowOffset + p_box->Y + 4,
           p_box->Width - 20, p_box->ScrollWindowHeight + 23);
-        flashy_draw_text(0, 0, p_box->Text, p_box->TextSpeed, p_box->field_38,
+        flashy_draw_text(0, 0, p_box->Text, p_box->TextSpeed, p_box->TextTopLine,
           &p_box->TextFadePos, 0);
         break;
     case DiBoxCt_ANIM:
@@ -992,7 +989,7 @@ ubyte show_weapon_name(struct ScreenTextBox *box)
     scr_y = box->Y + ((box->Height - text_h) >> 1);
     my_set_text_window(scr_x, scr_y, 640u, scr_y + text_h);
     flashy_draw_text(0, 0, box->Text, box->TextSpeed,
-      box->field_38, &box->TextFadePos, 0);
+      box->TextTopLine, &box->TextFadePos, 0);
 
     return 0;
 }
@@ -1031,7 +1028,7 @@ ubyte show_weapon_list(struct ScreenTextBox *box)
     spr = &fepanel_sprites[15 + 0];
     sheight = spr->SHeight;
 
-    for (weapon = box->field_38; (weapon < WEP_TYPES_COUNT) && (h0 + sheight < box->ScrollWindowHeight + 23); weapon++)
+    for (weapon = box->TextTopLine; (weapon < WEP_TYPES_COUNT) && (h0 + sheight < box->ScrollWindowHeight + 23); weapon++)
     {
         short msy, msx;
         short y1, y2;
@@ -1236,10 +1233,18 @@ ubyte show_weapon_slots(struct ScreenBox *p_box)
 
 void init_equip_screen_boxes(void)
 {
-    const char *s;
-    short scr_w, start_x;
+    const char *text;
+    ScrCoord scr_h, start_x, start_y;
+    short space_w, space_h, border;
 
-    scr_w = lbDisplay.GraphicsWindowWidth;
+    // Border value represents how much the box background goes
+    // out of the box area.
+    border = 3;
+#ifdef EXPERIMENTAL_MENU_CENTER_H
+    scr_h = global_apps_bar_box.Y;
+#else
+    scr_h = 432;
+#endif
 
     init_screen_text_box(&equip_list_head_box, 7u, 122u, 191u, 22,
       6, small_med_font, 1);
@@ -1276,10 +1281,10 @@ void init_equip_screen_boxes(void)
 
     lbFontPtr = med2_font;
     if (my_string_width(gui_strings[436]) <= my_string_width(gui_strings[407]))
-        s = gui_strings[407];
+        text = gui_strings[407];
     else
-        s = gui_strings[436];
-    equip_offer_buy_button.Width = my_string_width(s) + 4;
+        text = gui_strings[436];
+    equip_offer_buy_button.Width = my_string_width(text) + 4;
     equip_offer_buy_button.CallBackFn = ac_do_equip_offer_buy;
 
     init_screen_button(&equip_all_agents_button, 7u, 96u,
@@ -1289,22 +1294,73 @@ void init_equip_screen_boxes(void)
     equip_all_agents_button.Flags |= GBxFlg_RadioBtn;
     equip_all_agents_button.Radio = (ubyte *)&selected_agent;
 
-    start_x = (scr_w - weapon_slots.Width - equip_list_box.Width - equip_name_box.Width - 32) / 2;
+    // Reposition the components to current resolution
 
-    equip_all_agents_button.X = start_x + 7;
-    equip_list_head_box.X = start_x + 7;
-    weapon_slots.X = start_x + 7;
-    equip_list_box.X = weapon_slots.X + weapon_slots.Width + 9;
-    equip_name_box.X = equip_list_box.X + equip_list_box.Width + 9;
+    start_x = heading_box.X;
+    // On the X axis, we're going for aligning below heading box, to both left and right
+    space_w = heading_box.Width - weapon_slots.Width - equip_list_box.Width - equip_name_box.Width;
+
+    start_y = heading_box.Y + heading_box.Height;
+    // On the top, we're aligning to spilled border of previous box; same goes inside.
+    // But on the bottom, we're aligning to hard border, without spilling. To compensate
+    // for that, add pixels for such border to the space.
+    // One re-used box - cyborg name - does not exist as global instance, so count all agents button twice.
+    space_h = scr_h - start_y - 2 * equip_all_agents_button.Height - equip_list_box.Height + border;
+
+    // On the X axis, aligning to heading box left
+    equip_all_agents_button.X = start_x;
+    // Agent name field has no global box - assume it has the same height as equip_all_agents_button,
+    // so add that height to Y-position of equip_all_agents_button. Aleso move the box a tiny bit up from
+    // the normal position grid.
+    equip_all_agents_button.Y = start_y + equip_all_agents_button.Height + 2 * space_h / 4 - space_h / 24;
+
+    equip_list_head_box.X = start_x;
+    equip_list_head_box.Y = start_y + 2 * equip_all_agents_button.Height + 3 * space_h / 4;
+
+    weapon_slots.X = start_x;
+
+    equip_list_box.X = weapon_slots.X + weapon_slots.Width + space_w / 2;
+    equip_list_box.Y = equip_list_head_box.Y;
+
+    weapon_slots.Y = equip_list_box.Y + equip_list_box.Height - weapon_slots.Height;
+
+    equip_name_box.X = equip_list_box.X + equip_list_box.Width + space_w - space_w / 2;
+    equip_name_box.Y = equip_list_box.Y;
+
     equip_display_box.X = equip_name_box.X;
-    equip_offer_buy_button.X = equip_display_box.X + 5;
-    equip_cost_box.X = equip_offer_buy_button.X + equip_offer_buy_button.Width + 4;
-    equip_cost_box.Width = equip_list_box.Width - 2 - equip_offer_buy_button.Width - 14;
+    equip_display_box.Y = equip_list_box.Y + equip_list_box.Height - equip_display_box.Height;
+
+    // Boxes defining areas done; now reposition components inside
+
+    space_w = 5;
+    space_h = 5;
+    equip_offer_buy_button.X = equip_display_box.X + space_w;
+    equip_offer_buy_button.Y = equip_display_box.Y + equip_display_box.Height - space_h - equip_offer_buy_button.Height;
+    // No need to update equip_cost_box - that is done in switch_shared_equip_screen_buttons_to_equip()
+}
+
+void switch_shared_equip_screen_buttons_to_equip(void)
+{
+    short space_w, space_h;
+
+    space_w = 5;
+    space_h = 5;
+    set_heading_box_text(gui_strings[370]);
+    refresh_equip_list = 1;
+
+    equip_cost_box.Width = equip_display_box.Width - equip_offer_buy_button.Width - 3 * space_w - 1;
+    equip_cost_box.X = equip_display_box.X + equip_display_box.Width - (space_w - 1) - equip_cost_box.Width;
+    equip_cost_box.Y = equip_display_box.Y + equip_display_box.Height - space_h - equip_cost_box.Height;
+
+    equip_all_agents_button.CallBackFn = ac_do_equip_all_agents_set;
+
+    equip_display_box_redraw(&equip_display_box);
+    equip_name_box_redraw(&equip_name_box);
 }
 
 void init_equip_screen_shapes(void)
 {
-    ushort i, k;
+    ushort i;
     short x, y;
     short scr_w, start_x;
 
@@ -1316,51 +1372,36 @@ void init_equip_screen_shapes(void)
     y = 72;
     for (i = 0; i < 4; i++)
     {
-        LbMemoryCopy(unk11_menu[i].PtX, agent_panel_shape_points_x, sizeof(agent_panel_shape_points_x));
-        LbMemoryCopy(unk11_menu[i].PtY, agent_panel_shape_points_y, sizeof(agent_panel_shape_points_y));
-        for (k = 0; k < 9; k++)
-        {
-            if (k < sizeof(agent_panel_shape_points_x)/sizeof(agent_panel_shape_points_x[0]))
-            {
-                unk11_menu[i].PtX[k] = agent_panel_shape_points_x[k] + x;
-                unk11_menu[i].PtY[k] = agent_panel_shape_points_y[k] + y;
-            }
-            else
-            {
-                unk11_menu[i].PtX[k] = 0;
-                unk11_menu[i].PtY[k] = 0;
-            }
-        }
-        unk11_menu[i].field_24 = 6;
-        unk11_menu[i].field_25 = 0;
-        unk11_menu[i].Flags = GBxFlg_Unkn0001;
-        unk11_menu[i].Colour = 174;
-        unk11_menu[i].BGColour = 8;
+        struct ScreenShape *p_shp;
+
+        p_shp = &equip_agent_select_shapes[i];
+        init_screen_shape(p_shp, x, y,
+          agent_panel_shape_points_x, agent_panel_shape_points_y,
+          sizeof(agent_panel_shape_points_x)/sizeof(agent_panel_shape_points_x[0]),
+          0x0100, 0x0100, 6);
+        p_shp->Colour = 0xAE;
         x += 110;
     }
     x = 7 + start_x;
     y = 72;
     i = 4;
     {
-        for (k = 0; k < 9; k++)
-        {
-            if (k < sizeof(agent_name_shape_points_x)/sizeof(agent_name_shape_points_x[0]))
-            {
-                unk11_menu[i].PtX[k] = agent_name_shape_points_x[k] + x;
-                unk11_menu[i].PtY[k] = agent_name_shape_points_y[k] + y;
-            }
-            else
-            {
-                unk11_menu[i].PtX[k] = 0;
-                unk11_menu[i].PtY[k] = 0;
-            }
-        }
-        unk11_menu[i].field_24 = 6;
-        unk11_menu[i].field_25 = 0;
-        unk11_menu[i].Flags = GBxFlg_Unkn0001;
-        unk11_menu[i].Colour = 247;
-        unk11_menu[i].BGColour = 4;
+        struct ScreenShape *p_shp;
+
+        p_shp = &equip_agent_select_shapes[i];
+        init_screen_shape(p_shp, x, y,
+          agent_name_shape_points_x, agent_name_shape_points_y,
+          sizeof(agent_name_shape_points_x)/sizeof(agent_name_shape_points_x[0]),
+          0x0100, 0x0100, 6);
+        p_shp->Colour = 0x0F7;
     }
+}
+
+void reset_equip_screen_player_state(void)
+{
+    selected_weapon = -1;
+    selected_agent = 0;
+    refresh_equip_list = 0;
 }
 
 void reset_equip_screen_boxes_flags(void)
@@ -1374,7 +1415,7 @@ void reset_equip_screen_boxes_flags(void)
     equip_list_box.Flags = GBxFlg_Unkn0001 | GBxFlg_RadioBtn | GBxFlg_IsMouseOver;
     equip_display_box.Flags = GBxFlg_Unkn0001 | GBxFlg_RadioBtn | GBxFlg_IsMouseOver;
     for (i = 0; i < 5; i++) {
-        unk11_menu[i].Flags = GBxFlg_Unkn0001;
+        equip_agent_select_shapes[i].Flags = GBxFlg_Unkn0001;
     }
 }
 
@@ -1385,4 +1426,5 @@ void set_flag01_equip_screen_boxes(void)
     if (screentype == SCRT_CRYO)
         equip_cost_box.Flags |= GBxFlg_NoBkCopy;
 }
+
 /******************************************************************************/
