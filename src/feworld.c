@@ -621,6 +621,13 @@ ubyte show_world_landmap_box(struct ScreenBox *box)
     return 4;
 }
 
+void skip_flashy_draw_world_screen_boxes(void)
+{
+    skip_flashy_draw_heading_screen_boxes();
+    world_landmap_box.Flags |= GBxFlg_Unkn0002;
+    world_city_info_box.Flags |= GBxFlg_Unkn0002;
+}
+
 ubyte show_worldmap_screen(void)
 {
     ubyte drawn = true;
@@ -629,7 +636,7 @@ ubyte show_worldmap_screen(void)
       (is_key_pressed(KC_SPACE, KMod_DONTCARE) && !edit_flag))
     {
         clear_key_pressed(KC_SPACE);
-        set_flag02_world_screen_boxes();
+        skip_flashy_draw_world_screen_boxes();
     }
 
     // Draw sequentially
@@ -653,9 +660,17 @@ ubyte show_worldmap_screen(void)
 
 void init_world_screen_boxes(void)
 {
-    short scr_w, start_x;
+    ScrCoord scr_h, start_x, start_y;
+    short space_w, space_h, border;
 
-    scr_w = lbDisplay.GraphicsWindowWidth;
+    // Border value represents how much the box background goes
+    // out of the box area.
+    border = 3;
+#ifdef EXPERIMENTAL_MENU_CENTER_H
+    scr_h = global_apps_bar_box.Y;
+#else
+    scr_h = 432;
+#endif
 
     init_screen_box(&world_landmap_box, 7u, 72u, 518u, 354, 6);
     init_screen_text_box(&world_city_info_box, 534u, 72u, 99u, 354, 6, small_med_font, 3);
@@ -670,15 +685,39 @@ void init_world_screen_boxes(void)
     world_info_ACCEPT_button.CallBackFn = ac_do_unkn2_ACCEPT;
     world_landmap_box.SpecialDrawFn = show_world_landmap_box;
 
-    start_x = (scr_w - world_landmap_box.Width - world_city_info_box.Width - 23) / 2;
+    // Reposition the components to current resolution
 
-    world_landmap_box.X = start_x + 7;
-    world_city_info_box.X = world_landmap_box.X + world_landmap_box.Width + 9;
+    start_x = heading_box.X;
+    // On the X axis, we're going for aligning below heading box, to both left and right
+    space_w = heading_box.Width - world_landmap_box.Width - world_city_info_box.Width;
 
-    world_info_ACCEPT_button.X = world_city_info_box.X
-        + ((world_city_info_box.Width - world_info_ACCEPT_button.Width) >> 1);
+    start_y = heading_box.Y + heading_box.Height;
+    // On the top, we're aligning to spilled border of previous box; same goes inside.
+    // But on the bottom, we're aligning to hard border, without spilling. To compensate
+    // for that, add pixels for such border to the space.
+    space_h = scr_h - start_y - world_city_info_box.Height + border;
+
+    world_city_info_box.Y = start_y + space_h / 2;
+    world_landmap_box.X = start_x;
+    world_landmap_box.Y = world_city_info_box.Y;
+    world_city_info_box.X = world_landmap_box.X + world_landmap_box.Width + space_w;
+
+    space_h = 5;
     world_info_CANCEL_button.X = world_city_info_box.X
-        + ((world_city_info_box.Width - world_info_CANCEL_button.Width) >> 1);
+      + ((world_city_info_box.Width - world_info_CANCEL_button.Width) >> 1);
+    world_info_CANCEL_button.Y = world_city_info_box.Y + world_city_info_box.Height
+      - space_h - world_info_CANCEL_button.Height;
+    world_info_ACCEPT_button.X = world_city_info_box.X
+      + ((world_city_info_box.Width - world_info_ACCEPT_button.Width) >> 1);
+    world_info_ACCEPT_button.Y = world_info_CANCEL_button.Y
+      - space_h - world_info_ACCEPT_button.Height;
+}
+
+void reset_world_screen_player_state(void)
+{
+    unkn_city_no = -1;
+    word_1C6E0A = 0;
+    word_1C6E08 = 0;
 }
 
 void reset_world_screen_boxes_flags(void)
@@ -693,10 +732,4 @@ void set_flag01_world_screen_boxes(void)
     world_info_CANCEL_button.Flags |= GBxFlg_Unkn0001;
 }
 
-void set_flag02_world_screen_boxes(void)
-{
-    set_flag02_heading_screen_boxes();
-    world_landmap_box.Flags |= GBxFlg_Unkn0002;
-    world_city_info_box.Flags |= GBxFlg_Unkn0002;
-}
 /******************************************************************************/

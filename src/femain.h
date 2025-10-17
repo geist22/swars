@@ -56,6 +56,10 @@ struct ScreenTextBox;
 /******************************************************************************/
 extern struct ScreenTextBox unkn13_SYSTEM_button;
 
+extern struct ScreenBoxBase global_top_bar_box;
+extern struct ScreenBoxBase global_apps_bar_box;
+extern struct ScreenTextBox heading_box;
+
 extern struct SynTime global_date;
 extern struct SynTime research_curr_wep_date;
 extern struct SynTime research_curr_mod_date;
@@ -93,13 +97,13 @@ void set_heading_box_text(const char *text);
 void reset_heading_screen_boxes_flags(void);
 TbBool is_heading_flag01(void);
 ubyte draw_heading_box(void);
-void set_flag02_heading_screen_boxes(void);
+void skip_flashy_draw_heading_screen_boxes(void);
 void reset_system_menu_boxes_flags(void);
 void mark_system_menu_screen_boxes_redraw(void);
 
 void show_mission_loading_screen(void);
 
-void show_date_time(void);
+void show_purple_status_top_bar(void);
 void update_date_time(void);
 TbBool input_date_time(void);
 
@@ -108,6 +112,13 @@ void show_sysmenu_screen(void);
 TbBool is_purple_apps_selection_bar_visible(void);
 void show_purple_apps_selection_bar(void);
 TbBool input_purple_apps_selection_bar(void);
+
+/** Reset players part of app bar state.
+ *
+ * Resets all parts of app bar at bottom which are set by the player
+ * or related to players game progress.
+ */
+void reset_app_bar_player_state(void);
 
 /******************************************************************************/
 #ifdef __cplusplus

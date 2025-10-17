@@ -172,7 +172,7 @@ ubyte show_brief_netscan_box(struct ScreenTextBox *p_box)
     tx_height = font_height('A');
     ln_height = tx_height + margin;
     nlines = 0;
-    start_shift = border - ln_height * p_box->field_38;
+    start_shift = border - ln_height * p_box->TextTopLine;
     lbDisplay.DrawColour = 87;
     lbDisplay.DrawFlags = 0;
     if (selected_city_id != -1)
@@ -182,7 +182,7 @@ ubyte show_brief_netscan_box(struct ScreenTextBox *p_box)
             struct NetscanObjective *p_nsobv;
 
             p_nsobv = &netscan_objectives[nsobv];
-            if (nlines + p_nsobv->TextLines >= p_box->field_38)
+            if (nlines + p_nsobv->TextLines >= p_box->TextTopLine)
             {
                 if (lbDisplay.LeftButton)
                 {
@@ -611,6 +611,16 @@ void load_netscan_data(ubyte city_id, ubyte level)
     update_netscan_cost_button(city_id);
 }
 
+void skip_flashy_draw_mission_screen_boxes(void)
+{
+    skip_flashy_draw_heading_screen_boxes();
+    brief_graphical_box.Flags |= GBxFlg_Unkn0002;
+    brief_NETSCAN_button.Flags |= GBxFlg_Unkn0002;
+    brief_mission_text_box.Flags |= GBxFlg_Unkn0002;
+    brief_netscan_box.Flags |= GBxFlg_Unkn0002;
+    brief_NETSCAN_COST_box.Flags |= GBxFlg_Unkn0002;
+}
+
 ubyte show_mission_screen(void)
 {
 #if 0
@@ -623,12 +633,7 @@ ubyte show_mission_screen(void)
       (is_key_pressed(KC_SPACE, KMod_DONTCARE) && !edit_flag))
     {
         clear_key_pressed(KC_SPACE);
-        set_flag02_heading_screen_boxes();
-        brief_graphical_box.Flags |= GBxFlg_Unkn0002;
-        brief_NETSCAN_button.Flags |= GBxFlg_Unkn0002;
-        brief_mission_text_box.Flags |= GBxFlg_Unkn0002;
-        brief_netscan_box.Flags |= GBxFlg_Unkn0002;
-        brief_NETSCAN_COST_box.Flags |= GBxFlg_Unkn0002;
+        skip_flashy_draw_mission_screen_boxes();
     }
     // Draw sequentially
     if (drawn)
@@ -673,11 +678,21 @@ void init_brief_screen_scanner(void)
     SCANNER_init();
 }
 
+#define SCROLL_BAR_WIDTH 12
+
 void init_brief_screen_boxes(void)
 {
-    short scr_w, start_x;
+    ScrCoord scr_h, start_x, start_y;
+    short space_w, space_h, border;
 
-    scr_w = lbDisplay.GraphicsWindowWidth;
+    // Border value represents how much the box background goes
+    // out of the box area.
+    border = 3;
+#ifdef EXPERIMENTAL_MENU_CENTER_H
+    scr_h = global_apps_bar_box.Y;
+#else
+    scr_h = 432;
+#endif
 
     init_screen_text_box(&brief_netscan_box, 7, 281, 322, 145,
       6, small_med_font, 3);
@@ -692,7 +707,7 @@ void init_brief_screen_boxes(void)
 
     init_screen_text_box(&brief_mission_text_box, 338u, 72u, 295u, 354, 6, small_font, 3);
     init_screen_button(&unkn1_ACCEPT_button, 343u, 405u,
-      gui_strings[436], 6, med2_font, 1, 0);
+      gui_strings[436], 6, med2_font, 1, 0x00);
     init_screen_button(&unkn1_CANCEL_button, 616u, 405u,
       gui_strings[437], 6, med2_font, 1, 0x80);
     brief_mission_text_box.Buttons[0] = &unkn1_ACCEPT_button;
@@ -705,18 +720,43 @@ void init_brief_screen_boxes(void)
     init_screen_box(&brief_graphical_box, 7, 72, 322, 200, 6);
     brief_graphical_box.SpecialDrawFn = show_citymap_box;
 
-    start_x = (scr_w - brief_graphical_box.Width - brief_mission_text_box.Width - 23) / 2;
-    brief_graphical_box.X = start_x + 7;
+    // Reposition the components to current resolution
 
-    brief_netscan_box.X = start_x + 7;
-    brief_NETSCAN_COST_box.X = brief_netscan_box.X + 5;
-    //no need to update brief_NETSCAN_button.X - it will happen on the update below
+    start_x = heading_box.X;
+    // On the X axis, we're going for aligning below heading box, to both left and right
+    space_w = heading_box.Width - brief_graphical_box.Width - brief_mission_text_box.Width;
+
+    start_y = heading_box.Y + heading_box.Height;
+    // On the top, we're aligning to spilled border of previous box; same goes inside.
+    // But on the bottom, we're aligning to hard border, without spilling. To compensate
+    // for that, add pixels for such border to the space.
+    space_h = scr_h - start_y - brief_mission_text_box.Height + border;
+
+    // On the X axis, aligning to heading box left
+    brief_graphical_box.X = start_x;
+    brief_netscan_box.X = start_x;
+    // Ot to heading box right
+    brief_mission_text_box.X = brief_graphical_box.X + brief_graphical_box.Width + space_w;
+
+    // There is one box only to Y-position in 2nd column, so space goes into two parts - before and after
+    brief_mission_text_box.Y = start_y + space_h / 2;
+    // The remaining boxes should be Y-aligned to the one box in 2nd column
+    brief_graphical_box.Y = brief_mission_text_box.Y;
+    brief_netscan_box.Y = brief_mission_text_box.Y + brief_mission_text_box.Height - brief_netscan_box.Height;
+
+    // Boxes defining areas done; now reposition components inside
+
+    space_w = 5;
+    space_h = 5;
+    brief_NETSCAN_COST_box.X = brief_netscan_box.X + space_w;
+    brief_NETSCAN_COST_box.Y = brief_netscan_box.Y + brief_netscan_box.Height - brief_NETSCAN_COST_box.Height - space_h;
+    // no need to update brief_NETSCAN_button.X - it will happen on the update below
     update_brief_screen_netscan_button(441);
 
-    brief_mission_text_box.X = brief_graphical_box.X + brief_graphical_box.Width + 9;
-    unkn1_ACCEPT_button.X = brief_mission_text_box.X + 5;
-    // Additional 12 px left to fit scroll bar buttons
-    unkn1_CANCEL_button.X = brief_mission_text_box.X + brief_mission_text_box.Width - unkn1_CANCEL_button.Width - 5 - 12;
+    unkn1_ACCEPT_button.X = brief_mission_text_box.X + space_w;
+    unkn1_ACCEPT_button.Y = brief_mission_text_box.Y + brief_mission_text_box.Height - unkn1_ACCEPT_button.Height - space_h;
+    unkn1_CANCEL_button.X = brief_mission_text_box.X + brief_mission_text_box.Width - unkn1_CANCEL_button.Width - space_w - SCROLL_BAR_WIDTH;
+    unkn1_CANCEL_button.Y = brief_mission_text_box.Y + brief_mission_text_box.Height - unkn1_CANCEL_button.Height - space_h;
 }
 
 void update_brief_screen_netscan_button(ushort text_id)
@@ -724,10 +764,17 @@ void update_brief_screen_netscan_button(ushort text_id)
     const char *text;
 
     text = gui_strings[text_id];
-    init_screen_button(&brief_NETSCAN_button, brief_netscan_box.X + brief_netscan_box.Width - 17, 405,
+    init_screen_button(&brief_NETSCAN_button,
+      brief_netscan_box.X + brief_netscan_box.Width - 17, brief_NETSCAN_COST_box.Y,
       text, 6, med2_font, 1, 0x80);
     brief_NETSCAN_COST_box.Width = brief_netscan_box.Width - 10 - brief_NETSCAN_button.Width - 17;
     brief_NETSCAN_button.CallBackFn = ac_brief_do_netscan_enhance;
+}
+
+void reset_brief_screen_player_state(void)
+{
+    selected_netscan_objective = -1;
+    old_mission_brief = 0;
 }
 
 void reset_brief_screen_boxes_flags(void)

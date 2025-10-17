@@ -49,6 +49,8 @@ extern struct ScreenButton controls_calibrate_button;
 extern ubyte byte_1C4970;
 extern ubyte controls_hlight_gkey;
 
+short sheet_columns_x[] = {4, 200, 300};
+
 ubyte ac_do_controls_defaults(ubyte click);
 ubyte ac_do_controls_save(ubyte click);
 ubyte ac_do_controls_calibrate(ubyte click);
@@ -354,7 +356,7 @@ TbBool is_hardcoded_hlight_gkey(ushort hlight_gkey)
 }
 
 #define GAMEKEY_ACTIVE_WIDTH_MIN 50
-#define SHEET_COLUMNS 2
+#define SHEET_MOVE_COLUMNS 2
 
 /** Check inputs for controls box in system menu screen.
  *
@@ -374,9 +376,9 @@ ubyte menu_controls_inputs(struct ScreenTextBox *p_box, short *p_tx_kbd_width, s
 
     if (lbDisplay.LeftButton || joy.Buttons[0])
     {
-        wpos_x = 200;
-        wpos_y = 28;
-        for (i = p_box->field_38; i < i_limit; i++)
+        wpos_x = sheet_columns_x[1];
+        wpos_y = p_box->ScrollWindowOffset + 1;
+        for (i = p_box->TextTopLine; i < i_limit; i++)
         {
             short col_width;
             GameKey gkey;
@@ -402,9 +404,9 @@ ubyte menu_controls_inputs(struct ScreenTextBox *p_box, short *p_tx_kbd_width, s
 
     if (lbDisplay.LeftButton || joy.Buttons[0])
     {
-        wpos_x = 300;
-        wpos_y = 28;
-        for (i = p_box->field_38; i < i_limit; i++)
+        wpos_x = sheet_columns_x[2];
+        wpos_y = p_box->ScrollWindowOffset + 1;
+        for (i = p_box->TextTopLine; i < i_limit; i++)
         {
             short col_width;
             GameKey gkey;
@@ -430,9 +432,12 @@ ubyte menu_controls_inputs(struct ScreenTextBox *p_box, short *p_tx_kbd_width, s
 
     if (lbDisplay.LeftButton || joy.Buttons[0])
     {
-        lbDisplay.LeftButton = 0;
-        // Clicked outside of the keys area - exit editing a binding
-        controls_edited_gkey = 0;
+        if (mouse_down_over_box(p_box))
+        {
+            // Clicked outside of the keys area - exit editing a binding
+            // Do not clear the click
+            controls_edited_gkey = 0;
+        }
     }
 
     if (controls_edited_gkey == 0 && !net_unkn_pos_02)
@@ -441,7 +446,7 @@ ubyte menu_controls_inputs(struct ScreenTextBox *p_box, short *p_tx_kbd_width, s
         {
             clear_key_pressed(KC_DOWN);
             controls_hlight_gkey++;
-            if (controls_hlight_gkey > SHEET_COLUMNS * (GKey_KEYS_COUNT - 1))
+            if (controls_hlight_gkey > SHEET_MOVE_COLUMNS * (GKey_KEYS_COUNT - 1))
                 controls_hlight_gkey = 1;
             ret = 1;
         }
@@ -449,7 +454,7 @@ ubyte menu_controls_inputs(struct ScreenTextBox *p_box, short *p_tx_kbd_width, s
         {
             clear_key_pressed(KC_UP);
             if (controls_hlight_gkey < 1 + 1)
-                controls_hlight_gkey = SHEET_COLUMNS * (GKey_KEYS_COUNT - 1);
+                controls_hlight_gkey = SHEET_MOVE_COLUMNS * (GKey_KEYS_COUNT - 1);
             else
                 controls_hlight_gkey--;
             ret = 1;
@@ -459,8 +464,8 @@ ubyte menu_controls_inputs(struct ScreenTextBox *p_box, short *p_tx_kbd_width, s
             // Next column
             clear_key_pressed(KC_RIGHT);
             controls_hlight_gkey += (GKey_KEYS_COUNT - 1);
-            if (controls_hlight_gkey > SHEET_COLUMNS * (GKey_KEYS_COUNT - 1))
-                controls_hlight_gkey -= SHEET_COLUMNS * (GKey_KEYS_COUNT - 1);
+            if (controls_hlight_gkey > SHEET_MOVE_COLUMNS * (GKey_KEYS_COUNT - 1))
+                controls_hlight_gkey -= SHEET_MOVE_COLUMNS * (GKey_KEYS_COUNT - 1);
             ret = 1;
         }
         if (is_key_pressed(KC_LEFT, KMod_DONTCARE))
@@ -468,7 +473,7 @@ ubyte menu_controls_inputs(struct ScreenTextBox *p_box, short *p_tx_kbd_width, s
             // Prev column
             clear_key_pressed(KC_LEFT);
             if (controls_hlight_gkey < (GKey_KEYS_COUNT - 1) + 1)
-                controls_hlight_gkey += (SHEET_COLUMNS - 1) * (GKey_KEYS_COUNT - 1);
+                controls_hlight_gkey += (SHEET_MOVE_COLUMNS - 1) * (GKey_KEYS_COUNT - 1);
             else
                 controls_hlight_gkey -= (GKey_KEYS_COUNT - 1);
             ret = 1;
@@ -612,7 +617,7 @@ ubyte show_menu_controls_list_box(struct ScreenTextBox *p_box)
     ubyte kchange;
 
     // This needs to be done before setting my_text_window
-    i_limit = p_box->field_38 + get_text_box_lines_visible(p_box);
+    i_limit = p_box->TextTopLine + get_text_box_lines_visible(p_box);
     if (i_limit > GKey_KEYS_COUNT - 1)
         i_limit = GKey_KEYS_COUNT - 1;
 
@@ -623,11 +628,11 @@ ubyte show_menu_controls_list_box(struct ScreenTextBox *p_box)
 
         lbFontPtr = med_font;
         text = gui_strings[486];
-        draw_text_purple_list2(4, 4, text, 0);
+        draw_text_purple_list2(sheet_columns_x[0], 4, text, 0);
         text = gui_strings[487];
-        draw_text_purple_list2(200, 4, text, 0);
+        draw_text_purple_list2(sheet_columns_x[1], 4, text, 0);
         text = gui_strings[488];
-        draw_text_purple_list2(300, 4, text, 0);
+        draw_text_purple_list2(sheet_columns_x[2], 4, text, 0);
 
         lbDisplay.DrawFlags = 0;
     }
@@ -635,9 +640,9 @@ ubyte show_menu_controls_list_box(struct ScreenTextBox *p_box)
     lbFontPtr = p_box->Font;
 
     // Names column
-    wpos_x = 4;
-    wpos_y = 28;
-    for (i = p_box->field_38; i < i_limit; i++)
+    wpos_x = sheet_columns_x[0];
+    wpos_y = p_box->ScrollWindowOffset + 1;
+    for (i = p_box->TextTopLine; i < i_limit; i++)
     {
         const char *text;
         GameKey gkey;
@@ -649,9 +654,9 @@ ubyte show_menu_controls_list_box(struct ScreenTextBox *p_box)
     }
 
     // Keyboard keys column
-    wpos_x = 200;
-    wpos_y = 28;
-    for (i = p_box->field_38; i < i_limit; i++)
+    wpos_x = sheet_columns_x[1];
+    wpos_y = p_box->ScrollWindowOffset + 1;
+    for (i = p_box->TextTopLine; i < i_limit; i++)
     {
         const char *text;
         GameKey gkey;
@@ -688,9 +693,9 @@ ubyte show_menu_controls_list_box(struct ScreenTextBox *p_box)
     }
 
     // Joystick keys column
-    wpos_x = 300;
-    wpos_y = 28;
-    for (i = p_box->field_38; i < i_limit; i++)
+    wpos_x = sheet_columns_x[2];
+    wpos_y = p_box->ScrollWindowOffset + 1;
+    for (i = p_box->TextTopLine; i < i_limit; i++)
     {
         const char *text;
         GameKey gkey;
@@ -738,10 +743,10 @@ ubyte show_menu_controls_list_box(struct ScreenTextBox *p_box)
             i = controls_hlight_gkey - 1;
         else
             i = controls_hlight_gkey - 1 - (GKey_KEYS_COUNT - 1);
-        if (p_box->field_38 > i)
-            p_box->field_38 = i;
-        else if (p_box->field_38 + i_limit < i + 1)
-            p_box->field_38 = i + 1 - i_limit;
+        if (p_box->TextTopLine > i)
+            p_box->TextTopLine = i;
+        else if (p_box->TextTopLine + i_limit < i + 1)
+            p_box->TextTopLine = i + 1 - i_limit;
 
     }
 
@@ -824,17 +829,27 @@ ubyte show_options_controls_screen(void)
     return drawn;
 }
 
+#define SCROLL_BAR_WIDTH 12
+
 void init_controls_screen_boxes(void)
 {
-    short scr_w, start_x;
+    ScrCoord scr_w, scr_h, start_x, start_y;
+    short space_w, space_h, border;
+    short part_w;
 
+    // Border value represents how much the box background goes
+    // out of the box area.
+    border = 3;
     scr_w = lbDisplay.GraphicsWindowWidth;
+#ifdef EXPERIMENTAL_MENU_CENTER_H
+    scr_h = global_apps_bar_box.Y;
+#else
+    scr_h = 432;
+#endif
 
     init_screen_text_box(&controls_list_box, 213u, 72u, 420u, 354, 6, small_med_font, 1);
     controls_list_box.DrawTextFn = ac_show_menu_controls_list_box;
     controls_list_box.ScrollWindowHeight = 296;
-    controls_list_box.Buttons[0] = &controls_defaults_button;
-    controls_list_box.Buttons[1] = &controls_save_button;
     controls_list_box.Lines = GKey_KEYS_COUNT;
     controls_list_box.Flags |= (GBxFlg_RadioBtn | GBxFlg_IsMouseOver);
 
@@ -846,21 +861,51 @@ void init_controls_screen_boxes(void)
       gui_strings[439], 6, med2_font, 1, 0x80);
     controls_save_button.CallBackFn = ac_do_controls_save;
 
+    controls_list_box.Buttons[0] = &controls_defaults_button;
+    controls_list_box.Buttons[1] = &controls_save_button;
+
     init_screen_box(&controls_joystick_box, 7u, 252u, 197u, 174, 6);
     controls_joystick_box.SpecialDrawFn = show_controls_joystick_box;
     init_screen_button(&controls_calibrate_button, 57u, 405u,
       gui_strings[485], 6, med2_font, 1, 0);
     controls_calibrate_button.CallBackFn = ac_do_controls_calibrate;
 
-    start_x = (scr_w - controls_joystick_box.Width - controls_list_box.Width - 23) / 2;
+    // Reposition the components to current resolution
 
-    controls_joystick_box.X = start_x + 7;
+    start_x = unkn13_SYSTEM_button.X + unkn13_SYSTEM_button.Width;
+    // On the X axis, we're going for centering on the screen. So subtract the previous
+    // button position two times - once for the left, and once to make the same space on
+    // the right.
+    space_w = scr_w - start_x - unkn13_SYSTEM_button.X - controls_list_box.Width;
+
+    start_y = system_screen_shared_header_box.Y + system_screen_shared_header_box.Height;
+    // On the top, we're aligning to spilled border of previous box; same goes inside.
+    // But on the bottom, we're aligning to hard border, without spilling. To compensate
+    // for that, add pixels for such border to the space.
+    space_h = scr_h - start_y - controls_list_box.Height + border;
+
+    // There is one box only to position, and no space is needed after it - the whole
+    // available empty space goes into one place.
+    controls_list_box.X = start_x + space_w;
+    // There is one box only to position, so space goes into two parts - before and after.
+    controls_list_box.Y = start_y + space_h / 2;
+
+    start_x = unkn13_SYSTEM_button.X;
+
+    controls_joystick_box.X = start_x;
     controls_calibrate_button.X = controls_joystick_box.X + 50;
 
-    controls_list_box.X = controls_joystick_box.X + controls_joystick_box.Width + 9;
+    part_w = controls_list_box.Width - 6 - SCROLL_BAR_WIDTH;
+    sheet_columns_x[0] = 3 + 1;
+    sheet_columns_x[1] = 3 + part_w - 2 * (part_w / 4);
+    sheet_columns_x[2] = 3 + part_w - (part_w / 4);
     controls_defaults_button.X = controls_list_box.X + 6;
-    // Additional 12 px left to fit scroll bar buttons
-    controls_save_button.X = controls_list_box.X + controls_list_box.Width - controls_save_button.Width - 6 - 12;
+    controls_defaults_button.Y = controls_list_box.Y + controls_list_box.Height - controls_defaults_button.Height - 5;
+    controls_save_button.X = controls_list_box.X + controls_list_box.Width - controls_save_button.Width - 6 - SCROLL_BAR_WIDTH;
+    controls_save_button.Y = controls_list_box.Y + controls_list_box.Height - controls_save_button.Height - 5;
+
+    controls_joystick_box.Y = controls_list_box.Y + controls_list_box.Height - controls_joystick_box.Height;
+    controls_calibrate_button.Y = controls_joystick_box.Y + controls_joystick_box.Height - 21;
 }
 
 void reset_controls_screen_boxes_flags(void)
@@ -878,7 +923,7 @@ void set_flag01_controls_screen_boxes(void)
     controls_calibrate_button.Flags |= GBxFlg_Unkn0001;
 }
 
-void set_flag02_controls_screen_boxes(void)
+void skip_flashy_draw_controls_screen_boxes(void)
 {
     controls_defaults_button.Flags |= GBxFlg_Unkn0002;
     controls_calibrate_button.Flags |= GBxFlg_Unkn0002;

@@ -396,7 +396,7 @@ extern ubyte byte_1C5C28[8];
 extern ubyte byte_1C6D48;
 extern ubyte unkn_flags_08;
 extern long dword_153194;
-extern ulong starting_cash_amounts[4];
+extern ulong starting_cash_amounts[8];
 extern sbyte unkn_city_no;
 extern ubyte group_types[8];
 extern ubyte byte_1C4AA3;
@@ -473,6 +473,9 @@ void game_process(void);
 void game_reset(void);
 void host_reset(void);
 void free_texturemaps(void);
+void init_variables(void);
+void init_agents(void);
+void srm_reset_research(void);
 
 /** Decode and draw next frame of the animation.
  */
