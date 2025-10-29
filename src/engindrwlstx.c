@@ -1,5 +1,5 @@
 /******************************************************************************/
-// Syndicate Wars Port, source port of the classic strategy game from Bullfrog.
+// Syndicate Wars Fan Expansion, source port of the classic game from Bullfrog.
 /******************************************************************************/
 /** @file engindrwlstx.c
  *     Drawlists execution for the 3D engine.
@@ -1833,7 +1833,7 @@ void draw_sort_sprite1b(int sspr)
     word_1A5834 = 120;
     word_1A5836 = 120;
 
-    if (((p_thing->Flag2 & TgF2_Unkn2000) != 0) && (ingame.DisplayMode == 50))
+    if (((p_thing->Flag2 & TgF2_InsideBuilding) != 0) && (ingame.DisplayMode == 50))
     {
         if ((ingame.Flags & GamF_ThermalView) != 0) {
             ushort fr;

@@ -1,5 +1,5 @@
 /******************************************************************************/
-// Syndicate Wars Port, source port of the classic strategy game from Bullfrog.
+// Syndicate Wars Fan Expansion, source port of the classic game from Bullfrog.
 /******************************************************************************/
 /** @file packet.h
  *     Header file for packet.c.
@@ -103,6 +103,17 @@ enum PacketActions
     PAct_AGENT_SELF_DESTRUCT = 0xFF,
 };
 
+enum PacketActionResults
+{
+    PARes_DONE = 0,	/**< Action was performed, with success or not. */
+    PARes_SUCCESS,	/**< Action was performed, success confirmed. */
+    PARes_EBADRQC,	/**< Action skipped, unsupported action code. */
+    PARes_EINVAL,	/**< Action skipped, invalid argument (ie. number out of range, thing of wrong type). */
+    PARes_EBADSLT,	/**< Action skipped, invalid agent slot (player action but thing is not players agent). */
+    PARes_EALREADY,	/**< Action skipped, already in requested state or already performing the command. */
+    PARes_TNGBADST,	/**< Action skipped, thing in bad state (ie. agent is performing contradictory command). */
+};
+
 struct Packet
 {
     ushort Action;
@@ -133,12 +144,15 @@ struct Packet
 #pragma pack()
 /******************************************************************************/
 extern struct Packet packets[8];
-extern void (*my_build_packet)(struct Packet *packet, ushort type, ulong param1, long x, long y, long z);
+extern void (*my_build_packet)(struct Packet *packet, ushort action, ulong param1, long x, long y, long z);
 
-void build_packet(struct Packet *packet, ushort type, ulong param1, long x, long y, long z);
-void build_packet2(struct Packet *packet, ushort type, ulong param1, long x, long y, long z);
-void build_packet3(struct Packet *packet, ushort type, ulong param1, long x, long y, long z);
-void build_packet4(struct Packet *packet, ushort type, ulong param1, long x, long y, long z);
+const char * get_packet_action_name(ushort atype);
+const char * get_packet_action_result_text(short result);
+
+void build_packet(struct Packet *packet, ushort action, ulong param1, long x, long y, long z);
+void build_packet2(struct Packet *packet, ushort action, ulong param1, long x, long y, long z);
+void build_packet3(struct Packet *packet, ushort action, ulong param1, long x, long y, long z);
+void build_packet4(struct Packet *packet, ushort action, ulong param1, long x, long y, long z);
 
 void PacketRecord_Close(void);
 void PacketRecord_OpenWrite(void);

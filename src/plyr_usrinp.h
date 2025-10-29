@@ -1,5 +1,5 @@
 /******************************************************************************/
-// Syndicate Wars Port, source port of the classic strategy game from Bullfrog.
+// Syndicate Wars Fan Expansion, source port of the classic game from Bullfrog.
 /******************************************************************************/
 /** @file plyr_usrinp.h
  *     Header file for plyr_usrinp.c.
@@ -62,6 +62,7 @@ enum SpecialUserInputControlModes {
     UInpCtr_Joystick1,
     UInpCtr_Joystick2,
     UInpCtr_Joystick3,
+    UInpCtr_MODES_COUNT,
     UInpCtrF_Unkn2000 = 0x2000,
     UInpCtrF_Unkn4000 = 0x4000,
     UInpCtrF_Unkn8000 = 0x8000,
