@@ -173,7 +173,7 @@ extern unsigned short unkn2_pos_x;
 extern unsigned short unkn2_pos_y;
 extern unsigned short unkn2_pos_z;
 extern int data_1c8428;
-extern const char *primvehobj_fname;
+const char *primvehobj_fname = "qdata/primveh.obj";
 extern unsigned char textwalk_data[640];
 
 extern short word_1C6E08;
@@ -2095,7 +2095,7 @@ void teleport_current_agent(PlayerInfo *p_locplayer)
 
 void person_give_all_weapons(struct Thing *p_person)
 {
-    ushort wtype;
+    WeaponType wtype;
 
     for (wtype = WEP_TYPES_COUNT-1; wtype > 0; wtype--)
     {
@@ -2115,7 +2115,7 @@ void person_give_all_weapons(struct Thing *p_person)
 
 void mark_all_weapons_researched(void)
 {
-    ushort wtype;
+    WeaponType wtype;
 
     for (wtype = WEP_TYPES_COUNT-1; wtype > 0; wtype--)
     {
@@ -2291,14 +2291,6 @@ void setup_debug_obj_trace(void)
     debug_trace_place(0);
 }
 
-void BAT_unknsub_20(int a1, int a2, int a3, int a4, ubyte *a5)
-{
-    asm volatile (
-      "push %4\n"
-      "call ASM_BAT_unknsub_20\n"
-        : : "a" (a1), "d" (a2), "b" (a3), "c" (a4), "g" (a5));
-}
-
 TbResult prep_multicolor_sprites(void)
 {
     PathInfo *pinfo;
@@ -2328,7 +2320,8 @@ void setup_host(void)
 
     setup_mouse_pointers();
     lbMouseAutoReset = false;
-    LbMouseSetup(&pointer_sprites[1], 2, 2);
+    LbMouseSetup(&pointer_sprites[1],
+      2 * NORMAL_MOUSE_MOVE_RATIO, 2 * NORMAL_MOUSE_MOVE_RATIO);
 
     setup_debug_obj_trace();
 
@@ -2717,17 +2710,17 @@ void init_level(void)
     for (plyr_no = 0; plyr_no < PLAYERS_LIMIT; plyr_no++)
     {
         PlayerInfo *p_player;
-        short mouser;
+        short plagent;
 
         p_player = &players[plyr_no];
-        for (mouser = 0; mouser < 4; mouser++)
+        for (plagent = 0; plagent < LOCAL_USERS_MAX_COUNT; plagent++)
         {
-            p_player->UserVX[mouser] = 0;
-            p_player->UserVY[mouser] = 0;
-            p_player->UserVZ[mouser] = 0;
-            p_player->SpecialItems[mouser] = 0;
-            p_player->PanelItem[mouser] = 0;
-            p_player->PanelState[mouser] = PANEL_STATE_NORMAL;
+            p_player->UserVX[plagent] = 0;
+            p_player->UserVY[plagent] = 0;
+            p_player->UserVZ[plagent] = 0;
+            p_player->SpecialItems[plagent] = 0;
+            p_player->PanelItem[plagent] = 0;
+            p_player->PanelState[plagent] = PANEL_STATE_NORMAL;
         }
         p_player->GotoFace = 0;
         p_player->field_102 = 0;
@@ -4887,53 +4880,76 @@ ubyte weapon_select_input(void)
     return ret;
 #endif
     PlayerInfo *p_locplayer;
+    struct Packet *p_pckt;
     ThingIdx dcthing;
-    ushort weptype;
+    WeaponType wtype;
     int n;
 
+#ifdef MORE_GAME_KEYS
+    static const GameKey sel_weapon_gkeys[] = {
+        GKey_SEL_WEP_1, GKey_SEL_WEP_2, GKey_SEL_WEP_3, GKey_SEL_WEP_4, GKey_SEL_WEP_5, GKey_SEL_WEP_6,
+    };
+#else
     static TbKeyCode sel_weapon_keys[] = {
         KC_5, KC_6, KC_7, KC_8, KC_9, KC_0,
     };
+#endif
+
     static GameTurn last_sel_weapon_turn[WEAPONS_CARRIED_MAX_COUNT] = {0};
 
     p_locplayer = &players[local_player_no];
+    p_pckt = &packets[local_player_no];
     dcthing = p_locplayer->DirectControl[0];
-    weptype = WEP_NULL;
+    wtype = WEP_NULL;
 
+#ifdef MORE_GAME_KEYS
+    if (is_gamekey_pressed(GKey_USE_MEDIKIT))
+    {
+        clear_gamekey_pressed(GKey_USE_MEDIKIT);
+        if (person_carries_any_medikit(dcthing))
+        {
+            my_build_packet(p_pckt, PAct_AGENT_USE_MEDIKIT, dcthing, 0, 0, 0);
+            return 1;
+        }
+    }
+#endif
 
     assert(sizeof(sel_weapon_keys)/sizeof(sel_weapon_keys[0]) <= WEAPONS_CARRIED_MAX_COUNT);
 
     for (n = 0; n < (int)(sizeof(sel_weapon_keys)/sizeof(sel_weapon_keys[0])); n++)
     {
+#ifdef MORE_GAME_KEYS
+        GameKey gkey = sel_weapon_gkeys[n];
+        if (is_gamekey_pressed(gkey))
+        {
+            clear_gamekey_pressed(gkey);
+#else
         ushort kkey = sel_weapon_keys[n];
         if (is_key_pressed(kkey, KMod_NONE))
         {
             clear_key_pressed(kkey);
-            weptype = find_nth_weapon_held(dcthing, n+1);
-            if (weptype != WEP_NULL)
+#endif
+            wtype = find_nth_weapon_held(dcthing, n+1);
+            if (wtype != WEP_NULL)
                 break;
         }
     }
 
-    if (weptype == WEP_NULL)
+    if (wtype == WEP_NULL)
         return 0;
 
     // Double tapping - select for all agents
-    if (gameturn - last_sel_weapon_turn[n] < 7)
+    if (gameturn - last_sel_weapon_turn[n] < game_num_fps / 2)
     {
-        //TODO This doesn't work properly because our parameters do not distinguish between
-        // selecting and deselecting weapon; process_packets() would have to be updated for
-        // that to work, ie. to use one of zeroed packet parameters as select/deselect flag
-#if 0
-        my_build_packet(&packets[local_player_no], PAct_SELECT_GRP_SPEC_WEAPON, dcthing, weptype, 0, 0);
-#else
-        my_build_packet(&packets[local_player_no], PAct_SELECT_SPECIFIC_WEAPON, dcthing, weptype, 0, 0);
-#endif
-        last_sel_weapon_turn[n] -= 7;
+        ubyte flag;
+
+        flag = (person_get_selected_weapon(dcthing) == wtype) ? WepSel_SELECT : WepSel_HIDE;
+        my_build_packet(p_pckt, PAct_SELECT_GRP_SPEC_WEAPON, dcthing, wtype, flag, 0);
+        last_sel_weapon_turn[n] -= game_num_fps / 2;
     }
     else
     {
-        my_build_packet(&packets[local_player_no], PAct_SELECT_SPECIFIC_WEAPON, dcthing, weptype, 0, 0);
+        my_build_packet(p_pckt, PAct_SELECT_SPECIFIC_WEAPON, dcthing, wtype, WepSel_TOGGLE, 0);
         last_sel_weapon_turn[n] = gameturn;
     }
 
@@ -5279,7 +5295,7 @@ ubyte do_user_interface(void)
 
             if (person_can_accept_control(p_agent->ThingOffset) && ((p_agent->Flag2 & TgF2_KnockedOut) == 0))
             {
-                clear_key_pressed(gkey);
+                clear_gamekey_pressed(gkey);
                 if (p_locplayer->DoubleMode)
                 {
                     byte_153198 = n+1;
@@ -5391,7 +5407,7 @@ ubyte do_user_interface(void)
         ctlmode = p_usrinp->ControlMode & ~UInpCtr_AllFlagsMask;
         if ((ctlmode == UInpCtr_Mouse) && is_gamekey_pressed(GKey_KEY_CONTROL))
         {
-            clear_key_pressed(GKey_KEY_CONTROL);
+            clear_gamekey_pressed(GKey_KEY_CONTROL);
             p_usrinp->ControlMode &= UInpCtr_AllFlagsMask;
             p_usrinp->ControlMode |= UInpCtr_Keyboard;
             do_change_mouse(8);
@@ -6686,13 +6702,36 @@ ubyte process_send_person(ushort player, int i)
     return ret;
 }
 
-void input_packet_playback(void)
+void do_agent_track_only(void)
 {
+    static const TbKeyCode sel_agent_keys[] = {
+        KC_1, KC_2, KC_3, KC_4,
+    };
     PlayerInfo *p_locplayer;
-    struct Packet *p_pckt;
-    struct Thing *p_agent;
+    int n;
 
     p_locplayer = &players[local_player_no];
+
+    for (n = 0; n < (int)(sizeof(sel_agent_keys)/sizeof(sel_agent_keys[0])); n++)
+    {
+        TbKeyCode kkey = sel_agent_keys[n];
+        if (is_key_pressed(kkey, KMod_DONTCARE))
+        {
+            struct Thing *p_agent;
+
+            p_agent = p_locplayer->MyAgent[n];
+            ingame.TrackX = p_agent->X >> 8;
+            ingame.TrackZ = p_agent->Z >> 8;
+            engn_xc = ingame.TrackX;
+            engn_zc = ingame.TrackZ;
+        }
+    }
+}
+
+void input_packet_playback(void)
+{
+    struct Packet *p_pckt;
+
     p_pckt = &packets[local_player_no];
 
     if (is_key_pressed(KC_ESCAPE, KMod_SHIFT))
@@ -6701,43 +6740,13 @@ void input_packet_playback(void)
         if (critical_action_input())
         {
             exit_game = 1;
-            p_pckt->Action = 2;
+            p_pckt->Action = PAct_MISSN_ABORT;
         }
     }
     do_scroll_map();
     do_rotate_map();
-    if (is_key_pressed(KC_1, KMod_DONTCARE))
-    {
-        p_agent = p_locplayer->MyAgent[0];
-        ingame.TrackX = p_agent->X >> 8;
-        ingame.TrackZ = p_agent->Z >> 8;
-        engn_xc = ingame.TrackX;
-        engn_zc = ingame.TrackZ;
-    }
-    if (is_key_pressed(KC_2, KMod_DONTCARE))
-    {
-        p_agent = p_locplayer->MyAgent[1];
-        ingame.TrackX = p_agent->X >> 8;
-        ingame.TrackZ = p_agent->Z >> 8;
-        engn_xc = ingame.TrackX;
-        engn_zc = ingame.TrackZ;
-    }
-    if (is_key_pressed(KC_3, KMod_DONTCARE))
-    {
-        p_agent = p_locplayer->MyAgent[2];
-        ingame.TrackX = p_agent->X >> 8;
-        ingame.TrackZ = p_agent->Z >> 8;
-        engn_xc = ingame.TrackX;
-        engn_zc = ingame.TrackZ;
-    }
-    if (is_key_pressed(KC_4, KMod_DONTCARE))
-    {
-        p_agent = p_locplayer->MyAgent[3];
-        ingame.TrackX = p_agent->X >> 8;
-        ingame.TrackZ = p_agent->Z >> 8;
-        engn_xc = ingame.TrackX;
-        engn_zc = ingame.TrackZ;
-    }
+
+    do_agent_track_only();
 }
 
 void input_mission_cheats(void)
@@ -6838,10 +6847,6 @@ void input_mission_concluded(void)
 
 void load_packet(void)
 {
-#if 0
-    asm volatile ("call ASM_load_packet\n"
-        :  :  : "eax" );
-#else
     PlayerInfo *p_locplayer;
     struct Packet *p_pckt;
     int did_actn;
@@ -6937,7 +6942,7 @@ void load_packet(void)
                 clear_key_pressed(KC_ESCAPE);
                 if (in_network_game || critical_action_input()) {
                     change_brightness(-32);
-                    p_pckt->Action = 2;
+                    p_pckt->Action = PAct_MISSN_ABORT;
                 }
             }
         }
@@ -6947,7 +6952,6 @@ void load_packet(void)
             PacketRecord_Write(p_pckt);
         }
     }
-#endif
 }
 
 void joy_input(void)

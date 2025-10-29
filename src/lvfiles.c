@@ -1,5 +1,5 @@
 /******************************************************************************/
-// Syndicate Wars Port, source port of the classic strategy game from Bullfrog.
+// Syndicate Wars Fan Expansion, source port of the classic game from Bullfrog.
 /******************************************************************************/
 /** @file lvfiles.c
  *     Routines for level and map files handling.
@@ -24,6 +24,7 @@
 #include "bfmath.h"
 #include "bfmemut.h"
 
+#include "bat.h"
 #include "triangls.h"
 #include "trpoints.h"
 #include "trstate.h"
@@ -54,6 +55,17 @@
 #include "vehtraffic.h"
 #include "weapon.h"
 #include "swlog.h"
+/******************************************************************************/
+#pragma pack(1)
+
+struct BillboardNBreakout {
+  ubyte field_0;
+  ubyte field_1;
+  ubyte field_2;
+  ubyte field_3;
+};
+
+#pragma pack()
 /******************************************************************************/
 
 TbBool level_deep_fix = false;
@@ -93,6 +105,9 @@ struct QuickLoad quick_load_pc[] = {
 };
 
 ushort next_used_lvl_objective = 1;
+
+extern uint dword_177790;
+extern struct BillboardNBreakout map_bnb;
 
 void debug_level(const char *text, int player)
 {
@@ -1380,12 +1395,14 @@ void prepare_map_dat_to_play(void)
 
 TbResult load_map_mad(ushort mapno)
 {
-    char mad_fname[52];
+    char mad_fname[DISKPATH_SIZE];
+    PathInfo *pinfo;
     long fsize;
 
     next_local_mat = 1;
 
-    sprintf(mad_fname, "%s/map%03d.mad", "maps", mapno);
+    pinfo = &game_dirs[DirPlace_Maps];
+    snprintf(mad_fname, DISKPATH_SIZE-1, "%s/map%03d.mad", pinfo->directory, mapno);
     fsize = LbFileLoadAt(mad_fname, scratch_malloc_mem);
     if (fsize == Lb_FAIL)
         return Lb_FAIL;
@@ -1399,10 +1416,53 @@ TbResult load_map_mad(ushort mapno)
     return Lb_SUCCESS;
 }
 
-void load_map_bnb(int a1)
+void load_map_bnb(ushort mapno)
 {
+#if 0
     asm volatile ("call ASM_load_map_bnb\n"
-        : : "a" (a1));
+        : : "a" (mapno));
+#endif
+    char locstr[DISKPATH_SIZE];
+    PathInfo *pinfo;
+    TbFileHandle fh;
+    ubyte Amin, Amax;
+    ubyte Bmin, Bmax;
+
+    fh = INVALID_FILE;
+    pinfo = &game_dirs[DirPlace_Maps];
+    snprintf(locstr, DISKPATH_SIZE-1, "%s/map%03d.b&b", pinfo->directory, mapno);
+    if (LbFileExists(locstr))
+        fh = LbFileOpen(locstr, Lb_FILE_MODE_READ_ONLY);
+
+    if (fh == INVALID_FILE)
+    {
+        LOGSYNC("Using defaults in place of '%s' file", locstr);
+        map_bnb.field_0 = 0;
+        map_bnb.field_1 = 0;
+        map_bnb.field_2 = 0;
+        map_bnb.field_3 = 0;
+        dword_177790 = 0;
+    }
+    else
+    {
+        LbFileRead(fh, &map_bnb, 4);
+        LbFileClose(fh);
+        dword_177790 = 2;
+    }
+    Amin = map_bnb.field_0;
+    if (map_bnb.field_0 >= map_bnb.field_2)
+        Amin = map_bnb.field_2;
+    Bmin = map_bnb.field_1;
+    if (map_bnb.field_1 >= map_bnb.field_3)
+        Bmin = map_bnb.field_3;
+    Amax = map_bnb.field_0;
+    if (map_bnb.field_0 <= map_bnb.field_2)
+        Amax = map_bnb.field_2;
+    Bmax = map_bnb.field_1;
+    if (map_bnb.field_1 <= map_bnb.field_3)
+        Bmax = map_bnb.field_3;
+
+    BAT_unknsub_20(Amin, Bmin, Amax, Bmax, vec_tmap[4] + 0xA040);
 }
 
 TbResult load_mad_pc(ushort mapno)

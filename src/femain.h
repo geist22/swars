@@ -1,5 +1,5 @@
 /******************************************************************************/
-// Syndicate Wars Port, source port of the classic strategy game from Bullfrog.
+// Syndicate Wars Fan Expansion, source port of the classic game from Bullfrog.
 /******************************************************************************/
 /** @file femain.h
  *     Header file for femain.c.
@@ -35,6 +35,16 @@ enum SysScreenType {
   SySc_AUDIO_OPTS,
   SySc_GFX_OPTS,
   SySc_TYPES_COUNT,
+};
+
+enum AppBarIcons {
+  ApBar_SYSTEM = 0,
+  ApBar_PANET,
+  ApBar_WORLDMAP,
+  ApBar_CRYO,
+  ApBar_EQUIP,
+  ApBar_RESEARCH,
+  ApBar_NEWMAIL,
 };
 
 /** Special value whch does not have system screen,
@@ -110,6 +120,7 @@ TbBool input_date_time(void);
 void show_sysmenu_screen(void);
 
 TbBool is_purple_apps_selection_bar_visible(void);
+TbBool mouse_over_purple_apps_icon(short iconid);
 void show_purple_apps_selection_bar(void);
 TbBool input_purple_apps_selection_bar(void);
 

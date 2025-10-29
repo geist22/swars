@@ -1,5 +1,5 @@
 /******************************************************************************/
-// Syndicate Wars Port, source port of the classic strategy game from Bullfrog.
+// Syndicate Wars Fan Expansion, source port of the classic game from Bullfrog.
 /******************************************************************************/
 /** @file people.h
  *     Header file for people.c.
@@ -136,6 +136,13 @@ enum PersonFlags3 {
 
 #define PERSON_MAX_SPEED 2048
 
+enum ThingWeaponSelectFlags {
+    WepSel_TOGGLE = 0,
+    WepSel_HIDE,
+    WepSel_SELECT,
+    WepSel_SKIP,
+};
+
 struct Thing;
 
 struct PeepStat
@@ -211,11 +218,19 @@ void snprint_person_state(char *buf, ulong buflen, struct Thing *p_thing);
 
 TbBool person_is_dead(ThingIdx thing);
 TbBool person_is_dead_or_dying(ThingIdx thing);
+ubyte person_get_selected_weapon(ThingIdx thing);
 
-TbBool person_carries_weapon(struct Thing *p_person, ubyte weapon);
-TbBool person_carries_any_medikit(struct Thing *p_person);
+TbBool person_carries_weapon(struct Thing *p_person, WeaponType wtype);
+
+/** Returns if a person carries medikit of any kind.
+ */
+TbBool person_carries_any_medikit(ThingIdx person);
 
 TbBool person_can_accept_control(ThingIdx person);
+
+/** Returns slot at which given person is in given players agents, or -1.
+ */
+short person_slot_as_player_agent(struct Thing *p_person, ushort plyr);
 
 void set_person_stats_type(struct Thing *p_person, ushort type);
 void set_person_health_shield_type(struct Thing *p_person, ushort stype);
@@ -303,7 +318,16 @@ void person_init_get_item(struct Thing *p_person, short item, ushort plyr);
 void person_init_get_item_fast(struct Thing *p_person, short item, ushort plyr);
 void person_init_plant_mine_fast(struct Thing *p_thing, short x, short y, short z, int face);
 void person_init_plant_mine(struct Thing *p_person, short x, short y, short z, int face);
-int thing_select_specific_weapon(struct Thing *p_person, ushort weapon, uint flag);
+
+/** Selects a wielded weapon for the thing, or hides the weapon currently in hands.
+ *
+ * @param p_person The thing which will have current weapon switched.
+ * @param wtype The weapon type to be used.
+ * @param flag Value from ThingWeaponSelectFlags enum, telling whether to select or hide weapon.
+ * @return Gives Value from ThingWeaponSelectFlags enum based on results of the action.
+ */
+ubyte thing_select_specific_weapon(struct Thing *p_person, WeaponType wtype, ubyte flag);
+
 void person_go_enter_vehicle_fast(struct Thing *p_person, struct Thing *p_vehicle, ushort plyr);
 void person_go_enter_vehicle(struct Thing *p_person, struct Thing *p_vehicle);
 void person_init_follow_person(struct Thing *p_person, struct Thing *p_other);

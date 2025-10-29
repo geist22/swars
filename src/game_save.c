@@ -1,5 +1,5 @@
 /******************************************************************************/
-// Syndicate Wars Port, source port of the classic strategy game from Bullfrog.
+// Syndicate Wars Fan Expansion, source port of the classic game from Bullfrog.
 /******************************************************************************/
 /** @file game_save.c
  *     Loading and saving the game and user profile.
@@ -264,9 +264,13 @@ void read_user_settings(void)
     int i;
 
     read_mortal_salt_backup = false;
+    fh = INVALID_FILE;
     get_user_settings_fname(fname, login_name);
+    if (login_name[0] == '\0')
+        read_mortal_salt_backup = true;
 
-    fh = LbFileOpen(fname, Lb_FILE_MODE_READ_ONLY);
+    if (LbFileExists(fname))
+        fh = LbFileOpen(fname, Lb_FILE_MODE_READ_ONLY);
 
     // Try default settings file instead
     if ((fh == INVALID_FILE) && (strlen(login_name) > 0))
@@ -733,7 +737,10 @@ ubyte load_game(int slot, char *desc)
                 p_locplayer->FourPacks[WFRPK_KOGAS][i] = 1;
             if (weapons_has_weapon(p_locplayer->Weapons[i], WEP_CRAZYGAS))
                 p_locplayer->FourPacks[WFRPK_CRAZYGAS][i] = 1;
+        }
 
+        for (i = 0; i < LOCAL_USERS_MAX_COUNT; i++)
+        {
             p_locplayer->UserVX[i] = 0;
             p_locplayer->UserVZ[i] = 0;
         }
