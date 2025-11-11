@@ -1,3 +1,21 @@
+/******************************************************************************/
+// Syndicate Wars Fan Expansion, source port of the classic game from Bullfrog.
+/******************************************************************************/
+/** @file util.c
+ *     Routines implementing small utilities.
+ * @par Purpose:
+ *     Simple utilities for general use.
+ * @par Comment:
+ *     None.
+ * @author   Tomasz Lis
+ * @date     27 May 2022 - 12 Oct 2025
+ * @par  Copying and copyrights:
+ *     This program is free software; you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation; either version 2 of the License, or
+ *     (at your option) any later version.
+ */
+/******************************************************************************/
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
@@ -12,7 +30,55 @@
 #endif
 
 #include "util.h"
+
 #include "bffile.h"
+#include "bfutility.h"
+
+/******************************************************************************/
+#pragma pack(1)
+
+struct CharacterSubst {
+    char OrigChar;
+    char NewChar;
+};
+
+extern struct CharacterSubst subst_table_lower_to_upper[66];
+
+#pragma pack()
+/******************************************************************************/
+
+ubyte fontchrtoupper(ubyte ch)
+{
+    // TODO this should be just a simple conversion array, not such convoluted code
+    if (ch <= 127)
+    {
+        ch = toupper(ch);
+    }
+    else
+    {
+        int i;
+
+        for (i = 0; subst_table_lower_to_upper[i].OrigChar; i++)
+        {
+            if (ch == subst_table_lower_to_upper[i].OrigChar)
+            {
+                ch = subst_table_lower_to_upper[i].NewChar;
+                break;
+            }
+        }
+    }
+    return ch;
+}
+
+
+void fontstrtoupper(char *s)
+{
+    while (*s != '\0')
+    {
+        *s = fontchrtoupper(*s);
+        s++;
+    }
+}
 
 void strtolower(char *string)
 {
@@ -61,9 +127,10 @@ const char *extract_path_segment(const char *path, char *buffer, size_t size)
         return (path + 1);
     }
 
-    seg_len = MIN (sep - path, (int) size);
+    seg_len = min(sep - path, (int) size);
     snprintf(buffer, size, "%.*s", seg_len, path);
 
     return sep;
 }
 
+/******************************************************************************/

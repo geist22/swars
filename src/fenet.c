@@ -18,6 +18,7 @@
 /******************************************************************************/
 #include "fenet.h"
 
+#include "bffont.h"
 #include "bfkeybd.h"
 #include "bfmemut.h"
 #include "bfscrcopy.h"
@@ -33,13 +34,17 @@
 #include "femain.h"
 #include "feshared.h"
 #include "game_save.h"
+#include "game_speed.h"
 #include "game_sprts.h"
 #include "game.h"
+#include "keyboard.h"
 #include "network.h"
 #include "purpldrw.h"
 #include "purpldrwlst.h"
 #include "player.h"
+#include "sound.h"
 #include "swlog.h"
+#include "util.h"
 /******************************************************************************/
 
 extern struct ScreenButton net_INITIATE_button;
@@ -68,6 +73,16 @@ extern ubyte byte_155180; // = 109;
 extern ubyte byte_155181[];
 extern struct TbSprite *fe_icons_sprites;
 extern int unkn_rate; // = 19200;
+extern int serial_speeds[8];
+extern char net_baudrate_text[8];
+extern ubyte byte_1C47EA;
+extern ubyte byte_1C4805;
+extern ubyte byte_1C4806;
+extern ubyte byte_1C4994;
+extern ubyte net_autostart_done;
+extern ubyte byte_155170[4];
+extern char net_unkn1_text[25];
+extern char byte_1811E2[16];
 
 ubyte ac_do_net_protocol_option(ubyte click);
 ubyte ac_do_net_unkn40(ubyte click);
@@ -83,15 +98,25 @@ ubyte ac_show_net_comms_box(struct ScreenBox *box);
 ubyte ac_do_net_protocol_select(ubyte click);
 ubyte ac_show_net_protocol_box(struct ScreenBox *box);
 
+void ac_purple_unkn1_data_to_screen(void);
+void ac_purple_unkn3_data_to_screen(void);
+
+TbBool local_player_hosts_the_game(void)
+{
+    int plyr;
+
+    plyr = LbNetworkPlayerNumber();
+    return login_control__State == LognCt_Unkn6 || plyr == net_host_player_no;
+}
 
 void net_service_unkstruct04_clear(void)
 {
-    int i;
+    int plyr;
 
     LbMemorySet(unkstruct04_arr, 0, sizeof(unkstruct04_arr));
     byte_1C6D48 = 0;
-    for (i = 0; i < 8; i++) {
-        unkn2_names[i][0] = '\0';
+    for (plyr = 0; plyr < 8; plyr++) {
+        unkn2_names[plyr][0] = '\0';
     }
 }
 
@@ -106,7 +131,6 @@ void net_service_gui_switch(void)
         net_protocol_option_button.CallBackFn = ac_do_net_protocol_option;
         text = gui_strings[497 + nsvc.I.Type];
         net_protocol_select_button.Text = text;
-        net_service_unkstruct04_clear();
         break;
     case NetSvc_COM1:
     case NetSvc_COM2:
@@ -123,6 +147,14 @@ void net_service_gui_switch(void)
     }
 }
 
+void net_service_switch(ushort svctp)
+{
+    nsvc.I.Type = svctp;
+    if (nsvc.I.Type == NetSvc_IPX)
+        net_service_unkstruct04_clear();
+    net_service_gui_switch();
+}
+
 ubyte do_net_protocol_option(ubyte click)
 {
 #if 0
@@ -133,10 +165,10 @@ ubyte do_net_protocol_option(ubyte click)
 #endif
     short param, dt;
 
-    if (byte_1C4A7C)
+    if (net_service_started)
     {
         LbNetworkReset();
-        byte_1C4A7C = 0;
+        net_service_started = 0;
     }
     dt = 0x01;
     if ((lbShift & KMod_SHIFT) != 0)
@@ -167,46 +199,107 @@ ubyte do_net_protocol_option(ubyte click)
     if (LbNetworkServiceStart(&nsvc.I) != Lb_SUCCESS)
     {
         LOGERR("Failed on LbNetworkServiceStart");
-        nsvc.I.Type = NetSvc_COM1;
-        net_service_gui_switch();
         alert_box_text_fmt("%s", gui_strings[568]);
+        // Switch to a service which is always available
+        net_service_switch(NetSvc_COM1);
         return 1;
     }
+    net_service_started = 1;
 
-    byte_1C4A7C = 1;
     return 1;
 }
 
 ubyte do_net_unkn40(ubyte click)
 {
+#if 0
     ubyte ret;
     asm volatile ("call ASM_do_net_unkn40\n"
         : "=r" (ret) : "a" (click));
     return ret;
+#endif
+    byte_1C4994 = (byte_1C4994 == 0);
+    return 1;
+}
+
+short serial_speeds_idx(int boud_rate)
+{
+    short i;
+
+    for (i = 0; i < (int)(sizeof(serial_speeds)/sizeof(serial_speeds[0])); i++)
+    {
+        if (serial_speeds[i] == boud_rate)
+            break;
+    }
+    if (i >= (int)(sizeof(serial_speeds)/sizeof(serial_speeds[0])))
+        i = 0;
+    return i;
 }
 
 ubyte do_serial_speed_switch(ubyte click)
 {
+#if 0
     ubyte ret;
     asm volatile ("call ASM_do_serial_speed_switch\n"
         : "=r" (ret) : "a" (click));
     return ret;
+#endif
+    short cur_idx, nxt_idx;
+
+    cur_idx = serial_speeds_idx(unkn_rate);
+
+    if (click)
+    {
+        nxt_idx = cur_idx - 1;
+        if (nxt_idx < 0)
+            nxt_idx = (sizeof(serial_speeds)/sizeof(serial_speeds[0])) - 1;
+    }
+    else
+    {
+        nxt_idx = cur_idx + 1;
+        if (nxt_idx >= (int)(sizeof(serial_speeds)/sizeof(serial_speeds[0])))
+            nxt_idx = 0;
+    }
+    unkn_rate = serial_speeds[nxt_idx];
+    sprintf(net_baudrate_text, "%d", unkn_rate);
+    return 1;
 }
 
 ubyte do_net_SET2(ubyte click)
 {
+#if 0
     ubyte ret;
     asm volatile ("call ASM_do_net_SET2\n"
         : "=r" (ret) : "a" (click));
     return ret;
+#endif
+    int plyr;
+
+    if (!local_player_hosts_the_game() || login_control__State != LognCt_Unkn5)
+        return 0;
+
+    plyr = LbNetworkPlayerNumber();
+    unkn_flags_08 |= 0x02;
+    network_players[plyr].Type = 6;
+    return 1;
 }
 
 ubyte do_net_SET(ubyte click)
 {
+#if 0
     ubyte ret;
     asm volatile ("call ASM_do_net_SET\n"
         : "=r" (ret) : "a" (click));
     return ret;
+#endif
+    int plyr;
+
+    if (!local_player_hosts_the_game() || login_control__State != LognCt_Unkn5)
+        return 0;
+
+    plyr = LbNetworkPlayerNumber();
+    unkn_flags_08 |= 0x01;
+    network_players[plyr].Type = 6;
+    return 1;
 }
 
 ubyte net_unkn_func_32(void)
@@ -235,10 +328,11 @@ ubyte net_unkn_func_32(void)
         alert_box_text_fmt("%s", gui_strings[568]);
         goto out_fail;
     }
+    net_service_started = 1;
 
     LbNetworkSetBaud(unkn_rate);
     players[local_player_no].DoubleMode = 0;
-    byte_1C4A7C = 1;
+
     if (!byte_1C4A6F)
         goto skip_modem_init;
 
@@ -280,7 +374,7 @@ skip_modem_init:
         alert_box_text_fmt("%s", gui_strings[579]);
         goto out_fail;
     }
-    login_control__State = 5;
+    login_control__State = LognCt_Unkn5;
     net_host_player_no = LbNetworkHostPlayerNumber();
     net_players_num = LbNetworkSessionNumberPlayers();
     byte_15516C = -1;
@@ -298,17 +392,17 @@ out_fail:
         LbNetworkHangUp();
     if (nsvc.I.Type == NetSvc_IPX)
     {
-        if (!byte_1C4A7C) {
-            nsvc.I.Type = NetSvc_COM1;
-            net_service_gui_switch();
+        if (!net_service_started) {
+            // Switch to a service which is always available
+            net_service_switch(NetSvc_COM1);
         }
     }
     else
     {
-        if (byte_1C4A7C) {
+        if (net_service_started) {
             LbNetworkReset();
         }
-        byte_1C4A7C = 0;
+        net_service_started = 0;
     }
     return 0;
 #endif
@@ -337,9 +431,9 @@ ubyte net_unkn_func_31(struct TbNetworkSession *p_nsession)
         alert_box_text_fmt("%s", gui_strings[568]);
         goto out_fail;
     }
+    net_service_started = 1;
 
     LbNetworkSetBaud(unkn_rate);
-    byte_1C4A7C = 1;
     players[local_player_no].DoubleMode = 0;
     if (!byte_1C4A6F)
         goto skip_modem_init;
@@ -380,11 +474,11 @@ skip_modem_init:
         alert_box_text_fmt("%s", gui_strings[579]);
         goto out_fail;
     }
-    login_control__State = 5;
+    login_control__State = LognCt_Unkn5;
     net_host_player_no = LbNetworkHostPlayerNumber();
     net_players_num = LbNetworkSessionNumberPlayers();
     byte_1C6D4A = 1;
-    LbMemoryCopy(&nsvc.F, p_nsession, 0x28u);
+    LbMemoryCopy(&nsvc.S, p_nsession, sizeof(struct TbNetworkSession));
     if (nsvc.I.Type != NetSvc_IPX) {
         players[local_player_no].DoubleMode = 0;
     }
@@ -401,16 +495,16 @@ out_fail:
         LbNetworkHangUp();
     if (nsvc.I.Type == NetSvc_IPX)
     {
-        if (!byte_1C4A7C) {
-            nsvc.I.Type = NetSvc_COM1;
-            net_service_gui_switch();
+        if (!net_service_started) {
+            // Switch to a service which is always available
+            net_service_switch(NetSvc_COM1);
         }
     }
     else
     {
-        if (byte_1C4A7C)
+        if (net_service_started)
             LbNetworkReset();
-        byte_1C4A7C = 0;
+        net_service_started = 0;
     }
     return 0;
 #endif
@@ -430,7 +524,7 @@ void netgame_state_enter_5(void)
     init_variables();
     init_agents();
     srm_reset_research();
-    login_control__State = 5;
+    login_control__State = LognCt_Unkn5;
     for (plyr = 0; plyr < 8; plyr++) {
         player_mission_agents_reset(plyr);
     }
@@ -445,18 +539,18 @@ ubyte do_net_INITIATE(ubyte click)
         : "=r" (ret) : "a" (click));
     return ret;
 #endif
-    if (nsvc.I.Type == NetSvc_IPX && !byte_1C4A7C) {
+    if (nsvc.I.Type == NetSvc_IPX && !net_service_started) {
         LOGWARN("Cannot init protocol %d - not ready", (int)nsvc.I.Type);
         return 0;
     }
-    if (login_control__State == 6)
+    if (login_control__State == LognCt_Unkn6)
     {
         if (net_unkn_func_32())
         {
           netgame_state_enter_5();
       }
     }
-    else if (login_control__State == 5)
+    else if (login_control__State == LognCt_Unkn5)
     {
         int plyr;
         plyr = LbNetworkPlayerNumber();
@@ -484,11 +578,11 @@ ubyte do_net_groups_LOGON(ubyte click)
 #endif
     int plyr;
 
-    if (nsvc.I.Type == NetSvc_IPX && !byte_1C4A7C) {
+    if (nsvc.I.Type == NetSvc_IPX && !net_service_started) {
         LOGWARN("Cannot abort protocol %d - not ready", (int)nsvc.I.Type);
         return 0;
     }
-      if (login_control__State == 5)
+      if (login_control__State == LognCt_Unkn5)
       {
         plyr = LbNetworkPlayerNumber();
         network_players[plyr].Type = 13;
@@ -498,11 +592,14 @@ ubyte do_net_groups_LOGON(ubyte click)
         net_groups_LOGON_button.Text = gui_strings[386];
         net_unkn_func_33();
       }
-    else if (login_control__State == 6)
+    else if (login_control__State == LognCt_Unkn6)
     {
         if (byte_15516C != -1 || nsvc.I.Type != NetSvc_IPX)
         {
-            if (net_unkn_func_31(&unkstruct04_arr[byte_15516C].Session))
+            struct TbNetworkSession *p_nsession;
+
+            p_nsession = &unkstruct04_arr[byte_15516C].Session;
+            if (net_unkn_func_31(p_nsession))
             {
                 netgame_state_enter_5();
             }
@@ -591,7 +688,7 @@ void show_net_benefits_sub2(short x0, short y0, TbPixel *colours)
             {
                 lbDisplay.LeftButton = 0;
                 if (is_unkn_current_player() && ((unkn_flags_08 & 0x02) == 0)
-                  && (login_control__State == 5))
+                  && (login_control__State == LognCt_Unkn5))
                     login_control__TechLevel = i + 1;
             }
         }
@@ -626,7 +723,7 @@ void show_net_benefits_sub3(struct ScreenBox *box)
             {
                 lbDisplay.LeftButton = 0;
                 if (is_unkn_current_player() && ((unkn_flags_08 & 0x02) == 0)
-                  && (login_control__State == 5))
+                  && (login_control__State == LognCt_Unkn5))
                 {
                     login_control__TechLevel--;
                     if (login_control__TechLevel < 1)
@@ -652,7 +749,7 @@ void show_net_benefits_sub4(struct ScreenBox *box)
             {
                 lbDisplay.LeftButton = 0;
                 if (is_unkn_current_player() && ((unkn_flags_08 & 0x02) == 0)
-                    && (login_control__State == 5))
+                    && (login_control__State == LognCt_Unkn5))
                 {
                     login_control__TechLevel++;
                     if (login_control__TechLevel > 8)
@@ -734,7 +831,7 @@ void show_net_benefits_sub5(short x0, short y0, TbPixel *colours)
             {
                 lbDisplay.LeftButton = 0;
                 if (is_unkn_current_player() && ((unkn_flags_08 & 0x01) == 0)
-                  && (login_control__State == 5))
+                  && (login_control__State == LognCt_Unkn5))
                 {
                     login_control__Money = starting_cash_amounts[i];
                     ingame.Credits = login_control__Money;
@@ -772,7 +869,7 @@ void show_net_benefits_sub6(struct ScreenBox *box)
             {
                 lbDisplay.LeftButton = 0;
                 if (is_unkn_current_player() && ((unkn_flags_08 & 0x01) == 0)
-                    && (login_control__State == 5))
+                    && (login_control__State == LognCt_Unkn5))
                 {
                     reinit_starting_credits(-1);
                 }
@@ -798,7 +895,7 @@ void show_net_benefits_sub7(struct ScreenBox *box)
             {
                 lbDisplay.LeftButton = 0;
                 if (is_unkn_current_player() && ((unkn_flags_08 & 0x01) == 0)
-                    && (login_control__State == 5))
+                    && (login_control__State == LognCt_Unkn5))
                 {
                     reinit_starting_credits(1);
                 }
@@ -842,7 +939,7 @@ ubyte show_net_benefits_box(struct ScreenBox *box)
     show_net_benefits_sub7(box);
 
     lbDisplay.DrawFlags = 0;
-    if (is_unkn_current_player() && (login_control__State == 5))
+    if (is_unkn_current_player() && (login_control__State == LognCt_Unkn5))
     {
         //net_SET2_button.DrawFn(&net_SET2_button); -- incompatible calling convention
         asm volatile ("call *%2\n"
@@ -872,20 +969,179 @@ void purple_unkn4_data_to_screen(void)
         lbDisplay.GraphicsScreenHeight);
 }
 
-ubyte show_net_grpaint(struct ScreenBox *box)
+ubyte show_net_grpaint(struct ScreenBox *p_box)
 {
+#if 0
     ubyte ret;
     asm volatile ("call ASM_show_net_grpaint\n"
-        : "=r" (ret) : "a" (box));
+        : "=r" (ret) : "a" (p_box));
     return ret;
+#endif
+    int i;
+    short dy;
+    short ln_height;
+
+    if ((p_box->Flags & 0x1000) == 0)
+    {
+        lbDisplay.DrawFlags = 0x0010;
+        draw_box_purple_list(p_box->X + 263, p_box->Y + 4, 0xDu, 0x61u, 243);
+        lbDisplay.DrawFlags = 0;
+        dy = 0;
+        for (i = 0; i < 4; i++)
+        {
+            draw_box_purple_list(p_box->X + 265, p_box->Y + dy + 6, 9, 21, byte_155170[i]);
+            dy += 24;
+        }
+        draw_flic_purple_list(ac_purple_unkn3_data_to_screen);
+        if (login_control__State != LognCt_Unkn5)
+            draw_flic_purple_list(ac_purple_unkn1_data_to_screen);
+
+        copy_box_purple_list(p_box->X - 3, p_box->Y - 3,
+          p_box->Width + 6, p_box->Height + 6);
+        p_box->Flags |= 0x1000;
+    }
+
+    dy = 0;
+    ln_height = 24;
+    draw_flic_purple_list(purple_unkn4_data_to_screen);
+    for (i = 0; i < 4; i++)
+    {
+        if (mouse_down_over_box_coords(p_box->X + 265, p_box->Y + dy + 6, p_box->X + 274, p_box->Y + dy + ln_height + 6))
+        {
+            if (lbDisplay.LeftButton)
+            {
+                lbDisplay.LeftButton = 0;
+                play_sample_using_heap(0, 111, 127, 64, 100, 0, 2u);
+                byte_1C47EA = i;
+            }
+        }
+      dy += ln_height;
+    }
+
+    if (mouse_move_over_box_coords(p_box->X + 4, p_box->Y + 4 , p_box->X + 259, p_box->Y + 100))
+    {
+        TbBool pos_progress;
+        short plyr;
+
+        plyr = LbNetworkPlayerNumber();
+        pos_progress = false;
+        if (lbDisplay.MLeftButton)
+        {
+            lbDisplay.LeftButton = 0;
+            if ((lbShift & 0x01) != 0)
+                network_players[plyr].Type = 16;
+            else
+                network_players[plyr].Type = 11;
+            pos_progress = true;
+        }
+        else if (network_players[plyr].Type == 17)
+        {
+            network_players[plyr].Type = 18;
+            pos_progress = true;
+        }
+        if (pos_progress)
+        {
+            network_players[plyr].U.Progress.npfield_8 =
+              mouse_move_position_horizonal_over_bar_coords(p_box->X + 4, p_box->Width);
+            network_players[plyr].U.Progress.npfield_A =
+              mouse_move_position_vertical_over_bar_coords(p_box->Y + 4, p_box->Height);
+            network_players[plyr].U.Progress.npfield_12 = byte_1C47EA;
+        }
+        if (lbDisplay.MRightButton)
+        {
+            lbDisplay.RightButton = 0;
+            if (is_unkn_current_player())
+                network_players[plyr].Type = 3;
+        }
+    }
+    return 0;
 }
 
-ubyte show_net_comms_box(struct ScreenBox *box)
+ubyte show_net_comms_box(struct ScreenBox *p_box)
 {
+#if 0
     ubyte ret;
     asm volatile ("call ASM_show_net_comms_box\n"
-        : "=r" (ret) : "a" (box));
+        : "=r" (ret) : "a" (p_box));
     return ret;
+#endif
+    char plyrname[20];
+    char locstr[40];
+    int i;
+    short dx;
+    short tx_height;
+
+    if (byte_1C4805)
+    {
+        byte_1C4805 = 0;
+        net_unkn1_text[0] = '\0';
+    }
+    my_set_text_window(p_box->X + 4, p_box->Y + 4, p_box->Width - 8, p_box->Height - 8);
+    if ((p_box->Flags & 0x1000) != 0)
+    {
+        lbFontPtr = small_med_font;
+        tx_height = font_height('A');
+    }
+    else
+    {
+        lbFontPtr = med2_font;
+        lbDisplay.DrawFlags = 0x0100;
+        draw_text_purple_list2(0, 0, gui_strings[393], 0);
+        lbDisplay.DrawFlags = 0x0004;
+        draw_box_purple_list(p_box->X + 4, p_box->Y + 18, p_box->Width - 8, 61, 56);
+        lbFontPtr = small_med_font;
+        tx_height = font_height('A');
+        draw_box_purple_list(p_box->X + 4, p_box->Y + 87, p_box->Width - 8, tx_height + 6, 56);
+        lbDisplay.DrawFlags = 0;
+        copy_box_purple_list(p_box->X - 3, p_box->Y -  3, p_box->Width + 6, p_box->Height + 6);
+        p_box->Flags |= 0x1000;
+        reset_buffered_keys();
+    }
+
+    if (login_control__State != 5)
+    {
+        edit_flag = 0;
+        return 0;
+    }
+
+    edit_flag = 1;
+    dx = 14;
+    for (i = 0; i < 5; i++)
+    {
+        if ((LbNetworkPlayerName(plyrname, byte_1C6DDC[i]) == 1) &&
+          (net_players[i].field_0[0] != '\0'))
+        {
+            const char *text;
+
+            plyrname[7] = '\0';
+            snprintf(locstr, sizeof(locstr), "%s: %s", plyrname, net_players[i].field_0);
+            text = loctext_to_gtext(locstr);
+            draw_text_purple_list2(2, dx + 5, text, 0);
+            dx += tx_height + 4;
+        }
+    }
+
+    if (user_read_value(net_unkn1_text, 20, 0) && (login_control__State == 5)
+      && (net_unkn1_text[0] != '\0'))
+    {
+        int plyr;
+        plyr = LbNetworkPlayerNumber();
+        network_players[plyr].Type = 10;
+        strncpy(network_players[plyr].U.Text, net_unkn1_text,
+          min(sizeof(net_unkn1_text), sizeof(network_players[0].U.Text)));
+        byte_1C4805 = 1;
+    }
+    draw_text_purple_list2(2, 86, net_unkn1_text, 0);
+
+    if ((gameturn & 1) != 0)
+    {
+        const struct TbSprite *p_spr;
+
+        p_spr = LbFontCharSprite(lbFontPtr, 45);
+        tx_height = my_string_width(net_unkn1_text);
+        draw_sprite_purple_list(p_box->X + 6 + tx_height, p_box->Y + 92, p_spr);
+    }
+    return 0;
 }
 
 ubyte do_net_protocol_select(ubyte click)
@@ -899,10 +1155,10 @@ ubyte do_net_protocol_select(ubyte click)
     short proto;
     short pos_x;
 
-    if (byte_1C4A7C)
+    if (net_service_started)
     {
       LbNetworkReset();
-      byte_1C4A7C = 0;
+      net_service_started = 0;
     }
 
     pos_x = net_protocol_select_button.X - 12 + net_protocol_select_button.Width + 4;
@@ -930,7 +1186,6 @@ ubyte do_net_protocol_select(ubyte click)
                 net_protocol_select_button.X += 12;
             }
         }
-        nsvc.I.Type = proto;
     }
     else
     {
@@ -954,8 +1209,9 @@ ubyte do_net_protocol_select(ubyte click)
                 byte_1C4A6F = 1;
             }
         }
-        nsvc.I.Type = proto;
     }
+
+    net_service_switch(proto);
 
     switch (nsvc.I.Type)
     {
@@ -963,67 +1219,760 @@ ubyte do_net_protocol_select(ubyte click)
     default:
         break;
     case NetSvc_IPX:
-        net_service_gui_switch();
-
         if (LbNetworkServiceStart(&nsvc.I) != Lb_SUCCESS)
         {
             LOGERR("Failed on LbNetworkServiceStart");
-            nsvc.I.Type = NetSvc_COM1;
-            net_service_gui_switch();
             alert_box_text_fmt("%s", gui_strings[568]);
+            // Switch to a service which is always available
+            net_service_switch(NetSvc_COM1);
             break;
         }
-        byte_1C4A7C = 1;
+        net_service_started = 1;
         byte_15516C = -1;
         break;
     case NetSvc_COM1:
     case NetSvc_COM2:
     case NetSvc_COM3:
     case NetSvc_COM4:
-        net_service_gui_switch();
         byte_15516C = 0;
         break;
     }
     return 1;
 }
 
-ubyte show_net_protocol_box(struct ScreenBox *box)
+ubyte show_net_protocol_box(struct ScreenBox *p_box)
 {
+#if 0
     ubyte ret;
     asm volatile ("call ASM_show_net_protocol_box\n"
-        : "=r" (ret) : "a" (box));
+        : "=r" (ret) : "a" (p_box));
     return ret;
+#endif
+    const char *text;
+    short tx_height, tx_width;
+    short scr_x, scr_y;
+    ubyte drawn;
+
+    my_set_text_window(p_box->X + 4, p_box->Y + 4, p_box->Width - 8, p_box->Height - 8);
+
+    if (login_control__State == 5)
+    {
+        lbFontPtr = small_med_font;
+        tx_height = font_height('A');
+        lbDisplay.DrawColour = 87;
+
+        scr_y = 2;
+        text = gui_strings[506];
+        draw_text_purple_list2(4, scr_y, text, 0);
+
+        scr_y += tx_height + 4;
+        text = gui_strings[505];
+        draw_text_purple_list2(4, scr_y, text, 0);
+
+        scr_y += tx_height + 4;
+        text = gui_strings[515];
+        draw_text_purple_list2(4, scr_y, text, 0);
+
+        scr_y += tx_height + 4;
+        text = gui_strings[538];
+        draw_text_purple_list2(4, scr_y, text, 0);
+        lbDisplay.DrawFlags |= (0x8000 | 0x0040);
+
+        scr_y = 2;
+        if ((unkn_flags_08 & 0x04) != 0)
+            text = gui_strings[479];
+        else
+            text = gui_strings[478];
+        tx_width = my_string_width(text);
+        draw_text_purple_list2(165 - (tx_width >> 1), scr_y, text, 0);
+        lbDisplay.DrawFlags &= ~0x8000;
+        if (is_unkn_current_player())
+        {
+            if (mouse_down_over_box_coords(text_window_x1 + 4, text_window_y1 + scr_y - 2,
+              text_window_x1 + (tx_width >> 1) + 165, text_window_y1 + tx_height + scr_y + 2))
+            {
+                if (lbDisplay.LeftButton)
+                {
+                    int plyr;
+                    lbDisplay.LeftButton = 0;
+                    if ((unkn_flags_08 & 0x0004) != 0)
+                        unkn_flags_08 &= ~0x0004;
+                    else
+                        unkn_flags_08 |= 0x0004;
+                    plyr = LbNetworkPlayerNumber();
+                    network_players[plyr].Type = 6;
+                }
+            }
+        }
+
+        scr_y += tx_height + 4;
+        lbDisplay.DrawFlags |= 0x8000u;
+        if ((unkn_flags_08 & 0x08) != 0)
+            text = gui_strings[479];
+        else
+            text = gui_strings[478];
+        tx_width = my_string_width(text);
+        draw_text_purple_list2(165 - (tx_width >> 1), scr_y, text, 0);
+        lbDisplay.DrawFlags &= ~0x8000;
+        if (is_unkn_current_player())
+        {
+            if (mouse_down_over_box_coords(text_window_x1 + 4, text_window_y1 + scr_y - 2,
+              text_window_x1 + (tx_width >> 1) + 165, text_window_y1 + scr_y + tx_height + 2))
+            {
+                if (lbDisplay.LeftButton)
+                {
+                    int plyr;
+                    lbDisplay.LeftButton = 0;
+                    if ((unkn_flags_08 & 0x0008) != 0)
+                        unkn_flags_08 &= ~0x0008;
+                    else
+                        unkn_flags_08 |= 0x0008;
+                    plyr = LbNetworkPlayerNumber();
+                    network_players[plyr].Type = 6;
+                }
+            }
+        }
+
+        scr_y += tx_height + 4;
+        lbDisplay.DrawFlags |= 0x8000;
+        if ((unkn_flags_08 & 0x10) != 0)
+            text = gui_strings[479];
+        else
+            text = gui_strings[478];
+        tx_width = my_string_width(text);
+        draw_text_purple_list2(165 - (tx_width >> 1), scr_y, text, 0);
+        lbDisplay.DrawFlags &= ~0x8000;
+        if (is_unkn_current_player())
+        {
+            if (mouse_down_over_box_coords(text_window_x1 + 4, text_window_y1 + scr_y - 2,
+              text_window_x1 + (tx_width >> 1) + 165, text_window_y1 + scr_y + tx_height + 2))
+            {
+                if (lbDisplay.LeftButton)
+                {
+                    int plyr;
+                    lbDisplay.LeftButton = 0;
+                    if ((unkn_flags_08 & 0x0010) != 0)
+                        unkn_flags_08 &= ~0x0010;
+                    else
+                        unkn_flags_08 |= 0x0010;
+                    plyr = LbNetworkPlayerNumber();
+                    network_players[plyr].Type = 6;
+                }
+            }
+        }
+
+        scr_y += tx_height + 4;
+        lbDisplay.DrawFlags |= 0x8000;
+        if ((unkn_flags_08 & 0x20) != 0)
+            text = gui_strings[479];
+        else
+            text = gui_strings[478];
+        tx_width = my_string_width(text);
+        draw_text_purple_list2(165 - (tx_width >> 1), scr_y, text, 0);
+        lbDisplay.DrawFlags &= ~0x8000;
+        if (is_unkn_current_player())
+        {
+            if (mouse_down_over_box_coords(text_window_x1 + 4, text_window_y1 + scr_y - 2,
+              text_window_x1 + (tx_width >> 1) + 165, text_window_y1 + scr_y + tx_height + 2))
+            {
+                if (lbDisplay.LeftButton)
+                {
+                    int plyr;
+                    lbDisplay.LeftButton = 0;
+                    if ((unkn_flags_08 & 0x0020) != 0)
+                        unkn_flags_08 &= ~0x0020;
+                    else
+                        unkn_flags_08 |= 0x0020;
+                    plyr = LbNetworkPlayerNumber();
+                    network_players[plyr].Type = 6;
+                }
+            }
+        }
+        lbDisplay.DrawFlags &= ~0x0040;
+    }
+    else
+    {
+        TbBool draw_option;
+
+        lbFontPtr = med2_font;
+        tx_height = font_height('A');
+        draw_option = true;
+
+        if (nsvc.I.Type == NetSvc_IPX)
+        {
+            tx_width = 5 * LbTextCharWidth('A');
+            scr_x = ((p_box->Width - tx_width) >> 1) - 4;
+            lbDisplay.DrawFlags |= 0x0004;
+            draw_box_purple_list(text_window_x1 + scr_x, text_window_y1 + 22, tx_width + 4, tx_height + 4, 243);
+            lbDisplay.DrawFlags &= ~0x0004;
+
+            lbDisplay.DrawFlags |= 0x8000;
+            draw_text_purple_list2(scr_x + 2, 24, net_proto_param_text, 0);
+            lbDisplay.DrawFlags &= ~0x8000;
+
+            if (byte_1C4806 == 0)
+            {
+                tx_width = LbTextStringWidth(net_proto_param_text);
+                if (mouse_down_over_box_coords(text_window_x1 + scr_x + 2, text_window_y1 + 22,
+                  text_window_x1 + scr_x + 2 + tx_width, text_window_y1 + tx_height + 24 + 2))
+                {
+                    if (lbDisplay.LeftButton)
+                    {
+                        lbDisplay.LeftButton = 0;
+                        byte_1C4806 = 1;
+                        reset_buffered_keys();
+                    }
+                }
+            }
+
+            if (byte_1C4806 == 1)
+            {
+                if ((gameturn & 2) != 0)
+                {
+                    const struct TbSprite *p_spr;
+                    p_spr = LbFontCharSprite(lbFontPtr, 45);
+                    tx_width = LbTextStringWidth(net_proto_param_text);
+                    draw_sprite_purple_list(text_window_x1 + scr_x + 2 + tx_width, text_window_y1 + 27, p_spr);
+                }
+                if (user_read_value(net_proto_param_text, 4, 3))
+                {
+                    uint addr;
+
+                    byte_1C4806 = 0;
+                    addr = 0;
+                    sscanf(net_proto_param_text, "%04x", &addr);
+                    nsvc.I.Param = addr;
+                    LbNetworkSetupIPXAddress(addr);
+                    net_service_unkstruct04_clear();
+
+                    if (LbNetworkServiceStart(&nsvc.I) != Lb_SUCCESS)
+                    {
+                        LOGERR("Failed on LbNetworkServiceStart");
+                        alert_box_text_fmt("%s", gui_strings[568]);
+                        // Switch to a service which is always available
+                        net_service_switch(NetSvc_COM1);
+                    }
+                    else
+                    {
+                        net_service_started = 1;
+                    }
+                }
+            }
+            draw_option = false;
+        }
+        else
+        {
+            if (byte_1C4A6F)
+            {
+              //drawn = net_unkn40_button.DrawFn(&net_unkn40_button); -- incompatible calling convention
+              asm volatile ("call *%2\n"
+                  : "=r" (drawn) : "a" (&net_unkn40_button), "g" (net_unkn40_button.DrawFn));
+              if (drawn == 3)
+              {
+                  scr_y = net_unkn40_button.Y + 3;
+                  scr_x = net_unkn40_button.X + 3;
+                  draw_line_purple_list(scr_x +  0, scr_y + 0, scr_x +  3, scr_y + 0, 174);
+                  draw_line_purple_list(scr_x +  3, scr_y + 0, scr_x +  3, scr_y + 9, 174);
+                  draw_line_purple_list(scr_x +  3, scr_y + 9, scr_x +  6, scr_y + 9, 174);
+                  draw_line_purple_list(scr_x +  6, scr_y + 9, scr_x +  6, scr_y + 0, 174);
+                  draw_line_purple_list(scr_x +  6, scr_y + 0, scr_x +  9, scr_y + 0, 174);
+                  draw_line_purple_list(scr_x +  9, scr_y + 0, scr_x +  9, scr_y + 9, 174);
+                  draw_line_purple_list(scr_x +  9, scr_y + 9, scr_x + 12, scr_y + 9, 174);
+                  draw_line_purple_list(scr_x + 12, scr_y + 9, scr_x + 12, scr_y + 0, 174);
+                  draw_line_purple_list(scr_x + 12, scr_y + 0, scr_x + 15, scr_y + 0, 174);
+              }
+              my_set_text_window(p_box->X + 4, p_box->Y + 4, p_box->Width - 8, p_box->Height - 8);
+              if (!byte_1C4994) // Instead of option box, draw keyboard input
+              {
+                  tx_width = 15 * LbTextCharWidth('A');
+                  scr_x = ((p_box->Width - tx_width) >> 1) - 4;
+                  scr_y = 22;
+                  lbDisplay.DrawFlags |= 0x0004;
+                  draw_box_purple_list(scr_x + text_window_x1, text_window_y1 + scr_y, tx_width + 4, tx_height + 4, 243);
+                  lbDisplay.DrawFlags &= ~0x0004;
+                  lbDisplay.DrawFlags |= 0x8000;
+                  draw_text_purple_list2(scr_x + 2, scr_y + 2, net_unkn2_text, 0);
+                  lbDisplay.DrawFlags &= ~0x8000;
+                  if (!byte_1C4806)
+                  {
+                      tx_width = LbTextStringWidth(net_unkn2_text);
+                      if (mouse_down_over_box_coords(text_window_x1 + scr_x + 2, text_window_y1 + scr_y,
+                        text_window_x1 + scr_x + 2 + tx_width, text_window_y1 + scr_y + tx_height + 2 + 2))
+                      {
+                          if (lbDisplay.LeftButton)
+                          {
+                              lbDisplay.LeftButton = 0;
+                              byte_1C4806 = 1;
+                              reset_buffered_keys();
+                          }
+                      }
+                  }
+                  if (byte_1C4806 == 1)
+                  {
+                      if ((gameturn & 2) != 0)
+                      {
+                          const struct TbSprite *p_spr;
+                          p_spr = LbFontCharSprite(lbFontPtr, 45);
+                          tx_width = LbTextStringWidth(net_unkn2_text);
+                          draw_sprite_purple_list(text_window_x1 + scr_x + 2 + tx_width, text_window_y1 + 27, p_spr);
+                      }
+                      if (user_read_value(net_unkn2_text, 0xEu, 2))
+                      {
+                          byte_1C4806 = 0;
+                      }
+                  }
+                  draw_option = false;
+              }
+              byte_1C4806 = 0;
+            }
+        }
+        if (draw_option) {
+            //net_protocol_option_button.DrawFn(&net_protocol_option_button); -- incompatible calling convention
+            asm volatile ("call *%1\n"
+              :  : "a" (&net_protocol_option_button), "g" (net_protocol_option_button.DrawFn));
+        }
+        //net_protocol_select_button.DrawFn(&net_protocol_select_button); -- incompatible calling convention
+        asm volatile ("call *%1\n"
+          :  : "a" (&net_protocol_select_button), "g" (net_protocol_select_button.DrawFn));
+    }
+    return 0;
 }
 
-ubyte show_net_faction_box(struct ScreenBox *box)
+ubyte show_net_faction_box(struct ScreenBox *p_box)
 {
+#if 0
     ubyte ret;
     asm volatile ("call ASM_show_net_faction_box\n"
-        : "=r" (ret) : "a" (box));
+        : "=r" (ret) : "a" (p_box));
     return ret;
+#endif
+    short tx_height;
+    short scr_y;
+    int i;
+
+    my_set_text_window(p_box->X + 2, p_box->Y + 4, p_box->Width - 4, p_box->Height - 8);
+
+    if ((p_box->Flags & 0x1000) == 0)
+    {
+        lbFontPtr = med2_font;
+        tx_height = font_height('A');
+        lbDisplay.DrawFlags = 0x0100;
+        draw_text_purple_list2(0, 0, gui_strings[392], 0);
+        scr_y = tx_height + 10;
+
+        lbFontPtr = small_med_font;
+        tx_height = font_height('A');
+        lbDisplay.DrawFlags = 0x0004;
+
+        for (i = 0; i < 2; i++)
+        {
+            draw_box_purple_list(p_box->X + 4, p_box->Y + 4 + scr_y,
+              p_box->Width - 8, tx_height + 6, 56);
+            scr_y += tx_height + 9;
+        }
+        lbDisplay.DrawFlags = 0;
+
+        copy_box_purple_list(p_box->X - 3, p_box->Y - 3,
+          p_box->Width + 6, p_box->Height + 6);
+        p_box->Flags |= 0x1000;
+    }
+
+    lbFontPtr = small_med_font;
+    tx_height = font_height('A');
+
+    scr_y = 20;
+    for (i = 0; i < 2; i++)
+    {
+        if (byte_181183 == i)
+        {
+            lbDisplay.DrawFlags = (0x0040 | 0x0100);
+            lbDisplay.DrawColour = 87;
+        }
+        else
+        {
+            lbDisplay.DrawFlags = 0x0100;
+        }
+        lbDisplay.DrawFlags |= 0x8000;
+        draw_text_purple_list2(0, scr_y + 3, gui_strings[394 + i], 0);
+        lbDisplay.DrawFlags &= ~0x8000;
+
+        if (mouse_down_over_box_coords(text_window_x1, text_window_y1 - 2,
+           text_window_x2, text_window_y1 + scr_y + tx_height + 2))
+        {
+            if (lbDisplay.LeftButton)
+            {
+              int plyr;
+              lbDisplay.LeftButton = 0;
+              byte_181183 = i;
+              plyr = LbNetworkPlayerNumber();
+              network_players[plyr].Type = 8;
+            }
+        }
+        scr_y += tx_height + 9;
+    }
+    lbDisplay.DrawFlags = 0;
+    return 0;
 }
 
-ubyte show_net_team_box(struct ScreenBox *box)
+ubyte show_net_team_box(struct ScreenBox *p_box)
 {
+#if 0
     ubyte ret;
     asm volatile ("call ASM_show_net_team_box\n"
-        : "=r" (ret) : "a" (box));
+        : "=r" (ret) : "a" (p_box));
     return ret;
+#endif
+    short scr_y;
+    short tx_height;
+    int i;
+
+    my_set_text_window(p_box->X + 4, p_box->Y + 4, p_box->Width - 8, p_box->Height - 8);
+
+    if ((p_box->Flags & 0x1000) != 0)
+    {
+        lbFontPtr = small_med_font;
+        tx_height = font_height('A');
+    }
+    else
+    {
+        lbFontPtr = med2_font;
+        tx_height = font_height('A');
+        scr_y = 0;
+        lbDisplay.DrawFlags = 0x0100;
+        draw_text_purple_list2(0, scr_y, gui_strings[391], 0);
+        scr_y += tx_height + 3;
+
+        lbFontPtr = small_med_font;
+        tx_height = font_height('A');
+        lbDisplay.DrawFlags = 0x0004;
+
+        for (i = 0; i < 4; i++)
+        {
+            draw_box_purple_list(p_box->X + 4, p_box->Y + 4 + scr_y,
+              p_box->Width - 8, tx_height + 4, 56);
+            scr_y += tx_height + 5;
+        }
+        lbDisplay.DrawFlags = 0;
+        copy_box_purple_list(p_box->X - 3, p_box->Y - 3,
+          p_box->Width + 6, p_box->Height + 6);
+        p_box->Flags |= 0x1000;
+    }
+
+    scr_y = 13;
+    for (i = 0; i < 4; i++)
+    {
+        if (byte_181189 == i + 1)
+        {
+            lbDisplay.DrawFlags = 0x140;
+            lbDisplay.DrawColour = 87;
+        }
+        else
+        {
+            lbDisplay.DrawFlags = 0x100;
+        }
+        lbDisplay.DrawFlags |= 0x8000;
+        draw_text_purple_list2(0, scr_y + 2, gui_strings[397 + i], 0);
+        lbDisplay.DrawFlags &= ~0x8000;
+
+        if (mouse_down_over_box_coords(text_window_x1, text_window_y1 + scr_y - 2,
+           text_window_x2, text_window_y1 + scr_y + tx_height + 2))
+        {
+            if (lbDisplay.LeftButton)
+            {
+              int plyr;
+              lbDisplay.LeftButton = 0;
+              if (byte_181189 == i + 1)
+                  byte_181189 = 0;
+              else
+                  byte_181189 = i + 1;
+              plyr = LbNetworkPlayerNumber();
+              network_players[plyr].Type = 7;
+            }
+        }
+        scr_y += tx_height + 5;
+    }
+    lbDisplay.DrawFlags = 0;
+    return 0;
 }
 
-ubyte show_net_groups_box(struct ScreenBox *box)
+static const char *net_group_name_to_gtext(const char *name)
 {
+    char namestr[16];
+    char locstr[28];
+
+    snprintf(namestr, sizeof(namestr), "%s", name);
+    fontstrtoupper(namestr);
+    snprintf(locstr, sizeof(locstr), "%s'S %s", namestr, gui_strings[446]);
+    return loctext_to_gtext(locstr);
+}
+
+ubyte show_net_groups_box(struct ScreenBox *p_box)
+{
+#if 0
     ubyte ret;
     asm volatile ("call ASM_show_net_groups_box\n"
-        : "=r" (ret) : "a" (box));
+        : "=r" (ret) : "a" (p_box));
     return ret;
+#endif
+    const char *text;
+    int i;
+    short tx_height;
+    short scr_y;
+
+    if ((p_box->Flags & 0x1000) == 0)
+    {
+        short lines_height;
+        my_set_text_window(p_box->X + 2, p_box->Y + 4, p_box->Width - 4, p_box->Height - 8);
+
+        lbFontPtr = med2_font;
+        tx_height = font_height('A');
+        scr_y = 1;
+        lbDisplay.DrawFlags = 0x0100;
+        text = gui_strings[390];
+        draw_text_purple_list2(0, scr_y, text, 0);
+        lbDisplay.DrawFlags = 0;
+
+        scr_y += tx_height + 4;
+        lbFontPtr = small_med_font;
+        tx_height = font_height('A');
+        lines_height = 8 * tx_height;
+        lbDisplay.DrawFlags = 0x0004;
+        draw_box_purple_list(p_box->X + 4, p_box->Y + 4 + scr_y, p_box->Width - 8, lines_height + 34, 56);
+        lbDisplay.DrawFlags = 0x0100;
+
+        copy_box_purple_list(p_box->X - 3, p_box->Y - 3, p_box->Width + 6, p_box->Height + 6);
+        p_box->Flags |= 0x1000;
+    }
+
+    my_set_text_window(p_box->X + 4, p_box->Y + 4, p_box->Width - 8, p_box->Height - 8);
+    lbFontPtr = small_med_font;
+    tx_height = font_height('A');
+
+    scr_y = 19;
+    lbDisplay.DrawFlags = 0x0100;
+    if (login_control__State == 5)
+    {
+        text = net_group_name_to_gtext(nsvc.S.Name);
+        draw_text_purple_list2(0, scr_y, text, 0);
+    }
+    else
+    {
+        if (nsvc.I.Type == NetSvc_IPX)
+        {
+            struct TbNetworkSession *p_nsession;
+
+            for (i = 0; i < byte_1C6D48; i++)
+            {
+                p_nsession = &unkstruct04_arr[i].Session;
+
+                if (byte_15516C == i)
+                {
+                    lbDisplay.DrawFlags = (0x0100 | 0x0040);
+                    lbDisplay.DrawColour = 87;
+                }
+                else
+                {
+                    lbDisplay.DrawFlags = 0x0100;
+                }
+                text = net_group_name_to_gtext(p_nsession->Name);
+                lbDisplay.DrawFlags |= 0x8000;
+                draw_text_purple_list2(0, scr_y, text, 0);
+                lbDisplay.DrawFlags &= ~0x8000;
+
+                if (mouse_down_over_box_coords(text_window_x1, text_window_y1 + scr_y - 2,
+                  text_window_x2, text_window_y1 + scr_y + tx_height + 2))
+                {
+                    if (lbDisplay.LeftButton)
+                    {
+                        lbDisplay.LeftButton = 0;
+                        if (byte_15516C == i)
+                            byte_15516C = -1;
+                        else
+                            byte_15516C = i;
+                    }
+                }
+                scr_y += tx_height + 4;
+            }
+        }
+    }
+
+    if (is_unkn_current_player())
+    {
+        //net_INITIATE_button.DrawFn(&net_INITIATE_button); -- incompatible calling convention
+        asm volatile ("call *%1\n"
+          :  : "a" (&net_INITIATE_button), "g" (net_INITIATE_button.DrawFn));
+        if (byte_15516D != -1) {
+            //unkn8_EJECT_button.DrawFn(&unkn8_EJECT_button); -- incompatible calling convention
+            asm volatile ("call *%1\n"
+              :  : "a" (&unkn8_EJECT_button), "g" (unkn8_EJECT_button.DrawFn));
+        }
+    }
+    if ((byte_15516C != -1) || (login_control__State == 5))
+    {
+        //net_groups_LOGON_button.DrawFn(&net_groups_LOGON_button); -- incompatible calling convention
+        asm volatile ("call *%1\n"
+          :  : "a" (&net_groups_LOGON_button), "g" (net_groups_LOGON_button.DrawFn));
+    }
+    return 0;
 }
 
-ubyte show_net_users_box(struct ScreenBox *box)
+int refresh_users_in_net_game(void)
 {
+    char locstr[16];
+    int n;
+    short plyr;
+
+    n = 0;
+    ingame.InNetGame_UNSURE = (1 << 8) - 1;
+    for (plyr = 0; plyr < 8; plyr++)
+    {
+        TbResult ret;
+        ret = LbNetworkPlayerName(locstr, plyr);
+        if (ret != Lb_SUCCESS)
+        {
+            unkn2_names[plyr][0] = '\0';
+            ingame.InNetGame_UNSURE &= ~(1 << plyr);
+            continue;
+        }
+        if (locstr[0] == '\0')
+        {
+            unkn2_names[plyr][0] = '\0';
+            ingame.InNetGame_UNSURE &= ~(1 << plyr);
+            continue;
+        }
+        strncpy(unkn2_names[plyr], locstr, sizeof(unkn2_names[0]));
+        n++;
+    }
+    LOGSYNC("Net players %d", n);
+    return n;
+}
+
+ubyte show_net_users_box(struct ScreenBox *p_box)
+{
+#if 0
     ubyte ret;
     asm volatile ("call ASM_show_net_users_box\n"
-        : "=r" (ret) : "a" (box));
+        : "=r" (ret) : "a" (p_box));
+    return ret;
+#endif
+    const char *text;
+    struct TbNetworkPlayer *p_netplyr;
+    short plyr;
+    short scr_x, scr_y;
+    short tx_width, tx_height;
+
+    my_set_text_window(p_box->X + 4, p_box->Y + 4, p_box->Width - 8, p_box->Height - 8);
+    if ((p_box->Flags & 0x1000) == 0)
+    {
+        lbFontPtr = med2_font;
+        tx_height = font_height('A');
+        lbDisplay.DrawFlags = 0x0100;
+        draw_text_purple_list2(0, 1, gui_strings[389], 0);
+        lbDisplay.DrawFlags = 0;
+        scr_y = tx_height + 8;
+        lbFontPtr = small_med_font;
+        tx_height = font_height('A');
+        lbDisplay.DrawFlags = 0x0004;
+        for (plyr = 0; plyr < 8; plyr++)
+        {
+            struct TbSprite *p_spr;
+            p_spr = &fe_icons_sprites[138];
+            draw_box_purple_list(p_box->X + 4, p_box->Y + scr_y + 4, 109, tx_height + 6, 56);
+            draw_sprite_purple_list(p_box->X + 113, p_box->Y + scr_y + 4, p_spr);
+            draw_box_purple_list(p_box->X + p_spr->SWidth + 113, p_box->Y + scr_y + 4, 15, tx_height + 6, 56);
+            scr_y += tx_height + 9;
+        }
+        lbDisplay.DrawFlags = 0;
+
+        copy_box_purple_list(p_box->X - 3, p_box->Y - 3, p_box->Width + 6, p_box->Height + 6);
+        p_box->Flags |= 0x1000;
+    }
+
+    lbFontPtr = small_med_font;
+    tx_height = font_height('A');
+    scr_y = 18;
+    if (login_control__State == 5)
+    {
+        refresh_users_in_net_game();
+
+        for (plyr = 0; plyr < 8; plyr++)
+        {
+            text = unkn2_names[plyr];
+            if (text[0] == '\0')
+            {
+                continue;
+            }
+            if (byte_15516D == plyr)
+            {
+                lbDisplay.DrawFlags = 0x0040;
+                lbDisplay.DrawColour = 87;
+            }
+            else
+            {
+                lbDisplay.DrawFlags = 0;
+            }
+            tx_width = my_string_width(text);
+            scr_x = (110 - tx_width) >> 1;
+            if (is_unkn_current_player())
+                lbDisplay.DrawFlags |= 0x8000;
+            text = loctext_to_gtext(text);
+            draw_text_purple_list2(scr_x, scr_y + 3, text, 0);
+            lbDisplay.DrawFlags &= ~0x8000;
+
+            text = gui_strings[394 + group_types[plyr]];
+            scr_x = ((64 - my_string_width(text)) >> 1) + 139;
+            draw_text_purple_list2(scr_x, scr_y + 3, text, 0);
+            if (byte_1C5C28[plyr])
+            {
+                struct TbSprite *p_spr, *p_dspr;
+                p_spr = &fe_icons_sprites[138];
+                p_dspr = &fe_icons_sprites[109 + byte_1C5C28[plyr]];
+                draw_sprite_purple_list(p_box->X + (112 + p_spr->SWidth) + 4,
+                  p_box->Y + 4 + scr_y + 2, p_dspr);
+            }
+            if (is_unkn_current_player())
+            {
+                if (mouse_down_over_box_coords(text_window_x1, text_window_y1 + scr_y + 1,
+                  text_window_x2, text_window_y1 + tx_height + scr_y + 5))
+                {
+                    if (lbDisplay.LeftButton)
+                    {
+                        lbDisplay.LeftButton = 0;
+                        if (byte_15516D == plyr)
+                            byte_15516D = -1;
+                        else
+                            byte_15516D = plyr;
+                    }
+                }
+            }
+            scr_y += tx_height + 9;
+        }
+    }
+    else if (byte_15516C != -1)
+    {
+        p_netplyr = unkstruct04_arr[byte_15516C].Player;
+        for (plyr = 0; plyr < 8; plyr++)
+        {
+            const char *name;
+            name = p_netplyr[plyr].Name;
+            if (name[0] != '\0')
+            {
+                tx_width = my_string_width(name);
+                scr_x = (110 - tx_width) >> 1;
+                text = loctext_to_gtext(name);
+                draw_text_purple_list2(scr_x, scr_y + 3, text, 0);
+                scr_y += tx_height + 9;
+            }
+        }
+    }
+    return 0;
+}
+
+int net_unkn_func_30(void)
+{
+    int ret;
+    asm volatile ("call ASM_net_unkn_func_30\n"
+        : "=r" (ret) : );
     return ret;
 }
 
@@ -1046,9 +1995,63 @@ ubyte do_unkn8_EJECT(ubyte click)
 
 void show_netgame_unkn_case1(void)
 {
+#if 1
     asm volatile (
       "call ASM_show_netgame_unkn_case1\n"
         :  :  : "eax" );
+    return;
+#endif
+    if (!net_autostart_done)
+    {
+        net_autostart_done = 1;
+
+        nsvc.I.GameId = 0xD15C;
+        nsvc.I.Param = 0;
+        nsvc.I.Type = NetSvc_IPX;
+
+        strncpy(byte_1811E2, login_name, sizeof(byte_1811E2));
+        byte_1811E2[8] = '\0';
+        net_service_unkstruct04_clear();
+
+        if (LbNetworkServiceStart(&nsvc.I) != Lb_SUCCESS)
+        {
+            net_service_started = 0;
+            LOGERR("Failed on LbNetworkServiceStart");
+            alert_box_text_fmt("%s", gui_strings[568]);
+            // Switch to a service which is always available
+            net_service_switch(NetSvc_COM1);
+            return;
+        }
+        net_service_started = 1;
+    }
+    //net_protocol_box.DrawFn(&net_protocol_box); -- incompatible calling convention
+    asm volatile ("call *%1\n"
+      :  : "a" (&net_protocol_box), "g" (net_protocol_box.DrawFn));
+    //net_groups_box.DrawFn(&net_groups_box); -- incompatible calling convention
+    asm volatile ("call *%1\n"
+      :  : "a" (&net_groups_box), "g" (net_groups_box.DrawFn));
+    //net_users_box.DrawFn(&net_users_box); -- incompatible calling convention
+    asm volatile ("call *%1\n"
+      :  : "a" (&net_users_box), "g" (net_users_box.DrawFn));
+    //net_faction_box.DrawFn(&net_faction_box); -- incompatible calling convention
+    asm volatile ("call *%1\n"
+      :  : "a" (&net_faction_box), "g" (net_faction_box.DrawFn));
+    //net_team_box.DrawFn(&net_team_box); -- incompatible calling convention
+    asm volatile ("call *%1\n"
+      :  : "a" (&net_team_box), "g" (net_team_box.DrawFn));
+    //net_benefits_box.DrawFn(&net_benefits_box); -- incompatible calling convention
+    asm volatile ("call *%1\n"
+      :  : "a" (&net_benefits_box), "g" (net_benefits_box.DrawFn));
+    //net_comms_box.DrawFn(&net_comms_box); -- incompatible calling convention
+    asm volatile ("call *%1\n"
+      :  : "a" (&net_comms_box), "g" (net_comms_box.DrawFn));
+    //net_grpaint.DrawFn(&net_grpaint); -- incompatible calling convention
+    asm volatile ("call *%1\n"
+      :  : "a" (&net_grpaint), "g" (net_grpaint.DrawFn));
+
+    if ((login_control__State == 6) && (nsvc.I.Type == NetSvc_IPX)) {
+        net_unkn_func_30();
+    }
 }
 
 void init_net_screen_boxes(void)

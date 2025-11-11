@@ -25,8 +25,11 @@
 #include "bfscrcopy.h"
 #include "bfutility.h"
 #include "bflib_joyst.h"
+#include "ssampply.h"
 
+#include "fecryo.h"
 #include "femain.h"
+#include "fenet.h"
 #include "game_speed.h"
 #include "guiboxes.h"
 #include "guitext.h"
@@ -118,7 +121,7 @@ void update_equip_cost_text(void)
 
     if (selected_weapon == -1) // No weapon selected
     {
-        equip_cost_text[0] = 0;
+        equip_cost_text[0] = '\0';
         return;
     }
 
@@ -137,7 +140,7 @@ void equip_name_box_redraw(struct ScreenTextBox *p_box)
     {
         text = NULL;
     }
-    else if (is_research_weapon_completed(selected_weapon + 1) || (login_control__State != 6))
+    else if (is_research_weapon_completed(selected_weapon + 1) || (login_control__State != LognCt_Unkn6))
     {
         struct Campaign *p_campgn;
         ushort strid;
@@ -170,7 +173,7 @@ void equip_display_box_redraw(struct ScreenTextBox *p_box)
         p_box->Lines = 0;
         if (selected_weapon + 1 < 1) {
             text = NULL;
-        } else if (is_research_weapon_completed(selected_weapon + 1) || (login_control__State != 6)) {
+        } else if (is_research_weapon_completed(selected_weapon + 1) || (login_control__State != LognCt_Unkn6)) {
             text = &weapon_text[weapon_text_index[selected_weapon]];
         } else {
             text = gui_strings[536];
@@ -259,7 +262,7 @@ ubyte do_equip_offer_buy_weapon(ubyte click)
 
     if (nbought > 0)
     {
-        if ((login_control__State == 5 && (unkn_flags_08 & 0x08) != 0)) {
+        if ((login_control__State == LognCt_Unkn5 && (unkn_flags_08 & 0x08) != 0)) {
             net_players_copy_equip_and_cryo();
         }
     }
@@ -280,9 +283,9 @@ ubyte do_equip_offer_buy(ubyte click)
         return 0;
     }
 
-    if ((login_control__State == 5) && ((unkn_flags_08 & 0x08) != 0))
+    if ((login_control__State == LognCt_Unkn5) && ((unkn_flags_08 & 0x08) != 0))
     {
-        if ((login_control__State != 6) && (LbNetworkPlayerNumber() != net_host_player_no))
+        if (!local_player_hosts_the_game())
             return 0;
     }
 
@@ -303,16 +306,161 @@ ubyte do_equip_offer_buy(ubyte click)
 
 ubyte sell_equipment(ubyte click)
 {
+#if 0
     ubyte ret;
     asm volatile ("call ASM_sell_equipment\n"
         : "=r" (ret) : "a" (click));
     return ret;
+#endif
+    TbBool sold;
+
+    if ((login_control__State == LognCt_Unkn5) && ((unkn_flags_08 & 0x08) != 0))
+    {
+        if (!local_player_hosts_the_game())
+            return 0;
+    }
+
+    sold = false;
+    if (screentype == SCRT_EQUIP)
+    {
+        struct WeaponDef *wdef;
+
+        wdef = &weapon_defs[selected_weapon + 1];
+
+        if (selected_agent == 4)
+        {
+            ushort cryo_no;
+
+            for (cryo_no = 0; cryo_no < 4; cryo_no++)
+            {
+                if (player_cryo_remove_weapon_one(cryo_no, selected_weapon + 1)) {
+                    ingame.Credits += (100 * wdef->Cost) >> 1;
+                    sold = true;
+                }
+            }
+        }
+        else
+        {
+            if (player_cryo_remove_weapon_one(selected_agent, selected_weapon + 1)) {
+                ingame.Credits += (100 * wdef->Cost) >> 1;
+                sold = true;
+            }
+
+        }
+        if ((login_control__State == LognCt_Unkn5) && ((unkn_flags_08 & 0x08) != 0))
+        {
+            network_players[local_player_no].Type = 14;
+            net_unkn_func_33();
+            ++gameturn;
+            network_players[local_player_no].Type = 15;
+        }
+    }
+
+    if (sold)
+    {
+        check_buy_sell_button();
+    }
+    return 1;
+}
+
+/** Determines if buy or sell should be available in the equip weapon offer.
+ *
+ * @return Gives 0 if button unavailable, 1 for buy, 2 for sell.
+ */
+ubyte equip_offer_can_buy_or_sell(WeaponType wtype)
+{
+    if (selected_agent < 0)
+        return 0;
+
+    if (selected_agent == 4) // All agents selected
+    {
+        short plagent;
+
+        if (is_research_weapon_completed(wtype) ||
+          (login_control__State != LognCt_Unkn6))
+            return 1;
+
+        for (plagent = 0; plagent < 4; plagent++)
+        {
+            if (!player_agent_has_weapon(local_player_no, plagent, wtype))
+              break;
+        }
+        if (plagent == 4) // all agents have that weapon
+            return 2;
+
+        return 0;
+    }
+
+    if (player_agent_has_weapon(local_player_no, selected_agent, wtype))
+        return 2;
+
+    if (is_research_weapon_completed(wtype) ||
+      (login_control__State != LognCt_Unkn6))
+        return 1;
+
+    return 0;
+}
+
+ubyte get_buy_sell_button_mode(void)
+{
+    ubyte mode;
+
+    mode = 0;
+    if (screentype == 5)
+    {
+        if (selected_weapon == -1)
+        {
+            // no weapon selected - no check
+        }
+        else
+        {
+            mode = equip_offer_can_buy_or_sell(selected_weapon + 1);
+        }
+    }
+    else
+    {
+        if (selected_mod == -1)
+        {
+            // no mod selected - no check
+        }
+        else
+        {
+            mode = cryo_offer_can_buy_or_sell(selected_mod + 1);
+        }
+    }
+    return mode;
 }
 
 void check_buy_sell_button(void)
 {
+#if 0
     asm volatile ("call ASM_check_buy_sell_button\n"
         :  :  : "eax" );
+#endif
+    ubyte mode;
+
+    mode = get_buy_sell_button_mode();
+
+    if (mode == 1)
+    {
+        equip_offer_buy_button.Text = gui_strings[436];
+        equip_offer_buy_button.CallBackFn = ac_do_equip_offer_buy;
+    }
+    else if (mode == 2)
+    {
+        equip_offer_buy_button.Text = gui_strings[407];
+        equip_offer_buy_button.CallBackFn = ac_sell_equipment;
+    }
+
+    // The functions below may check callback function to figure out mode
+    if (screentype == 5)
+    {
+        update_equip_cost_text();
+    }
+    else
+    {
+        update_cybmod_cost_text();
+    }
 }
 
 ubyte select_all_agents(ubyte click)
@@ -356,17 +504,17 @@ void skip_flashy_draw_equipment_screen_boxes(void)
     equip_agent_name_draw_state = 1;
 }
 
-TbBool weapon_available_for_purchase(short weapon)
+TbBool weapon_available_for_purchase(short wtype)
 {
     struct WeaponDef *wdef;
 
-    if (weapon < 0 || weapon >= WEP_TYPES_COUNT)
+    if (wtype < 0 || wtype >= WEP_TYPES_COUNT)
         return false;
 
-    wdef = &weapon_defs[weapon];
+    wdef = &weapon_defs[wtype];
 
-    return ((wdef->Flags & WEPDFLG_CanPurchease) && (research.WeaponsCompleted & (1 << (weapon-1))))
-            || (login_control__State == 5 && login_control__TechLevel >= weapon_tech_level[weapon]);
+    return ((wdef->Flags & WEPDFLG_CanPurchease) && (research.WeaponsCompleted & (1 << (wtype-1))))
+            || (login_control__State == LognCt_Unkn5 && login_control__TechLevel >= weapon_tech_level[wtype]);
 }
 
 ubyte flashy_draw_agent_panel_shape(struct ScreenShape *p_shape, ubyte gbstate)
@@ -435,7 +583,7 @@ ubyte input_equip_agent_panel_shape(struct ScreenShape *shape, sbyte nagent)
     if (mouse_over_agent_panel_shape(shape))
     {
         if ((shape->Flags & 0x0200) == 0) {
-            play_sample_using_heap(0, 123, 127, 64, 100, 0, 1u);
+            play_sample_using_heap(0, 123, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 1u);
             shape->Flags |= 0x0200;
         }
         if (lbDisplay.MLeftButton || (joy.Buttons[0] != 0))
@@ -452,13 +600,13 @@ ubyte input_equip_agent_panel_shape(struct ScreenShape *shape, sbyte nagent)
                 {
                     if (nagent < cryo_agents.NumAgents)
                     {
-                        play_sample_using_heap(0, 111, 127, 64, 100, 0, 2u);
+                        play_sample_using_heap(0, 111, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 2u);
                         selected_agent = nagent;
                         check_buy_sell_button();
                     }
                     else
                     {
-                        play_sample_using_heap(0, 129, 127, 64, 100, 0, 2u);
+                        play_sample_using_heap(0, 129, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 2u);
                     }
                     shape->Flags &= ~0x0400;
                 }
@@ -637,11 +785,11 @@ ubyte show_equipment_screen(void)
     }
     if (refresh_equip_list)
     {
-        short weapon;
+        WeaponType wtype;
         equip_list_box.Lines = 0;
-        for (weapon = 1; weapon < WEP_TYPES_COUNT; weapon++)
+        for (wtype = 1; wtype < WEP_TYPES_COUNT; wtype++)
         {
-            if (weapon_available_for_purchase(weapon)) {
+            if (weapon_available_for_purchase(wtype)) {
                 equip_list_box.Lines++;
             }
         }
@@ -824,44 +972,6 @@ TbBool input_display_box_content_wep(struct ScreenTextBox *p_box)
     return false;
 }
 
-/** Determines if buy or sell should be available in the equip weapon offer.
- *
- * @return Gives 0 if button unavailable, 1 for buy, 2 for sell.
- */
-ubyte equip_offer_can_buy_or_sell(ubyte weapon)
-{
-    if (selected_agent < 0)
-        return 0;
-
-    if (selected_agent == 4) // All agents selected
-    {
-        short i;
-
-        if (is_research_weapon_completed(weapon) ||
-          (login_control__State != 6))
-            return 1;
-
-        for (i = 0; i < 4; i++)
-        {
-            if (!player_agent_has_weapon(local_player_no, i, weapon))
-              break;
-        }
-        if (i == 4) // all agents have that weapon
-            return 2;
-
-        return 0;
-    }
-
-    if (player_agent_has_weapon(local_player_no, selected_agent, weapon))
-        return 2;
-
-    if (is_research_weapon_completed(weapon) ||
-      (login_control__State != 6))
-        return 1;
-
-    return 0;
-}
-
 void display_box_content_state_switch(void)
 {
     switch (display_box_content)
@@ -936,7 +1046,7 @@ ubyte display_weapon_info(struct ScreenTextBox *box)
     lbFontPtr = small_med_font;
 
     // Weapon category
-    if (is_research_weapon_completed(selected_weapon + 1) || (login_control__State != 6))
+    if (is_research_weapon_completed(selected_weapon + 1) || (login_control__State != LognCt_Unkn6))
         stridx = 59 + weapon_defs[selected_weapon + 1].Category;
     else
         stridx = 65;

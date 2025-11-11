@@ -26,6 +26,7 @@
 #include <assert.h>
 
 #include "ailss.h"
+
 #include "aildebug.h"
 #include "ail.h"
 #include "memfile.h"
@@ -228,7 +229,7 @@ int32_t SS_configure_buffers(DIG_DRIVER *digdrv)
         {
             // use one of system_data[] slots for temporary storage,
             // the storage place becomes free again when this function ends
-            digdrv->samples[i].system_data[7] =
+            digdrv->samples[i].system_data[SmpSD_TEMP] =
                 digdrv->samples[i].status;
 
             if (digdrv->samples[i].status == SNDSMP_PLAYING)
@@ -394,7 +395,7 @@ int32_t SS_configure_buffers(DIG_DRIVER *digdrv)
         // Resume any interrupted samples
         for (i = 0; i < digdrv->n_samples; i++)
             digdrv->samples[i].status =
-                digdrv->samples[i].system_data[7];
+                digdrv->samples[i].system_data[SmpSD_TEMP];
 
         // Flush new DMA buffers with silence and resume DMA playback
         SS_flush(digdrv);
@@ -579,6 +580,48 @@ void AIL2OAL_API_end_sample(SNDSAMPLE *s)
     }
 }
 
+void AIL2OAL_API_stop_sample(SNDSAMPLE *s)
+{
+    if (s == NULL)
+        return;
+
+    // Make sure sample is currently playing
+    if (s->status != SNDSMP_PLAYING)
+        return;
+
+    // Mask 'playing' status
+    s->status = SNDSMP_STOPPED;
+}
+
+void AIL2OAL_API_resume_sample(SNDSAMPLE *s)
+{
+    if (s == NULL)
+        return;
+
+    if (s->status == SNDSMP_FREE)
+        return;
+
+    // See if sample has been previously stopped or not managed to start yet
+    if ((s->status != SNDSMP_STOPPED) && (s->status != SNDSMP_FREE))
+        return;
+
+    // Extra checks if resume got called before start (good for non-zero start offsets)
+    if (s->status == SNDSMP_FREE)
+    {
+        // Make sure valid sample data exists
+        if ((s->len[s->current_buffer] == 0) ||
+         (s->start[s->current_buffer] == NULL))
+            return;
+    }
+
+    // Start reverb if parameters say it is needed - NO SUPPORT
+
+    s->status = SNDSMP_PLAYING;
+
+    // If driver is not already transmitting data, start it
+    SS_start_DIG_driver_playback(s->driver);
+}
+
 uint32_t AIL2OAL_API_sample_status(SNDSAMPLE *s)
 {
     assert(s != NULL);
@@ -662,15 +705,21 @@ int32_t AIL2OAL_API_set_sample_file(SNDSAMPLE *s, const void *file_image, int32_
     switch (ftype)
     {
     case SMP_FTYP_WAV:
-        s->system_data[6] = 0;
+        s->system_data[SmpSD_RELEASE] = 0;
         AIL_process_WAV_image(file_image, s);
         break;
     case SMP_FTYP_VOC:
+#if !defined(LBS_ENABLE_STRUCTS_EXPAND)
+        AIL_set_error("VOC samples are not compatible with OpenAL unless STRUCTS_EXPAND is used.");
+#endif
         // Store pointer to sample data
-        s->system_data[1] = (uintptr_t)file_image + *(uint16_t *)(file_image + 20);
-        //s->system_data[4] = block; // used by OpenAL
-        s->system_data[6] = 0;
-        //s->system_data[5] = (block == -1); // used by OpenAL
+        s->system_data[SmpSD_VOC_BLK_PTR] =
+          (uintptr_t)file_image + *(uint16_t *)(file_image + 20);
+        s->system_data[SmpSD_RELEASE] = 0;
+#if defined(LBS_ENABLE_STRUCTS_EXPAND) // without extra fields, these are used by OpenAL
+        s->system_data[SmpSD_VOC_MRKR] = block;
+        s->system_data[SmpSD_VOC_MRKR_FND] = (block != -1);
+#endif
         AIL_process_VOC_block(s, 0);
         break;
     default: // s->system_data[6] == -1

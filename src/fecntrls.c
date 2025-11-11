@@ -22,6 +22,7 @@
 #include "bftext.h"
 #include "bfutility.h"
 #include "bflib_joyst.h"
+#include "ssampply.h"
 
 #include "femain.h"
 #include "feshared.h"
@@ -226,7 +227,7 @@ ubyte show_controls_joystick_box(struct ScreenBox *p_box)
         if (lbDisplay.LeftButton)
         {
             lbDisplay.LeftButton = 0;
-            if (login_control__State != 5 || nsvc.I.Type == 1)
+            if (login_control__State != LognCt_Unkn5 || nsvc.I.Type == 1)
             {
                 p_locplayer->DoubleMode++;
                 if (p_locplayer->DoubleMode > 3)
@@ -496,7 +497,7 @@ ubyte menu_controls_inputs(struct ScreenTextBox *p_box, short *p_tx_kbd_width, s
             if (is_key_pressed(KC_RETURN, KMod_DONTCARE))
             {
                 if (is_hardcoded_hlight_gkey(controls_hlight_gkey)) {
-                    play_sample_using_heap(0, 129, 127, 64, 100, 0, 2u);
+                    play_sample_using_heap(0, 129, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 2u);
                 } else {
                     byte_1C4970++;
                     ret = 2;
@@ -505,7 +506,7 @@ ubyte menu_controls_inputs(struct ScreenTextBox *p_box, short *p_tx_kbd_width, s
             if (is_key_pressed(KC_BACK, KMod_DONTCARE))
             {
                 if (is_hardcoded_hlight_gkey(controls_hlight_gkey)) {
-                    play_sample_using_heap(0, 129, 127, 64, 100, 0, 2u);
+                    play_sample_using_heap(0, 129, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 2u);
                 } else {
                     clear_key_pressed(KC_BACK);
                     unset_controls_key(controls_hlight_gkey);
