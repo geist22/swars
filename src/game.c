@@ -3057,7 +3057,9 @@ ushort make_group_into_players(ushort group, ushort plyr, ushort max_agent, shor
             switch_person_anim_mode(p_person, 0);
         }
 
-        if ((p_person->SubType == SubTT_PERS_AGENT) || (p_person->SubType == SubTT_PERS_ZEALOT))
+        // TODO remove SubTT_PERS_HIGH_PRIEST from here once the zealots have a proper implementation for changing robes
+        // Currently it's required for the workaround to function, otherwise zealot 1 gets duplicated as zealot 2 and zealot 2/3/4 move up one number
+        if ((p_person->SubType == SubTT_PERS_AGENT) || (p_person->SubType == SubTT_PERS_ZEALOT) || (p_person->SubType == SubTT_PERS_HIGH_PRIEST))
             high_tier++;
 
         if (++plagent == max_agent)
