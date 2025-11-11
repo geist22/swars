@@ -20,6 +20,7 @@
 
 #include <assert.h>
 #include "bfbox.h"
+#include "bffont.h"
 #include "bfgentab.h"
 #include "bfline.h"
 #include "bfmemut.h"
@@ -194,7 +195,7 @@ int SCANNER_text_draw(const char *text, int start_x, int height)
     {
         while (*str != '\0')
         {
-            struct TbSprite *p_spr;
+            const struct TbSprite *p_spr;
             int chr_width, chr_height;
             ubyte ch;
             TbPixel col;
@@ -205,7 +206,7 @@ int SCANNER_text_draw(const char *text, int start_x, int height)
             } else {
               ch = my_char_to_upper(*str);
               col = pixmap.fade_table[56 * PALETTE_8b_COLORS + sel_c1];
-              p_spr = &lbFontPtr[ch - 31];
+              p_spr = LbFontCharSprite(lbFontPtr, ch);
               chr_width = p_spr->SWidth * height / height_base;
               chr_height = p_spr->SHeight * height / height_base;
               LbSpriteDrawScaledOneColour(x, y, p_spr, chr_width, chr_height, col);
@@ -218,7 +219,7 @@ int SCANNER_text_draw(const char *text, int start_x, int height)
     {
         while (*str != '\0')
         {
-            struct TbSprite *p_spr;
+            const struct TbSprite *p_spr;
             ubyte ch;
             TbPixel col;
 
@@ -228,7 +229,7 @@ int SCANNER_text_draw(const char *text, int start_x, int height)
             } else {
               ch = my_char_to_upper(*str);
               col = pixmap.fade_table[56 * PALETTE_8b_COLORS + sel_c1];
-              p_spr = &lbFontPtr[ch - 31];
+              p_spr = LbFontCharSprite(lbFontPtr, ch);
               LbSpriteDrawOneColour(x, y, p_spr, col);
               x += p_spr->SWidth;
             }
@@ -2512,7 +2513,7 @@ TbBool check_panel_input(short panel)
                     my_build_packet(p_pckt, PAct_AGENT_SET_MOOD, p_agent->ThingOffset, i, 0, 0);
                 p_locplayer->PanelState[mouser] = PANEL_STATE_MOOD_SET_ONE + p_panel->ID;
                 if (!IsSamplePlaying(0, 21, 0))
-                    play_sample_using_heap(0, 21, 127, 64, 100, -1, 1u);
+                    play_sample_using_heap(0, 21, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_4EVER, 1u);
                 ingame.Flags |= GamF_Unkn00100000;
                 return 1;
             }
@@ -2561,7 +2562,7 @@ TbBool check_panel_input(short panel)
                     if (things[dcthing].U.UPerson.Energy > 100)
                     {
                         ingame.Flags |= GamF_ThermalView;
-                        play_sample_using_heap(0, 35, 127, 64, 100, 0, 1);
+                        play_sample_using_heap(0, 35, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 1);
                         ingame_palette_reload();
                     }
                 }
@@ -2608,7 +2609,7 @@ TbBool check_panel_input(short panel)
                     my_build_packet(p_pckt, PAct_GROUP_SET_MOOD, p_agent->ThingOffset, i, 0, 0);
                 p_locplayer->PanelState[mouser] = PANEL_STATE_MOOD_SET_GRP + p_panel->ID;
                 if (!IsSamplePlaying(0, 21, 0))
-                    play_sample_using_heap(0, 21, 127, 64, 100, -1, 1u);
+                    play_sample_using_heap(0, 21, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_4EVER, 1u);
                 ingame.Flags |= GamF_Unkn00100000;
                 return 1;
             }

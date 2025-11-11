@@ -27,6 +27,7 @@
 #include "bfmouse.h"
 #include "bfutility.h"
 #include "bflib_joyst.h"
+#include "ssampply.h"
 
 #include "app_gentab.h"
 #include "app_sprite.h"
@@ -472,12 +473,36 @@ void alert_box_text_fmt(const char *fmt, ...)
     va_end(val);
 }
 
-ubyte show_title_box(struct ScreenTextBox *box)
+ubyte show_title_box(struct ScreenTextBox *p_box)
 {
+#if 0
     ubyte ret;
     asm volatile ("call ASM_show_title_box\n"
-        : "=r" (ret) : "a" (box));
+        : "=r" (ret) : "a" (p_box));
     return ret;
+#endif
+    short scr_x, scr_y;
+    short tx_width, tx_height;
+    ubyte cyan;
+
+    if (((p_box->Flags & 0x0080) != 0) && (p_box->Timer != 255))
+    {
+        p_box->TextFadePos = -5;
+        p_box->Flags &= ~0x0080;
+    }
+    if (p_box->Text == NULL)
+        return 1;
+
+    lbFontPtr = p_box->Font;
+    cyan = (lbFontPtr == med2_font);
+    tx_width = my_string_width(p_box->Text);
+    tx_height = font_height('A');
+    scr_x = p_box->X + ((p_box->Width - tx_width) >> 1);
+    scr_y = p_box->Y + ((p_box->Height - tx_height) >> 1);
+    my_set_text_window(scr_x, scr_y, p_box->Width, p_box->Height);
+
+    return flashy_draw_text(0, 0, p_box->Text, p_box->TextSpeed,
+           p_box->TextTopLine, &p_box->TextFadePos, cyan);
 }
 
 void show_sysmenu_screen(void)
@@ -571,6 +596,7 @@ void show_sysmenu_screen(void)
 
     if (sysscrn_no != SySc_NONE)
     {
+        int plyr;
         game_system_screen = sysscrn_no;
         unkn13_SYSTEM_button.Flags &= ~(GBxFlg_TextCopied|GBxFlg_BkCopied);
         reset_sys_scr_shared_boxes_flags();
@@ -601,9 +627,10 @@ void show_sysmenu_screen(void)
             reset_options_gfx_boxes_flags();
             break;
         case SySc_LOGOUT:
-            if (login_control__State == 5)
+            if (login_control__State == LognCt_Unkn5)
             {
-                network_players[LbNetworkPlayerNumber()].Type = 13;
+                plyr = LbNetworkPlayerNumber();
+                network_players[plyr].Type = 13;
                 byte_15516D = -1;
                 byte_15516C = -1;
                 switch_net_screen_boxes_to_initiate();
@@ -1020,7 +1047,7 @@ void show_purple_status_top_bar(void)
     global_date_box_draw();
     global_time_box_draw();
 
-    if (login_control__State == 5)
+    if (login_control__State == LognCt_Unkn5)
     {
         global_citydrop_box_draw();
         global_techlevel_box_draw();
@@ -1091,7 +1118,7 @@ void draw_unread_email_icon(short x, short y, ubyte aframe)
         draw_sprite_purple_list(x, y, spr);
         break;
     case 2:
-        play_sample_using_heap(0, 112, 127, 64, 100, 0, 1);
+        play_sample_using_heap(0, 112, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 1);
         // fall through
     case 3:
     case 4:
@@ -1140,7 +1167,7 @@ TbBool is_purple_apps_utility_visible(short iconid)
     }
 
 
-    if (login_control__State == 5)
+    if (login_control__State == LognCt_Unkn5)
     {
         TbBool visible;
 
@@ -1235,7 +1262,7 @@ void draw_purple_app_utility_icon(short iconid)
     {
         if ((byte_1C497E & (1 << iconid)) == 0) {
             byte_1C497E |= (1 << iconid);
-            play_sample_using_heap(0, 123, 127, 64, 100, 0, 1);
+            play_sample_using_heap(0, 123, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 1);
         }
         lbDisplay.DrawFlags = Lb_SPRITE_TRANSPAR4;
         // If clicked, draw the icon without transparency
@@ -1297,7 +1324,7 @@ TbBool get_purple_app_utility_icon_inputs(short iconid)
             else
             {
                 change_screen = iconid + 1;
-                play_sample_using_heap(0, 111, 127, 64, 100, 0, 2);
+                play_sample_using_heap(0, 111, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 2);
             }
             word_1C498A = 0;
         }
@@ -1310,7 +1337,7 @@ TbBool get_purple_app_utility_icon_inputs(short iconid)
         else if (word_1C498A == 2 * (iconid + 1) + 1)
         {
             change_screen = iconid + 1;
-            play_sample_using_heap(0, 111, 127, 64, 100, 0, 2);
+            play_sample_using_heap(0, 111, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 2);
 
             word_1C498A = 0;
         }
@@ -1339,7 +1366,7 @@ void draw_purple_app_unread_email_icon(void)
         if (!byte_1C4980 && !is_key_pressed(KC_RETURN, KMod_DONTCARE))
         {
             byte_1C4980 = 1;
-            play_sample_using_heap(0, 123, 127, 64, 100, 0, 1);
+            play_sample_using_heap(0, 123, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 1);
         }
         lbDisplay.DrawFlags = Lb_SPRITE_TRANSPAR4;
         // If clicked, draw the icon without transparency
@@ -1400,7 +1427,7 @@ TbBool get_purple_app_unread_email_icon_inputs(void)
                         if (word_1C6F40 < 0)
                             word_1C6F40 = 0;
                         open_brief = next_brief;
-                        change_screen = ChSCRT_MISSION;
+                        change_screen = ChSCRT_MISBRIEF;
                         subtext = gui_strings[372];
                     }
                     else
@@ -1408,16 +1435,16 @@ TbBool get_purple_app_unread_email_icon_inputs(void)
                         word_1C6F3E = next_email - 4;
                         if (word_1C6F3E < 0)
                             word_1C6F3E = 0;
-                        change_screen = ChSCRT_MISSION;
+                        change_screen = ChSCRT_MISBRIEF;
                         subtext = gui_strings[373];
                         open_brief = -next_email;
                     }
                     set_heading_box_text(subtext);
-                    play_sample_using_heap(0, 111, 127, 64, 100, 0, 2);
+                    play_sample_using_heap(0, 111, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 2);
                     if (new_mail)
                     {
                         play_sample_using_heap(0,
-                          119 + (LbRandomAnyShort() % 3), 127, 64, 100, 0, 3);
+                          119 + (LbRandomAnyShort() % 3), FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3);
                     }
                     else
                     {
@@ -1451,7 +1478,7 @@ void draw_purple_app_email_icon(short cx, short cy, short bri)
         if ((byte_1C497F & (1 << iconid)) == 0)
         {
             byte_1C497F |= (1 << iconid);
-            play_sample_using_heap(0, 123, 127, 64, 100, 0, 1u);
+            play_sample_using_heap(0, 123, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 1u);
         }
         // If clicked, draw the icon without transparency
         if (lbDisplay.MLeftButton || (joy.Buttons[0] && !net_unkn_pos_02))
@@ -1513,10 +1540,10 @@ TbBool get_purple_app_email_icon_inputs(short cx, short cy, short bri)
         }
         else if (word_1C498A == 2 * (bri + 1) + 100)
         {
-            change_screen = ChSCRT_MISSION;
+            change_screen = ChSCRT_MISBRIEF;
             set_heading_box_text(gui_strings[372]);
             open_brief = bri + 1;
-            play_sample_using_heap(0, 111, 127, 64, 100, 0, 2);
+            play_sample_using_heap(0, 111, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 2);
 
             word_1C498A = 0;
         }
@@ -1643,7 +1670,7 @@ TbBool input_purple_apps_selection_bar(void)
         {
             clear_key_pressed(KC_F6);
             if (open_brief != 0)
-                change_screen = ChSCRT_MISSION;
+                change_screen = ChSCRT_MISBRIEF;
         }
     }
 
@@ -1672,7 +1699,7 @@ void show_mission_loading_screen(void)
 {
     LbMouseChangeSprite(0);
     reload_background();
-    play_sample_using_heap(0, 118, 127, 64, 100, 0, 3);
+    play_sample_using_heap(0, 118, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3);
 
     ulong finished = 0; // Amount of frames after the drawing animation finished
     do
