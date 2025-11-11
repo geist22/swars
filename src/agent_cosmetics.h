@@ -31,7 +31,7 @@ extern "C" {
 
 #pragma pack()
 /******************************************************************************/
-extern short PlayerAgentHeads[4];
+extern char PlayerAgentHeads[4];
 extern bool PlayerZealotIsHighPriest[4];
 TbBool read_agent_cosmetics_file(void);
 /******************************************************************************/
