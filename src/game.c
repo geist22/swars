@@ -3048,7 +3048,7 @@ ushort make_group_into_players(ushort group, ushort plyr, ushort max_agent, shor
 
         // Set High Priest Robes if enabled
         if ((p_person->SubType == SubTT_PERS_ZEALOT) && (PlayerZealotIsHighPriest[plagent] == true)) {
-            // TODO this is a bad idea, fix this by changing animations instead of SubType - but how?
+            // TODO this is a bad, temporary workaround - needs a proper implementation by changing animations instead
             p_person->SubType = SubTT_PERS_HIGH_PRIEST;
         }
 
