@@ -53,7 +53,7 @@ const struct TbNamedEnum agent_cosmetics_zealot_cmnds[] = {
     {NULL,		0},
 };
 
-short PlayerAgentHeads[] = {0,0,0,0};
+char PlayerAgentHeads[] = {0,0,0,0};
 bool PlayerZealotIsHighPriest[] = {false,false,false,false};
 
 TbBool read_agent_cosmetics_file(void)
@@ -119,7 +119,7 @@ TbBool read_agent_cosmetics_file(void)
             else {
                 CONFWRNLOG("Invalid entry, appearance left at default.");
             }
-            CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)PlayerAgentHeads[0]);
+            CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (char)PlayerAgentHeads[0]);
             break;
         case ACAgentCmd_Agent2:
             i = LbIniValueGetLongInt(&parser, &k);
@@ -133,7 +133,7 @@ TbBool read_agent_cosmetics_file(void)
             else {
                 CONFWRNLOG("Invalid entry, appearance left at default.");
             }
-            CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)PlayerAgentHeads[1]);
+            CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (char)PlayerAgentHeads[1]);
             break;
         case ACAgentCmd_Agent3:
             i = LbIniValueGetLongInt(&parser, &k);
@@ -147,7 +147,7 @@ TbBool read_agent_cosmetics_file(void)
             else {
                 CONFWRNLOG("Invalid entry, appearance left at default.");
             }
-            CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)PlayerAgentHeads[2]);
+            CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (char)PlayerAgentHeads[2]);
             break;
         case ACAgentCmd_Agent4:
             i = LbIniValueGetLongInt(&parser, &k);
@@ -161,7 +161,7 @@ TbBool read_agent_cosmetics_file(void)
             else {
                 CONFWRNLOG("Invalid entry, appearance left at default.");
             }
-            CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)PlayerAgentHeads[3]);
+            CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (char)PlayerAgentHeads[3]);
             break;
         case 0: // comment
             break;
@@ -197,48 +197,60 @@ TbBool read_agent_cosmetics_file(void)
         switch (cmd_num)
         {
         case ACZealotCmd_Zealot1:
-	    i = LbIniValueGetLongInt(&parser, &k);
-	    if (i <= 0) {
+	        i = LbIniValueGetLongInt(&parser, &k);
+	        if (i <= 0) {
                 CONFWRNLOG("Could not read \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
                 break;
             }
-	    if (k==1) {
-	        PlayerZealotIsHighPriest[0] = true;
+	        if (k==1) {
+	            PlayerZealotIsHighPriest[0] = true;
             }
-            CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)PlayerZealotIsHighPriest[0]);
+			else if (k != 0) {
+                CONFWRNLOG("Invalid entry, appearance left at default.");
+            }
+            CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (bool)PlayerZealotIsHighPriest[0]);
             break;
         case ACZealotCmd_Zealot2:
-	    i = LbIniValueGetLongInt(&parser, &k);
-	    if (i <= 0) {
+	        i = LbIniValueGetLongInt(&parser, &k);
+	        if (i <= 0) {
                 CONFWRNLOG("Could not read \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
                 break;
             }
-	    if (k==1) {
-	        PlayerZealotIsHighPriest[1] = true;
+	        if (k==1) {
+	            PlayerZealotIsHighPriest[1] = true;
             }
-            CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)PlayerZealotIsHighPriest[1]);
+			else if (k != 0) {
+                CONFWRNLOG("Invalid entry, appearance left at default.");
+            }
+            CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (bool)PlayerZealotIsHighPriest[1]);
             break;
         case ACZealotCmd_Zealot3:
-	    i = LbIniValueGetLongInt(&parser, &k);
-	    if (i <= 0) {
+	        i = LbIniValueGetLongInt(&parser, &k);
+	        if (i <= 0) {
                 CONFWRNLOG("Could not read \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
                 break;
             }
-	    if (k==1) {
-	        PlayerZealotIsHighPriest[2] = true;
+	        if (k==1) {
+	            PlayerZealotIsHighPriest[2] = true;
             }
-            CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)PlayerZealotIsHighPriest[2]);
+			else if (k != 0) {
+                CONFWRNLOG("Invalid entry, appearance left at default.");
+            }
+            CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (bool)PlayerZealotIsHighPriest[2]);
             break;
         case ACZealotCmd_Zealot4:
-	    i = LbIniValueGetLongInt(&parser, &k);
-	    if (i <= 0) {
+	        i = LbIniValueGetLongInt(&parser, &k);
+	        if (i <= 0) {
                 CONFWRNLOG("Could not read \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
                 break;
             }
-	    if (k==1) {
-	        PlayerZealotIsHighPriest[3] = true;
+	        if (k==1) {
+	            PlayerZealotIsHighPriest[3] = true;
             }
-            CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)PlayerZealotIsHighPriest[3]);
+			else if (k != 0) {
+                CONFWRNLOG("Invalid entry, appearance left at default.");
+            }
+            CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (bool)PlayerZealotIsHighPriest[3]);
             break;
         case 0: // comment
             break;
