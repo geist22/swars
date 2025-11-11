@@ -74,25 +74,15 @@ void frameskip_decrease(void)
  */
 TbBool get_speed_control_inputs(void)
 {
-    if (is_key_pressed(KC_ADD,KMod_CONTROL))
+    if (is_gamekey_pressed(GKey_GAMESPEED_INC))
     {
+        clear_gamekey_pressed(GKey_GAMESPEED_INC);
         frameskip_increase();
-        clear_key_pressed(KC_ADD);
     }
-    if (is_key_pressed(KC_EQUALS,KMod_CONTROL))
+    if (is_gamekey_pressed(GKey_GAMESPEED_DEC))
     {
-        frameskip_increase();
-        clear_key_pressed(KC_EQUALS);
-    }
-    if (is_key_pressed(KC_SUBTRACT,KMod_CONTROL))
-    {
+        clear_gamekey_pressed(GKey_GAMESPEED_DEC);
         frameskip_decrease();
-        clear_key_pressed(KC_SUBTRACT);
-    }
-    if (is_key_pressed(KC_MINUS,KMod_CONTROL))
-    {
-        frameskip_decrease();
-        clear_key_pressed(KC_MINUS);
     }
     return false;
 }

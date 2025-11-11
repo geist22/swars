@@ -89,6 +89,20 @@ enum ScreenType {
   SCRT_99 = 99,
 };
 
+enum LoginControlStates {
+    LognCt_Unkn0 = 0,
+    LognCt_Unkn1,
+    LognCt_Unkn2,
+    LognCt_Unkn3,
+    LognCt_Unkn4,
+    LognCt_Unkn5,
+    LognCt_Unkn6,
+    LognCt_Unkn7,
+    LognCt_Unkn8,
+    LognCt_Unkn9,
+    LognCt_Unkn10,
+};
+
 enum DisplayModes {
   DpM_NONE = 0x0,
   DpM_UNKN_1 = 0x1,
@@ -135,7 +149,7 @@ enum ChangeScreenType {
   ChSCRT_CRYO,
   ChSCRT_EQUIP,
   ChSCRT_RESEARCH,
-  ChSCRT_MISSION,
+  ChSCRT_MISBRIEF,
 };
 
 enum OpenMissionEndStatus {
@@ -312,7 +326,7 @@ extern ubyte *spare_map_buffer;
 extern long target_old_frameno;
 extern ushort word_176E38;
 
-extern ubyte byte_1C4A7C;
+extern ubyte net_service_started;
 extern ubyte linear_vec_pal[256];
 extern ulong nsta_size;
 
@@ -405,7 +419,6 @@ extern ubyte refresh_equip_list;
 extern ubyte flic_mods[5];
 extern ubyte old_flic_mods[5];
 extern ubyte reload_background_flag;
-extern ushort word_1811AE;
 
 extern struct LevelDef level_def;
 
@@ -417,7 +430,6 @@ extern ubyte mouser;
 extern long dword_1AA5C4;
 extern long dword_1AA5C8;
 
-extern short next_ref;
 extern ushort next_mission;
 extern ushort replay_intro_timer;
 extern ubyte show_alert;

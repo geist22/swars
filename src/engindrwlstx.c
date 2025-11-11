@@ -66,6 +66,11 @@ ushort next_special_face = 1;
 ushort next_special_face4 = 1;
 
 extern long dword_176CC4;
+
+extern struct Thing *dword_176CC8;
+extern int dword_176CCC;
+extern int dword_176CD0;
+
 extern long unkn1_pos_x;
 extern long unkn1_pos_y;
 extern struct TbSprite *unkn1_spr;
@@ -639,31 +644,66 @@ void draw_sorted_sprite1b(ubyte *frv, ushort frm, short x, short y,
 
 ubyte check_mouse_overlap(ushort sspr)
 {
+#if 0
     ubyte ret;
     asm volatile (
       "call ASM_check_mouse_overlap\n"
         : "=r" (ret) : "a" (sspr));
     return ret;
+#endif
+    struct ScreenBoxBase box;
+    struct SortSprite *p_sspr;
+    struct Frame *p_frm;
+    PlayerInfo *p_locplayer;
+
+    p_sspr = &game_sort_sprites[sspr];
+    box.X = p_sspr->X + ((overall_scale * word_1A5834) >> 8);
+    box.Y = p_sspr->Y + ((overall_scale * word_1A5836) >> 8);
+
+    p_frm = &frame[p_sspr->Frame];
+    box.Width = (overall_scale * p_frm->SWidth) >> 9;
+    box.Height = (overall_scale * p_frm->SHeight) >> 9;
+
+    p_locplayer = &players[local_player_no];
+    if (box.Width < 16)
+    {
+        box.X -= ((17 - box.Width) >> 1);
+        box.Width = 16;
+    }
+    if (box.Height < 20) {
+        box.Y -= ((21 - box.Height) >> 1);
+        box.Height = 20;
+    }
+
+    if (in_box(lbDisplay.MMouseX, lbDisplay.MMouseY, box.X, box.Y, box.Width, box.Height))
+    {
+        p_locplayer->Target = p_sspr->PThing->ThingOffset;
+        p_locplayer->TargetType = TrgTp_Unkn7;
+        return 1;
+    }
+    return 0;
 }
 
-void check_mouse_overlap_item(ushort sspr)
+ubyte check_mouse_overlap_item(ushort sspr)
 {
 #if 0
     asm volatile (
       "call ASM_check_mouse_overlap_item\n"
         : : "a" (sspr));
-#else
+    return 0;
+#endif
+    struct ScreenBoxBase box;
     struct SortSprite *p_sspr;
-    struct Frame *p_frame;
+    struct Frame *p_frm;
     PlayerInfo *p_locplayer;
-    int x, y, w, h;
 
     p_sspr = &game_sort_sprites[sspr];
-    x = p_sspr->X + ((overall_scale * word_1A5834) >> 8);
-    y = p_sspr->Y + ((overall_scale * word_1A5836) >> 8);
-    p_frame = &frame[p_sspr->Frame];
-    w = (overall_scale * p_frame->SWidth) >> 9;
-    h = (overall_scale * p_frame->SHeight) >> 9;
+    box.X = p_sspr->X + ((overall_scale * word_1A5834) >> 8);
+    box.Y = p_sspr->Y + ((overall_scale * word_1A5836) >> 8);
+
+    p_frm = &frame[p_sspr->Frame];
+    box.Width = (overall_scale * p_frm->SWidth) >> 9;
+    box.Height = (overall_scale * p_frm->SHeight) >> 9;
 
     p_locplayer = &players[local_player_no];
     if (p_locplayer->TargetType == TrgTp_DroppedTng)
@@ -673,37 +713,103 @@ void check_mouse_overlap_item(ushort sspr)
         if ( VX )
         {
             if (VX < 12 || VX > 13)
-                return;
-            x = x - (w >> 1);
-            y = y - (h >> 1);
-            w *= 2;
-            h *= 2;
+                return 0;
+            box.X -= (box.Width >> 1);
+            box.Y -= (box.Height >> 1);
+            box.Width *= 2;
+            box.Height *= 2;
         }
     }
-    if (in_box(lbDisplay.MMouseX, lbDisplay.MMouseY, x, y, w, h))
+    if (in_box(lbDisplay.MMouseX, lbDisplay.MMouseY, box.X, box.Y, box.Width, box.Height))
     {
         p_locplayer->Target = p_sspr->PThing->ThingOffset;
         p_locplayer->TargetType = TrgTp_DroppedTng;
+        return 1;
     }
-#endif
+    return 0;
 }
 
 ubyte check_mouse_overlap_corpse(ushort sspr)
 {
+#if 0
     ubyte ret;
     asm volatile (
       "call ASM_check_mouse_overlap_corpse\n"
         : "=r" (ret) : "a" (sspr));
     return ret;
+#endif
+    struct ScreenBoxBase box;
+    struct SortSprite *p_sspr;
+    struct Frame *p_frm;
+    PlayerInfo *p_locplayer;
+
+    p_sspr = &game_sort_sprites[sspr];
+    box.X = p_sspr->X + ((overall_scale * word_1A5834) >> 8);
+    box.Y = p_sspr->Y + ((overall_scale * word_1A5836) >> 8);
+
+    p_frm = &frame[p_sspr->Frame];
+    box.Width = (overall_scale * p_frm->SWidth) >> 9;
+    box.Height = (overall_scale * p_frm->SHeight) >> 9;
+
+    p_locplayer = &players[local_player_no];
+    if (box.Width < 16)
+    {
+        box.X -= ((17 - box.Width) >> 1);
+        box.Width = 16;
+    }
+    if (box.Height < 20) {
+        box.Y -= ((21 - box.Height) >> 1);
+        box.Height = 20;
+    }
+
+    if (in_box(lbDisplay.MMouseX, lbDisplay.MMouseY, box.X, box.Y, box.Width, box.Height))
+    {
+        p_locplayer->Target = p_sspr->PThing->ThingOffset;
+        p_locplayer->TargetType = TrgTp_Unkn1;
+        return 1;
+    }
+    return 0;
 }
 
 ubyte check_mouse_over_unkn2(ushort sspr, struct Thing *p_thing)
 {
+#if 0
     ubyte ret;
     asm volatile (
       "call ASM_check_mouse_over_unkn2\n"
         : "=r" (ret) : "a" (sspr), "d" (p_thing));
     return ret;
+#endif
+    struct ScreenBoxBase box;
+    struct SortSprite *p_sspr;
+    struct Frame *p_frm;
+
+    p_sspr = &game_sort_sprites[sspr];
+    box.X = p_sspr->X + ((overall_scale * word_1A5834) >> 8);
+    box.Y = p_sspr->Y + ((overall_scale * word_1A5836) >> 8);
+
+    p_frm = &frame[p_sspr->Frame];
+    box.Width = (overall_scale * p_frm->SWidth) >> 9;
+    box.Height = (overall_scale * p_frm->SHeight) >> 9;
+
+    if (box.Width < 16)
+    {
+        box.X -= ((17 - box.Width) >> 1);
+        box.Width = 16;
+    }
+    if (box.Height < 20) {
+        box.Y -= ((21 - box.Height) >> 1);
+        box.Height = 20;
+    }
+
+    if (in_box(lbDisplay.MMouseX, lbDisplay.MMouseY, box.X, box.Y, box.Width, box.Height))
+    {
+        dword_176CC8 = p_thing;
+        dword_176CD0 = box.Y - 8;
+        dword_176CCC = box.X + (box.Height >> 1);
+        return 1;
+    }
+    return 0;
 }
 
 void check_mouse_over_face(struct PolyPoint *pt1, struct PolyPoint *pt2,

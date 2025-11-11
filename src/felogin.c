@@ -18,19 +18,23 @@
 /******************************************************************************/
 #include "felogin.h"
 
+#include "bffont.h"
 #include "bfkeybd.h"
 #include "bftext.h"
 #include "bfutility.h"
-#include "guiboxes.h"
-#include "guitext.h"
+#include "ssampply.h"
+
 #include "campaign.h"
 #include "display.h"
 #include "femail.h"
 #include "femain.h"
 #include "feoptions.h"
 #include "game_save.h"
+#include "game_speed.h"
 #include "game_sprts.h"
 #include "game.h"
+#include "guiboxes.h"
+#include "guitext.h"
 #include "keyboard.h"
 #include "purpldrw.h"
 #include "sound.h"
@@ -74,17 +78,23 @@ ubyte do_login_2(ubyte click)
     campaign_new_game_prepare();
 
     if (new_mail)
-        play_sample_using_heap(0, 119 + (LbRandomAnyShort() % 3), 127, 64, 100, 0, 3u);
+        play_sample_using_heap(0, 119 + (LbRandomAnyShort() % 3), FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3u);
 
     return 1;
 }
 
 ubyte do_abort_2(ubyte click)
 {
+#if 0
     ubyte ret;
     asm volatile ("call ASM_do_abort_2\n"
         : "=r" (ret) : "a" (click));
     return ret;
+#endif
+    redraw_screen_flag = 1;
+    screentype = SCRT_MAINMENU;
+    edit_flag = 0;
+    return 1;
 }
 
 ubyte show_campaigns_list(struct ScreenBox *box)
@@ -156,12 +166,50 @@ ubyte show_campaigns_list(struct ScreenBox *box)
     return 0;
 }
 
-ubyte show_login_name(struct ScreenBox *box)
+ubyte show_login_name(struct ScreenBox *p_box)
 {
+#if 0
     ubyte ret;
     asm volatile ("call ASM_show_login_name\n"
-        : "=r" (ret) : "a" (box));
+        : "=r" (ret) : "a" (p_box));
     return ret;
+#endif
+    short scr_x;
+
+    lbFontPtr = med2_font;
+    my_set_text_window(p_box->X + 4, p_box->Y + 4, p_box->Width - 8, p_box->Height - 8);
+    scr_x = my_string_width(gui_strings[454]) + 2;
+    if ((p_box->Flags & 0x8000) == 0)
+    {
+        lbFontPtr = med_font;
+        draw_text_purple_list2(0, 2, gui_strings[454], 0);
+        lbDisplay.DrawFlags = 4;
+        draw_box_purple_list(scr_x + text_window_x1, text_window_y1, 0xF4u, 0xEu, 243);
+        lbDisplay.DrawFlags = 0;
+        copy_box_purple_list(p_box->X - 3, p_box->Y - 3,
+          p_box->Width + 6, p_box->Height + 6);
+        lbFontPtr = med2_font;
+        p_box->Flags |= 0x8000;
+        reset_buffered_keys();
+  }
+    user_read_value(login_name, 0xFu, 1);
+    draw_text_purple_list2(scr_x + 2, 2, login_name, 0);
+    if (strcmp(login_name, "POOSLICE") == 0)
+    {
+        ingame.UserFlags |= 0x04;
+        play_sample_using_heap(0, 71, 127, 64, 100, 0, 3u);
+    }
+    if ((gameturn & 1) != 0)
+    {
+        const struct TbSprite *p_spr;
+        short tx_width;
+
+        p_spr = LbFontCharSprite(lbFontPtr, 45);
+        tx_width = my_string_width(login_name);
+        if (p_spr != NULL)
+            draw_sprite_purple_list(text_window_x1 + scr_x + 2 + tx_width, text_window_y1 + 6, p_spr);
+    }
+    return 0;
 }
 
 void skip_flashy_draw_login_screen_boxes(void)

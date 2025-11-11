@@ -924,8 +924,8 @@ void play_smacker_then_back_to_menu(ushort vid_type)
     play_smacker(vid_type);
     setup_screen_mode(screen_mode_menu);
 
-    play_sample_using_heap(0, 122, 127, 64, 100, -1, 3);
-    play_sample_using_heap(0, 122, 127, 64, 100, -1, 3);
+    play_sample_using_heap(0, 122, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_4EVER, 3);
+    play_sample_using_heap(0, 122, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_4EVER, 3);
 }
 
 void play_intro(void)
@@ -1892,7 +1892,7 @@ void init_outro(void)
     StopAllSamples();
     reset_heaps();
     setup_heaps(SHSC_CreditsSnd, language_3str);
-    play_sample_using_heap(0, 1, 127, 64, 100, -1, 3);
+    play_sample_using_heap(0, 1, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_4EVER, 3);
 
     data_197150 = 1;
     data_1dd91c = 0;
@@ -1921,7 +1921,7 @@ void init_outro(void)
             // Randomly play seagull sample if applause is not currently playing
             if (((LbRandomAnyShort() & 0xF) == 0) && (data_155704 == -1 || !IsSamplePlaying(0, data_155704, NULL)) )
             {
-                play_sample_using_heap(0, 7 + (LbRandomAnyShort() % 5), 127, 64, 100, 0, 3u);
+                play_sample_using_heap(0, 7 + (LbRandomAnyShort() % 5), FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3u);
             }
         }
 
@@ -2655,16 +2655,16 @@ void start_ingame_ambient_sound(void)
     case MAtmsph_Moon:
         stop_sample_using_heap(0, 8);
         stop_sample_using_heap(0, 77);
-        play_sample_using_heap(0, 78, 64, 64, 100, -1, 2);
+        play_sample_using_heap(0, 78, 64, EQUL_PAN, NORM_PTCH, LOOP_4EVER, 2);
         break;
     case MAtmsph_Earth:
         stop_sample_using_heap(0, 78);
         if (gamep_scene_effect_type == ScEff_RAIN) {
             stop_sample_using_heap(0, 8);
-            play_sample_using_heap(0, 77, 64, 64, 100, -1, 2);
+            play_sample_using_heap(0, 77, 64, EQUL_PAN, NORM_PTCH, LOOP_4EVER, 2);
         } else {
             stop_sample_using_heap(0, 77);
-            play_sample_using_heap(0, 8, 64, 64, 100, -1, 2);
+            play_sample_using_heap(0, 8, 64, EQUL_PAN, NORM_PTCH, LOOP_4EVER, 2);
         }
         break;
     default:
@@ -3471,9 +3471,9 @@ int xdo_next_frame(ubyte anislot)
     if (anislot >= AniSl_EQVIEW && anislot <= AniSl_CYBORG_INOUT)
     {
         if (p_anim->FrameNumber == 0) {
-            play_sample_using_heap(0, 135, 127, 64, 100, 0, 3u);
+            play_sample_using_heap(0, 135, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3u);
         } else if (p_anim->FrameNumber == p_anim->FLCFileHeader.NumberOfFrames >> 1) {
-            play_sample_using_heap(0, 115, 127, 64, 100, 0, 3u);
+            play_sample_using_heap(0, 115, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3u);
         }
     }
 
@@ -3731,7 +3731,7 @@ ubyte load_game_slot(ubyte click)
     int ldslot;
     int ret;
 
-    if (login_control__State != 6) {
+    if (login_control__State != LognCt_Unkn6) {
         return 0;
     }
     if (save_slot == -1) {
@@ -3811,7 +3811,7 @@ void init_variables(void)
     //word_15518A = -1; -- set but never used - remove pending
     ingame.MissionStatus = ObvStatu_COMPLETED;
     login_control__Money = starting_cash_amounts[4];
-    if (login_control__State == 6)
+    if (login_control__State == LognCt_Unkn6)
     {
         ingame.Credits = 50000;
         ingame.CashAtStart = 50000;
@@ -3823,7 +3823,7 @@ void init_variables(void)
     }
     ingame.Expenditure = 0;
     login_control__City = 19;
-    login_control__State = 6;
+    login_control__State = LognCt_Unkn6;
     byte_181189 = 0;
     unkn_flags_08 = 0x3C;
     login_control__TechLevel = 4;
@@ -4604,7 +4604,7 @@ void campaign_new_game_prepare(void)
 
 ubyte do_storage_NEW_MORTAL(ubyte click)
 {
-    if (login_control__State != 6)
+    if (login_control__State != LognCt_Unkn6)
         return 0;
 
     if (strlen(login_name) == 0)
@@ -4629,7 +4629,7 @@ ubyte do_storage_NEW_MORTAL(ubyte click)
     }
 
     if (new_mail)
-      play_sample_using_heap(0, 119 + (LbRandomAnyShort() % 3), 127, 64, 100, 0, 3u);
+      play_sample_using_heap(0, 119 + (LbRandomAnyShort() % 3), FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3u);
 
     return 1;
 }
@@ -4878,15 +4878,9 @@ ubyte weapon_select_input(void)
     WeaponType wtype;
     int n;
 
-#ifdef MORE_GAME_KEYS
     static const GameKey sel_weapon_gkeys[] = {
         GKey_SEL_WEP_1, GKey_SEL_WEP_2, GKey_SEL_WEP_3, GKey_SEL_WEP_4, GKey_SEL_WEP_5, GKey_SEL_WEP_6,
     };
-#else
-    static TbKeyCode sel_weapon_keys[] = {
-        KC_5, KC_6, KC_7, KC_8, KC_9, KC_0,
-    };
-#endif
 
     static GameTurn last_sel_weapon_turn[WEAPONS_CARRIED_MAX_COUNT] = {0};
 
@@ -4895,7 +4889,6 @@ ubyte weapon_select_input(void)
     dcthing = p_locplayer->DirectControl[0];
     wtype = WEP_NULL;
 
-#ifdef MORE_GAME_KEYS
     if (is_gamekey_pressed(GKey_USE_MEDIKIT))
     {
         clear_gamekey_pressed(GKey_USE_MEDIKIT);
@@ -4905,23 +4898,15 @@ ubyte weapon_select_input(void)
             return 1;
         }
     }
-#endif
 
-    assert(sizeof(sel_weapon_keys)/sizeof(sel_weapon_keys[0]) <= WEAPONS_CARRIED_MAX_COUNT);
+    assert(sizeof(sel_weapon_gkeys)/sizeof(sel_weapon_gkeys[0]) <= WEAPONS_CARRIED_MAX_COUNT);
 
-    for (n = 0; n < (int)(sizeof(sel_weapon_keys)/sizeof(sel_weapon_keys[0])); n++)
+    for (n = 0; n < (int)(sizeof(sel_weapon_gkeys)/sizeof(sel_weapon_gkeys[0])); n++)
     {
-#ifdef MORE_GAME_KEYS
         GameKey gkey = sel_weapon_gkeys[n];
         if (is_gamekey_pressed(gkey))
         {
             clear_gamekey_pressed(gkey);
-#else
-        ushort kkey = sel_weapon_keys[n];
-        if (is_key_pressed(kkey, KMod_NONE))
-        {
-            clear_key_pressed(kkey);
-#endif
             wtype = find_nth_weapon_held(dcthing, n+1);
             if (wtype != WEP_NULL)
                 break;
@@ -4966,7 +4951,7 @@ TbResult read_palette_file(void)
 void do_music_user_input(void)
 {
     // MIDI Music (tension) volume control
-    if (is_key_pressed(KC_NUMPAD8, KMod_DONTCARE))
+    if (is_gamekey_pressed(GKey_DANGR_VOL_INC))
     {
         if (lbShift & KMod_SHIFT)
             startscr_midivol += 1;
@@ -4974,7 +4959,7 @@ void do_music_user_input(void)
             startscr_midivol += 10;
         sfx_apply_midivol();
     }
-    if (is_key_pressed(KC_NUMPAD2, KMod_DONTCARE))
+    if (is_gamekey_pressed(GKey_DANGR_VOL_DEC))
     {
         if (lbShift & KMod_SHIFT)
             startscr_midivol -= 1;
@@ -4984,7 +4969,7 @@ void do_music_user_input(void)
     }
 
     // Sample volume control
-    if (is_key_pressed(KC_NUMPAD7, KMod_DONTCARE))
+    if (is_gamekey_pressed(GKey_SOUND_VOL_INC))
     {
         if (lbShift & KMod_SHIFT)
             startscr_samplevol += 1;
@@ -4992,7 +4977,7 @@ void do_music_user_input(void)
             startscr_samplevol += 10;
         sfx_apply_samplevol();
     }
-    if (is_key_pressed(KC_NUMPAD1, KMod_DONTCARE))
+    if (is_gamekey_pressed(GKey_SOUND_VOL_DEC))
     {
         if (lbShift & KMod_SHIFT)
             startscr_samplevol -= 1;
@@ -5002,7 +4987,7 @@ void do_music_user_input(void)
     }
 
     // CD Music volume control
-    if (is_key_pressed(KC_NUMPAD9, KMod_DONTCARE))
+    if (is_gamekey_pressed(GKey_MUSIC_VOL_INC))
     {
         if (lbShift & KMod_SHIFT)
             startscr_cdvolume += 1;
@@ -5010,7 +4995,7 @@ void do_music_user_input(void)
             startscr_cdvolume += 10;
         sfx_apply_cdvolume();
     }
-    if (is_key_pressed(KC_NUMPAD3, KMod_DONTCARE))
+    if (is_gamekey_pressed(GKey_MUSIC_VOL_DEC))
     {
         if (lbShift & KMod_SHIFT)
             startscr_cdvolume -= 1;
@@ -5020,13 +5005,13 @@ void do_music_user_input(void)
     }
 
     // Music track control
-    if (is_key_pressed(KC_NUMPAD5, KMod_DONTCARE))
+    if (is_gamekey_pressed(GKey_MUSIC_TRACK))
     {
         clear_key_pressed(KC_NUMPAD5);
         if (++ingame.CDTrack > 4)
             ingame.CDTrack = 2;
     }
-    if (is_key_pressed(KC_NUMPAD0, KMod_DONTCARE))
+    if (is_gamekey_pressed(GKey_DANGR_TRACK))
     {
         clear_key_pressed(KC_NUMPAD0);
         ingame.DangerTrack = 2 - ingame.DangerTrack + 1;
@@ -5064,8 +5049,11 @@ ubyte do_user_interface(void)
         return process_mouse_imputs() != 0;
 
     // screenshot
-    if (is_key_pressed(KC_M, KMod_DONTCARE))
+    if (is_gamekey_pressed(GKey_SCREENSHOT))
+    {
+        clear_gamekey_pressed(GKey_SCREENSHOT);
         LbPngSaveScreen("synII", lbDisplay.WScreen, display_palette, 0);
+    }
 
 #if 0
     // This looks like some kind of early idea for grouping agents like in C&C
@@ -5241,9 +5229,9 @@ ubyte do_user_interface(void)
     }
 
     // Scanner appearence control
-    if (is_key_pressed(KC_NUMPAD6, KMod_DONTCARE))
+    if (is_gamekey_pressed(GKey_SCANNR_BRIGH_INC))
         ingame.Scanner.Brightness += 4;
-    if (is_key_pressed(KC_NUMPAD4, KMod_DONTCARE))
+    if (is_gamekey_pressed(GKey_SCANNR_BRIGH_DEC))
         ingame.Scanner.Brightness -= 4;
     if (ingame.Scanner.Brightness < 0)
         ingame.Scanner.Brightness = 0;
@@ -5254,9 +5242,9 @@ ubyte do_user_interface(void)
     // Restart level
     if (!in_network_game && (ingame.Flags & GamF_MortalGame) == 0)
     {
-        if (is_key_pressed(KC_R, KMod_DONTCARE))
+        if (is_gamekey_pressed(GKey_MISSN_RESTART))
         {
-            clear_key_pressed(KC_R);
+            clear_gamekey_pressed(GKey_MISSN_RESTART);
             StopCD();
             test_missions(1);
             init_level_3d(1);
@@ -5436,7 +5424,7 @@ void show_menu_screen_st0(void)
 
     players_init_control_mode();
 
-    login_control__State = 6;
+    login_control__State = LognCt_Unkn6;
     sprintf(net_unkn2_text, "01234567890");
 
     {
@@ -5519,7 +5507,7 @@ void net_unkn_func_29(short a1, short a2, ubyte a3, sbyte a4, ubyte a5)
 void net_new_game_prepare(void)
 {
     switch_net_screen_boxes_to_initiate();
-    login_control__State = 6;
+    login_control__State = LognCt_Unkn6;
     byte_15516D = -1;
     byte_15516C = -1;
     ingame.Credits = 50000;
@@ -5660,7 +5648,7 @@ void net_unkn_func_33_sub1(int plyr, int netplyr)
     switch (p_netplyr->Type & 0x1F)
     {
     case 2:
-        login_control__State = 8;
+        login_control__State = LognCt_Unkn8;
         LbNetworkShutDownListeners();
         LbMemorySet(unkstruct04_arr, 0, 20 * sizeof(struct TbNetworkSessionList));
         byte_1C6D48 = 0;
@@ -5721,7 +5709,7 @@ void net_unkn_func_33_sub1(int plyr, int netplyr)
         byte_15516D = -1;
         reset_net_screen_EJECT_flags();
         LbNetworkSessionStop();
-        if (word_1811AE == 1)
+        if (nsvc.I.Type == 1)
         {
             if (p_netplyr->U.Progress.val_15516D == netplyr)
             {
@@ -5739,21 +5727,17 @@ void net_unkn_func_33_sub1(int plyr, int netplyr)
             if (byte_1C4A6F)
                 LbNetworkHangUp();
             LbNetworkReset();
-            byte_1C4A7C = 0;
+            net_service_started = 0;
         }
         break;
     case 13:
         LbNetworkSessionStop();
-        if (word_1811AE == 1)
+        if (nsvc.I.Type == 1)
         {
             if (plyr == netplyr || net_host_player_no == plyr)
             {
                 net_new_game_prepare();
-                memset(unkstruct04_arr, 0, 0x1108u);
-                byte_1C6D48 = 0;
-                for (i = 0; i < PLAYERS_LIMIT; i++) {
-                    unkn2_names[i][0] = '\0';
-                }
+                net_service_unkstruct04_clear();
             }
         }
         else
@@ -5765,7 +5749,7 @@ void net_unkn_func_33_sub1(int plyr, int netplyr)
             if ( byte_1C4A6F )
               LbNetworkHangUp();
             LbNetworkReset();
-            byte_1C4A7C = 0;
+            net_service_started = 0;
         }
         if (screentype == SCRT_CRYO)
         {
@@ -5883,12 +5867,12 @@ void net_unkn_func_33(void)
     {
         LbNetworkSessionStop();
         net_new_game_prepare();
-        if (word_1811AE != 1)
+        if (nsvc.I.Type != 1)
         {
             if (byte_1C4A6F)
                 LbNetworkHangUp();
             LbNetworkReset();
-            byte_1C4A7C = 0;
+            net_service_started = 0;
         }
     }
 
@@ -5989,7 +5973,7 @@ void show_menu_screen_st2(void)
     init_brief_screen_scanner();
 
     if (new_mail)
-        play_sample_using_heap(0, 119 + (LbRandomAnyShort() % 3), 127, 64, 100, 0, 3u);
+        play_sample_using_heap(0, 119 + (LbRandomAnyShort() % 3), FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3u);
 
     net_system_init2();
 }
@@ -6158,10 +6142,10 @@ void show_load_and_prep_mission(void)
         flic_unkn03(AniSl_BILLBOARD);
         xdo_next_frame(AniSl_BILLBOARD);
 
-        if ( in_network_game )
+        if (in_network_game)
         {
-            if (word_1811AE != 1)
-                ingame.InNetGame_UNSURE = 3;
+            if (nsvc.I.Type != NetSvc_IPX)
+                ingame.InNetGame_UNSURE = ((1 << 0) | (1 << 1)); // two players
             ingame.DetailLevel = 0;
             bang_set_detail(ingame.DetailLevel == 0);
         }
@@ -6258,7 +6242,7 @@ void menu_screen_redraw(void)
     set_flag01_world_screen_boxes();
 
     if (!game_projector_speed && screentype != SCRT_99)
-        play_sample_using_heap(0, 113, 127, 64, 100, 0, 3u);
+        play_sample_using_heap(0, 113, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3u);
 }
 
 /** Mark beginning of user input processing code.
@@ -6331,11 +6315,11 @@ void show_menu_screen(void)
     {
     case 2:
         show_menu_screen_st2();
-        play_sample_using_heap(0, 122, 127, 64, 100, -1, 3);
+        play_sample_using_heap(0, 122, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_4EVER, 3);
         break;
     case 0:
         show_menu_screen_st0();
-        play_sample_using_heap(0, 122, 127, 64, 100, -1, 3);
+        play_sample_using_heap(0, 122, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_4EVER, 3);
         break;
     default:
         break;
@@ -6378,7 +6362,7 @@ void show_menu_screen(void)
     if (is_purple_apps_selection_bar_visible())
           show_purple_apps_selection_bar();
 
-    if ((screentype == SCRT_DEBRIEF || screentype == SCRT_NETDEBRF) && change_screen == ChSCRT_MISSION)
+    if ((screentype == SCRT_DEBRIEF || screentype == SCRT_NETDEBRF) && change_screen == ChSCRT_MISBRIEF)
     {
         screentype = SCRT_MISSION;
         brief_load_mission_info();
@@ -6442,11 +6426,11 @@ void show_menu_screen(void)
 
     input_processing_end();
 
-    if (login_control__State == 5)
+    if (login_control__State == LognCt_Unkn5)
     {
         net_unkn_func_33();
     }
-    else if (login_control__State == 8)
+    else if (login_control__State == LognCt_Unkn8)
     {
         start_into_mission = 1;
         in_network_game = 1;
@@ -6529,7 +6513,7 @@ void show_menu_screen(void)
         change_screen = 0;
         redraw_screen_flag = 1;
     }
-    if (change_screen == ChSCRT_MISSION)
+    if (change_screen == ChSCRT_MISBRIEF)
     {
         selected_city_id = -1;
         screentype = SCRT_MISSION;
@@ -6639,7 +6623,7 @@ void draw_purple_rect(int x, int y, int w, int h, ubyte active)
 {
     TbPixel col1, col2;
 
-    lbDisplay.DrawFlags &= ~0x0010;
+    lbDisplay.DrawFlags &= ~Lb_SPRITE_OUTLINE;
     if (active) {
         col1 = 0x0E;
         col2 = 0x0C;

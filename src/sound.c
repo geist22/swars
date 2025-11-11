@@ -1,3 +1,22 @@
+/******************************************************************************/
+// Syndicate Wars Fan Expansion, source port of the classic game from Bullfrog.
+/******************************************************************************/
+/** @file sound.c
+ *     Sound related routines.
+ * @par Purpose:
+ *     Implements routines which help adjust functions from bfsoundlib to
+ *     the games needs.
+ * @par Comment:
+ *     Just a header file - #defines, typedefs, function prototypes etc.
+ * @author   Tomasz Lis
+ * @date     22 Apr 2023 - 02 Nov 2025
+ * @par  Copying and copyrights:
+ *     This program is free software; you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation; either version 2 of the License, or
+ *     (at your option) any later version.
+ */
+/******************************************************************************/
 
 #include "sound.h"
 
@@ -38,6 +57,8 @@ extern struct HeapMgrHeader *hmhead;
 extern long samples_in_bank;
 extern struct SampleTable *sample_table;
 
+/******************************************************************************/
+
 void set_default_sfx_settings(void)
 {
     startscr_samplevol = STARTSCR_VOLUME_MAX;
@@ -72,7 +93,8 @@ void sfx_apply_cdvolume(void)
     SetCDVolume(70 * (127 * startscr_cdvolume / STARTSCR_VOLUME_MAX) / 100);
 }
 
-struct SampleInfo *play_sample_using_heap(ulong a1, short smptbl_id, ulong a3, ulong a4, ulong a5, char a6, ubyte type)
+struct SampleInfo *play_sample_using_heap(ulong bank_id, short smptbl_id,
+  ulong volume, ulong pan, ulong pitch, sbyte loop_count, ubyte type)
 {
     struct SampleInfo *ret;
     asm volatile (
@@ -80,7 +102,7 @@ struct SampleInfo *play_sample_using_heap(ulong a1, short smptbl_id, ulong a3, u
       "push %6\n"
       "push %5\n"
       "call ASM_play_sample_using_heap\n"
-        : "=r" (ret) : "a" (a1), "d" (smptbl_id), "b" (a3), "c" (a4), "g" (a5), "g" (a6), "g" (type));
+        : "=r" (ret) : "a" (bank_id), "d" (smptbl_id), "b" (volume), "c" (pan), "g" (pitch), "g" (loop_count), "g" (type));
     return ret;
 }
 
@@ -333,3 +355,4 @@ void setup_heaps(short setup_cmd, const char *lang)
     }
 }
 
+/******************************************************************************/
