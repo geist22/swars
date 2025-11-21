@@ -126,6 +126,37 @@ enum PersonFlags3 {
     PrsF3_Unkn80     = 0x80,
 };
 
+enum PersonAnims {
+    ANIM_PERS_IDLE  = 0,
+    ANIM_PERS_WEPLIGHT_IDLE = 1,
+    ANIM_PERS_WEPHEAVY_IDLE = 2,
+    ANIM_PERS_Unkn03  = 3,
+    ANIM_PERS_Unkn04  = 4,
+    ANIM_PERS_Unkn05  = 5,
+    ANIM_PERS_Unkn06  = 6,
+    ANIM_PERS_WEPHEAVY_Unkn07 = 7,
+    ANIM_PERS_Unkn08  = 8,
+    ANIM_PERS_Unkn09  = 9,
+    ANIM_PERS_Unkn10  = 10,
+    ANIM_PERS_LAY_DOWN = 11,
+    ANIM_PERS_Unkn12  = 12,
+    ANIM_PERS_Unkn13  = 13,
+    ANIM_PERS_Unkn14  = 14,
+    ANIM_PERS_WEPHEAVY_Unkn15 = 15,
+    ANIM_PERS_PUSH_BACK = 16,
+    ANIM_PERS_Unkn17  = 17,
+    ANIM_PERS_DEAD_ASH = 18,
+    ANIM_PERS_Unkn19  = 19,
+    ANIM_PERS_DEAD_BODY  = 20,
+    ANIM_PERS_Unkn21  = 21,
+    ANIM_PERS_TOTAL_COUNT,
+};
+
+enum PersonSex {
+    PERSON_MALE  = 0,
+    PERSON_FEMALE,
+};
+
 /** Max health of a person; cannot safely go beyond that.
  */
 #define PERSON_MAX_HEALTH_LIMIT 16383
@@ -134,7 +165,15 @@ enum PersonFlags3 {
  */
 #define PERSON_MAX_ENERGY_LIMIT 32255
 
+/** Max shield charge of a person.
+ */
+#define PERSON_MAX_SHIELD 1024
+
 #define PERSON_MAX_SPEED 2048
+
+/** Multiplayer when transferring weapon energy points to shield points.
+ */
+#define PERSON_ENERGY_TO_SHIELD_MUL 4
 
 enum ThingWeaponSelectFlags {
     WepSel_TOGGLE = 0,
@@ -232,6 +271,10 @@ TbBool person_can_accept_control(ThingIdx person);
  */
 short person_slot_as_player_agent(struct Thing *p_person, ushort plyr);
 
+/** Returns sex of a person, either PERSON_MALE or PERSON_FEMALE.
+ */
+ubyte person_sex(struct Thing *p_person);
+
 void set_person_stats_type(struct Thing *p_person, ushort type);
 void set_person_health_shield_type(struct Thing *p_person, ushort stype);
 void set_person_energy_stamina_type(struct Thing *p_person, ushort stype);
@@ -243,6 +286,7 @@ short calc_person_speed(struct Thing *p_person);
 void check_persons_target(struct Thing *p_person);
 void check_persons_target2(struct Thing *p_person);
 void process_stamina(struct Thing *p_person);
+void process_shield(struct Thing *p_person);
 void process_person(struct Thing *p_person);
 void process_random_speech(struct Thing *p_person, ubyte a2);
 
@@ -298,7 +342,7 @@ TbBool person_is_persuaded_by_player(ThingIdx thing, ushort plyr);
 void player_change_person(short thing, ushort plyr);
 void make_peeps_scatter(struct Thing *p_person, int x, int z);
 int person_hit_by_bullet(struct Thing *p_person, short hp,
-  int vx, int vy, int vz, struct Thing *p_attacker, int type);
+  int vx, int vy, int vz, struct Thing *p_attacker, ushort type);
 
 /** Restores agents health by consuming a medikit, or just restores if no medikit available.
  */
@@ -327,6 +371,8 @@ void person_init_plant_mine(struct Thing *p_person, short x, short y, short z, i
  * @return Gives Value from ThingWeaponSelectFlags enum based on results of the action.
  */
 ubyte thing_select_specific_weapon(struct Thing *p_person, WeaponType wtype, ubyte flag);
+ubyte thing_select_best_weapon_for_range(struct Thing *p_person, int range);
+ubyte thing_deselect_weapon(struct Thing *p_person);
 
 void person_go_enter_vehicle_fast(struct Thing *p_person, struct Thing *p_vehicle, ushort plyr);
 void person_go_enter_vehicle(struct Thing *p_person, struct Thing *p_vehicle);

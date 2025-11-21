@@ -28,6 +28,7 @@
 #include "femain.h"
 #include "guiboxes.h"
 #include "guitext.h"
+#include "game_options.h"
 #include "game_sprts.h"
 #include "game.h"
 #include "keyboard.h"
@@ -63,7 +64,7 @@ void show_debrief_screen(void)
 #endif
     ubyte drawn;
 
-    if ((game_projector_speed && (heading_box.Flags & 0x0001) != 0) ||
+    if ((game_projector_speed && is_heading_flag01()) ||
       (is_key_pressed(KC_SPACE, KMod_DONTCARE) && !edit_flag))
     {
         clear_key_pressed(KC_SPACE);

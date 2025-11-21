@@ -32,6 +32,7 @@
 #include "engintrns.h"
 #include "enginzoom.h"
 #include "game.h"
+#include "game_options.h"
 #include "game_speed.h"
 #include "game_sprani.h"
 #include "keyboard.h"
@@ -146,7 +147,7 @@ void build_person(struct Thing *p_thing)
         frame = p_thing->Frame;
         bri = 32;
     }
-    else if (p_thing->U.UPerson.AnimMode == 20)
+    else if (p_thing->U.UPerson.AnimMode == ANIM_PERS_DEAD_BODY)
     {
         ushort stframe_old, stframe_new;
 

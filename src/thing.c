@@ -18,26 +18,31 @@
 /******************************************************************************/
 #include "thing.h"
 
+#include <assert.h>
+
 #include "bfbox.h"
 #include "bfutility.h"
 #include "bfmemut.h"
 #include "bfscreen.h"
 #include "ssampply.h"
 
+#include "bigmap.h"
 #include "building.h"
+#include "bmbang.h"
 #include "display.h"
 #include "enginfexpl.h"
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"
 #include "game.h"
+#include "game_options.h"
 #include "game_speed.h"
 #include "game_sprani.h"
 #include "matrix.h"
 #include "pepgroup.h"
 #include "player.h"
 #include "sound.h"
+#include "thing_fire.h"
 #include "vehicle.h"
-#include "bigmap.h"
 #include "game.h"
 #include "swlog.h"
 /******************************************************************************/
@@ -229,6 +234,41 @@ const char *state_change_result_name(StateChRes res)
     return state_change_result_names[res];
 }
 
+struct Thing *effective_owner_of_thing(struct Thing *p_thing)
+{
+    struct Thing *p_owntng;
+
+    if (p_thing == NULL) {
+        return NULL;
+    }
+
+    // Consider player agent an owner even if it got persuaded
+    if ((p_thing->Flag & TngF_PlayerAgent) != 0) {
+        return p_thing;
+    }
+
+    p_owntng = &things[p_thing->Owner];
+
+    if (((p_thing->Flag & TngF_Persuaded) != 0) && (p_owntng->Flag & TngF_PlayerAgent) != 0) {
+        return p_owntng;
+    }
+
+    if (p_thing->Type == TT_MINE && p_thing->SubType == 48) {
+        return p_owntng;
+    }
+
+    return p_thing;
+}
+
+ubyte on_mapwho(struct Thing *p_thing)
+{
+    ubyte ret;
+    asm volatile (
+      "call ASM_on_mapwho\n"
+        : "=r" (ret) : "a" (p_thing));
+    return ret;
+}
+
 void move_mapwho(struct Thing *p_thing, int x, int y, int z)
 {
     asm volatile (
@@ -302,13 +342,6 @@ void unkn_update_lights(void)
     return;
 }
 
-void process_shield(struct Thing *p_thing)
-{
-    asm volatile (
-      "call ASM_process_shield\n"
-        : : "a" (p_thing));
-}
-
 void process_rocket(struct Thing *p_rocket)
 {
     asm volatile (
@@ -356,11 +389,40 @@ void process_air_strike(struct Thing *p_thing)
         : : "a" (p_thing));
 }
 
+void process_unkn35_crashing(struct Thing *p_thing)
+{
+#if 0
+    asm volatile (
+      "call ASM_process_unkn35_crashing\n"
+        : : "a" (p_thing));
+#endif
+    ushort rnd;
+    int alt_under;
+
+    LOGNO("Thing (%d,%d,%d)", (int)p_thing->X, (int)p_thing->Y, (int)p_thing->Z);
+    move_mapwho(p_thing, p_thing->X + p_thing->VX, p_thing->Y + p_thing->VY, p_thing->Z + p_thing->VZ);
+
+    rnd = LbRandomAnyShort();
+    p_thing->VX -= p_thing->VX >> 4;
+    p_thing->VZ -= p_thing->VZ >> 4;
+    p_thing->VY -= ((rnd & 0x7F) + 0x200);
+
+    alt_under = alt_at_point(PRCCOORD_TO_MAPCOORD(p_thing->X), PRCCOORD_TO_MAPCOORD(p_thing->Z));
+    if (alt_under > p_thing->Y)
+    {
+        bang_new4(p_thing->X, p_thing->Y, p_thing->Z, 80);
+        remove_thing(p_thing->ThingOffset);
+        delete_node(p_thing);
+    }
+}
+
 void process_unkn35(struct Thing *p_thing)
 {
-    asm volatile (
-      "call ASM_process_unkn35\n"
-        : : "a" (p_thing));
+    if (p_thing->State == 13) {
+        process_unkn35_crashing(p_thing);
+        return;
+    }
+    //TODO implement the rest of the state update
 }
 
 void process_laser(struct Thing *p_laser)
@@ -428,7 +490,7 @@ void FIRE_process_flame(struct SimpleThing *p_sthing)
 void FIRE_finish_flame(struct SimpleThing *p_sthing, ThingIdx thing)
 {
     ReleaseLoopedSample(thing, 16);
-    play_dist_ssample(p_sthing, 0x17, 0x7F, 0x40, 100, 0, 3);
+    play_dist_ssample(p_sthing, 0x17, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3);
     remove_sthing(thing);
     delete_snode(p_sthing);
 }
@@ -541,8 +603,6 @@ void process_thing(struct Thing *p_thing, ThingIdx thing)
         process_air_strike(p_thing);
         break;
     case TT_UNKN35:
-        if (p_thing->State != 13)
-            break;
         process_unkn35(p_thing);
         break;
     case TT_LASER11:
@@ -595,26 +655,44 @@ void process_temp_light(struct SimpleThing *p_sthing)
     apply_full_light(lgtng_x, lgtng_y >> 3, lgtng_z, bri, 0);
 }
 
+void set_thing_frame(struct Thing *p_thing, ushort anim_start)
+{
+    assert(p_thing->Type != TT_PERSON);
+    p_thing->StartFrame = anim_start;
+    p_thing->Frame = nstart_ani[p_thing->StartFrame];
+}
+
+void reset_thing_frame(struct Thing *p_thing)
+{
+    assert(p_thing->Type != TT_PERSON);
+    p_thing->Frame = nstart_ani[p_thing->StartFrame];
+}
+
+void reset_sthing_frame(struct SimpleThing *p_sthing)
+{
+    p_sthing->Frame = nstart_ani[p_sthing->StartFrame];
+}
+
+void process_burning_static(struct SimpleThing *p_sthing)
+{
+    p_sthing->Timer1--;
+    if (p_sthing->Timer1 != 0)
+        return;
+    p_sthing->State = 13;
+    reset_sthing_frame(p_sthing);
+    stop_sample_using_heap(p_sthing->ThingOffset, 29);
+}
+
 void process_static(struct SimpleThing *p_sthing)
 {
     switch (p_sthing->State)
     {
     case 36:
-        play_dist_ssample(p_sthing, 0x1D, 0x7F, 0x40, 100, 0, 2);
-        p_sthing->Timer1--;
-        if (p_sthing->Timer1 != 0)
-            break;
-        p_sthing->State = 13;
-        p_sthing->Frame = nstart_ani[p_sthing->StartFrame];
-        stop_sample_using_heap(p_sthing->ThingOffset, 0x1Du);
+        play_dist_ssample(p_sthing, 29, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 2);
+        process_burning_static(p_sthing);
         break;
     case 12:
-        p_sthing->Timer1--;
-        if (p_sthing->Timer1 != 0)
-            break;
-        p_sthing->State = 13;
-        p_sthing->Frame = nstart_ani[p_sthing->StartFrame];
-       stop_sample_using_heap(p_sthing->ThingOffset, 0x1Du);
+        process_burning_static(p_sthing);
         break;
     }
 }
@@ -627,7 +705,7 @@ void process_sfx(struct SimpleThing *p_sthing)
         if (!dont_bother_with_explode_faces)
             break;
         stop_sample_using_heap(p_sthing->ThingOffset, 0x2E);
-        play_dist_ssample(p_sthing, 0x2F, 0x7F, 0x40, 100, 0, 3);
+        play_dist_ssample(p_sthing, 0x2F, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3);
         p_sthing->State = 2;
         p_sthing->Timer1 = 100;
         break;
@@ -1478,6 +1556,39 @@ struct SimpleThing *create_sound_effect(int x, int y, int z, ushort sample, int 
       "call ASM_create_sound_effect\n"
         : "=r" (ret) : "a" (x), "d" (y), "b" (z), "c" (sample), "g" (vol), "g" (loop));
     return ret;
+}
+
+void mine_detonate(struct Thing *p_thing)
+{
+    play_dist_sample(p_thing, 37, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3);
+    bang_new4(p_thing->X, p_thing->Y, p_thing->Z, 20);
+    p_thing->State = 13;
+    p_thing->Flag |= TngF_Destroyed;
+    set_thing_frame(p_thing, 1069);
+}
+
+int mine_hit_by_bullet(struct Thing *p_thing, short hp,
+  int vx, int vy, int vz, struct Thing *p_attacker, ushort type)
+{
+    if (p_thing->State == 13) {
+        return 0;
+    }
+    p_thing->Health -= hp;
+    if (p_thing->Health <= 0) {
+        mine_detonate(p_thing);
+        return p_thing->Health + hp;
+    }
+    return 0;
+}
+
+int static_hit_by_bullet(struct SimpleThing *p_sthing, short hp,
+  int vx, int vy, int vz, struct Thing *p_attacker, ushort type)
+{
+    p_sthing->U.UScenery.Health -= hp;
+    if (p_sthing->U.UScenery.Health <= 0) {
+        set_static_on_fire(p_sthing);
+    }
+    return 100;
 }
 
 /******************************************************************************/

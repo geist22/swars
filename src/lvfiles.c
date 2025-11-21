@@ -42,6 +42,7 @@
 #include "enginsngobjs.h"
 #include "game.h"
 #include "game_data.h"
+#include "game_options.h"
 #include "game_speed.h"
 #include "game_sprani.h"
 #include "lvobjctv.h"
@@ -162,6 +163,29 @@ void global_3d_store(int action)
     }
 }
 
+TbBool is_level_stored_thing(struct Thing *p_thing)
+{
+    switch (p_thing->Type)
+    {
+    case TT_VEHICLE:
+    case TT_PERSON:
+    case TT_UNKN35:
+       return true;
+    }
+    return false;
+}
+
+TbBool is_level_stored_sthing(struct SimpleThing *p_sthing)
+{
+    switch (p_sthing->Type)
+    {
+    case SmTT_CARRIED_ITEM:
+    case SmTT_DROPPED_ITEM:
+       return true;
+    }
+    return false;
+}
+
 ulong load_level_pc_handle(TbFileHandle lev_fh)
 {
     ulong fmtver;
@@ -200,13 +224,27 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
                 LbFileRead(lev_fh, &s_oldthing, sizeof(s_oldthing));
                 refresh_old_thing_format(p_thing, &s_oldthing, fmtver);
             }
-            LOGNO("Thing(%hd,%hd) group %hd at (%d,%d,%d) type=%d,%d",
-              p_thing->ThingOffset, p_thing->U.UPerson.UniqueID,
-              p_thing->U.UPerson.Group,
-              PRCCOORD_TO_MAPCOORD(p_thing->X),
-              PRCCOORD_TO_MAPCOORD(p_thing->Y),
-              PRCCOORD_TO_MAPCOORD(p_thing->Z),
-              (int)p_thing->Type, (int)p_thing->SubType);
+
+            if (!is_level_stored_thing(p_thing))
+            {
+                LOGWARN("Thing(%hd,%hd) group %hd at (%d,%d,%d) type=%d,%d",
+                  p_thing->ThingOffset, p_thing->U.UPerson.UniqueID,
+                  p_thing->U.UPerson.Group,
+                  PRCCOORD_TO_MAPCOORD(p_thing->X),
+                  PRCCOORD_TO_MAPCOORD(p_thing->Y),
+                  PRCCOORD_TO_MAPCOORD(p_thing->Z),
+                  (int)p_thing->Type, (int)p_thing->SubType);
+            }
+            else
+            {
+                LOGNO("Thing(%hd,%hd) group %hd at (%d,%d,%d) type=%d,%d",
+                  p_thing->ThingOffset, p_thing->U.UPerson.UniqueID,
+                  p_thing->U.UPerson.Group,
+                  PRCCOORD_TO_MAPCOORD(p_thing->X),
+                  PRCCOORD_TO_MAPCOORD(p_thing->Y),
+                  PRCCOORD_TO_MAPCOORD(p_thing->Z),
+                  (int)p_thing->Type, (int)p_thing->SubType);
+            }
 
             if ((p_thing->Z >> 8) < 256)
                 p_thing->Z += (256 << 8);
@@ -251,6 +289,7 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
 
             if (p_thing->Type == SmTT_DROPPED_ITEM)
             {
+                // SimpleThings should not be on this list. But many level do have them.
                 p_thing->Frame = nstart_ani[p_thing->StartFrame + 1];
             }
 
@@ -369,6 +408,35 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
             p_thing = &sthings[thing];
             memcpy(&loc_thing, p_thing, 60);
             LbFileRead(lev_fh, p_thing, 60);
+
+            if (!is_level_stored_sthing(p_thing))
+            {
+                LOGWARN("SThing(%hd,%hd) at (%d,%d,%d) type=%d,%d",
+                  p_thing->ThingOffset, p_thing->UniqueID,
+                  PRCCOORD_TO_MAPCOORD(p_thing->X),
+                  PRCCOORD_TO_MAPCOORD(p_thing->Y),
+                  PRCCOORD_TO_MAPCOORD(p_thing->Z),
+                  (int)p_thing->Type, (int)p_thing->SubType);
+            }
+            else
+            {
+                LOGNO("SThing(%hd,%hd) at (%d,%d,%d) type=%d,%d",
+                  p_thing->ThingOffset, p_thing->UniqueID,
+                  PRCCOORD_TO_MAPCOORD(p_thing->X),
+                  PRCCOORD_TO_MAPCOORD(p_thing->Y),
+                  PRCCOORD_TO_MAPCOORD(p_thing->Z),
+                  (int)p_thing->Type, (int)p_thing->SubType);
+            }
+
+            if (fmtver <= 17)
+            {
+                if (p_thing->Type == 0)
+                {
+                    p_thing->Type = SmTT_DROPPED_ITEM;
+                    p_thing->SubType &= 3;
+                }
+            }
+
             if (p_thing->Type == SmTT_CARRIED_ITEM)
             {
                 p_thing->LinkParent = loc_thing.LinkParent;
@@ -385,12 +453,6 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
               if (thing != 0)
                   add_node_sthing(thing);
             }
-            LOGNO("Thing(%hd,%hd) at (%d,%d,%d) type=%d,%d",
-              p_thing->ThingOffset, p_thing->UniqueID,
-              PRCCOORD_TO_MAPCOORD(p_thing->X),
-              PRCCOORD_TO_MAPCOORD(p_thing->Y),
-              PRCCOORD_TO_MAPCOORD(p_thing->Z),
-              (int)p_thing->Type, (int)p_thing->SubType);
         }
     }
 
@@ -435,6 +497,117 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
 
     return fmtver;
 }
+
+void save_level_pc_handle(TbFileHandle lev_fh)
+{
+    ulong fmtver;
+    ushort count;
+    int i, k;
+
+    assert(sizeof(struct Thing) == 168);
+    assert(sizeof(struct Command) == 32);
+    assert(sizeof(struct Objective) == 32);
+    assert(sizeof(struct LevelMisc) == 22);
+
+    fmtver = 18;
+    LbFileWrite(lev_fh, &fmtver, 4);
+
+    {// Things are partially stored in map, partially in level file
+        struct Thing *p_thing;
+        ThingIdx thing;
+
+        i = 0;
+        for (thing = things_used_head; thing > 0; thing = p_thing->LinkChild)
+        {
+            p_thing = &things[thing];
+            // Per thing code start
+            if (!is_level_stored_thing(p_thing))
+                continue;
+            i++;
+            // Per thing code end
+        }
+        count = i;
+        LbFileWrite(lev_fh, &count, 2);
+
+        i = 0;
+        LOGSYNC("Level fmtver=%lu n_things=%hd", fmtver, count);
+        for (thing = things_used_head; thing > 0; thing = p_thing->LinkChild)
+        {
+            p_thing = &things[thing];
+            // Per thing code start
+            if (!is_level_stored_thing(p_thing))
+                continue;
+            i++;
+            LbFileWrite(lev_fh, p_thing, sizeof(struct Thing));
+            if (p_thing->Type == TT_VEHICLE)
+            {
+                k = p_thing->U.UVehicle.MatrixIndex;
+                LbFileWrite(lev_fh, &local_mats[k], 36);
+
+            }
+            // Per thing code end
+        }
+    }
+    assert(count == i);
+
+    LbFileWrite(lev_fh, &next_command, sizeof(ushort));
+    LbFileWrite(lev_fh, game_commands, sizeof(struct Command) * next_command);
+
+    LbFileWrite(lev_fh, &level_def, 44);
+
+    LbFileWrite(lev_fh, engine_mem_alloc_ptr + engine_mem_alloc_size - 1320 - 33, 1320);
+    LbFileWrite(lev_fh, war_flags, 32 * sizeof(struct WarFlag));
+
+    LbFileWrite(lev_fh, &word_1531E0, sizeof(ushort));
+    LbFileWrite(lev_fh, engine_mem_alloc_ptr + engine_mem_alloc_size - 32000, 15 * word_1531E0);
+    LbFileWrite(lev_fh, &unkn3de_len, sizeof(ushort));
+    LbFileWrite(lev_fh, engine_mem_alloc_ptr + engine_mem_alloc_size - 32000, unkn3de_len);
+
+    {// SimpleThings are partially stored in map, partially in level file
+        struct SimpleThing *p_sthing;
+        ThingIdx thing;
+
+        i = 0;
+        for (thing = sthings_used_head; thing < 0; thing = p_sthing->LinkChild)
+        {
+            p_sthing = &sthings[thing];
+            // Per thing code start
+            if (!is_level_stored_sthing(p_sthing))
+                continue;
+            i++;
+            // Per thing code end
+        }
+        count = i;
+        LbFileWrite(lev_fh, &count, 2);
+
+        i = 0;
+        LOGSYNC("Level fmtver=%lu n_sthings=%hd", fmtver, count);
+        for (thing = sthings_used_head; thing < 0; thing = p_sthing->LinkChild)
+        {
+            p_sthing = &sthings[thing];
+            // Per thing code start
+            if (!is_level_stored_sthing(p_sthing))
+                continue;
+            i++;
+            LbFileWrite(lev_fh, p_sthing, sizeof(struct SimpleThing));
+            // Per thing code end
+        }
+    }
+    assert(count == i);
+
+    LbFileWrite(lev_fh, &game_level_unique_id, 2);
+
+    LbFileWrite(lev_fh, &next_used_lvl_objective, sizeof(ushort));
+    LbFileWrite(lev_fh, game_used_lvl_objectives, sizeof(struct Objective) * next_used_lvl_objective);
+
+    LbFileWrite(lev_fh, game_level_unkn1, 40);
+    LbFileWrite(lev_fh, game_level_unkn2, 40);
+
+    LbFileWrite(lev_fh, game_level_miscs, sizeof(struct LevelMisc) * 200);
+
+    LbFileWrite(lev_fh, &engn_anglexz, 4);
+}
+
 
 short find_group_which_looks_like_human_player(TbBool strict)
 {
@@ -615,6 +788,8 @@ void fix_level_indexes(short missi, ulong fmtver, ubyte reload, TbBool deep)
     ushort objectv;
     ThingIdx thing;
 
+    LOGSYNC("Fixing mission %d fmtver %d reload %d deep %d",
+      (int)missi, (int)fmtver, (int)reload, (int)deep);
     fix_thing_commands_indexes(deep);
 
     for (objectv = 1; objectv < next_used_lvl_objective; objectv++)
@@ -622,7 +797,7 @@ void fix_level_indexes(short missi, ulong fmtver, ubyte reload, TbBool deep)
         struct Objective *p_objectv;
 
         p_objectv = &game_used_lvl_objectives[objectv];
-        p_objectv->Level = (current_level - 1) % 15 + 1;
+        p_objectv->Level = LEVEL_NUM_STRAIN(current_level);
         p_objectv->Map = current_map;
         fix_single_objective(p_objectv, objectv, "UL");
     }
@@ -637,7 +812,9 @@ void fix_level_indexes(short missi, ulong fmtver, ubyte reload, TbBool deep)
 
     // Used objectives are not part of the level file, but part of
     // the mission file. If restarting level, leave these intact,
-    // as fixups were already applied on first load.
+    // as fixups were already applied on first load. Though loading
+    // a different level as part of the same mission needs to be
+    // taken into account when setting the 'reload' parameter.
     if (!reload)
     {
         fix_mission_used_objectives(missi);
@@ -808,7 +985,7 @@ void load_level_pc(short level, short missi, ubyte reload)
                 current_map, next_level);
         else
             sprintf(lev_fname, "%s/c%03dl%03d.d%d", game_dirs[DirPlace_Levels].directory,
-               current_map, (next_level - 1) % 15 + 1, (next_level - 1) / 15);
+               current_map, LEVEL_NUM_STRAIN(next_level), LEVEL_NUM_VARIANT(next_level));
         if (next_level > 0)
             current_level = next_level;
     }

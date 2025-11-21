@@ -39,6 +39,7 @@
 #include "display.h"
 #include "engintrns.h"
 #include "game_data.h"
+#include "game_options.h"
 #include "game_speed.h"
 #include "game_sprts.h"
 #include "game.h"
@@ -787,7 +788,7 @@ int count_weapons_in_flags(int *p_ncarr_below, int *p_ncarr_above, ulong weapons
     ncarr_below = 0;
     wepflags = weapons_carried;
 
-    for (nwtype = 1; nwtype < WEP_TYPES_COUNT; nwtype++, wepflags >>= 1)
+    for (nwtype = WEP_NULL + 1; nwtype < WEP_TYPES_COUNT; nwtype++, wepflags >>= 1)
     {
         if (wepflags == 0)
             break;
@@ -1764,7 +1765,7 @@ void update_game_panel(void)
         case PanT_WeaponEnergy:
             // If supershield is enabled for the current agent, draw energy bar in red
             p_agent = &things[p_locplayer->DirectControl[0]];
-            panel_sprites_switch(panel, (p_agent->Type == TT_PERSON) && (p_agent->Flag & TngF_Unkn0100) != 0);
+            panel_sprites_switch(panel, (p_agent->Type == TT_PERSON) && (p_agent->Flag & TngF_PersSupShld) != 0);
             break;
         }
     }
@@ -1929,7 +1930,7 @@ void draw_new_panel_health_overlay(short panel, ushort plagent, TbBool darkened)
     }
     // Draw shield level over health
     lv = p_agent->U.UPerson.ShieldEnergy;
-    draw_health_level(x, y, w, h, lv, 0x400, colour_lookup[ColLU_WHITE], 1);
+    draw_health_level(x, y, w, h, lv, PERSON_MAX_SHIELD, colour_lookup[ColLU_WHITE], 1);
 }
 
 void draw_new_panel_mood_overlay(short panel, ushort plagent, TbBool darkened)
@@ -2005,7 +2006,7 @@ void draw_new_panel(void)
     for (panel = 0; true; panel++)
     {
         struct GamePanel *p_panel;
-        TbBool is_visible;
+        TbBool is_visible, is_blinking;
         TbBool is_disabled, is_subordnt;
 
         p_panel = &game_panel[panel];
@@ -2016,12 +2017,14 @@ void draw_new_panel(void)
         if (!panel_for_speciifc_agent(panel))
         {
             is_visible = (p_panel->Spr[0] != 0);
+            is_blinking = false;
             is_disabled = false;
             is_subordnt = false;
         }
         else
         {
             is_visible = true;
+            is_blinking = false;
             if (p_panel->ID >= playable_agents)
             {
                 is_visible = false;
@@ -2041,6 +2044,7 @@ void draw_new_panel(void)
                     wep_delay = player_agent_weapon_delay(local_player_no, p_panel->ID, weapon);
 
                     is_visible = (weapon != 0) && ((wep_delay == 0) || (gameturn & 1));
+                    is_blinking = (weapon != 0) && (wep_delay != 0);
                 }
                 else
                 {
@@ -2057,6 +2061,20 @@ void draw_new_panel(void)
                 is_disabled = (((p_agent->Flag2 & TgF2_Unkn10000000) != 0) ||
                   person_is_executing_commands(p_agent->ThingOffset));
             }
+        }
+
+        // Store data about panel state to be used by input handling
+        switch (p_panel->Type)
+        {
+        case PanT_AgentWeapon:
+            // If a panel is blinking only as visual effect, this should not affect input
+            if (is_visible || is_blinking)
+                panel_wep[p_panel->ID] |= PaMF_EXISTS;
+            if (is_disabled)
+                panel_wep[p_panel->ID] |= PaMF_DISABLED;
+            if (is_subordnt)
+                panel_wep[p_panel->ID] |= PaMF_SUBORDNT;
+            break;
         }
 
         if (!is_visible)
@@ -2195,11 +2213,7 @@ void draw_new_panel(void)
             // Medi sprite gets switched when we have medikit, so no need for update
             break;
         case PanT_AgentWeapon:
-            panel_wep[p_panel->ID] |= PaMF_EXISTS;
-            if (is_disabled)
-                panel_wep[p_panel->ID] |= PaMF_DISABLED;
-            if (is_subordnt)
-                panel_wep[p_panel->ID] |= PaMF_SUBORDNT;
+            // Weapon sprite will be drawn later based on panel_wep[] flags
             break;
         case PanT_WeaponEnergy:
             // Fill the left energy bar
@@ -2232,7 +2246,7 @@ void draw_new_panel(void)
 
     ingame.Scanner.MX = engn_xc >> 7;
     ingame.Scanner.MZ = engn_zc >> 7;
-    ingame.Scanner.Angle = 2047 - ((engn_anglexz >> 5) & 0x7FF);
+    ingame.Scanner.Angle = (2*LbFPMath_PI - 1) - ((engn_anglexz >> 5) & LbFPMath_AngleMask);
     SCANNER_draw_new_transparent();
 
     draw_panel_objective_info();
