@@ -131,6 +131,7 @@
 #include "wadfile.h"
 #include "weapon.h"
 #include "wrcities.h"
+#include "agent_cosmetics.h"
 
 #include "timer.h"
 
@@ -3023,13 +3024,29 @@ ushort make_group_into_players(ushort group, ushort plyr, ushort max_agent, shor
             reset_person_frame(p_person);
             break;
         }
-        p_person->U.UPerson.FrameId.Version[0] = 0;
+
+        // Set FrameId for Agents' heads
+        if (p_person->SubType == SubTT_PERS_AGENT) {
+            p_person->U.UPerson.FrameId.Version[0] = PlayerAgentHeads[plagent];
+        }
+        else {
+            p_person->U.UPerson.FrameId.Version[0] = 0;
+        }
+
+        // Set High Priest Robes if enabled
+        if ((p_person->SubType == SubTT_PERS_ZEALOT) && (PlayerZealotIsHighPriest[plagent] == true)) {
+            // TODO this is a bad, temporary workaround - needs a proper implementation by changing animations instead
+            p_person->SubType = SubTT_PERS_HIGH_PRIEST;
+        }
+
         if (p_person->U.UPerson.CurrentWeapon == 0)
         {
             switch_person_anim_mode(p_person, ANIM_PERS_IDLE);
         }
 
-        if ((p_person->SubType == SubTT_PERS_AGENT) || (p_person->SubType == SubTT_PERS_ZEALOT))
+        // TODO remove SubTT_PERS_HIGH_PRIEST from here once the zealots have a proper implementation for changing robes
+        // Currently it's required for the workaround to function, otherwise zealot 1 gets duplicated as zealot 2 and zealot 2/3/4 move up one number
+        if ((p_person->SubType == SubTT_PERS_AGENT) || (p_person->SubType == SubTT_PERS_ZEALOT) || (p_person->SubType == SubTT_PERS_HIGH_PRIEST))
             high_tier++;
 
         if (++plagent == max_agent)
@@ -3379,6 +3396,7 @@ void game_setup(void)
     engine_mem_alloc_ptr = LbMemoryAlloc(engine_mem_alloc_size);
     load_texturemaps();
     LbDataLoadAll(unk02_load_files);
+    read_agent_cosmetics_file();
     read_rules_file();
     read_weapons_conf_file();
     read_cybmods_conf_file();
