@@ -31,6 +31,7 @@
 #include "enginsngtxtr.h"
 #include "game.h"
 #include "game_data.h"
+#include "game_options.h"
 #include "game_sprani.h"
 #include "matrix.h"
 #include "thing.h"
@@ -134,9 +135,9 @@ void draw_person_shadow(ushort face)
 
     fr = p_thing->Frame - nstart_ani[p_thing->StartFrame + 1 + p_thing->U.UObject.Angle];
     anmode = p_thing->U.UPerson.AnimMode;
-    if ((anmode == 2) || (anmode == 15) || (anmode == 7))
+    if ((anmode == ANIM_PERS_WEPHEAVY_IDLE) || (anmode == ANIM_PERS_WEPHEAVY_Unkn15) || (anmode == ANIM_PERS_WEPHEAVY_Unkn07))
         shpak = 12;
-    else if ((anmode == 1) || (anmode == 14) || (anmode == 6))
+    else if ((anmode == ANIM_PERS_WEPLIGHT_IDLE) || (anmode == ANIM_PERS_Unkn14) || (anmode == ANIM_PERS_Unkn06))
         shpak = byte_154F2C[2 * p_thing->SubType + 1];
     else
         shpak = byte_154F2C[2 * p_thing->SubType + 0];

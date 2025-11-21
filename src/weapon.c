@@ -673,8 +673,6 @@ TbBool weapons_has_weapon(ulong weapons, WeaponType wtype)
     return (weapons & wepflg) != 0;
 }
 
-/** Returns weapon set in given flags with index below last.
- */
 ushort weapons_prev_weapon(ulong weapons, WeaponType last_wtype)
 {
     WeaponType wtype;
@@ -689,6 +687,20 @@ ushort weapons_prev_weapon(ulong weapons, WeaponType last_wtype)
             return wtype;
     }
     return 0;
+}
+
+ushort weapons_count_used_slots(ulong weapons)
+{
+    ushort used_slots;
+    WeaponType wtype;
+
+    used_slots = 0;
+    for (wtype = WEP_NULL + 1; wtype < WEP_TYPES_COUNT; wtype++)
+    {
+        if (weapons_has_weapon(weapons, wtype))
+            used_slots++;
+    }
+    return used_slots;
 }
 
 void weapons_remove_weapon(ulong *p_weapons, struct WeaponsFourPack *p_fourpacks, WeaponType wtype)
@@ -768,14 +780,14 @@ TbBool weapons_add_one(ulong *p_weapons, struct WeaponsFourPack *p_fourpacks, We
     ushort fp;
     TbBool is_first;
 
-    if (number_of_set_bits(*p_weapons) >= WEAPONS_CARRIED_MAX_COUNT)
-        return false;
-
     is_first = ((*p_weapons & (1 << (wtype-1))) == 0);
+
+    if ((is_first) && (weapons_count_used_slots(*p_weapons) >= WEAPONS_CARRIED_MAX_COUNT))
+        return false;
 
     fp = weapon_fourpack_index(wtype);
     if (fp < WFRPK_COUNT) {
-        if ((!is_first) && (p_fourpacks->Amount[fp] > 3))
+        if ((!is_first) && (p_fourpacks->Amount[fp] >= WEAPONS_FOURPACK_MAX_COUNT))
             return false;
 
         if (is_first)
@@ -803,14 +815,14 @@ TbBool weapons_add_one_for_player(ulong *p_weapons,
     ushort fp;
     TbBool is_first;
 
-    if (number_of_set_bits(*p_weapons) >= WEAPONS_CARRIED_MAX_COUNT)
-        return false;
-
     is_first = ((*p_weapons & (1 << (wtype-1))) == 0);
+
+    if ((is_first) && (weapons_count_used_slots(*p_weapons) >= WEAPONS_CARRIED_MAX_COUNT))
+        return false;
 
     fp = weapon_fourpack_index(wtype);
     if (fp < WFRPK_COUNT) {
-        if ((!is_first) && (p_plfourpacks[fp][plagent] > 3))
+        if ((!is_first) && (p_plfourpacks[fp][plagent] >= WEAPONS_FOURPACK_MAX_COUNT))
             return false;
 
         if (is_first)
@@ -1038,7 +1050,7 @@ void do_weapon_quantities_max_to_player(struct Thing *p_person)
 
 void do_weapon_quantities1(struct Thing *p_person)
 {
-    if (in_network_game)
+    if ((in_network_game) || ((p_person->Flag & TngF_PlayerAgent) == 0))
     {
         // No action
     }
@@ -1050,7 +1062,11 @@ void do_weapon_quantities1(struct Thing *p_person)
 
 void do_weapon_quantities_proper1(struct Thing *p_person)
 {
-    if (in_network_game)
+    if ((p_person->Flag & TngF_PlayerAgent) == 0)
+    {
+        // No action - only player agents have quantities of weapons
+    }
+    else if (in_network_game)
     {
         do_weapon_quantities_player_to_net(p_person);
     }
@@ -1288,7 +1304,7 @@ void init_fire_weapon(struct Thing *p_person)
     {
         if (wtype == WEP_MINIGUN) {
             plagent = p_person->U.UPerson.ComCur & 3;
-            play_dist_sample(p_person, 88 + plagent, 0x7Fu, 0x40u, 100, 0, 2);
+            play_dist_sample(p_person, 88 + plagent, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 2);
         }
     }
     else
@@ -1317,7 +1333,7 @@ void init_fire_weapon(struct Thing *p_person)
                 if (p_target != NULL)
                 {
                     if ((p_target->Flag & TngF_Destroyed) == 0)
-                        p_person->Flag2 |= TngF_Unkn00200000;
+                        p_person->Flag2 |= TgF2_Unkn00200000;
                 }
             }
             p_person->U.UPerson.FrameId.Version[4] = 1;
@@ -1335,7 +1351,7 @@ void init_fire_weapon(struct Thing *p_person)
                 else
                     plagent = 0;
 
-                play_dist_sample(p_person, 80 + plagent, 0x7Fu, 0x40u, 100 + i, -1, 3);
+                play_dist_sample(p_person, 80 + plagent, FULL_VOL, EQUL_PAN, NORM_PTCH + i, LOOP_4EVER, 3);
             }
             p_person->Flag2 |= TgF2_Unkn0200;
             break;
@@ -1348,7 +1364,7 @@ void init_fire_weapon(struct Thing *p_person)
                 if (p_target != NULL)
                 {
                     if ((p_target->Flag & TngF_Destroyed) == 0)
-                        p_person->Flag2 |= TngF_Unkn00200000;
+                        p_person->Flag2 |= TgF2_Unkn00200000;
                 }
             }
             p_person->U.UPerson.FrameId.Version[4] = 3;
@@ -1361,7 +1377,7 @@ void init_fire_weapon(struct Thing *p_person)
                 else
                     plagent = 0;
 
-                play_dist_sample(p_person, 84 + plagent, 0x7Fu, 0x40u, 100, -1, 3);
+                play_dist_sample(p_person, 84 + plagent, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_4EVER, 3);
             }
             p_person->Flag2 |= TgF2_Unkn0200;
             break;
@@ -1372,11 +1388,11 @@ void init_fire_weapon(struct Thing *p_person)
                 if (p_target != NULL)
                 {
                     if ((p_target->Flag & TngF_Destroyed) == 0)
-                        p_person->Flag2 |= TngF_Unkn00200000;
+                        p_person->Flag2 |= TgF2_Unkn00200000;
                 }
             }
             if ((p_person->Flag & TngF_Unkn1000) != 0)
-                play_dist_sample(p_person, 7u, 0x7Fu, 0x40u, 100, -1, 3);
+                play_dist_sample(p_person, 7, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_4EVER, 3);
             break;
         case WEP_ELLASER:
             if ((p_person->Flag & TngF_PlayerAgent) != 0)
@@ -1385,12 +1401,12 @@ void init_fire_weapon(struct Thing *p_person)
                 if (p_target != NULL)
                 {
                     if ((p_target->Flag & TngF_Destroyed) == 0)
-                        p_person->Flag2 |= TngF_Unkn00200000;
+                        p_person->Flag2 |= TgF2_Unkn00200000;
                 }
             }
             if (((p_person->Flag2 & TgF2_ExistsOffMap) == 0)
               && ((p_person->Flag & TngF_Unkn1000) != 0))
-                play_dist_sample(p_person, 7u, 0x7Fu, 0x40u, 100, -1, 3);
+                play_dist_sample(p_person, 7, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_4EVER, 3);
             break;
         case WEP_RAP:
             // Targetted shots are created somewhere else
@@ -1402,7 +1418,7 @@ void init_fire_weapon(struct Thing *p_person)
             }
             p_person->U.UPerson.Energy -= wdef->EnergyUsed;
             init_grenade(p_person, 3);
-            play_dist_sample(p_person, 0x24u, 0x7Fu, 0x40u, 100, 0, 2);
+            play_dist_sample(p_person, 36, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 2);
             p_person->U.UPerson.WeaponTurn = wdef->ReFireDelay;
             if ((p_person->Flag & TngF_PlayerAgent) == 0)
                 choose_best_weapon_for_range(p_person, 1280);
@@ -1420,7 +1436,7 @@ void init_fire_weapon(struct Thing *p_person)
             }
             p_person->U.UPerson.Energy -= wdef->EnergyUsed;
             init_grenade(p_person, 4);
-            play_dist_sample(p_person, 0x24u, 0x7Fu, 0x40u, 100, 0, 2);
+            play_dist_sample(p_person, 36, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 2);
             p_person->U.UPerson.WeaponTurn = wdef->ReFireDelay;
             if ((p_person->Flag & TngF_PlayerAgent) == 0)
                 choose_best_weapon_for_range(p_person, 1280);
@@ -1432,7 +1448,7 @@ void init_fire_weapon(struct Thing *p_person)
             }
             p_person->U.UPerson.Energy -= wdef->EnergyUsed;
             init_grenade(p_person, 5);
-            play_dist_sample(p_person, 0x24u, 0x7Fu, 0x40u, 100, 0, 2);
+            play_dist_sample(p_person, 36, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 2);
             p_person->U.UPerson.WeaponTurn = wdef->ReFireDelay;
             if ((p_person->Flag & TngF_PlayerAgent) == 0)
                 choose_best_weapon_for_range(p_person, 1280);
@@ -1456,13 +1472,13 @@ void init_fire_weapon(struct Thing *p_person)
                 if (p_target != NULL)
                 {
                     if ((p_target->Flag & TngF_Destroyed) == 0)
-                        p_person->Flag2 |= TngF_Unkn00200000;
+                        p_person->Flag2 |= TgF2_Unkn00200000;
                 }
             }
             p_person->U.UPerson.FrameId.Version[4] = 1;
             init_long_range(p_person);
             p_person->U.UPerson.WeaponTurn = wdef->ReFireDelay;
-            play_dist_sample(p_person, 0x21u, 0x7Fu, 0x40u, 100, 0, 3);
+            play_dist_sample(p_person, 33, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3);
             break;
         case WEP_AIRSTRIKE:
             give_take_me_weapon(p_person, wtype, -1, p_person->ThingOffset);
@@ -1475,11 +1491,11 @@ void init_fire_weapon(struct Thing *p_person)
                 if (p_target != NULL)
                 {
                     if ((p_target->Flag & TngF_Destroyed) == 0)
-                        p_person->Flag2 |= TngF_Unkn00200000;
+                        p_person->Flag2 |= TgF2_Unkn00200000;
                 }
             }
             if ((p_person->Flag & TngF_Unkn1000) != 0)
-                play_dist_sample(p_person, 7u, 0x7Fu, 0x40u, 100, -1, 3);
+                play_dist_sample(p_person, 7, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_4EVER, 3);
             break;
         case WEP_QDEVASTATOR:
             if ((p_person->Flag & TngF_PlayerAgent) != 0)
@@ -1488,11 +1504,11 @@ void init_fire_weapon(struct Thing *p_person)
                 if (p_target != NULL)
                 {
                     if ((p_target->Flag & TngF_Destroyed) == 0)
-                        p_person->Flag2 |= TngF_Unkn00200000;
+                        p_person->Flag2 |= TgF2_Unkn00200000;
                 }
             }
             if ((p_person->Flag & TngF_Unkn1000) != 0)
-                play_dist_sample(p_person, 7u, 0x7Fu, 0x40u, 100, -1, 3);
+                play_dist_sample(p_person, 7, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_4EVER, 3);
             break;
         case WEP_STASISFLD:
             p_person->U.UPerson.Energy -= wdef->EnergyUsed;
@@ -1536,7 +1552,7 @@ void init_clone_disguise(struct Thing *p_person)
     if ((p_person->Flag2 & TgF2_Unkn00400000) != 0)
         return;
 
-    p_person->U.UPerson.AnimMode = 0;
+    p_person->U.UPerson.AnimMode = ANIM_PERS_IDLE;
     p_person->U.UPerson.OldSubType = p_person->SubType;
     switch (LbRandomAnyShort() & 3)
     {
@@ -1559,12 +1575,85 @@ void init_clone_disguise(struct Thing *p_person)
     p_person->Flag2 |= TgF2_Unkn00400000;
 }
 
+void reset_clone_disguise(struct Thing *p_person)
+{
+    if ((p_person->Flag2 & TgF2_Unkn00400000) == 0)
+        return;
+
+    p_person->Flag2 &= ~TgF2_Unkn00400000;
+    p_person->SubType = p_person->U.UPerson.OldSubType;
+    reset_person_frame(p_person);
+}
+
 int gun_out_anim(struct Thing *p_person, ubyte shoot_flag)
 {
+#if 0
     int ret;
     asm volatile ("call ASM_gun_out_anim\n"
         : "=r" (ret) : "a" (p_person), "d" (shoot_flag));
     return ret;
+#endif
+    if ((p_person->Flag & TngF_Destroyed) != 0) {
+        return p_person->U.UPerson.AnimMode;
+    }
+
+    switch (p_person->U.UPerson.CurrentWeapon)
+    {
+    case WEP_FLAMER:
+    case WEP_QDEVASTATOR:
+    case WEP_MINIGUN:
+    case WEP_LASER:
+    case WEP_ELLASER:
+    case WEP_LONGRANGE:
+    case WEP_BEAM:
+        if (p_person->SubType == SubTT_PERS_AGENT)
+            p_person->U.UPerson.FrameId.Version[3] = 1;
+        if (shoot_flag == 2)
+            return ANIM_PERS_WEPHEAVY_Unkn07;
+        if (shoot_flag == 1)
+            return ANIM_PERS_WEPHEAVY_Unkn15;
+        return ANIM_PERS_WEPHEAVY_IDLE;
+
+    default:
+    case WEP_NULL:
+    case WEP_NUCLGREN:
+    case WEP_H2HTASER:
+    case WEP_CRAZYGAS:
+    case WEP_KOGAS:
+    case WEP_ELEMINE:
+    case WEP_EXPLMINE:
+    case WEP_NAPALMMINE:
+    case WEP_AIRSTRIKE:
+    case WEP_RAZORWIRE:
+    case WEP_PERSUADER2:
+    case WEP_ENERGYSHLD:
+    case WEP_CEREBUSIFF:
+    case WEP_MEDI1:
+    case WEP_MEDI2:
+    case WEP_EXPLWIRE:
+    case WEP_CLONESHLD:
+    case WEP_UNUSED1F:
+        if (p_person->SubType == SubTT_PERS_AGENT)
+            p_person->U.UPerson.FrameId.Version[3] = 0;
+        if (p_person->State == PerSt_WAIT)
+            return ANIM_PERS_Unkn21;
+        return ANIM_PERS_IDLE;
+
+    case WEP_UZI:
+    case WEP_RAP:
+    case WEP_PERSUADRTRN:
+    case WEP_SONICBLAST:
+    case WEP_STASISFLD:
+    case WEP_SOULGUN:
+    case WEP_TIMEGUN:
+        if (p_person->SubType == SubTT_PERS_AGENT)
+            p_person->U.UPerson.FrameId.Version[3] = 0;
+        if (shoot_flag == 2)
+            return ANIM_PERS_Unkn06;
+        if (shoot_flag == 1)
+            return ANIM_PERS_Unkn14;
+        return ANIM_PERS_WEPLIGHT_IDLE;
+    }
 }
 
 ushort player_weapon_time(struct Thing *p_person)
@@ -2082,9 +2171,7 @@ void process_clone_disguise(struct Thing *p_person)
 
     if (p_person->U.UPerson.CurrentWeapon != WEP_CLONESHLD)
     {
-        p_person->Flag2 &= ~TgF2_Unkn00400000;
-        p_person->SubType = p_person->U.UPerson.OldSubType;
-        reset_person_frame(p_person);
+        reset_clone_disguise(p_person);
     }
 }
 
@@ -2263,7 +2350,7 @@ void process_weapon_wind_down(struct Thing *p_person)
             plagent = 0;
         ReleaseLoopedSample(p_person->ThingOffset, 84 + plagent);
         plagent = p_person->U.UPerson.ComCur & 3;
-        play_dist_sample(p_person, 88 + plagent, 0x7F, 0x40, 100, 0, 1);
+        play_dist_sample(p_person, 88 + plagent, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 1);
         p_person->Flag2 &= ~TgF2_Unkn0200;
         break;
     }
@@ -2287,7 +2374,8 @@ void process_weapon_continuous_fire(struct Thing *p_person)
             int animMode;
 
             animMode = p_person->U.UPerson.AnimMode;
-            if ((animMode == 14 || animMode == 15) && p_person->Type != TT_MINE)
+            if ((animMode == ANIM_PERS_Unkn14 || animMode == ANIM_PERS_WEPHEAVY_Unkn15)
+              && p_person->Type != TT_MINE)
             {
                 p_person->U.UPerson.AnimMode = gun_out_anim(p_person, 0);
                 reset_person_frame(p_person);
@@ -2320,7 +2408,7 @@ void process_weapon_continuous_fire(struct Thing *p_person)
                         plagent = 0;
                     ReleaseLoopedSample(p_person->ThingOffset, 84 + plagent);
                     plagent = p_person->U.UPerson.ComCur & 3;
-                    play_dist_sample(p_person, 88 + plagent, 0x7F, 0x40, 100, 0, 1);
+                    play_dist_sample(p_person, 88 + plagent, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 1);
                     p_person->Flag2 &= ~TgF2_Unkn0200;
                 }
                 break;
@@ -2329,7 +2417,7 @@ void process_weapon_continuous_fire(struct Thing *p_person)
                   ((p_person->Flag & TngF_Unkn0800) == 0))
                 {
                     stop_sample_using_heap(p_person->ThingOffset, 14);
-                    play_dist_sample(p_person, 15, 0x7F, 0x40, 100, 0, 2);
+                    play_dist_sample(p_person, 15, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 2);
                     p_person->Flag2 &= ~TgF2_Unkn0200;
                 }
                 break;
@@ -2390,14 +2478,14 @@ void weapon_init_shot(struct Thing *p_person, WeaponType wtype)
             init_laser(p_person, p_person->U.UPerson.WeaponTimer);
         stop_sample_using_heap(p_person->ThingOffset, 7);
         stop_sample_using_heap(p_person->ThingOffset, 52);
-        play_dist_sample(p_person, 18, 0x7F, 0x40, 100, 0, 3);
+        play_dist_sample(p_person, 18, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3);
         break;
     case WEP_ELLASER:
         init_laser_elec(p_person, p_person->U.UPerson.WeaponTimer);
         stop_sample_using_heap(p_person->ThingOffset, 7);
         stop_sample_using_heap(p_person->ThingOffset, 52);
         if ((p_person->Flag2 & TgF2_ExistsOffMap) == 0)
-            play_dist_sample(p_person, 6, 0x7F, 0x40, 100, 0, 3);
+            play_dist_sample(p_person, 6, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3);
         break;
     case WEP_RAP:
         init_rocket(p_person);
@@ -2408,13 +2496,13 @@ void weapon_init_shot(struct Thing *p_person, WeaponType wtype)
          init_laser_beam(p_person, p_person->U.UPerson.WeaponTimer, 17);
          stop_sample_using_heap(p_person->ThingOffset, 7);
          stop_sample_using_heap(p_person->ThingOffset, 52);
-         play_dist_sample(p_person, 5, 0x7F, 0x40, 100, 0, 3);
+         play_dist_sample(p_person, 5, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3);
         break;
     case WEP_QDEVASTATOR:
         init_laser_q_sep(p_person, p_person->U.UPerson.WeaponTimer);
         stop_sample_using_heap(p_person->ThingOffset, 7);
         stop_sample_using_heap(p_person->ThingOffset, 52);
-        play_dist_sample(p_person, 28, 0x7F, 0x40, 100, 0, 3);
+        play_dist_sample(p_person, 28, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3);
         break;
     default:
         break;
@@ -2478,8 +2566,8 @@ void process_wielded_weapon_fire(struct Thing *p_person, WeaponType wtype)
                 if ((p_person->U.UPerson.WeaponTurn == 0)
                     && ((p_person->Flag2 & TgF2_Unkn0400) == 0))
                 {
-                    play_dist_sample(p_person, 14, 0x7F, 0x40, 100, -1, 2);
-                    play_dist_sample(p_person, 13, 0x7F, 0x40, 100, 0, 2);
+                    play_dist_sample(p_person, 14, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_4EVER, 2);
+                    play_dist_sample(p_person, 13, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 2);
                     p_person->Flag2 |= TgF2_Unkn0200;
                 }
                 init_fire_weapon(p_person);
@@ -2597,7 +2685,7 @@ void process_wielded_weapon(struct Thing *p_person)
             if (p_person->U.UPerson.WeaponTimer == 14)
             {
                 stop_sample_using_heap(p_person->ThingOffset, 7);
-                play_dist_sample(p_person, 52, 0x7F, 0x40, 100, -1, 3);
+                play_dist_sample(p_person, 52, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_4EVER, 3);
             }
             else
             {

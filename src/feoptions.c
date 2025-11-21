@@ -31,6 +31,7 @@
 #include "guiboxes.h"
 #include "guitext.h"
 #include "display.h"
+#include "game_options.h"
 #include "game_sprts.h"
 #include "game.h"
 #include "purpldrw.h"
@@ -64,10 +65,36 @@ ubyte ac_show_netgame_unkn1(struct ScreenBox *box);
 
 void show_audio_volume_box_func_02(short scr_x, short scr_y, short a3, short a4, TbPixel colour)
 {
+#if 0
     asm volatile (
       "push %4\n"
       "call ASM_show_audio_volume_box_func_02\n"
         : : "a" (scr_x), "d" (scr_y), "b" (a3), "c" (a4), "g" (colour));
+#endif
+    short i;
+    int cx, cy;
+
+    if (a3 == 0) {
+        return;
+    }
+
+    if (a4 <= a3)
+    {
+        cx = scr_x - a4;
+        cy = scr_y + a4;
+        draw_triangle_purple_list(scr_x, scr_y, scr_x, cy, cx, cy, colour);
+        draw_triangle_purple_list(scr_x + a3, scr_y, cx + a3, cy, cx + a3, scr_y, colour);
+        draw_box_purple_list(scr_x, scr_y, a3 - a4, a4, colour);
+    }
+    else
+    {
+        for (i = 0; i < a4; i++)
+        {
+            cy = scr_y + i;
+            cx = scr_x - i;
+            draw_line_purple_list(cx, cy, cx + a3 - 1, cy, colour);
+        }
+    }
 }
 
 void draw_horiz_proslider_main_body(struct ScreenShape *p_shp, short *p_value)
@@ -305,55 +332,195 @@ TbBool input_horiz_proslider_right_arrow(struct ScreenShape *p_shp, short *p_val
     return target_affected;
 }
 
-ubyte show_netgame_unkn1(struct ScreenBox *box)
+void update_options_gfx_state(void)
 {
-    ubyte ret;
-    asm volatile ("call ASM_show_netgame_unkn1\n"
-        : "=r" (ret) : "a" (box));
-    return ret;
+    const char *text;
+    int i;
+
+    i = ingame.PanelPermutation;
+    if (i < 0)
+        text = gui_strings[579 + abs(i)];
+    else
+        text = gui_strings[580 + i];
+    options_gfx_buttons[14].Text = text;
+
+    i = ingame.TrenchcoatPreference;
+    options_gfx_buttons[15].Text = gui_strings[583 + i];
 }
 
-ubyte show_audio_volume_box(struct ScreenBox *box)
+ubyte show_netgame_unkn1(struct ScreenBox *p_box)
+{
+#if 0
+    ubyte ret;
+    asm volatile ("call ASM_show_netgame_unkn1\n"
+        : "=r" (ret) : "a" (p_box));
+    return ret;
+#endif
+    int tx_height;
+    int scr_x, scr_y;
+    int i;
+
+    if ((p_box->Flags & 0x0080) != 0) {
+        p_box->Flags &= ~0x0080;
+    }
+
+    my_set_text_window(p_box->X + 4, p_box->Y + 4, p_box->Width - 8, p_box->Height - 8);
+    lbFontPtr = med_font;
+    tx_height = font_height('A');
+    scr_x = 20;
+    scr_y = 20;
+
+    draw_text_purple_list2(scr_x, scr_y, game_option_desc(GOpt_ProjectorSpeed), 0);
+    scr_y += tx_height + 8;
+
+    draw_text_purple_list2(scr_x, scr_y, game_option_desc(GOpt_HighResolution), 0);
+    scr_y += tx_height + 8;
+
+    draw_text_purple_list2(scr_x, scr_y, game_option_desc(GOpt_DetailLevel), 0);
+    scr_y += tx_height + 8;
+
+    draw_text_purple_list2(scr_x, scr_y, game_option_desc(GOpt_CameraPerspective), 0);
+    scr_y += tx_height + 8;
+
+    draw_text_purple_list2(scr_x, scr_y, game_option_desc(GOpt_AdvancedLights), 0);
+    scr_y += tx_height + 8;
+
+    draw_text_purple_list2(scr_x, scr_y, game_option_desc(GOpt_BillboardMovies), 0);
+    scr_y += tx_height + 8;
+
+    draw_text_purple_list2(scr_x, scr_y, game_option_desc(GOpt_DeepRadar), 0);
+    scr_y += tx_height + 8;
+    scr_y += tx_height + 8;
+    scr_y += tx_height + 8 + 2;
+
+    lbDisplay.DrawFlags |= 0x0100;
+    draw_text_purple_list2(scr_x, scr_y, game_option_desc(GOpt_PanelPermutation), 0);
+    scr_y += tx_height + 8;
+    scr_y += tx_height + 8;
+    draw_text_purple_list2(scr_x, scr_y, game_option_desc(GOpt_TrenchcoatPreference), 0);
+    lbDisplay.DrawFlags &= ~0x0100;
+
+    for (i = 0; i < 16; i++)
+    {
+        //options_gfx_buttons[i].DrawFn(&options_gfx_buttons[i]); -- incompatible calling convention
+        asm volatile ("call *%1\n"
+            : : "a" (&options_gfx_buttons[i]), "g" (options_gfx_buttons[i].DrawFn));
+    }
+
+    for (i = 14; i < 16; i++)
+    {
+      scr_x = options_gfx_buttons[i].X - 19;
+      scr_y = options_gfx_buttons[i].Y + 1;
+      lbDisplay.DrawFlags = 0x8000 | 0x0004;
+
+      if (mouse_move_over_box_coords(scr_x, scr_y, scr_x + 9, scr_y + 14))
+      {
+          if (lbDisplay.MLeftButton || joy.Buttons[0])
+          {
+              lbDisplay.LeftButton = 0;
+              switch (i)
+              {
+              case 15:
+                  game_option_dec(GOpt_TrenchcoatPreference);
+                  break;
+              case 14:
+                  game_option_dec(GOpt_PanelPermutation);
+                  break;
+              }
+              update_options_gfx_state();
+          }
+          lbDisplay.DrawFlags = 0x8000;
+          draw_sprite_purple_list(scr_x, scr_y, &fe_icons_sprites[108]);
+          lbDisplay.DrawFlags |= 0x0004;
+      }
+      else
+      {
+          draw_sprite_purple_list(scr_x, scr_y, &fe_icons_sprites[108]);
+      }
+      scr_x = options_gfx_buttons[i].X + options_gfx_buttons[i].Width + 10;
+
+      if (mouse_move_over_box_coords(scr_x, scr_y, scr_x + 9, scr_y + 14))
+      {
+          if ( lbDisplay.MLeftButton || joy.Buttons[0] )
+          {
+              lbDisplay.LeftButton = 0;
+              switch (i)
+              {
+              case 15:
+                  game_option_inc(GOpt_TrenchcoatPreference);
+                  break;
+              case 14:
+                  game_option_inc(GOpt_PanelPermutation);
+                  break;
+              }
+              update_options_gfx_state();
+          }
+          lbDisplay.DrawFlags = 0x8000;
+      }
+      draw_sprite_purple_list(scr_x - 7, scr_y, &fe_icons_sprites[109]);
+    }
+    lbDisplay.DrawFlags = 0;
+
+    if (game_gfx_advanced_lights)
+      ingame.Flags |= 0x02;
+    else
+      ingame.Flags &= ~0x02;
+
+    if (game_billboard_movies)
+        ingame.Flags |= 0x01;
+    else
+        ingame.Flags &= ~0x01;
+
+    if (game_gfx_deep_radar)
+        ingame.Flags |= 0x0400;
+    else
+        ingame.Flags &= ~0x0400;
+
+    bang_set_detail(ingame.DetailLevel == 0);
+    return 0;
+}
+
+ubyte show_audio_volume_box(struct ScreenBox *p_box)
 {
     short *target_ptr;
-    char *s;
+    const char *s;
     ushort w;
     ubyte target_var;
     TbBool change;
     ubyte text_drawn, shapes_drawn;
 
     change = false;
-    if (box->Flags & GBxFlg_Unkn0080)
+    if (p_box->Flags & GBxFlg_Unkn0080)
     {
-        box->Flags &= ~GBxFlg_Unkn0080;
+        p_box->Flags &= ~GBxFlg_Unkn0080;
         word_1C4866[0] = -5;
         word_1C4866[1] = -5;
         word_1C4866[2] = -5;
     }
-    if (box->Timer == 255)
+    if (p_box->Timer == 255)
     {
         word_1C4866[0] = 99;
         word_1C4866[1] = 99;
         word_1C4866[2] = 99;
     }
-    my_set_text_window(box->X + 4, box->Y + 4, box->Width - 6, 480);
+    my_set_text_window(p_box->X + 4, p_box->Y + 4, p_box->Width - 6, 480);
 
-    if (box == &audio_volume_boxes[0])
+    if (p_box == &audio_volume_boxes[0])
     {
         target_ptr = &startscr_samplevol;
-        s = gui_strings[419];
+        s = game_option_desc(GOpt_SampleVolume);
         target_var = 0;
     }
-    else if (box == &audio_volume_boxes[1])
+    else if (p_box == &audio_volume_boxes[1])
     {
         target_ptr = &startscr_midivol;
-        s = gui_strings[420];
+        s = game_option_desc(GOpt_DangerVolume);
         target_var = 1;
     }
     else
     {
         target_ptr = &startscr_cdvolume;
-        s = gui_strings[516];
+        s = game_option_desc(GOpt_CDAVolume);
         target_var = 2;
     }
 
@@ -363,7 +530,7 @@ ubyte show_audio_volume_box(struct ScreenBox *box)
     }
 
     lbFontPtr = med_font;
-    w = (box->Width - my_string_width(s)) >> 1;
+    w = (p_box->Width - my_string_width(s)) >> 1;
     text_drawn = flashy_draw_text(1 + w, 1, s, 1, 0, &word_1C4866[target_var], 0);
 
     if (audio_volume_sliders_draw_state[target_var] == 0)
@@ -399,7 +566,7 @@ ubyte show_audio_volume_box(struct ScreenBox *box)
         change |= input_horiz_proslider_right_arrow(p_shp, target_ptr);
 
         p_shp = &audio_volume_sliders[3 * target_var + 1]; // Main bar
-        draw_horiz_proslider_main_body_text(p_shp, box, target_ptr);
+        draw_horiz_proslider_main_body_text(p_shp, p_box, target_ptr);
 
         shapes_drawn = 3;
     }
@@ -419,26 +586,26 @@ ubyte show_audio_volume_box(struct ScreenBox *box)
     return 0;
 }
 
-ubyte show_audio_tracks_box(struct ScreenBox *box)
+ubyte show_audio_tracks_box(struct ScreenBox *p_box)
 {
 #if 0
     ubyte ret;
     asm volatile ("call ASM_show_audio_tracks_box\n"
-        : "=r" (ret) : "a" (box));
+        : "=r" (ret) : "a" (p_box));
     return ret;
 #endif
     int i;
     ubyte drawn1 = true;
     ubyte drawn2 = true;
 
-    if ((box->Flags & 0x0080) != 0)
+    if ((p_box->Flags & 0x0080) != 0)
     {
-        box->Flags &= ~0x0080;
+        p_box->Flags &= ~0x0080;
         for (i = 0; i < 3; i++) {
             textpos[i] = -5;
         }
     }
-    if (box->Timer == 255)
+    if (p_box->Timer == 255)
     {
         for (i = 0; i < 3; i++) {
             textpos[i] = strlen(gui_strings[528 + i]);
@@ -446,15 +613,15 @@ ubyte show_audio_tracks_box(struct ScreenBox *box)
     }
 
     lbFontPtr = med_font;
-    my_set_text_window(box->X + 4, box->Y + 4, box->Width - 8, box->Height - 8);
+    my_set_text_window(p_box->X + 4, p_box->Y + 4, p_box->Width - 8, p_box->Height - 8);
 
     if (drawn1)
-        drawn1 = flashy_draw_text(20, 4 + 0 * 18, gui_strings[528], 1, 0, &textpos[0], 0);
+        drawn1 = flashy_draw_text(20, 4 + 0 * 18, game_option_desc(GOpt_CDATrack), 1, 0, &textpos[0], 0);
     if (drawn2)
-        drawn2 = flashy_draw_text(20, 4 + 1 * 18, gui_strings[529], 1, 0, &textpos[1], 0);
+        drawn2 = flashy_draw_text(20, 4 + 1 * 18, game_option_desc(GOpt_DangerTrack), 1, 0, &textpos[1], 0);
 #ifdef HAS_MULTIMEDIA_EXTENSIONS
     if (drawn2)
-        drawn2 = flashy_draw_text(20, 4 + 2 * 18, gui_strings[530], 1, 0, &textpos[2], 0);
+        drawn2 = flashy_draw_text(20, 4 + 2 * 18, game_option_desc(GOpt_UseMultiMedia), 1, 0, &textpos[2], 0);
 #endif
     if (drawn1)
     {
@@ -595,6 +762,46 @@ short horiz_proslider_prepare_right_arrow_pts(short *pts_x, short *pts_y, short 
     return 5;
 }
 
+ubyte change_panel_permutation(ubyte click)
+{
+#if 0
+    ubyte ret;
+    asm volatile ("call ASM_change_panel_permutation\n"
+        : "=r" (ret) : "a" (click));
+    return ret;
+#endif
+    if (click)
+    {
+        game_option_dec(GOpt_PanelPermutation);
+    }
+    else
+    {
+        game_option_inc(GOpt_PanelPermutation);
+    }
+    update_options_gfx_state();
+    return 1;
+}
+
+ubyte change_trenchcoat_preference(ubyte click)
+{
+#if 0
+    ubyte ret;
+    asm volatile ("call ASM_change_trenchcoat_preference\n"
+        : "=r" (ret) : "a" (click));
+    return ret;
+#endif
+    if (click)
+    {
+        game_option_dec(GOpt_TrenchcoatPreference);
+    }
+    else
+    {
+        game_option_inc(GOpt_TrenchcoatPreference);
+    }
+    update_options_gfx_state();
+    return 1;
+}
+
 void init_options_audio_screen_boxes(void)
 {
     int i, h;
@@ -620,19 +827,19 @@ void init_options_audio_screen_boxes(void)
     }
     init_screen_box(&audio_tracks_box, 213, h, 420, 62, 6);
 
-    init_screen_button(&options_audio_buttons[0], 393u, 289u,
+    init_screen_button(&options_audio_buttons[0], 393, 289,
       gui_strings[531], 6, med2_font, 1, 0);
-    init_screen_button(&options_audio_buttons[1], 458u, 289u,
+    init_screen_button(&options_audio_buttons[1], 458, 289,
       gui_strings[532], 6, med2_font, 1, 0);
-    init_screen_button(&options_audio_buttons[2], 523u, 289u,
+    init_screen_button(&options_audio_buttons[2], 523, 289,
       gui_strings[533], 6, med2_font, 1, 0);
-    init_screen_button(&options_audio_buttons[3], 458u, 307u,
+    init_screen_button(&options_audio_buttons[3], 458, 307,
       gui_strings[531], 6, med2_font, 1, 0);
-    init_screen_button(&options_audio_buttons[4], 523u, 307u,
+    init_screen_button(&options_audio_buttons[4], 523, 307,
       gui_strings[532], 6, med2_font, 1, 0);
-    init_screen_button(&options_audio_buttons[5], 458u, 325u,
+    init_screen_button(&options_audio_buttons[5], 458, 325,
       gui_strings[478], 6, med2_font, 1, 0);
-    init_screen_button(&options_audio_buttons[6], 523u, 325u,
+    init_screen_button(&options_audio_buttons[6], 523, 325,
       gui_strings[479], 6, med2_font, 1, 0);
 
     val = 2;
@@ -975,22 +1182,6 @@ void skip_flashy_draw_gfx_screen_boxes(void)
 void mark_gfx_screen_boxes_redraw(void)
 {
     options_gfx_box.Flags &= ~(GBxFlg_BkgndDrawn|GBxFlg_TextRight|GBxFlg_BkCopied);
-}
-
-void update_options_gfx_state(void)
-{
-    const char *text;
-    int i;
-
-    i = ingame.PanelPermutation;
-    if (i < 0)
-        text = gui_strings[579 + abs(i)];
-    else
-        text = gui_strings[580 + i];
-    options_gfx_buttons[14].Text = text;
-
-    i = ingame.TrenchcoatPreference;
-    options_gfx_buttons[15].Text = gui_strings[583 + i];
 }
 
 void update_options_screen_state(void)

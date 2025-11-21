@@ -18,6 +18,8 @@
 /******************************************************************************/
 #include "fenet.h"
 
+#include <assert.h>
+
 #include "bffont.h"
 #include "bfkeybd.h"
 #include "bfmemut.h"
@@ -26,13 +28,16 @@
 #include "bfstrut.h"
 #include "bftext.h"
 #include "bfutility.h"
+#include "ssampply.h"
 
 #include "campaign.h"
+#include "dos.h"
 #include "guiboxes.h"
 #include "guitext.h"
 #include "display.h"
 #include "femain.h"
 #include "feshared.h"
+#include "game_options.h"
 #include "game_save.h"
 #include "game_speed.h"
 #include "game_sprts.h"
@@ -83,6 +88,9 @@ extern ubyte net_autostart_done;
 extern ubyte byte_155170[4];
 extern char net_unkn1_text[25];
 extern char byte_1811E2[16];
+extern uint32_t sessionlist_last_update[20];
+extern ubyte byte_1C6D48;
+extern struct TbNetworkSessionList unkstruct04_arr[20];
 
 ubyte ac_do_net_protocol_option(ubyte click);
 ubyte ac_do_net_unkn40(ubyte click);
@@ -109,13 +117,78 @@ TbBool local_player_hosts_the_game(void)
     return login_control__State == LognCt_Unkn6 || plyr == net_host_player_no;
 }
 
-void net_service_unkstruct04_clear(void)
+void net_sessionlist_clear(void)
 {
-    int plyr;
+    ushort i;
 
-    LbMemorySet(unkstruct04_arr, 0, sizeof(unkstruct04_arr));
+    assert(sizeof(struct TbNetworkSession) == 40);
+    assert(sizeof(struct TbNetworkPlayer) == 22);
+    assert(sizeof(struct TbNetworkSessionList) == 40+22*8+2);
+
+    for (i = 0; i < sizeof(unkstruct04_arr)/sizeof(unkstruct04_arr[0]); i++)
+        LbMemorySet(&unkstruct04_arr[i], 0, sizeof(struct TbNetworkSessionList));
+
     byte_1C6D48 = 0;
-    for (plyr = 0; plyr < 8; plyr++) {
+}
+
+void net_sessionlist_remove(int sess_no)
+{
+    int nxt_sess_no;
+    struct TbNetworkSessionList *p_cur_nslist;
+    struct TbNetworkSessionList *p_nxt_nslist;
+
+    p_cur_nslist = &unkstruct04_arr[sess_no];
+    p_nxt_nslist = &unkstruct04_arr[sess_no + 1];
+    for (nxt_sess_no = sess_no + 1; nxt_sess_no < byte_1C6D48; nxt_sess_no++)
+    {
+        LbMemoryCopy(p_cur_nslist, p_nxt_nslist, sizeof(struct TbNetworkSessionList));
+        sessionlist_last_update[nxt_sess_no - 1] = sessionlist_last_update[nxt_sess_no];
+        ++p_cur_nslist;
+        ++p_nxt_nslist;
+    }
+    nxt_sess_no = --byte_1C6D48;
+    LbMemorySet(&unkstruct04_arr[nxt_sess_no], 0, sizeof(struct TbNetworkSessionList));
+    sessionlist_last_update[nxt_sess_no] = 0;
+}
+
+void net_sessionlist_update_latest_one(void)
+{
+    struct TbNetworkSessionList locsesslst;
+    struct TbNetworkSessionList *p_nslist;
+    TbBool sess_found;
+    int sess_no;
+
+    if (LbNetworkSessionList(&locsesslst, 1) != 1) {
+        LOGSYNC("No session to update");
+        return;
+    }
+
+    sess_found = false;
+
+    for (sess_no = 0; sess_no < byte_1C6D48; sess_no++)
+    {
+        p_nslist = &unkstruct04_arr[sess_no];
+        if (strcmp(p_nslist->Session.Name, locsesslst.Session.Name) == 0)
+        {
+            sess_found = 1;
+            break;
+        }
+    }
+    if (!sess_found) {
+        sess_no = byte_1C6D48;
+        byte_1C6D48++;
+    }
+    LOGSYNC("Updating session %d", sess_no);
+    p_nslist = &unkstruct04_arr[sess_no];
+    LbMemoryCopy(p_nslist, &locsesslst, sizeof(struct TbNetworkSessionList));
+    sessionlist_last_update[sess_no] = dos_clock();
+}
+
+void net_unkn2_names_clear(void)
+{
+    ushort plyr;
+
+    for (plyr = 0; plyr < PLAYERS_LIMIT; plyr++) {
         unkn2_names[plyr][0] = '\0';
     }
 }
@@ -150,9 +223,61 @@ void net_service_gui_switch(void)
 void net_service_switch(ushort svctp)
 {
     nsvc.I.Type = svctp;
-    if (nsvc.I.Type == NetSvc_IPX)
-        net_service_unkstruct04_clear();
+    if (nsvc.I.Type == NetSvc_IPX) {
+        net_sessionlist_clear();
+        net_unkn2_names_clear();
+    }
     net_service_gui_switch();
+}
+
+/** Restart the network service after an option change.
+ */
+TbBool net_service_restart(void)
+{
+    LOGSYNC("Restart");
+    net_sessionlist_clear();
+    net_unkn2_names_clear();
+
+    if (LbNetworkServiceStart(&nsvc.I) != Lb_SUCCESS)
+    {
+        LOGERR("Failed on LbNetworkServiceStart");
+        alert_box_text_fmt("%s", gui_strings[568]);
+        return false;
+    }
+    net_service_started = 1;
+    return true;
+}
+
+/** Stop the network service if it was started.
+ */
+TbBool net_service_stop(void)
+{
+    if (net_service_started)
+    {
+        LbNetworkReset();
+        net_service_started = 0;
+        return true;
+    }
+    return false;
+}
+
+/** Initialize network sessions, create local session.
+ *
+ * Requires the network service to be started before.
+ */
+TbBool net_sessions_init(void)
+{
+    LOGSYNC("Prep local session");
+    LbMemoryCopy(nsvc.S.Name, login_name, min(sizeof(nsvc.S.Name),sizeof(login_name)));
+    nsvc.S.MaxPlayers = 8;
+    nsvc.S.HostPlayerNumber = 0;
+    if (LbNetworkSessionCreate(&nsvc.S, nsvc.S.Name) != Lb_SUCCESS)
+    {
+        LOGERR("Failed on LbNetworkSessionCreate");
+        alert_box_text_fmt("%s", gui_strings[579]);
+        return false;
+    }
+    return true;
 }
 
 ubyte do_net_protocol_option(ubyte click)
@@ -165,11 +290,8 @@ ubyte do_net_protocol_option(ubyte click)
 #endif
     short param, dt;
 
-    if (net_service_started)
-    {
-        LbNetworkReset();
-        net_service_started = 0;
-    }
+    net_service_stop();
+
     dt = 0x01;
     if ((lbShift & KMod_SHIFT) != 0)
         dt = 0x10;
@@ -194,17 +316,10 @@ ubyte do_net_protocol_option(ubyte click)
     sprintf(net_proto_param_text, "%04x", (int)nsvc.I.Param);
     LbStringToUpper(net_proto_param_text);
 
-    net_service_unkstruct04_clear();
-
-    if (LbNetworkServiceStart(&nsvc.I) != Lb_SUCCESS)
-    {
-        LOGERR("Failed on LbNetworkServiceStart");
-        alert_box_text_fmt("%s", gui_strings[568]);
+    if (!net_service_restart()) {
         // Switch to a service which is always available
         net_service_switch(NetSvc_COM1);
-        return 1;
     }
-    net_service_started = 1;
 
     return 1;
 }
@@ -320,15 +435,8 @@ ubyte net_unkn_func_32(void)
     if (nsvc.I.Type == NetSvc_IPX)
         goto skip_modem_init;
 
-    net_service_unkstruct04_clear();
-
-    if (LbNetworkServiceStart(&nsvc.I) != Lb_SUCCESS)
-    {
-        LOGERR("Failed on LbNetworkServiceStart");
-        alert_box_text_fmt("%s", gui_strings[568]);
+    if (!net_service_restart())
         goto out_fail;
-    }
-    net_service_started = 1;
 
     LbNetworkSetBaud(unkn_rate);
     players[local_player_no].DoubleMode = 0;
@@ -365,15 +473,9 @@ ubyte net_unkn_func_32(void)
     }
 
 skip_modem_init:
-    LbMemoryCopy(nsvc.S.Name, login_name, min(sizeof(nsvc.S.Name),sizeof(login_name)));
-    nsvc.S.MaxPlayers = 8;
-    nsvc.S.HostPlayerNumber = 0;
-    if (LbNetworkSessionCreate(&nsvc.S, nsvc.S.Name) != Lb_SUCCESS)
-    {
-        LOGERR("Failed on LbNetworkSessionCreate");
-        alert_box_text_fmt("%s", gui_strings[579]);
+    if (!net_sessions_init())
         goto out_fail;
-    }
+
     login_control__State = LognCt_Unkn5;
     net_host_player_no = LbNetworkHostPlayerNumber();
     net_players_num = LbNetworkSessionNumberPlayers();
@@ -381,6 +483,7 @@ skip_modem_init:
     byte_15516D = -1;
     if (nsvc.I.Type != NetSvc_IPX)
         players[local_player_no].DoubleMode = 0;
+
     load_missions(99);
     for (i = 0; i < 8; i++) {
         network_players[i].Type = 17;
@@ -399,10 +502,7 @@ out_fail:
     }
     else
     {
-        if (net_service_started) {
-            LbNetworkReset();
-        }
-        net_service_started = 0;
+        net_service_stop();
     }
     return 0;
 #endif
@@ -423,15 +523,8 @@ ubyte net_unkn_func_31(struct TbNetworkSession *p_nsession)
     if (nsvc.I.Type == NetSvc_IPX)
       goto skip_modem_init;
 
-    net_service_unkstruct04_clear();
-
-    if (LbNetworkServiceStart(&nsvc.I) != Lb_SUCCESS)
-    {
-        LOGERR("Failed on LbNetworkServiceStart");
-        alert_box_text_fmt("%s", gui_strings[568]);
+    if (!net_service_restart())
         goto out_fail;
-    }
-    net_service_started = 1;
 
     LbNetworkSetBaud(unkn_rate);
     players[local_player_no].DoubleMode = 0;
@@ -502,9 +595,7 @@ out_fail:
     }
     else
     {
-        if (net_service_started)
-            LbNetworkReset();
-        net_service_started = 0;
+        net_service_stop();
     }
     return 0;
 #endif
@@ -512,15 +603,9 @@ out_fail:
 
 void netgame_state_enter_5(void)
 {
-    const char *text;
     PlayerIdx plyr;
 
-    net_INITIATE_button.Text = gui_strings[387];
-    if (byte_1C4A6F)
-        text = gui_strings[520];
-    else
-        text = gui_strings[388];
-    net_groups_LOGON_button.Text = text;
+    switch_net_screen_boxes_to_execute();
     init_variables();
     init_agents();
     srm_reset_research();
@@ -547,8 +632,8 @@ ubyte do_net_INITIATE(ubyte click)
     {
         if (net_unkn_func_32())
         {
-          netgame_state_enter_5();
-      }
+            netgame_state_enter_5();
+        }
     }
     else if (login_control__State == LognCt_Unkn5)
     {
@@ -582,23 +667,33 @@ ubyte do_net_groups_LOGON(ubyte click)
         LOGWARN("Cannot abort protocol %d - not ready", (int)nsvc.I.Type);
         return 0;
     }
-      if (login_control__State == LognCt_Unkn5)
-      {
+
+    if (login_control__State == LognCt_Unkn5)
+    {
         plyr = LbNetworkPlayerNumber();
         network_players[plyr].Type = 13;
-        byte_15516D = -1;
-        net_INITIATE_button.Text = gui_strings[385];
         byte_15516C = -1;
-        net_groups_LOGON_button.Text = gui_strings[386];
+        byte_15516D = -1;
+        switch_net_screen_boxes_to_initiate();
         net_unkn_func_33();
-      }
+    }
     else if (login_control__State == LognCt_Unkn6)
     {
-        if (byte_15516C != -1 || nsvc.I.Type != NetSvc_IPX)
-        {
-            struct TbNetworkSession *p_nsession;
+        struct TbNetworkSession *p_nsession;
 
-            p_nsession = &unkstruct04_arr[byte_15516C].Session;
+        p_nsession = NULL;
+        if (nsvc.I.Type == NetSvc_IPX)
+        {
+            if (byte_15516C != -1) {
+                p_nsession = &unkstruct04_arr[byte_15516C].Session;
+            }
+        }
+        else
+        {
+            p_nsession = &unkstruct04_arr[0].Session;
+        }
+        if (p_nsession != NULL)
+        {
             if (net_unkn_func_31(p_nsession))
             {
                 netgame_state_enter_5();
@@ -951,6 +1046,11 @@ ubyte show_net_benefits_box(struct ScreenBox *box)
     return drawn;
 }
 
+void purple_unkn1_data_to_screen(void)
+{
+    memcpy(dword_1C6DE4, dword_1C6DE8, 255 * 96);
+}
+
 void purple_unkn3_data_to_screen(void)
 {
     LbScreenSetGraphicsWindow(net_grpaint.X + 4, net_grpaint.Y + 4,
@@ -1011,7 +1111,7 @@ ubyte show_net_grpaint(struct ScreenBox *p_box)
             if (lbDisplay.LeftButton)
             {
                 lbDisplay.LeftButton = 0;
-                play_sample_using_heap(0, 111, 127, 64, 100, 0, 2u);
+                play_sample_using_heap(0, 111, FULL_VOL, EQUL_PAN, NORM_PTCH, 0, 2u);
                 byte_1C47EA = i;
             }
         }
@@ -1085,9 +1185,9 @@ ubyte show_net_comms_box(struct ScreenBox *p_box)
     else
     {
         lbFontPtr = med2_font;
-        lbDisplay.DrawFlags = 0x0100;
+        lbDisplay.DrawFlags = Lb_TEXT_HALIGN_CENTER;
         draw_text_purple_list2(0, 0, gui_strings[393], 0);
-        lbDisplay.DrawFlags = 0x0004;
+        lbDisplay.DrawFlags = Lb_SPRITE_TRANSPAR4;
         draw_box_purple_list(p_box->X + 4, p_box->Y + 18, p_box->Width - 8, 61, 56);
         lbFontPtr = small_med_font;
         tx_height = font_height('A');
@@ -1155,11 +1255,7 @@ ubyte do_net_protocol_select(ubyte click)
     short proto;
     short pos_x;
 
-    if (net_service_started)
-    {
-      LbNetworkReset();
-      net_service_started = 0;
-    }
+    net_service_stop();
 
     pos_x = net_protocol_select_button.X - 12 + net_protocol_select_button.Width + 4;
 
@@ -1219,15 +1315,11 @@ ubyte do_net_protocol_select(ubyte click)
     default:
         break;
     case NetSvc_IPX:
-        if (LbNetworkServiceStart(&nsvc.I) != Lb_SUCCESS)
-        {
-            LOGERR("Failed on LbNetworkServiceStart");
-            alert_box_text_fmt("%s", gui_strings[568]);
+        if (!net_service_restart()) {
             // Switch to a service which is always available
             net_service_switch(NetSvc_COM1);
             break;
         }
-        net_service_started = 1;
         byte_15516C = -1;
         break;
     case NetSvc_COM1:
@@ -1443,18 +1535,10 @@ ubyte show_net_protocol_box(struct ScreenBox *p_box)
                     sscanf(net_proto_param_text, "%04x", &addr);
                     nsvc.I.Param = addr;
                     LbNetworkSetupIPXAddress(addr);
-                    net_service_unkstruct04_clear();
 
-                    if (LbNetworkServiceStart(&nsvc.I) != Lb_SUCCESS)
-                    {
-                        LOGERR("Failed on LbNetworkServiceStart");
-                        alert_box_text_fmt("%s", gui_strings[568]);
+                    if (!net_service_restart()) {
                         // Switch to a service which is always available
                         net_service_switch(NetSvc_COM1);
-                    }
-                    else
-                    {
-                        net_service_started = 1;
                     }
                 }
             }
@@ -1727,7 +1811,7 @@ ubyte show_net_groups_box(struct ScreenBox *p_box)
         lbFontPtr = med2_font;
         tx_height = font_height('A');
         scr_y = 1;
-        lbDisplay.DrawFlags = 0x0100;
+        lbDisplay.DrawFlags = Lb_TEXT_HALIGN_CENTER;
         text = gui_strings[390];
         draw_text_purple_list2(0, scr_y, text, 0);
         lbDisplay.DrawFlags = 0;
@@ -1736,9 +1820,9 @@ ubyte show_net_groups_box(struct ScreenBox *p_box)
         lbFontPtr = small_med_font;
         tx_height = font_height('A');
         lines_height = 8 * tx_height;
-        lbDisplay.DrawFlags = 0x0004;
+        lbDisplay.DrawFlags = Lb_SPRITE_TRANSPAR4;
         draw_box_purple_list(p_box->X + 4, p_box->Y + 4 + scr_y, p_box->Width - 8, lines_height + 34, 56);
-        lbDisplay.DrawFlags = 0x0100;
+        lbDisplay.DrawFlags = Lb_TEXT_HALIGN_CENTER;
 
         copy_box_purple_list(p_box->X - 3, p_box->Y - 3, p_box->Width + 6, p_box->Height + 6);
         p_box->Flags |= 0x1000;
@@ -1749,7 +1833,7 @@ ubyte show_net_groups_box(struct ScreenBox *p_box)
     tx_height = font_height('A');
 
     scr_y = 19;
-    lbDisplay.DrawFlags = 0x0100;
+    lbDisplay.DrawFlags = Lb_TEXT_HALIGN_CENTER;
     if (login_control__State == 5)
     {
         text = net_group_name_to_gtext(nsvc.S.Name);
@@ -1767,12 +1851,12 @@ ubyte show_net_groups_box(struct ScreenBox *p_box)
 
                 if (byte_15516C == i)
                 {
-                    lbDisplay.DrawFlags = (0x0100 | 0x0040);
+                    lbDisplay.DrawFlags = (Lb_TEXT_HALIGN_CENTER | Lb_TEXT_ONE_COLOR);
                     lbDisplay.DrawColour = 87;
                 }
                 else
                 {
-                    lbDisplay.DrawFlags = 0x0100;
+                    lbDisplay.DrawFlags = Lb_TEXT_HALIGN_CENTER;
                 }
                 text = net_group_name_to_gtext(p_nsession->Name);
                 lbDisplay.DrawFlags |= 0x8000;
@@ -1823,8 +1907,8 @@ int refresh_users_in_net_game(void)
     short plyr;
 
     n = 0;
-    ingame.InNetGame_UNSURE = (1 << 8) - 1;
-    for (plyr = 0; plyr < 8; plyr++)
+    ingame.InNetGame_UNSURE = (1 << PLAYERS_LIMIT) - 1;
+    for (plyr = 0; plyr < PLAYERS_LIMIT; plyr++)
     {
         TbResult ret;
         ret = LbNetworkPlayerName(locstr, plyr);
@@ -1856,7 +1940,6 @@ ubyte show_net_users_box(struct ScreenBox *p_box)
     return ret;
 #endif
     const char *text;
-    struct TbNetworkPlayer *p_netplyr;
     short plyr;
     short scr_x, scr_y;
     short tx_width, tx_height;
@@ -1895,7 +1978,7 @@ ubyte show_net_users_box(struct ScreenBox *p_box)
     {
         refresh_users_in_net_game();
 
-        for (plyr = 0; plyr < 8; plyr++)
+        for (plyr = 0; plyr < PLAYERS_LIMIT; plyr++)
         {
             text = unkn2_names[plyr];
             if (text[0] == '\0')
@@ -1904,7 +1987,7 @@ ubyte show_net_users_box(struct ScreenBox *p_box)
             }
             if (byte_15516D == plyr)
             {
-                lbDisplay.DrawFlags = 0x0040;
+                lbDisplay.DrawFlags = Lb_TEXT_ONE_COLOR;
                 lbDisplay.DrawColour = 87;
             }
             else
@@ -1920,7 +2003,7 @@ ubyte show_net_users_box(struct ScreenBox *p_box)
             lbDisplay.DrawFlags &= ~0x8000;
 
             text = gui_strings[394 + group_types[plyr]];
-            scr_x = ((64 - my_string_width(text)) >> 1) + 139;
+            scr_x = 139 + ((64 - my_string_width(text)) >> 1);
             draw_text_purple_list2(scr_x, scr_y + 3, text, 0);
             if (byte_1C5C28[plyr])
             {
@@ -1950,11 +2033,12 @@ ubyte show_net_users_box(struct ScreenBox *p_box)
     }
     else if (byte_15516C != -1)
     {
-        p_netplyr = unkstruct04_arr[byte_15516C].Player;
-        for (plyr = 0; plyr < 8; plyr++)
+        struct TbNetworkPlayer *p_netplyr_lst;
+        p_netplyr_lst = unkstruct04_arr[byte_15516C].Player;
+        for (plyr = 0; plyr < PLAYERS_LIMIT; plyr++)
         {
             const char *name;
-            name = p_netplyr[plyr].Name;
+            name = p_netplyr_lst[plyr].Name;
             if (name[0] != '\0')
             {
                 tx_width = my_string_width(name);
@@ -1968,12 +2052,42 @@ ubyte show_net_users_box(struct ScreenBox *p_box)
     return 0;
 }
 
+void net_sessionlist_remove_old(void)
+{
+    int sess_no;
+
+    for (sess_no = 0; sess_no < byte_1C6D48; sess_no++)
+    {
+        if (dos_clock() - sessionlist_last_update[sess_no] > 4 * DOS_CLOCKS_PER_SEC)
+        {
+            LOGSYNC("Retiring session %d", sess_no);
+            net_sessionlist_remove(sess_no);
+            sess_no--;
+        }
+    }
+}
+
 int net_unkn_func_30(void)
 {
+#if 0
     int ret;
     asm volatile ("call ASM_net_unkn_func_30\n"
         : "=r" (ret) : );
     return ret;
+#endif
+    int preval;
+
+    if (byte_1C6D48 < 20)
+    {
+        net_sessionlist_update_latest_one();
+        net_sessionlist_remove_old();
+    }
+    preval = byte_15516C;
+    if (byte_15516C == -1 && byte_1C6D48)
+        byte_15516C = 0;
+    if (!byte_1C6D48)
+        byte_15516C = -1;
+    return preval;
 }
 
 ubyte do_unkn8_EJECT(ubyte click)
@@ -1995,7 +2109,7 @@ ubyte do_unkn8_EJECT(ubyte click)
 
 void show_netgame_unkn_case1(void)
 {
-#if 1
+#if 0
     asm volatile (
       "call ASM_show_netgame_unkn_case1\n"
         :  :  : "eax" );
@@ -2011,18 +2125,12 @@ void show_netgame_unkn_case1(void)
 
         strncpy(byte_1811E2, login_name, sizeof(byte_1811E2));
         byte_1811E2[8] = '\0';
-        net_service_unkstruct04_clear();
 
-        if (LbNetworkServiceStart(&nsvc.I) != Lb_SUCCESS)
-        {
-            net_service_started = 0;
-            LOGERR("Failed on LbNetworkServiceStart");
-            alert_box_text_fmt("%s", gui_strings[568]);
+        if (!net_service_restart()) {
             // Switch to a service which is always available
             net_service_switch(NetSvc_COM1);
             return;
         }
-        net_service_started = 1;
     }
     //net_protocol_box.DrawFn(&net_protocol_box); -- incompatible calling convention
     asm volatile ("call *%1\n"
@@ -2252,11 +2360,14 @@ void switch_net_screen_boxes_to_initiate(void)
 
 void switch_net_screen_boxes_to_execute(void)
 {
+    const char *text;
+
     net_INITIATE_button.Text = gui_strings[387];
     if (byte_1C4A6F)
-        net_groups_LOGON_button.Text = gui_strings[520];
+        text = gui_strings[520];
     else
-        net_groups_LOGON_button.Text = gui_strings[388];
+        text = gui_strings[388];
+    net_groups_LOGON_button.Text = text;
 }
 
 /******************************************************************************/

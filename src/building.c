@@ -26,6 +26,7 @@
 #include "bigmap.h"
 #include "bmbang.h"
 #include "enginsngobjs.h"
+#include "game_options.h"
 #include "game_speed.h"
 #include "game.h"
 #include "matrix.h"
@@ -448,6 +449,14 @@ void collapse_building_station(struct Thing *p_building)
     }
 }
 
+void init_mgun_explode(struct Thing *p_thing)
+{
+    asm volatile (
+      "call ASM_init_mgun_explode\n"
+        :  : "a" (p_thing));
+    return;
+}
+
 void collapse_building(short x, short y, short z, struct Thing *p_building)
 {
 #if 0
@@ -472,7 +481,7 @@ void collapse_building(short x, short y, short z, struct Thing *p_building)
     {
         short tng_x, tng_y, tng_z;
         get_thing_position_mapcoords(&tng_x, &tng_y, &tng_z, p_building->ThingOffset);
-        play_dist_sample(p_building, 0x2Du, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3);
+        play_dist_sample(p_building, 45, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3);
         p_sthing = create_sound_effect(tng_x, tng_y, tng_z, 0x2Eu, 127, -1);
         if (p_sthing != NULL)
         {
@@ -628,7 +637,7 @@ void init_mgun_laser(struct Thing *p_owner, ushort bmsize)
         p_hitstng = &sthings[-hittng];
         //TODO is it really ok to use person hit function for hitting SimpleThings?
         person_hit_by_bullet((struct Thing *)p_hitstng, damage, p_shot->VX - cor_x,
-          p_shot->VY - cor_y, p_shot->VZ - cor_z, p_owner, 4);
+          p_shot->VY - cor_y, p_shot->VZ - cor_z, p_owner, DMG_LASER);
     }
     else if (rhit != 0) // hit normal thing
     {
@@ -638,7 +647,7 @@ void init_mgun_laser(struct Thing *p_owner, ushort bmsize)
         hittng = (short)rhit;
         p_hittng = &things[hittng];
         person_hit_by_bullet(p_hittng, damage, p_shot->VX - cor_x,
-          p_shot->VY - cor_y, p_shot->VZ - cor_z, p_owner, 4);
+          p_shot->VY - cor_y, p_shot->VZ - cor_z, p_owner, DMG_LASER);
     }
     p_shot->StartTimer1 = bmsize;
     p_shot->Timer1 = bmsize;
@@ -717,6 +726,45 @@ void process_building(struct Thing *p_building)
         }
         break;
     }
+}
+
+int building_hit_by_bullet(struct Thing *p_thing, short hp,
+  int vx, int vy, int vz, struct Thing *p_attacker, ushort type)
+{
+    if (p_attacker != NULL) {
+        p_attacker->U.UPerson.Flag3 |= 0x40;
+    }
+    if (p_thing->SubType != 32)
+    {
+        if ((p_thing->Flag & TngF_Destroyed) == 0)
+        {
+            int health;
+
+            play_dist_sample(p_thing, 65, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 1);
+            health = p_thing->Health - (hp >> 1);
+            if (health < 0) {
+                collapse_building(PRCCOORD_TO_MAPCOORD(p_thing->X),
+                  PRCCOORD_TO_MAPCOORD(p_thing->Y), PRCCOORD_TO_MAPCOORD(p_thing->Z), p_thing);
+            }
+            p_thing->Health = health;
+        }
+        return hp;
+    }
+    p_thing->Flag |= TngF_Unkn01000000;
+    if ((p_thing->Flag & TngF_Destroyed) == 0)
+    {
+        int health_decr;
+
+        health_decr = hp >> 1 >> 1;
+        p_thing->Health -= health_decr;
+        p_thing->U.UObject.Cost = 5;
+        if (p_thing->Health <= 0)
+        {
+            init_mgun_explode(p_thing);
+            return p_thing->Health + health_decr;
+        }
+    }
+    return 0;
 }
 
 /******************************************************************************/

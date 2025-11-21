@@ -25,6 +25,7 @@
 #include "ssampply.h"
 
 #include "game_bstype.h"
+#include "game_options.h"
 #include "game.h"
 #include "guitext.h"
 #include "hud_panel.h"
@@ -181,7 +182,7 @@ void player_agent_weapon_switch(PlayerIdx plyr, ThingIdx person, short shift)
 void player_agent_init_drop_item(PlayerIdx plyr, struct Thing *p_person, ushort weapon)
 {
     if ((weapon == 0) || (weapon == p_person->U.UPerson.CurrentWeapon)) {
-        p_person->U.UPerson.AnimMode = 0;
+        p_person->U.UPerson.AnimMode = ANIM_PERS_IDLE;
         reset_person_frame(p_person);
     }
     if (p_person->State == PerSt_PROTECT_PERSON)
@@ -206,7 +207,7 @@ void person_grp_switch_to_specific_weapon(struct Thing *p_person, PlayerIdx plyr
     p_person->U.UPerson.TempWeapon = p_person->U.UPerson.CurrentWeapon;
 
     if ((plyr == local_player_no) && (p_person->U.UPerson.CurrentWeapon != 0))
-        play_disk_sample(local_player_no, 0x2Cu, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3);
+        play_disk_sample(local_player_no, 44, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3);
 
     for (plagent = 0; plagent < playable_agents; plagent++)
     {
@@ -225,8 +226,7 @@ void person_grp_switch_to_specific_weapon(struct Thing *p_person, PlayerIdx plyr
             stop_looped_weapon_sample(p_agent, p_agent->U.UPerson.CurrentWeapon);
             if (flag == WepSel_HIDE)
             {
-                player_agent_update_prev_weapon(p_agent);
-                p_agent->U.UPerson.CurrentWeapon = WEP_NULL;
+                thing_deselect_weapon(p_agent);
             }
             else if (p_agent->U.UPerson.TempWeapon != WEP_NULL)
             {
@@ -234,10 +234,7 @@ void person_grp_switch_to_specific_weapon(struct Thing *p_person, PlayerIdx plyr
             }
             else
             {
-                choose_best_weapon_for_range(p_agent, 1280);
-                p_agent->U.UPerson.AnimMode = gun_out_anim(p_agent, 0);
-                reset_person_frame(p_agent);
-                p_agent->Speed = calc_person_speed(p_agent);
+                thing_select_best_weapon_for_range(p_agent, 1280);
             }
         }
         else

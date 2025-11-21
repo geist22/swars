@@ -29,6 +29,7 @@
 #include "femail.h"
 #include "femain.h"
 #include "feoptions.h"
+#include "game_options.h"
 #include "game_save.h"
 #include "game_speed.h"
 #include "game_sprts.h"
@@ -196,8 +197,8 @@ ubyte show_login_name(struct ScreenBox *p_box)
     draw_text_purple_list2(scr_x + 2, 2, login_name, 0);
     if (strcmp(login_name, "POOSLICE") == 0)
     {
-        ingame.UserFlags |= 0x04;
-        play_sample_using_heap(0, 71, 127, 64, 100, 0, 3u);
+        ingame.UserFlags |= UsrF_Cheats;
+        play_sample_using_heap(0, 71, FULL_VOL, EQUL_PAN, NORM_PTCH, 0, 3u);
     }
     if ((gameturn & 1) != 0)
     {

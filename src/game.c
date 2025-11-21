@@ -66,6 +66,7 @@
 #include "engintrns.h"
 #include "enginzoom.h"
 #include "game_data.h"
+#include "game_options.h"
 #include "game_save.h"
 #include "game_sprts.h"
 #include "guiboxes.h"
@@ -559,7 +560,7 @@ void anim_billboard_broadcast_sound(void)
     p_thing = &things[ingame.VisibleBillboardThing];
     smpl_no = byte_154BB4[billboard_anim_no];
     rnd = LbRandomPosShort() & 1;
-    play_dist_sample(p_thing, smpl_no + rnd, 0x7Fu, 0x40, 100, 0, 1);
+    play_dist_sample(p_thing, smpl_no + rnd, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 1);
 }
 
 void flic_unkn03(ubyte anislot)
@@ -1541,9 +1542,9 @@ void func_13A78(void)
         :  :  : "eax" );
 }
 
-void unkstruct03_process(void)
+void process_map_craters(void)
 {
-    asm volatile ("call ASM_unkstruct03_process\n"
+    asm volatile ("call ASM_process_map_craters\n"
         :  :  : "eax" );
 }
 
@@ -1700,7 +1701,7 @@ void process_engine_unk3(void)
     mech_unkn_dw_1DC890 = mech_unkn_tile_x3;
     mech_unkn_dw_1DC894 = mech_unkn_tile_y3;
 
-    unkstruct03_process();
+    process_map_craters();
     func_13A78();
 
     if (((ingame.Flags & GamF_Unkn00400000) == 0) &&
@@ -2084,12 +2085,19 @@ void screen_mode_switch_to_next(void)
 
 void teleport_current_agent(PlayerInfo *p_locplayer)
 {
+    struct Thing *p_person;
     short dcthing;
+
     dcthing = p_locplayer->DirectControl[mouser];
-    delete_node(&things[dcthing]);
-    things[dcthing].X = MAPCOORD_TO_PRCCOORD(mouse_map_x,0);
-    things[dcthing].Z = MAPCOORD_TO_PRCCOORD(mouse_map_z,0);
-    things[dcthing].Y = alt_at_point(mouse_map_x, mouse_map_z);
+    p_person = &things[dcthing];
+
+    remove_path(p_person);
+    if (on_mapwho(p_person))
+        delete_node(p_person);
+    p_person->U.UPerson.OnFace = 0; // Can only teleport to ground
+    p_person->X = MAPCOORD_TO_PRCCOORD(mouse_map_x, 0);
+    p_person->Z = MAPCOORD_TO_PRCCOORD(mouse_map_z, 0);
+    p_person->Y = alt_at_point(mouse_map_x, mouse_map_z);
     add_node_thing(dcthing);
 }
 
@@ -2097,7 +2105,7 @@ void person_give_all_weapons(struct Thing *p_person)
 {
     WeaponType wtype;
 
-    for (wtype = WEP_TYPES_COUNT-1; wtype > 0; wtype--)
+    for (wtype = WEP_TYPES_COUNT-1; wtype > WEP_NULL; wtype--)
     {
         struct WeaponDef *wdef;
         ulong wepflg;
@@ -2111,13 +2119,16 @@ void person_give_all_weapons(struct Thing *p_person)
         p_person->U.UPerson.WeaponsCarried |= wepflg;
     }
     do_weapon_quantities1(p_person);
+    if ((p_person->Flag & TngF_PlayerAgent) != 0) {
+        player_agent_update_prev_weapon(p_person);
+    }
 }
 
 void mark_all_weapons_researched(void)
 {
     WeaponType wtype;
 
-    for (wtype = WEP_TYPES_COUNT-1; wtype > 0; wtype--)
+    for (wtype = WEP_TYPES_COUNT-1; wtype > WEP_NULL; wtype--)
     {
         struct WeaponDef *wdef;
 
@@ -2228,7 +2239,7 @@ void game_graphics_inputs(void)
 
     if ((ingame.UserFlags & UsrF_Cheats) && !in_network_game)
     {
-        if (is_key_pressed(KC_Q, KMod_NONE))
+        if (is_key_pressed(KC_Q, KMod_ALT))
         {
             clear_key_pressed(KC_Q);
             give_best_mods_to_all_agents(p_locplayer);
@@ -2352,30 +2363,6 @@ void setup_host(void)
     }
     play_intro();
     flic_unkn03(AniSl_BILLBOARD);
-}
-
-void set_default_gfx_settings(void)
-{
-    game_gfx_advanced_lights = 1;
-    game_billboard_movies = 1;
-    game_gfx_deep_radar = 0;
-    game_high_resolution = true;
-    game_projector_speed = 0;
-    game_perspective = 5;
-}
-
-void set_default_visual_prefernces(void)
-{
-    ingame.PanelPermutation = -2;
-    ingame.TrenchcoatPreference = 0;
-    ingame.DetailLevel = 1;
-    ingame.UseMultiMedia = 0;
-}
-
-void set_default_audio_tracks(void)
-{
-    ingame.DangerTrack = 1;
-    ingame.CDTrack = 2;
 }
 
 void init_engine(void)
@@ -2548,9 +2535,9 @@ void init_level_unknsub01_person(struct Thing *p_person)
     if ((p_person->Flag & TngF_Destroyed) == 0)
     {
         if (p_person->U.UPerson.CurrentWeapon != 0)
-            switch_person_anim_mode(p_person, 1);
+            switch_person_anim_mode(p_person, ANIM_PERS_WEPLIGHT_IDLE);
         else
-            switch_person_anim_mode(p_person, 0);
+            switch_person_anim_mode(p_person, ANIM_PERS_IDLE);
     }
 }
 
@@ -3039,7 +3026,7 @@ ushort make_group_into_players(ushort group, ushort plyr, ushort max_agent, shor
         p_person->U.UPerson.FrameId.Version[0] = 0;
         if (p_person->U.UPerson.CurrentWeapon == 0)
         {
-            switch_person_anim_mode(p_person, 0);
+            switch_person_anim_mode(p_person, ANIM_PERS_IDLE);
         }
 
         if ((p_person->SubType == SubTT_PERS_AGENT) || (p_person->SubType == SubTT_PERS_ZEALOT))
@@ -3700,22 +3687,6 @@ void gproc3_unknsub2(void)
     process_engine_unk1();
 }
 
-ubyte change_panel_permutation(ubyte click)
-{
-    ubyte ret;
-    asm volatile ("call ASM_change_panel_permutation\n"
-        : "=r" (ret) : "a" (click));
-    return ret;
-}
-
-ubyte change_trenchcoat_preference(ubyte click)
-{
-    ubyte ret;
-    asm volatile ("call ASM_change_trenchcoat_preference\n"
-        : "=r" (ret) : "a" (click));
-    return ret;
-}
-
 ubyte accept_mission(ubyte click)
 {
     ubyte ret;
@@ -3967,6 +3938,30 @@ void research_unkn_func_006(ushort missi)
         }
         break;
     }
+}
+
+void hide_weapons_for_agents_from_player(PlayerInfo *p_locplayer)
+{
+    struct Thing *p_agent;
+    short i;
+    for (i = 0; i < playable_agents; i++)
+    {
+        p_agent = p_locplayer->MyAgent[i];
+
+        if (p_agent->Type != TT_PERSON) continue;
+        if ((p_agent->Flag & TngF_Destroyed) != 0) continue;
+
+        p_agent->U.UPerson.CurrentWeapon = WEP_NULL;
+        process_clone_disguise(p_agent);
+    }
+}
+
+void mission_over_prepare_agents(void)
+{
+    PlayerInfo *p_locplayer;
+
+    p_locplayer = &players[local_player_no];
+    hide_weapons_for_agents_from_player(p_locplayer);
 }
 
 void mission_over_update_players(void)
@@ -4489,6 +4484,9 @@ ubyte check_delete_open_mission(ushort missi, sbyte state)
 void mission_over(void)
 {
     ubyte misend;
+
+    // Hide weapon to cancel any effects
+    mission_over_prepare_agents();
 
     ingame.DisplayMode = DpM_PURPLEMNU;
     reload_menu_flag = true;
@@ -5015,13 +5013,12 @@ void do_music_user_input(void)
     if (is_gamekey_pressed(GKey_MUSIC_TRACK))
     {
         clear_key_pressed(KC_NUMPAD5);
-        if (++ingame.CDTrack > 4)
-            ingame.CDTrack = 2;
+        game_option_inc(GOpt_CDATrack);
     }
     if (is_gamekey_pressed(GKey_DANGR_TRACK))
     {
         clear_key_pressed(KC_NUMPAD0);
-        ingame.DangerTrack = 2 - ingame.DangerTrack + 1;
+        game_option_inc(GOpt_DangerTrack);
     }
 
 }
@@ -5146,10 +5143,7 @@ ubyte do_user_interface(void)
     if (is_key_pressed(KC_F1, KMod_CONTROL))
     {
         clear_key_pressed(KC_F1);
-        if ((ingame.Flags & GamF_BillboardMovies) != 0)
-            ingame.Flags &= ~GamF_BillboardMovies;
-        else
-            ingame.Flags |= GamF_BillboardMovies;
+        game_option_inc(GOpt_BillboardMovies);
     }
     if (is_key_pressed(KC_F2, KMod_CONTROL))
     {
@@ -5170,18 +5164,12 @@ ubyte do_user_interface(void)
     if (is_key_pressed(KC_F4, KMod_CONTROL))
     {
         clear_key_pressed(KC_F4);
-        if ((ingame.Flags & GamF_AdvLights) != 0)
-            ingame.Flags &= ~GamF_AdvLights;
-        else
-            ingame.Flags |= GamF_AdvLights;
+        game_option_inc(GOpt_AdvancedLights);
     }
     if (is_key_pressed(KC_F6, KMod_CONTROL))
     {
         clear_key_pressed(KC_F6);
-        if ((ingame.Flags & GamF_DeepRadar) != 0)
-            ingame.Flags &= ~GamF_DeepRadar;
-        else
-            ingame.Flags |= GamF_DeepRadar;
+        game_option_inc(GOpt_DeepRadar);
     }
     if (is_key_pressed(KC_F10, KMod_CONTROL))
     {
@@ -5211,7 +5199,7 @@ ubyte do_user_interface(void)
     // Control map area to draw
     if ((ingame.UserFlags & UsrF_Cheats) != 0)
     {
-        if (is_key_pressed(KC_E, KMod_DONTCARE))
+        if (is_key_pressed(KC_E, KMod_ALT) || is_key_pressed(KC_E, KMod_ALT|KMod_SHIFT))
         {
             if (lbShift & KMod_SHIFT)
                 n = -2;
@@ -5329,7 +5317,7 @@ ubyte do_user_interface(void)
     // Resurrection and best equipment cheat; why is it in two places?
     if (p_locplayer->DoubleMode && (ingame.UserFlags & UsrF_Cheats) && !in_network_game)
     {
-        if (is_key_pressed(KC_Q, KMod_NONE))
+        if (is_key_pressed(KC_Q, KMod_ALT))
         {
             clear_key_pressed(KC_Q);
             give_best_mods_to_all_agents(p_locplayer);
@@ -5429,6 +5417,8 @@ ubyte do_user_interface(void)
 
 void show_menu_screen_st0(void)
 {
+    LOGSYNC("Init main menu, %s game", in_network_game ? "MP" : "SP");
+
     debug_trace_place(16);
 
     lbInkeyToAscii[KC_OEM_102] = '\\';
@@ -5465,22 +5455,23 @@ void show_menu_screen_st0(void)
     global_date.Month = 6;
     global_date.Year = 74;
 
-    debug_trace_place(17);
-    init_menu_screen_colors_and_sprites();
-
-    debug_trace_place(18);
-    init_screen_boxes();
-
     load_city_data(0);
     load_city_txt();
     player_mission_agents_reset(local_player_no);
 
-    debug_trace_place(19);
+    debug_trace_place(17);
+    // Need to set screen type before gfx background is reloaded
     if (in_network_game)
         screentype = SCRT_LOGIN;
     else
         screentype = SCRT_MAINMENU;
-    data_1c498d = 1;
+
+    debug_trace_place(18);
+    reload_menu_flag = 0;
+    init_purple_mode_colors_and_sprites();
+
+    debug_trace_place(19);
+    init_screen_boxes();
 
     init_brief_screen_scanner();
 
@@ -5501,11 +5492,6 @@ void update_mission_time(char a1)
 {
     asm volatile ("call ASM_update_mission_time\n"
         : : "a" (a1));
-}
-
-void purple_unkn1_data_to_screen(void)
-{
-    memcpy(dword_1C6DE4, dword_1C6DE8, 24480);
 }
 
 void net_unkn_func_29(short a1, short a2, ubyte a3, sbyte a4, ubyte a5)
@@ -5662,8 +5648,7 @@ void net_unkn_func_33_sub1(int plyr, int netplyr)
     case 2:
         login_control__State = LognCt_Unkn8;
         LbNetworkShutDownListeners();
-        LbMemorySet(unkstruct04_arr, 0, 20 * sizeof(struct TbNetworkSessionList));
-        byte_1C6D48 = 0;
+        net_sessionlist_clear();
         break;
     case 3:
         draw_flic_purple_list(ac_purple_unkn1_data_to_screen);
@@ -5749,17 +5734,16 @@ void net_unkn_func_33_sub1(int plyr, int netplyr)
             if (plyr == netplyr || net_host_player_no == plyr)
             {
                 net_new_game_prepare();
-                net_service_unkstruct04_clear();
+                net_sessionlist_clear();
+                net_unkn2_names_clear();
             }
         }
         else
         {
             net_new_game_prepare();
-            for (i = 0; i < PLAYERS_LIMIT; i++) {
-                unkn2_names[i][0] = '\0';
-            }
-            if ( byte_1C4A6F )
-              LbNetworkHangUp();
+            net_unkn2_names_clear();
+            if (byte_1C4A6F)
+                LbNetworkHangUp();
             LbNetworkReset();
             net_service_started = 0;
         }
@@ -5917,12 +5901,13 @@ void net_unkn_func_33(void)
 
 void show_menu_screen_st2(void)
 {
-    if ( in_network_game )
+    LOGSYNC("Init debrief, %s game", in_network_game ? "MP" : "SP");
+
+    if (in_network_game)
     {
         local_player_no = 0;
         net_new_game_prepare();
-        memset(unkstruct04_arr, 0, 20 * sizeof(struct TbNetworkSessionList)); //clear 4360 bytes
-        byte_1C6D48 = 0;
+        net_sessionlist_clear();
         selected_mod = -1;
         selected_weapon = -1;
         scientists_lost = 0;
@@ -5977,9 +5962,8 @@ void show_menu_screen_st2(void)
     init_weapon_text();
     load_city_txt();
 
-    init_menu_screen_colors_and_sprites();
-
-    data_1c498d = 1;
+    reload_menu_flag = 0;
+    init_purple_mode_colors_and_sprites();
 
     update_options_screen_state();
     init_brief_screen_scanner();
@@ -6104,7 +6088,6 @@ void show_load_and_prep_mission(void)
         ingame.DisplayMode = DpM_UNKN_1;
     }
 
-    data_1c498d = 2;
     reload_background_flag = 1;
     // Setup screen, palette and colour tables
     debug_trace_place(13);
@@ -6120,20 +6103,17 @@ void show_load_and_prep_mission(void)
     }
 
     // Update game progress and prepare level to play
-    if ( start_into_mission )
+    if (start_into_mission)
     {
         clear_open_mission_status();
-        if ( in_network_game )
+        if (in_network_game)
         {
             update_mission_time(1);
             gameturn = 0;
         }
         else
         {
-            int i;
-            for (i = 0; i < PLAYERS_LIMIT; i++) {
-                unkn2_names[i][0] = 0;
-            }
+            net_unkn2_names_clear();
             strncpy(unkn2_names[0], login_name, 16);
 
             update_mission_time(1);
@@ -6144,7 +6124,7 @@ void show_load_and_prep_mission(void)
     }
 
     // Set up remaining graphics data and controls
-    if ( start_into_mission )
+    if (start_into_mission)
     {
         prep_multicolor_sprites();
         LbScreenClear(0);
@@ -6202,12 +6182,6 @@ void net_players_copy_equip_and_cryo_now(void)
     net_unkn_func_33();
     network_players[local_player_no].Type = 15;
     net_unkn_func_33();
-}
-
-void menu_screen_reload(void)
-{
-    load_small_font_for_current_purple_mode();
-    reload_background();
 }
 
 void menu_screen_redraw(void)
@@ -6326,10 +6300,12 @@ void show_menu_screen(void)
     switch (data_1c498d)
     {
     case 2:
+        data_1c498d = 1;
         show_menu_screen_st2();
         play_sample_using_heap(0, 122, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_4EVER, 3);
         break;
     case 0:
+        data_1c498d = 1;
         show_menu_screen_st0();
         play_sample_using_heap(0, 122, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_4EVER, 3);
         break;
@@ -6348,7 +6324,7 @@ void show_menu_screen(void)
     if (reload_menu_flag)
     {
         reload_menu_flag = 0;
-        menu_screen_reload();
+        init_purple_mode_colors_and_sprites();
         my_set_text_window(0, 0, lbDisplay.GraphicsScreenWidth, lbDisplay.GraphicsScreenHeight);
     }
 
@@ -6556,6 +6532,7 @@ void show_menu_screen(void)
     if ( start_into_mission || map_editor )
     {
         show_load_and_prep_mission();
+        data_1c498d = 2;
     }
     else if (reload_background_flag)
     {

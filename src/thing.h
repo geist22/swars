@@ -104,7 +104,8 @@ enum ThingFlags {
     TngF_Unkn0020     = 0x0020,
     TngF_Unkn0040     = 0x0040,
     TngF_Unkn0080     = 0x0080,
-    TngF_Unkn0100     = 0x0100,
+    TngF_PersSupShld  = 0x0100,
+    TngF_VehUnkn0100  = 0x0100,
     TngF_StationrSht  = 0x0200,
     TngF_WepCharging  = 0x0400,
     TngF_Unkn0800     = 0x0800,
@@ -982,6 +983,24 @@ void navi_onscreen_debug(TbBool a1);
 
 TbBool thing_is_destroyed(ThingIdx thing);
 
+struct Thing *effective_owner_of_thing(struct Thing *p_thing);
+
+/** Set a thing frame with single-angle sprite.
+ * Can be used for all sprite things except people.
+ */
+void set_thing_frame(struct Thing *p_thing, ushort anim_start);
+
+/** Reset a thing frame with single-angle sprite.
+ * Can be used for all sprite things except people.
+ */
+void reset_thing_frame(struct Thing *p_thing);
+
+/** Reset a simple thing frame with single-angle sprite.
+ */
+void reset_sthing_frame(struct SimpleThing *p_sthing);
+
+ubyte on_mapwho(struct Thing *p_thing);
+
 /** Delete the thing from `mapwho` chain.
  */
 TbResult delete_node(struct Thing *p_thing);
@@ -1034,6 +1053,12 @@ TbBool thing_intersects_circle(ThingIdx thing, short X, short Z, ushort R);
 TbBool thing_intersects_cylinder(ThingIdx thing, short X, short Y, short Z, ushort R, ushort H);
 
 struct SimpleThing *create_sound_effect(int x, int y, int z, ushort sample, int vol, int loop);
+
+int mine_hit_by_bullet(struct Thing *p_thing, short hp,
+  int vx, int vy, int vz, struct Thing *p_attacker, ushort type);
+
+int static_hit_by_bullet(struct SimpleThing *p_sthing, short hp,
+  int vx, int vy, int vz, struct Thing *p_attacker, ushort type);
 
 /******************************************************************************/
 #ifdef __cplusplus

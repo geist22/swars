@@ -29,6 +29,7 @@
 #include "femail.h"
 #include "femain.h"
 #include "game_data.h"
+#include "game_options.h"
 #include "guiboxes.h"
 #include "guitext.h"
 #include "purpldrw.h"
@@ -632,7 +633,7 @@ ubyte show_mission_screen(void)
 #endif
     ubyte drawn = true;
 
-    if (((game_projector_speed != 0) && is_heading_flag01()) ||
+    if (((game_projector_speed) && is_heading_flag01()) ||
       (is_key_pressed(KC_SPACE, KMod_DONTCARE) && !edit_flag))
     {
         clear_key_pressed(KC_SPACE);

@@ -39,6 +39,7 @@
 #include "scandraw.h"
 #include "display.h"
 #include "game.h"
+#include "game_options.h"
 #include "game_speed.h"
 #include "vehicle.h"
 #include "wadfile.h"
@@ -270,7 +271,7 @@ int add_used_objective(long mapno, long levelno)
     p_objectv->Type = 0;
     p_objectv->Pri = 0;
     p_objectv->Map = mapno;
-    p_objectv->Level = (levelno - 1) % 15 + 1;
+    p_objectv->Level = LEVEL_NUM_STRAIN(levelno);
     p_objectv->Status = ObvStatu_UNDECIDED;
 
     return objectv;
@@ -881,7 +882,7 @@ ubyte fix_single_objective(struct Objective *p_objectv, ushort objectv, const ch
     ubyte ret;
 
     // Skip objectives for other levels
-    if (p_objectv->Level != (current_level - 1) % 15 + 1)
+    if (p_objectv->Level != LEVEL_NUM_STRAIN(current_level))
         return 1;
     if (p_objectv->Map != current_map)
         return 1;
@@ -2050,6 +2051,9 @@ void load_netscan_objectives(ubyte mapno, ubyte level)
     int remain;
 
     missi = find_mission_with_map_and_level(mapno, level);
+    if (missi == 0) {
+        LOGERR("Unable to map map and level to mission.");
+    }
     p_missi = &mission_list[missi];
     LbMemoryCopy(netscan_objectives, &mission_netscan_objectives[p_missi->NetscanObvIndex],
       sizeof(struct NetscanObjective) * p_missi->NetscanObvCount);

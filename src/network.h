@@ -66,12 +66,12 @@ struct NetworkServiceFunction { // sizeof=36
 
 struct TbNetworkSession { // sizeof=40
     NSESS_HANDLE Id; // offset=0
-    ulong GameId; // offset=2
-    char Name[8]; // offset=6
-    short HostPlayerNumber; // offset=14
-    short MaxPlayers; // offset=16
-    short Flags; // offset=18
-    ubyte Reserved[20]; // offset=20
+    ulong GameId; // offset=4
+    char Name[8]; // offset=8 (orig.=6)
+    short HostPlayerNumber; // offset=16 (orig.=14)
+    short MaxPlayers; // offset=18 (orig.=16)
+    short Flags; // offset=20 (orig.=18)
+    ubyte Reserved[18]; // offset=22 (orig.=20)
 };
 
 struct TbNetworkService { // sizeof=10
@@ -154,8 +154,44 @@ struct ModemCommand {
   char cmd[80];
 };
 
+struct TbUnknCommSt {
+  ubyte field_0;
+  ubyte field_1;
+  int  field_2;
+  int field_6;
+  ubyte field_A[127];
+  int field_89;
+  int field_8D;
+  ubyte field_91[127];
+  int field_110;
+  ubyte field_114[131];
+  int field_197;
+  uint (*WriteCb)(ubyte *, uint);
+  uint (*ReadCb)(ubyte *, uint, uint);
+  int (*ExchangeCb)();
+  int field_1A7;
+  int field_1AB;
+  ubyte field_1AF[256];
+  int field_2AF;
+  int field_2B3;
+  int field_2B7;
+  ubyte field_2BB[256];
+  ubyte field_3BB;
+  ubyte field_3BC;
+  ubyte field_3BD;
+  ubyte field_3BE;
+  ubyte field_3BF;
+  ubyte field_3C0;
+  ubyte field_3C1;
+  ubyte field_3C2;
+  ubyte field_3C3[32];
+  ubyte field_3E3[32];
+};
+
 struct TbSerialDev { // sizeof=4301
-  ubyte field_0[2198];
+  ubyte field_0[2];
+  ushort field_2;
+  ubyte field_4[2194];
   ubyte inbuf[2048];
   ushort field_1096;
   ushort field_1098;
@@ -293,7 +329,7 @@ struct TbNetworkPlayer { // sizeof=22
 
 struct TbNetworkSessionList { // sizeof=218
     struct TbNetworkSession Session; // offset=0
-    struct TbNetworkPlayer Player[8];
+    struct TbNetworkPlayer Player[8]; // offset=28
     short NumberOfPlayers; // offset=216
 };
 
@@ -305,7 +341,6 @@ extern struct TbNetworkService NetworkServicePtr;
 extern ulong NetTimeoutTicks;
 extern struct NetworkPlayer network_players[8];
 extern struct NetPlayer2 net_players[5];
-extern struct TbNetworkSessionList unkstruct04_arr[20];
 // Application-accessible copy of the service structure?
 extern struct TbNetworkService nsvc;
 
@@ -315,6 +350,7 @@ TbResult LbNetworkReadConfig(const char *fname);
 TbResult LbNetworkSetBaud(int rate);
 TbResult LbNetworkSessionCreate(struct TbNetworkSession *session, char *a2);
 TbResult LbNetworkSessionJoin(struct TbNetworkSession *session, char *a2);
+int LbNetworkSessionList(struct TbNetworkSessionList *p_nslist, int listlen);
 TbResult LbNetworkSetTimeoutSec(ulong tmsec);
 
 TbResult LbNetworkSetSessionCreateFunction(void *func);

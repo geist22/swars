@@ -31,6 +31,7 @@ extern "C" {
 #pragma pack(1)
 
 #define WEAPONS_CARRIED_MAX_COUNT 6
+#define WEAPONS_FOURPACK_MAX_COUNT 4
 #define WEP_CATEGORIES_COUNT 11
 
 /** Range of the weapon can never exceed this limit.
@@ -82,6 +83,22 @@ enum WeaponFourPackIndex
     WFRPK_CRAZYGAS,
     WFRPK_KOGAS,
     WFRPK_COUNT,
+};
+
+enum DamageType
+{
+  DMG_NULL = 0,
+  DMG_UZI = 1,
+  DMG_ELLASER = 2,
+  DMG_BEAM = 3,
+  DMG_LASER = 4,
+  DMG_UNKN5 = 5,
+  DMG_RAP = 6,
+  DMG_MINIGUN = 7,
+  DMG_LONGRANGE = 8,
+  DMG_UNKN9 = 9,
+  DMG_ELSTRAND = 10,
+  DMG_TYPES_COUNT,
 };
 
 enum ProcessProximityWieldWeaponTargetSelect {
@@ -175,7 +192,14 @@ TbBool weapon_has_targetting(WeaponType wtype);
 ushort weapon_sprite_index(WeaponType wtype, TbBool enabled);
 
 TbBool weapons_has_weapon(ulong weapons, WeaponType wtype);
+
+/** Returns weapon set in given flags with index below last.
+ */
 ushort weapons_prev_weapon(ulong weapons, WeaponType last_wtype);
+
+/** Returns how many weapon slots are occupied in given weapons flags.
+ */
+ushort weapons_count_used_slots(ulong weapons);
 
 ushort weapon_fourpack_index(WeaponType wtype);
 void weapons_remove_weapon(ulong *p_weapons,
@@ -255,11 +279,14 @@ void do_weapon_quantities_proper1(struct Thing *p_person);
 
 void process_weapon(struct Thing *p_person);
 short process_persuadertron(struct Thing *p_person, ubyte target_select, ushort *energy_reqd);
+void process_weapon_wind_down(struct Thing *p_person);
 int gun_out_anim(struct Thing *p_person, ubyte shoot_flag);
 
 s32 laser_hit_at(s32 x1, s32 y1, s32 z1, s32 *x2, s32 *y2, s32 *z2, struct Thing *p_shot);
 void finalise_razor_wire(struct Thing *p_person);
 void init_lay_razor(struct Thing *p_thing, short x, short y, short z, int flag);
+
+void process_clone_disguise(struct Thing *p_person);
 
 /******************************************************************************/
 #ifdef __cplusplus
