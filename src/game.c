@@ -5569,9 +5569,8 @@ ubyte do_user_interface(void)
             p_agent = p_locplayer->MyAgent[n];
             if (p_agent->Type != TT_PERSON) continue;
 
-            if (person_can_accept_control(p_agent->ThingOffset) && ((p_agent->Flag2 & TgF2_KnockedOut) == 0) && !(lbShift && KMod_SHIFT)) // this blocks all modifiers, not just shift
+            if (person_can_accept_control(p_agent->ThingOffset) && ((p_agent->Flag2 & TgF2_KnockedOut) == 0) && !(lbShift & KMod_SHIFT))
             {
-                clear_gamekey_pressed(gkey);
                 if (p_locplayer->DoubleMode)
                 {
                     byte_153198 = n+1;
@@ -5601,21 +5600,15 @@ ubyte do_user_interface(void)
                     }
                     last_sel_agent_turn[n] = gameturn;
                 }
-                did_inp |= GINPUT_PACKET;
-                return did_inp;
             }
-            else if (lbShift && KMod_SHIFT) // this triggers on alt, not shift
+			else if (lbShift & KMod_SHIFT)
 			{
-				clear_gamekey_pressed(gkey);
-				short dcthing; // what is this, is it  required?
-				dcthing = p_locplayer->DirectControl[0];
 				if (person_carries_any_medikit(p_agent->ThingOffset))
-				{
-				    my_build_packet(&packets[local_player_no], PAct_AGENT_USE_MEDIKIT, dcthing, p_agent->ThingOffset, 0, 0); // uses medikit of selected agent instead of agent for pressed key
-				    did_inp |= GINPUT_DIRECT;
-				    return did_inp;
-				}
+					my_build_packet(&packets[local_player_no], PAct_AGENT_USE_MEDIKIT, p_agent->ThingOffset, 0, 0, 0);
 			}
+			clear_gamekey_pressed(gkey);
+			did_inp |= GINPUT_PACKET;
+			return did_inp;
         }
     }
 
