@@ -56,7 +56,7 @@ and then add the neccessary data files. The steps are:
    (e.g. in `/media/cdrom`).
 2. Choose an installation folder, like `/usr/local/share/syndwarsfx` (this is the default).
 3. Do `util/install -f <SOURCE> -t <TARGET> -l <LANG>`, where
-   * *\<SOURCE\>* is the game CD path, like `/media/cdrom`,
+   * *\<SOURCE\>* is the game CD mount path, like `/media/cdrom`,
    * *\<TARGET\>* is the destination path, meaning the installation folder you've chosen,
    * *\<LANG\>* is the installation language, and can be one of: `eng` `fre` `ger` `ita` `spa` `swe`.
 
@@ -183,7 +183,7 @@ You can now [start the game](#starting-the-game).
 The original game needed to be started with parameters to play normally. While
 with SyndWarsFX this is no longer mandatory, the parameters can still be used,
 and many new ones are actually available. The executable can be run with
-`--help` parameter to show a short description of all aprameters.
+`--help` parameter to show a short description of all parameters.
 
 Parameter `-w` (used in the original game) is not recommended when running on
 new hardware.
@@ -247,7 +247,16 @@ You should now have a working `src/syndwarsfx` executable file.
 
 Here are specific commands required to compile the executable on Ubuntu linux.
 
-Install the dependencies - remember that some must be 32-bit (i386):
+First, dependencies have to be installed. But this project can be built only
+for 32-bit address space - some installed packages have to be compatible with
+it. To even allow installing packages for a different architecture, it needs
+to be added:
+
+```
+dpkg --add-architecture i386
+```
+
+Now install the dependencies - remember that some must be 32-bit (i386):
 
 ```
 sudo apt install gcc-multilib g++-multilib lib32z1
@@ -260,6 +269,11 @@ sudo apt install libvorbis-dev:i386 libvorbisfile3:i386
 sudo apt install libogg-dev:i386
 sudo apt install libwildmidi-dev:i386
 ```
+
+Be warned - your package manager may assume you want to replace the architecture
+if you did not explicitly added it. If the information on screen suggests
+that the installation would remove a group of currently installed packages,
+do not proceed with the changes and find another way.
 
 Now as our host is ready, we can start working on the actual `syndwarsfx` sources.
 Go to that folder, and generate build scripts from templates using autotools:

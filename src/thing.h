@@ -467,8 +467,15 @@ struct Thing { // sizeof=168
     ushort StartFrame;
     short Timer1;
     short StartTimer1;
+    /** Move velocity vector or shoot target position; X coord.
+     * The vector set is expected to be normalized, length od 256 means full speed.
+     */
     s32 VX;
+    /** Move velocity vector, Y coord.
+     */
     s32 VY;
+    /** Move velocity vector, Z coord.
+     */
     s32 VZ;
     short Speed;
     short Health;
@@ -564,7 +571,7 @@ struct SimpleThing
         struct STngUBang UBang;
         struct STngUFire UFire;
     } U;
-    short field_38;
+    short Owner2;
     ushort UniqueID;
 };
 
@@ -946,7 +953,7 @@ extern ubyte debug_log_things;
 struct Thing *get_thing_safe(ThingIdx thing, ubyte ttype);
 
 void init_things(void);
-void refresh_old_thing_format(struct Thing *p_thing, struct ThingOldV9 *p_oldthing, ulong fmtver);
+void refresh_old_thing_format(struct Thing *p_thing, struct ThingOldV9 *p_oldthing, u32 fmtver);
 void process_things(void);
 
 /** Get a string up to 14 chars containing thing/sthing type name.
@@ -1051,6 +1058,8 @@ TbBool thing_intersects_circle(ThingIdx thing, short X, short Z, ushort R);
  * the cylinder only a little. Even a small intersection is enough.
  */
 TbBool thing_intersects_cylinder(ThingIdx thing, short X, short Y, short Z, ushort R, ushort H);
+
+struct SimpleThing *create_scale_effect(int x, int y, int z, ushort frame, int timer);
 
 struct SimpleThing *create_sound_effect(int x, int y, int z, ushort sample, int vol, int loop);
 

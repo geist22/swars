@@ -207,6 +207,7 @@ ushort replace_mission_state_slot(ushort old_missi, ushort new_missi);
 short get_mission_state_using_state_slot(ushort missi);
 void set_mission_state_using_state_slot(ushort missi, short mstate);
 void init_mission_states(void);
+void missions_clear_bank_tests(void);
 
 ushort find_mission_with_map_and_level(ushort mapno, ushort level);
 void fix_mission_used_objectives(short missi);
@@ -214,6 +215,11 @@ void fix_mission_used_objectives(short missi);
 TbBool mission_remain_until_success(ushort missi);
 TbBool mission_has_immediate_next_on_success(ushort missi);
 TbBool mission_has_immediate_previous(ushort missi);
+
+/** Returns if the mission has either email message or triggers to be received
+ * by player on mission fail.
+ */
+TbBool mission_has_fail_email_or_triggers(ushort missi);
 TbBool mission_is_final_at_game_end(ushort missi);
 
 TbBool read_missions_conf_info(int num);

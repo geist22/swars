@@ -185,7 +185,7 @@ void floor_texture_switch_to_index(struct SingleFloorTexture *p_fltextr, int ind
 }
 
 void refresh_old_floor_texture_format(struct SingleFloorTexture *p_fltextr,
-  struct SingleFloorTexture *p_oldfltextr, ulong fmtver)
+  struct SingleFloorTexture *p_oldfltextr, u32 fmtver)
 {
     LbMemoryCopy(p_fltextr, p_oldfltextr, sizeof(struct SingleFloorTexture));
 
@@ -363,6 +363,17 @@ void face_texture_switch_to_index(struct SingleTexture *p_fctextr, int index)
     p_fctextr->TMapY3 = beg_y + (p_fctextr->TMapY3 - prev_beg_y);
 }
 
+ubyte get_my_texture_bits(short tex)
+{
+#if 1
+    ubyte ret;
+    asm volatile (
+      "call ASM_get_my_texture_bits\n"
+        : "=r" (ret) : "a" (tex));
+    return ret;
+#endif
+}
+
 static void animate_texture(ushort tmap)
 {
     struct AnimTmap *p_atmap;
@@ -416,7 +427,7 @@ void animate_textures(void)
 }
 
 void refresh_old_face_texture_format(struct SingleTexture *p_fctextr,
-  struct SingleTexture *p_oldfctextr, ulong fmtver)
+  struct SingleTexture *p_oldfctextr, u32 fmtver)
 {
     LbMemoryCopy(p_fctextr, p_oldfctextr, sizeof(struct SingleTexture));
 

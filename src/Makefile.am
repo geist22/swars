@@ -104,6 +104,8 @@ syndwarsfx_SOURCES = \
 	engintrns.h \
 	enginzoom.c \
 	enginzoom.h \
+	feappbar.c \
+	feappbar.h \
 	febrief.c \
 	febrief.h \
 	fedebrief.c \
@@ -194,6 +196,8 @@ syndwarsfx_SOURCES = \
 	pathtrig.h \
 	packet.c \
 	packet.h \
+	packetfe.c \
+	packetfe.h \
 	people.c \
 	people.h \
 	pepgroup.c \

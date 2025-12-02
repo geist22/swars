@@ -18,6 +18,7 @@
 /******************************************************************************/
 #include "feequip.h"
 
+#include <assert.h>
 #include "bftext.h"
 #include "bfsprite.h"
 #include "bfkeybd.h"
@@ -27,6 +28,7 @@
 #include "bflib_joyst.h"
 #include "ssampply.h"
 
+#include "feappbar.h"
 #include "fecryo.h"
 #include "femain.h"
 #include "fenet.h"
@@ -42,6 +44,7 @@
 #include "game.h"
 #include "keyboard.h"
 #include "network.h"
+#include "packetfe.h"
 #include "player.h"
 #include "purpldrw.h"
 #include "purpldrwlst.h"
@@ -108,6 +111,22 @@ void ac_weapon_flic_data_to_screen(void);
 ubyte ac_do_equip_all_agents_set(ubyte click);
 
 ubyte do_equip_offer_buy_cybmod(ubyte click);
+
+TbBool dragged_weapon_can_drop_on_research(void)
+{
+    return (mo_weapon != -1 && mo_weapon == research.CurrentWeapon);
+}
+
+void dragged_weapon_drop_on_research(void)
+{
+    assert(dragged_weapon_can_drop_on_research());
+
+    LOGSYNC("Transferred weapon %s from agent %d to research",
+      weapon_codename(mo_weapon+1), mo_from_agent);
+    player_cryo_remove_weapon_one(mo_from_agent, mo_weapon + 1);
+    research_unkn_func_003();
+    mo_weapon = -1;
+}
 
 TbBool weapon_has_display_anim(ubyte weapon)
 {
@@ -265,7 +284,7 @@ ubyte do_equip_offer_buy_weapon(ubyte click)
 
     if (nbought > 0)
     {
-        if ((login_control__State == LognCt_Unkn5 && (unkn_flags_08 & 0x08) != 0)) {
+        if ((login_control__State == LognCt_Unkn5 && (net_game_play_flags & NGPF_Unkn08) != 0)) {
             net_players_copy_equip_and_cryo();
         }
     }
@@ -286,9 +305,9 @@ ubyte do_equip_offer_buy(ubyte click)
         return 0;
     }
 
-    if ((login_control__State == LognCt_Unkn5) && ((unkn_flags_08 & 0x08) != 0))
+    if ((login_control__State == LognCt_Unkn5) && ((net_game_play_flags & NGPF_Unkn08) != 0))
     {
-        if (!local_player_hosts_the_game())
+        if (!net_local_player_hosts_the_game())
             return 0;
     }
 
@@ -317,9 +336,9 @@ ubyte sell_equipment(ubyte click)
 #endif
     TbBool sold;
 
-    if ((login_control__State == LognCt_Unkn5) && ((unkn_flags_08 & 0x08) != 0))
+    if ((login_control__State == LognCt_Unkn5) && ((net_game_play_flags & NGPF_Unkn08) != 0))
     {
-        if (!local_player_hosts_the_game())
+        if (!net_local_player_hosts_the_game())
             return 0;
     }
 
@@ -350,12 +369,9 @@ ubyte sell_equipment(ubyte click)
             }
 
         }
-        if ((login_control__State == LognCt_Unkn5) && ((unkn_flags_08 & 0x08) != 0))
+        if ((login_control__State == LognCt_Unkn5) && ((net_game_play_flags & NGPF_Unkn08) != 0))
         {
-            network_players[local_player_no].Type = 14;
-            net_unkn_func_33();
-            ++gameturn;
-            network_players[local_player_no].Type = 15;
+            net_players_copy_equip_and_cryo();
         }
     }
 

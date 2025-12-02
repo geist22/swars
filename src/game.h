@@ -46,7 +46,7 @@ enum GameFlags {
     GamF_SkipIntro    = 0x00080000,
     GamF_Unkn00100000 = 0x00100000,
     GamF_NoScannerBeep = 0x00200000,
-    GamF_Unkn00400000 = 0x00400000,
+    GamF_BillboardBAT = 0x00400000,
     GamF_Unkn00800000 = 0x00800000,
     GamF_Unkn01000000 = 0x01000000,
     GamF_Unkn02000000 = 0x02000000,
@@ -100,22 +100,6 @@ enum LoginControlStates {
     LognCt_Unkn10,
 };
 
-enum DisplayModes {
-  DpM_NONE = 0x0,
-  DpM_UNKN_1 = 0x1,
-  DpM_2 = 0x2,
-  DpM_31 = 0x31,
-  DpM_ENGINEPLY = 0x32,
-  DpM_UNKN_33 = 0x33,
-  DpM_34 = 0x34,
-  DpM_36 = 0x36,
-  DpM_PURPLEMNU = 0x37,
-  DpM_38 = 0x38,
-  DpM_39 = 0x39,
-  DpM_UNKN_3A = 0x3A,
-  DpM_UNKN_3B = 0x3B,
-};
-
 enum AnimSlot {
   AniSl_FULLSCREEN = 0,
   AniSl_BILLBOARD = 1,
@@ -128,12 +112,6 @@ enum AnimSlot {
   AniSl_CYBORG_BRTH = 8,
   AniSl_NETSCAN = 9,
   AniSl_SCRATCH = 10,	/**< scratch buffer for some transparent menu animations */
-};
-
-enum PacketRecordMode {
-  PktR_NONE = 0x0,
-  PktR_RECORD = 0x1,
-  PktR_PLAYBACK = 0x2,
 };
 
 // For some reason, we have different values for change_screen
@@ -215,8 +193,6 @@ extern ubyte byte_181183;
 extern ubyte byte_181189;
 
 extern ubyte cmdln_param_n;
-extern ubyte pktrec_mode;
-extern ushort packet_rec_no;
 extern ubyte exit_game;
 extern ubyte input_char;
 
@@ -332,7 +308,6 @@ extern ubyte redraw_screen_flag;
 extern sbyte byte_15516C;
 extern sbyte byte_15516D;
 extern ubyte byte_1C5C28[8];
-extern ubyte unkn_flags_08;
 extern long dword_153194;
 extern ulong starting_cash_amounts[8];
 extern sbyte unkn_city_no;
@@ -353,9 +328,6 @@ extern ubyte old_flic_mods[5];
 extern ubyte reload_background_flag;
 
 extern struct LevelDef level_def;
-
-extern long dword_17710C;
-extern long dword_177110;
 
 /** Index of the local user who controls mouse. */
 extern ubyte mouser;
@@ -413,6 +385,7 @@ void free_texturemaps(void);
 void init_variables(void);
 void init_agents(void);
 void srm_reset_research(void);
+void net_new_game_prepare(void);
 
 /** Decode and draw next frame of the animation.
  */
@@ -432,7 +405,6 @@ void my_preprocess_text(char *text);
 ushort my_count_lines(const char *text);
 
 TbBool player_try_spend_money(long cost);
-TbBool is_unkn_current_player(void);
 void campaign_new_game_prepare(void);
 
 void process_sound_heap(void);
@@ -454,14 +426,13 @@ void ingame_palette_reload(void);
 void game_set_cam_track_thing_xz(ThingIdx thing);
 TbBool game_cam_tracked_thing_is_player_agent(void);
 
-void local_to_worldr(int *dx, int *dy, int *dz);
 ubyte process_send_person(ushort player, int i);
 
 ubyte *anim_type_get_output_buffer(ubyte anislot);
 
-void net_unkn_func_33(void);
-void net_players_copy_equip_and_cryo(void);
-void net_players_copy_cryo(void);
+short test_missions(ubyte flag);
+void init_level_3d(ubyte flag);
+void restart_back_into_mission(ushort missi);
 
 #ifdef __cplusplus
 };

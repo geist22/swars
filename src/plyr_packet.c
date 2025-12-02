@@ -20,21 +20,32 @@
 #include "plyr_packet.h"
 
 #include <assert.h>
+#include "bfkeybd.h"
 #include "bfscd.h"
+#include "bfmemut.h"
 #include "bfmusic.h"
+#include "bfutility.h"
 #include "ssampply.h"
 
+#include "bigmap.h"
+#include "display.h"
 #include "game_bstype.h"
 #include "game_options.h"
+#include "game_speed.h"
 #include "game.h"
 #include "guitext.h"
 #include "hud_panel.h"
+#include "keyboard.h"
 #include "network.h"
 #include "packet.h"
 #include "player.h"
+#include "research.h"
 #include "sound.h"
 #include "thing.h"
 #include "swlog.h"
+/******************************************************************************/
+extern struct ShortPacket shpackets[8];
+
 /******************************************************************************/
 
 void net_player_leave(PlayerIdx plyr)
@@ -82,19 +93,39 @@ void player_agent_select(PlayerIdx plyr, ThingIdx person)
     }
 }
 
+/** Alter relative position, limiting its vector length to 256.
+ *
+ * Relative position change needs to be capped, as packet creation function does
+ * not care too much about exceeding the limit. Normalizing here, on packet receive
+ * side, also makes sure cheating is not possible.
+ */
+void packet_rel_position_3d_normalize(short *p_x, short *p_y, short *p_z)
+{
+    int len;
+    len = map_distance_deltas_fast(*p_x, *p_y, *p_z);
+    if (len < 256) { // do not increase vector length if below max
+        len = 256;
+    }
+    *p_x = (*p_x) * 256 / len;
+    *p_y = (*p_y) * 256 / len;
+    *p_z = (*p_z) * 256 / len;
+}
+
+void thing_goto_point_rel(struct Thing *p_thing, short x, short y, short z)
+{
+    // Make sure the normalization is kept when this function is remade
+    packet_rel_position_3d_normalize(&x, &y, &z);
+    asm volatile (
+      "call ASM_thing_goto_point_rel\n"
+        : : "a" (p_thing), "d" (x), "b" (y), "c" (z));
+}
+
 void thing_goto_point_rel_fast(struct Thing *p_thing, short x, short y, short z, int plyr)
 {
     asm volatile (
       "push %4\n"
       "call ASM_thing_goto_point_rel_fast\n"
         : : "a" (p_thing), "d" (x), "b" (y), "c" (z), "g" (plyr));
-}
-
-void thing_goto_point_rel(struct Thing *p_thing, short x, short y, short z)
-{
-    asm volatile (
-      "call ASM_thing_goto_point_rel\n"
-        : : "a" (p_thing), "d" (x), "b" (y), "c" (z));
 }
 
 void thing_goto_point_fast(struct Thing *p_thing, short x, short y, short z, int plyr)
@@ -145,6 +176,24 @@ void unkn_player_group_prot(sbyte a1, ubyte a2)
 {
     asm volatile ("call ASM_unkn_player_group_prot\n"
         :  : "a" (a1), "d" (a2));
+}
+
+void player_thermal_toggle(PlayerIdx plyr, struct Thing *p_person)
+{
+    if ((ingame.Flags & GamF_ThermalView) == 0)
+    {
+        if (p_person->U.UPerson.Energy > 100)
+        {
+            ingame.Flags |= GamF_ThermalView;
+            play_sample_using_heap(0, 35, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 1);
+            ingame_palette_reload();
+        }
+    }
+    else
+    {
+        ingame.Flags &= ~GamF_ThermalView;
+        change_brightness(0);
+    }
 }
 
 void peep_change_weapon(struct Thing *p_person)
@@ -246,12 +295,302 @@ void person_grp_switch_to_specific_weapon(struct Thing *p_person, PlayerIdx plyr
     }
 }
 
-short net_unkn_check_1(void)
+void cheat_teleport_agent_to_gnd(struct Thing *p_person, MapCoord cor_x, MapCoord cor_z)
 {
-    short ret;
-    asm volatile ("call ASM_net_unkn_check_1\n"
-        : "=r" (ret) : );
+    remove_path(p_person);
+    if (on_mapwho(p_person))
+        delete_node(p_person);
+    p_person->U.UPerson.OnFace = 0; // Can only teleport to ground
+    p_person->X = MAPCOORD_TO_PRCCOORD(cor_x, 0);
+    p_person->Z = MAPCOORD_TO_PRCCOORD(cor_z, 0);
+    p_person->Y = alt_at_point(cor_x, cor_z);
+    add_node_thing(p_person->ThingOffset);
+}
+
+void person_give_all_weapons(struct Thing *p_person)
+{
+    WeaponType wtype;
+
+    for (wtype = WEP_TYPES_COUNT-1; wtype > WEP_NULL; wtype--)
+    {
+        struct WeaponDef *wdef;
+        ulong wepflg;
+
+        wdef = &weapon_defs[wtype];
+
+        if ((wdef->Flags & WEPDFLG_CanPurchease) == 0)
+            continue;
+
+        wepflg = 1 << (wtype-1);
+        p_person->U.UPerson.WeaponsCarried |= wepflg;
+    }
+    player_agent_set_weapon_quantities_max(p_person);
+    if ((p_person->Flag & TngF_PlayerAgent) != 0) {
+        player_agent_update_prev_weapon(p_person);
+    }
+}
+
+void mark_all_weapons_researched(void)
+{
+    WeaponType wtype;
+
+    for (wtype = WEP_TYPES_COUNT-1; wtype > WEP_NULL; wtype--)
+    {
+        struct WeaponDef *wdef;
+
+        wdef = &weapon_defs[wtype];
+
+        if ((wdef->Flags & WEPDFLG_CanPurchease) == 0)
+            continue;
+
+        research_weapon_complete(wtype);
+    }
+}
+
+void resurrect_any_dead_agents(PlayerIdx plyr)
+{
+    PlayerInfo *p_player;
+    int i;
+
+    p_player = &players[plyr];
+
+    for (i = 0; i < playable_agents; i++)
+    {
+        struct Thing *p_agent;
+        p_agent = p_player->MyAgent[i];
+        if (p_agent->Type != TT_PERSON)
+            continue;
+        if ((p_agent->Flag & TngF_Destroyed) != 0)
+            person_resurrect(p_agent);
+    }
+}
+
+void give_all_weapons_to_all_agents(PlayerIdx plyr)
+{
+    PlayerInfo *p_player;
+    int i;
+
+    p_player = &players[plyr];
+
+    for (i = 0; i < playable_agents; i++)
+    {
+        struct Thing *p_agent;
+        p_agent = p_player->MyAgent[i];
+        if (p_agent->Type != TT_PERSON)
+            continue;
+        if (thing_is_destroyed(p_agent->ThingOffset))
+            continue;
+        person_give_all_weapons(p_agent);
+    }
+    mark_all_weapons_researched();
+}
+
+void give_best_mods_to_all_agents(PlayerIdx plyr)
+{
+    PlayerInfo *p_player;
+    int i;
+
+    p_player = &players[plyr];
+
+    for (i = 0; i < playable_agents; i++)
+    {
+        struct Thing *p_agent;
+        p_agent = p_player->MyAgent[i];
+        if (p_agent->Type != TT_PERSON)
+            continue;
+        if (thing_is_destroyed(p_agent->ThingOffset))
+            continue;
+        person_give_best_mods(p_agent);
+    }
+}
+
+void set_max_stats_to_all_agents(PlayerIdx plyr)
+{
+    PlayerInfo *p_player;
+    int i;
+
+    p_player = &players[plyr];
+
+    for (i = 0; i < playable_agents; i++)
+    {
+        struct Thing *p_agent;
+        p_agent = p_player->MyAgent[i];
+        if (p_agent->Type != TT_PERSON)
+            continue;
+        if (thing_is_destroyed(p_agent->ThingOffset))
+            continue;
+        person_set_helath_to_max_limit(p_agent);
+        person_set_energy_to_max_limit(p_agent);
+        person_set_persuade_power__to_allow_all(p_agent);
+    }
+}
+
+int net_unkn_func_12(void *a1)
+{
+    int ret;
+    asm volatile ("call ASM_net_unkn_func_12\n"
+        : "=r" (ret) : "a" (a1));
     return ret;
+}
+
+int show_message(const char *str)
+{
+    int ret;
+    asm volatile ("call ASM_show_message\n"
+        : "=r" (ret) : "a" (str));
+    return ret;
+}
+
+void net_unkn_check_1(void)
+{
+#if 0
+    asm volatile ("call ASM_net_unkn_check_1\n"
+        :  : );
+#endif
+    char locstr[100];
+    ushort i, m;
+    s32 check_val;
+    char recvd2[8];
+    char recvd3[8];
+    char recvd[8];
+
+    LbMemorySet(recvd, 0, 8);
+    if ((PacketRecord_IsPlayback()) && in_network_game)
+    {
+        for (i = 0; i < 8; i++)
+        {
+            if (((1 << i) & ingame.InNetGame_UNSURE) != 0) {
+                PacketRecord_Read(&packets[i]);
+            }
+        }
+    }
+    else if (nsvc.I.Type == NetSvc_IPX)
+    {
+        struct Packet *p_pckt;
+        int ret;
+
+        p_pckt = &packets[local_player_no];
+        p_pckt->D1Seed = lbSeed;
+        p_pckt->D2Check = ingame.fld_unkC4B;
+        net_unkn_func_12(recvd2);
+        ret = LbNetworkExchange(packets, sizeof(struct Packet));
+        if (gameturn == 5) {
+            LbNetworkSetTimeoutSec(15);
+        }
+        if (ret == -1)
+        {
+            net_unkn_func_12(recvd3);
+            for (i = 0; i < 8; i++)
+            {
+                if (((1 << i) & ingame.InNetGame_UNSURE) == 0)
+                    continue;
+                if (recvd2[i] == recvd3[i])
+                    continue;
+
+                sprintf(locstr, " Player >%s< Has Timed Out", unkn2_names[i]);
+                show_message(locstr);
+                ingame.InNetGame_UNSURE &= ~(1 << i);
+                if (i == local_player_no)
+                {
+                  show_message("You have Timed out from the system");
+                  ingame.DisplayMode = DpM_PURPLEMNU;
+                  StopCD();
+                  StopAllSamples();
+                }
+                net_players_num--;
+            }
+        }
+        else if (ret == -8)
+        {
+            show_message(" Host Connection Lost");
+            ingame.InNetGame_UNSURE = 0;
+            ingame.DisplayMode = DpM_PURPLEMNU;
+            StopCD();
+            StopAllSamples();
+        }
+    }
+    else
+    {
+        struct Packet *p_pckt;
+        struct ShortPacket *p_shpckt;
+
+        p_pckt = &packets[local_player_no];
+        p_shpckt = &shpackets[local_player_no];
+        p_shpckt->Action = p_pckt->Action;
+        p_shpckt->Data = p_pckt->Data;
+        p_shpckt->X = p_pckt->X;
+        p_shpckt->Y = p_pckt->Y;
+        p_shpckt->Z = p_pckt->Z;
+        p_shpckt->BCheck = ingame.fld_unkC4B;
+
+        LbNetworkExchange(shpackets, sizeof(struct ShortPacket));
+
+        for (i = 0; i < 8; i++)
+        {
+            struct Packet *p_pckt;
+            struct ShortPacket *p_shpckt;
+
+            p_pckt = &packets[i];
+            p_shpckt = &shpackets[i];
+            p_pckt->Action = p_shpckt->Action;
+            p_pckt->Action2 = 0;
+            p_pckt->Action3 = 0;
+            p_pckt->Action4 = 0;
+            p_pckt->Data = p_shpckt->Data;
+            p_pckt->X = p_shpckt->X;
+            p_pckt->Y = p_shpckt->Y;
+            p_pckt->Z = p_shpckt->Z;
+            p_pckt->D1Seed = lbSeed;
+            p_pckt->D2Check = p_shpckt->BCheck;
+        }
+    }
+
+    if (nsvc.I.Type == NetSvc_IPX)
+        check_val = ingame.fld_unkC4B;
+    else
+        check_val = (ubyte)ingame.fld_unkC4B;
+    if (nsvc.I.Type == NetSvc_IPX)
+    {
+        for (i = 0; i < 8; i++)
+        {
+            if (((1 << i) & ingame.InNetGame_UNSURE) == 0)
+                continue;
+            for (m = 0; m < 8; m++)
+            {
+                if ( ((1 << m) & ingame.InNetGame_UNSURE) == 0)
+                    continue;
+                if (packets[m].D2Check == packets[i].D2Check)
+                    recvd[i]++;
+            }
+        }
+    }
+
+    for (i = 0; i < 8; i++)
+    {
+        if (((1 << i) & ingame.InNetGame_UNSURE) == 0)
+            continue;
+
+        if ((pktrec_mode == 1) && in_network_game && (net_host_player_no == local_player_no))
+            PacketRecord_Write(&packets[i]);
+
+        if ((nsvc.I.Type == NetSvc_IPX) && (recvd[i] == 1) && (net_players_num > 2))
+        {
+            sprintf(locstr, " Player >%s< is out of sync", unkn2_names[i]);
+            show_message(locstr);
+        }
+        if (check_val != packets[i].D2Check)
+        {
+          show_message(" CHECK ERROR ");
+          clear_gamekey_pressed(GKey_MISSN_RESTART);
+          in_network_game = 2;
+          StopCD();
+          test_missions(1);
+          init_level_3d(1);
+          restart_back_into_mission(ingame.CurrentMission);
+          in_network_game = 1;
+          return;
+        }
+    }
 }
 
 void player_chat_message_add_key(ushort a1, int a2)
@@ -926,6 +1265,19 @@ void process_packet(PlayerIdx plyr, struct Packet *p_pckt, ushort i)
         unkn_player_group_add(p_pckt->Data, plyr);
         result = PARes_DONE;
         break;
+    case PAct_THERMAL_TOGGLE:
+        p_thing = get_thing_safe(p_pckt->Data, TT_PERSON);
+        if (p_thing == INVALID_THING) {
+            result = PARes_EINVAL;
+            break;
+        }
+        if (person_slot_as_player_agent(p_thing, plyr) < 0) {
+            result = PARes_EBADSLT;
+            break;
+        }
+        player_thermal_toggle(plyr, p_thing);
+        result = PARes_DONE;
+        break;
     case PAct_CHAT_MESSAGE_KEY:
         player_chat_message_add_key(plyr, p_pckt->Data);
         result = PARes_DONE;
@@ -1014,6 +1366,38 @@ void process_packet(PlayerIdx plyr, struct Packet *p_pckt, ushort i)
         }
         person_self_destruct(p_thing);
         result = PARes_DONE;
+        break;
+    case PAct_CHEAT_AGENT_TELEPORT:
+        p_thing = get_thing_safe(p_pckt->Data, TT_PERSON);
+        if (p_thing == INVALID_THING) {
+            result = PARes_EINVAL;
+            break;
+        }
+        if (person_slot_as_player_agent(p_thing, plyr) < 0) {
+            result = PARes_EBADSLT;
+            break;
+        }
+        cheat_teleport_agent_to_gnd(p_thing, p_pckt->X, p_pckt->Z);
+        result = PARes_DONE;
+        break;
+    case PAct_CHEAT_ALL_AGENTS:
+        switch (p_pckt->Data)
+        {
+        case PCheatAA_RESURRECT_AND_WEPAPN:
+            resurrect_any_dead_agents(plyr);
+            give_all_weapons_to_all_agents(plyr);
+            player_agents_clear_weapon_delays(plyr);
+            result = PARes_DONE;
+            break;
+        case PCheatAA_BEEFUP_AND_MODS:
+            result = PARes_DONE;
+            give_best_mods_to_all_agents(plyr);
+            set_max_stats_to_all_agents(plyr);
+            break;
+        default:
+            result = PARes_EINVAL;
+            break;
+        }
         break;
     case PAct_NONE:
         result = PARes_DONE;

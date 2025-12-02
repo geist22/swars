@@ -294,7 +294,7 @@ void read_user_settings(void)
         assert(sizeof(locflags) == sizeof(ingame.UserFlags));
 
         if (LbFileLengthHandle(fh) > 126)
-            LbFileRead(fh, &fmtver, 4);
+            LbFileRead(fh, &fmtver, sizeof(u32));
         else
             fmtver = 0;
 
@@ -604,7 +604,7 @@ ubyte load_game(int slot, char *desc)
         return 1;
     LbFileRead(fh, desc, 25);
     LbFileRead(fh, &gblen, 4);
-    LbFileRead(fh, &fmtver, 4);
+    LbFileRead(fh, &fmtver, sizeof(u32));
     LbFileRead(fh, save_game_buffer, gblen);
     LbFileRead(fh, &decrypt_verify, 4);
     LbFileClose(fh);
@@ -717,7 +717,8 @@ ubyte load_game(int slot, char *desc)
     else
     {
         PlayerInfo *p_locplayer;
-        int agent, i;
+        int i;
+
         p_locplayer = &players[local_player_no];
 
         i = sizeof(PlayerInfo) - offsetof(PlayerInfo, FourPacks);
@@ -752,12 +753,7 @@ ubyte load_game(int slot, char *desc)
             p_locplayer->UserVZ[i] = 0;
         }
 
-        for (agent = 0; agent < 32; agent++)
-        {
-            for (i = 0; i < 4; i++) {
-                p_locplayer->WepDelays[i][agent] = 0;
-            }
-        }
+        player_agents_clear_weapon_delays(local_player_no);
     }
     players_sync_from_cryo();
 

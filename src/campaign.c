@@ -472,7 +472,7 @@ void read_missions_bin_file(int num)
 {
     TbFileHandle fh;
     char locstr[52];
-    ulong fmtver;
+    u32 fmtver;
     char *p_str;
     int i;
 
@@ -482,7 +482,7 @@ void read_missions_bin_file(int num)
     fh = LbFileOpen(locstr, Lb_FILE_MODE_READ_ONLY);
     if (fh != INVALID_FILE)
     {
-        LbFileRead(fh, &fmtver, sizeof(ulong));
+        LbFileRead(fh, &fmtver, sizeof(u32));
         LbFileRead(fh, &mission_strings_len, sizeof(ushort));
         LbFileRead(fh, p_str, mission_strings_len);
         LbFileRead(fh, &next_mission, sizeof(ushort));
@@ -1858,11 +1858,33 @@ TbBool mission_has_immediate_previous(ushort missi)
     return ((p_missi->Flags & MisF_ImmediatePrevious) != 0);
 }
 
+TbBool mission_has_fail_email_or_triggers(ushort missi)
+{
+    struct Mission *p_missi;
+    p_missi = &mission_list[missi];
+    if (p_missi->FailID != 0)
+        return true;
+    if ((p_missi->FailTrigger[0]|p_missi->FailTrigger[1]|p_missi->FailTrigger[2]) != 0)
+        return true;
+    return false;
+}
+
 TbBool mission_is_final_at_game_end(ushort missi)
 {
     struct Mission *p_missi;
     p_missi = &mission_list[missi];
     return ((p_missi->Flags & MisF_IsFinalMission) != 0);
+}
+
+void missions_clear_bank_tests(void)
+{
+    short missi;
+
+    for (missi = 1; missi < next_mission; missi++)
+    {
+        mission_list[missi].BankTest = 0;
+        mission_list[missi].BankTestFail = 0;
+    }
 }
 
 /******************************************************************************/

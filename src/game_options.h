@@ -65,6 +65,37 @@ enum GameOptions {
     GOpt_CDATrack,
     GOpt_DangerTrack,
     GOpt_UseMultiMedia,
+    GOpt_ScannerPulse,
+    GOpt_TranspObjSurfaceColr,
+    GOpt_TranspObjLineColr,
+};
+
+enum DisplayModes {
+  DpM_NONE = 0x0,
+  DpM_UNKN_1 = 0x1,
+  DpM_2 = 0x2,
+  DpM_31 = 0x31,
+  DpM_ENGINEPLY = 0x32,
+  DpM_UNKN_33 = 0x33,
+  DpM_34 = 0x34,
+  DpM_36 = 0x36,
+  DpM_PURPLEMNU = 0x37,
+  DpM_38 = 0x38,
+  DpM_39 = 0x39,
+  DpM_UNKN_3A = 0x3A,
+  DpM_UNKN_3B = 0x3B,
+};
+
+enum NetGamePlayFlags {
+  NGPF_NONE = 0x0,
+  NGPF_Unkn01 = 0x01,
+  NGPF_Unkn02 = 0x02,
+  NGPF_Unkn04 = 0x04,
+  NGPF_Unkn08 = 0x08,
+  NGPF_Unkn10 = 0x10,
+  NGPF_Unkn20 = 0x20,
+  NGPF_Unkn40 = 0x40,
+  NGPF_Unkn60 = 0x80,
 };
 
 struct InGame {
@@ -80,7 +111,7 @@ struct InGame {
     struct Scanner Scanner; // offset=0x0C
     long Credits; // offset=0x473 (on original Scanner struct)
     ulong fld_unkC4B;	// offset=0x477
-    short fld_unkC4F;
+    short MissionEndFade;
     short MissionStatus;
     long Flags;
     ushort fld_unkC57;
@@ -131,13 +162,21 @@ struct InGame {
 #pragma pack()
 /******************************************************************************/
 extern struct InGame ingame;
+extern ubyte net_game_play_flags;
 
 /******************************************************************************/
 
+/** Gives national text with description of the action.
+ */
 const char *game_option_desc(int option_no);
+
+/** Decrements value of the option, with wrapping.
+ */
 void game_option_dec(int option_no);
+
+/** Increments value of the option, with wrapping.
+ */
 void game_option_inc(int option_no);
-void game_option_toggle(int option_no);
 
 void set_default_gfx_settings(void);
 void set_default_visual_prefernces(void);

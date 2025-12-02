@@ -1,14 +1,14 @@
 /******************************************************************************/
 // Syndicate Wars Fan Expansion, source port of the classic game from Bullfrog.
 /******************************************************************************/
-/** @file game_speed.h
- *     Header file for game_speed.c.
+/** @file feappbar.h
+ *     Header file for feappbar.c.
  * @par Purpose:
- *     Control of the game speed.
+ *     Front-end desktop and menu system, application bar at the bottom.
  * @par Comment:
  *     Just a header file - #defines, typedefs, function prototypes etc.
  * @author   Tomasz Lis
- * @date     10 Feb 2024 - 02 May 2024
+ * @date     05 Apr 2024 - 22 Nov 2025
  * @par  Copying and copyrights:
  *     This program is free software; you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -16,39 +16,46 @@
  *     (at your option) any later version.
  */
 /******************************************************************************/
-#ifndef GAME_SPEED_H
-#define GAME_SPEED_H
+#ifndef FEAPPBAR_H
+#define FEAPPBAR_H
 
 #include "bftypes.h"
-#include "game_bstype.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 /******************************************************************************/
+#pragma pack(1)
+
+enum AppBarIcons {
+  ApBar_SYSTEM = 0,
+  ApBar_PANET,
+  ApBar_WORLDMAP,
+  ApBar_CRYO,
+  ApBar_EQUIP,
+  ApBar_RESEARCH,
+  ApBar_NEWMAIL,
+};
+
+#pragma pack()
+/******************************************************************************/
+extern struct ScreenBoxBase global_apps_bar_box;
 
 /******************************************************************************/
-extern ulong curr_tick_time;
-extern ulong prev_tick_time;
-extern GameTurn gameturn;
-extern GameTurn prev_gameturn;
-extern ulong turns_delta;
-extern ushort fifties_per_gameturn;
 
-/** Amount of frames per second drawn by the game, and also aount of game
- * turns per second. */
-extern ushort game_num_fps;
+TbBool is_purple_apps_selection_bar_visible(void);
+TbBool mouse_over_purple_apps_icon(short iconid);
+void show_purple_apps_selection_bar(void);
+TbBool input_purple_apps_selection_bar(void);
 
-/**
- * Handles game speed control inputs.
- * @return Returns true if packet was created, false otherwise.
+void init_global_app_bar_box(void);
+
+/** Reset players part of app bar state.
+ *
+ * Resets all parts of app bar at bottom which are set by the player
+ * or related to players game progress.
  */
-ubyte get_speed_control_inputs(void);
-
-void wait_next_gameturn(void);
-
-TbBool display_needs_redraw_this_turn(void);
-void update_tick_time(void);
+void reset_app_bar_player_state(void);
 
 /******************************************************************************/
 #ifdef __cplusplus

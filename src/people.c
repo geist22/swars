@@ -32,6 +32,7 @@
 #include "display.h"
 #include "drawtext.h"
 #include "enginsngobjs.h"
+#include "enginsngtxtr.h"
 #include "engintrns.h"
 #include "febrief.h"
 #include "game.h"
@@ -196,17 +197,6 @@ const ubyte follow_dist[4][4] = {
   { 3, 0, 6, 9 },
   { 3, 6, 0, 9 },
   { 3, 6, 9, 0 },
-};
-
-const struct Direction angle_direction[] = {
-    {   0,  256},
-    { 181,  181},
-    { 256,    0},
-    { 181, -181},
-    {   0, -256},
-    {-181, -181},
-    {-256,    0},
-    {-181,  181},
 };
 
 ubyte sfx_man_shot[] = {
@@ -3526,17 +3516,6 @@ void person_go_sleep(struct Thing *p_person)
     }
 }
 
-ubyte get_my_texture_bits(short tex)
-{
-#if 1
-    ubyte ret;
-    asm volatile (
-      "call ASM_get_my_texture_bits\n"
-        : "=r" (ret) : "a" (tex));
-    return ret;
-#endif
-}
-
 ubyte vector_in_way(struct Thing *p_thing, int dx, int dz)
 {
 #if 1
@@ -3604,24 +3583,27 @@ TbBool check_ground_unkn01(struct Thing *p_person, short sh_x, short sh_z)
 {
     struct MyMapElement *p_mapel;
     ushort tflags;
+    MapCoord cor_x, cor_z;
     short tile_x, tile_z;
     ushort txtr;
     TbBool tile_blocking;
 
-    tile_z = (p_person->Z + (sh_z << 8)) >> 16;
-    tile_x = (p_person->X + (sh_x << 8)) >> 16;
+    cor_x = PRCCOORD_TO_MAPCOORD(p_person->X) + sh_x;
+    cor_z = PRCCOORD_TO_MAPCOORD(p_person->Z) + sh_z;
+    tile_x = MAPCOORD_TO_TILE(cor_x);
+    tile_z = MAPCOORD_TO_TILE(cor_z);
 
     tile_blocking = compute_map_tile_is_blocking_walk(tile_x, tile_z);
 
-    p_mapel = &game_my_big_map[MAP_TILE_WIDTH * tile_z + tile_x];
-
-    txtr = p_mapel->Texture & 0x3FFF;
+    txtr = floor_texture_at_point(cor_x, cor_z);
     tflags = ((get_my_texture_bits(txtr) & 0xC0) >> 6) & 0x02;
 
     if ((tile_x < 0) || (tile_x >= MAP_TILE_WIDTH) || (tile_z < 0) || (tile_z >= MAP_TILE_HEIGHT))
     {
       return true;
     }
+
+    p_mapel = &game_my_big_map[MAP_TILE_WIDTH * tile_z + tile_x];
 
     if (tile_blocking)
         tflags |= 0x04;
@@ -4391,14 +4373,48 @@ void person_go_plant_mine(struct Thing *p_person)
     person_goto_point(p_person);
     if (p_person->State == PerSt_NONE)
     {
-        person_init_drop(p_person, p_person->U.UPerson.CurrentWeapon);
+        WeaponType wtype;
+
+        wtype = p_person->U.UPerson.CurrentWeapon;
+        if (weapon_is_for_planting(wtype)) {
+            person_init_drop(p_person, wtype);
+        } else {
+            LOGWARN("Weapon %s is not desgined for planting",
+              weapon_codename(wtype));
+        }
     }
 }
 
 void process_knocked_out(struct Thing *p_person)
 {
+#if 0
     asm volatile ("call ASM_process_knocked_out\n"
         : : "a" (p_person));
+#endif
+    ushort nxframe;
+
+    p_person->Timer1 -= fifties_per_gameturn;
+    if (p_person->Timer1 < 0)
+    {
+        nxframe = frame[p_person->Frame].Next;
+        if ((frame[nxframe].Flags & 0x01) != 0) {
+            p_person->Timer1 = 0;
+        } else {
+            p_person->Timer1 = p_person->StartTimer1;
+            p_person->Frame = nxframe;
+        }
+    }
+
+    p_person->U.UPerson.BumpCount--;
+    if (p_person->U.UPerson.BumpCount == 0)
+    {
+        p_person->U.UPerson.AnimMode = p_person->U.UPerson.OldAnimMode;
+        reset_person_frame(p_person);
+
+        p_person->Flag2 &= ~TgF2_KnockedOut;
+        p_person->Timer1 = 48;
+        p_person->Flag &= ~TngF_Unkn01000000;
+    }
 }
 
 void process_tasered_person(struct Thing *p_person)
@@ -5352,7 +5368,7 @@ void person_burning(struct Thing *p_person)
             smpl_no = 1;
             break;
         }
-        play_dist_speech(p_person, smpl_no, 0x7Fu, 0x40u, 100, 0, 2);
+        play_dist_speech(p_person, smpl_no, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 2);
     }
 
     if (p_person->U.UPerson.RecoilTimer > 95)

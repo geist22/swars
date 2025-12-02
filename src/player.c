@@ -196,21 +196,55 @@ short player_agent_current_or_prev_weapon(PlayerIdx plyr, ushort plagent)
     return curwep;
 }
 
-short player_agent_weapon_delay(PlayerIdx plyr, ushort plagent, ubyte weapon)
+short player_agent_weapon_delay(PlayerIdx plyr, ushort plagent, WeaponType wtype)
 {
     PlayerInfo *p_player;
 
     p_player = &players[plyr];
-    return p_player->WepDelays[plagent][weapon];
+    return p_player->WepDelays[plagent][wtype];
 }
 
+void player_agent_set_weapon_delay(PlayerIdx plyr, ushort plagent, WeaponType wtype, short delay_turns)
+{
+    PlayerInfo *p_player;
 
-TbBool player_agent_has_weapon(PlayerIdx plyr, ushort plagent, ubyte weapon)
+    if (delay_turns < 0)
+        delay_turns = 0;
+    else if (delay_turns > 255)
+        delay_turns = 255;
+
+    p_player = &players[plyr];
+    p_player->WepDelays[plagent][wtype] = delay_turns;
+}
+
+void player_agent_clear_weapon_delays(PlayerIdx plyr, ushort plagent)
+{
+    PlayerInfo *p_player;
+    WeaponType wtype;
+
+    p_player = &players[plyr];
+    for (wtype = WEP_NULL; wtype < WEP_TYPES_COUNT; wtype++)
+    {
+        p_player->WepDelays[plagent][wtype] = 0;
+    }
+}
+
+void player_agents_clear_weapon_delays(PlayerIdx plyr)
+{
+    ushort plagent;
+
+    for (plagent = 0; plagent < playable_agents; plagent++)
+    {
+        player_agent_clear_weapon_delays(plyr, plagent);
+    }
+}
+
+TbBool player_agent_has_weapon(PlayerIdx plyr, ushort plagent, WeaponType wtype)
 {
     PlayerInfo *p_player;
 
     p_player = &players[plyr];
-    return weapons_has_weapon(p_player->Weapons[plagent], weapon);
+    return weapons_has_weapon(p_player->Weapons[plagent], wtype);
 }
 
 TbBool player_agent_is_alive(PlayerIdx plyr, ushort plagent)
