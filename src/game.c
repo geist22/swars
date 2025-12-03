@@ -5604,8 +5604,7 @@ ubyte do_user_interface(void)
 				did_inp |= GINPUT_PACKET;
 				return did_inp;
             }
-			else if (lbShift & KMod_SHIFT)
-			{
+			else if (lbShift & KMod_SHIFT) {
 				clear_gamekey_pressed(gkey);
 				if (person_carries_any_medikit(p_agent->ThingOffset)) {
 					my_build_packet(&packets[local_player_no], PAct_AGENT_USE_MEDIKIT, p_agent->ThingOffset, 0, 0, 0);
