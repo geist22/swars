@@ -5585,19 +5585,19 @@ ubyte do_user_interface(void)
                     // Double tapping - center view on the agent
                     if (gameturn - last_sel_agent_turn[n] < 7)
                     {
-                      struct Packet *p_pckt;
+                        struct Packet *p_pckt;
 
-                      p_pckt = &packets[local_player_no];
+                        p_pckt = &packets[local_player_no];
 
-                      game_set_cam_track_thing_xz(p_agent->ThingOffset);
-                      engn_yc = PRCCOORD_TO_MAPCOORD(p_agent->Y);
-                      dcthing = p_locplayer->DirectControl[mouser];
-                      build_packet(p_pckt, PAct_SELECT_AGENT, dcthing, p_agent->ThingOffset, 0, 0);
-                      if (p_agent->ThingOffset == (short)p_locplayer->DirectControl[mouser])
-                      {
-                          engn_xc = PRCCOORD_TO_MAPCOORD(p_agent->X);
-                          engn_zc = PRCCOORD_TO_MAPCOORD(p_agent->Z);
-                      }
+                        game_set_cam_track_thing_xz(p_agent->ThingOffset);
+                        engn_yc = PRCCOORD_TO_MAPCOORD(p_agent->Y);
+                        dcthing = p_locplayer->DirectControl[mouser];
+                        build_packet(p_pckt, PAct_SELECT_AGENT, dcthing, p_agent->ThingOffset, 0, 0);
+                        if (p_agent->ThingOffset == (short)p_locplayer->DirectControl[mouser])
+                        {
+                            engn_xc = PRCCOORD_TO_MAPCOORD(p_agent->X);
+                            engn_zc = PRCCOORD_TO_MAPCOORD(p_agent->Z);
+                        }
                     }
                     last_sel_agent_turn[n] = gameturn;
                 }
