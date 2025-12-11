@@ -20,6 +20,7 @@
 
 #include "bfconfig.h"
 #include "bfutility.h"
+#include "bfmemut.h"
 #include "bfscreen.h"
 #include "bfsprite.h"
 #include "bftext.h"
@@ -417,6 +418,7 @@ short get_text_box_lines_visible(struct ScreenTextBox *p_box)
 
 TbBool flashy_draw_text(int x, int y, const char *text, ubyte speed, int top_line, short *textpos, int cyan_flag)
 {
+#if 0
     TbBool ret;
     asm volatile (
       "push %7\n"
@@ -425,6 +427,71 @@ TbBool flashy_draw_text(int x, int y, const char *text, ubyte speed, int top_lin
       "call ASM_flashy_draw_text\n"
         : "=r" (ret) : "a" (x), "d" (y), "b" (text), "c" (speed), "g" (top_line), "g" (textpos), "g" (cyan_flag));
     return ret;
+#endif
+    char *gtext;
+    int text_tot_len, chunk_end;
+    int i, pos;
+    sbyte chunk_no;
+
+    if (text == NULL) {
+        return 1;
+    }
+    text_tot_len = strlen(text);
+    pos = *textpos;
+    if (pos >= text_tot_len) {
+        draw_text_purple_list2(x, y, text, top_line);
+        return 1;
+    }
+    gtext = (char *)back_buffer + text_buf_pos;
+    if (pos > 0)
+        LbMemoryCopy(gtext, text, pos);
+    if (pos <= 0)
+        pos = 0;
+    if (cyan_flag)
+    {
+        chunk_no = 12;
+        gtext[pos] = 27;
+        pos += 1;
+        for (i = 0; i < 4; i++)
+        {
+            chunk_end = i + *textpos;
+            if ((chunk_end >= 0) && (chunk_end < text_tot_len))
+            {
+              gtext[pos + 0] = 14;
+              gtext[pos + 1] = chunk_no;
+              gtext[pos + 2] = text[i + *textpos];
+              pos += 3;
+            }
+            ++chunk_no;
+        }
+    }
+    else
+    {
+        chunk_no = 6;
+        gtext[pos] = 27;
+        pos += 1;
+        for (i = 0; i < 6; i++)
+        {
+            chunk_end = i + *textpos;
+            if ((chunk_end >= 0) && (chunk_end < text_tot_len))
+            {
+              gtext[pos + 0] = 14;
+              gtext[pos + 1] = chunk_no;
+              gtext[pos + 2] = text[i + *textpos];
+              pos += 3;
+            }
+            ++chunk_no;
+        }
+    }
+    gtext[pos + 0] = 28;
+    gtext[pos + 1] = 0;
+    pos += 2;
+    text_buf_pos += pos;
+
+    *textpos += speed;
+    draw_text_purple_list2(x, y, gtext, top_line);
+    play_sample_using_heap(0, 114, 127, 64, 100, 0, 3);
+    return 0;
 }
 
 ubyte flashy_draw_purple_text_box_text(struct ScreenTextBox *p_box)
