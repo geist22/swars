@@ -121,6 +121,7 @@ void draw_text_purple_list2(int x, int y, const char *text, ushort line)
     asm volatile (
       "call ASM_draw_text_purple_list2\n"
         : : "a" (x), "d" (y), "b" (text), "c" (line));
+    return;
 #endif
     struct PurpleDrawItem *pditem;
 
