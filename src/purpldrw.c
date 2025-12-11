@@ -117,9 +117,28 @@ void draw_box_purple_list(int x, int y, ulong width, ulong height, int colour)
 
 void draw_text_purple_list2(int x, int y, const char *text, ushort line)
 {
+#if 0
     asm volatile (
       "call ASM_draw_text_purple_list2\n"
         : : "a" (x), "d" (y), "b" (text), "c" (line));
+#endif
+    struct PurpleDrawItem *pditem;
+
+    pditem = &purple_draw_list[purple_draw_index];
+    purple_draw_index++;
+
+    pditem->U.Text.X = x;
+    pditem->U.Text.Y = y;
+    pditem->U.Text.WindowX = text_window_x1;
+    pditem->U.Text.WindowY = text_window_y1;
+    pditem->U.Text.Width = text_window_x2 - text_window_x1 + 1;
+    pditem->U.Text.Height = text_window_y2 - text_window_y1 + 1;
+    pditem->U.Text.Text = text;
+    pditem->U.Text.Line = line;
+    pditem->U.Text.Colour = lbDisplay.DrawColour;
+    pditem->U.Text.Font = lbFontPtr;
+    pditem->Flags = lbDisplay.DrawFlags;
+    pditem->Type = PuDT_TEXT;
 }
 
 void draw_sprite_purple_list(int x, int y, const struct TbSprite *p_sprite)
