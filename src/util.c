@@ -69,7 +69,7 @@ ubyte fontCharToUpper[] = {
 
 ubyte fontchrtoupper(ubyte ch)
 {
-#if 1
+#if 0
     // TODO this should be just a simple conversion array, not such convoluted code
     if (ch <= 127)
     {
