@@ -119,7 +119,6 @@ ushort my_draw_text(short x, short y, const char *text, ushort startline)
   int v74;
   char v83;
   int v84;
-  int v85;
   char v88;
   int v89;
   int v90;
@@ -598,145 +597,115 @@ LABEL_382:
       }
     }
   }
-  if ( (ushort)v100 >= startline )
-  {
-    if (v97_hw < text_window_y1)
-        return v100 + 1;
 
-    if ((lbDisplay.DrawFlags & 0x0080) != 0)
+    if ( (ushort)v100 >= startline )
     {
-        v73 = v99 - v90;
-        v008 += v73;
+      if (v97_hw < text_window_y1)
+          return v100 + 1;
+
+      if ((lbDisplay.DrawFlags & 0x0080) != 0)
+      {
+          v73 = v99 - v90;
+          v008 += v73;
+      }
+      else if ((lbDisplay.DrawFlags & 0x0100) != 0)
+      {
+          v73 = (v99 - (ushort)v90) >> 1;
+          v008 += v73;
+      }
+      v74 = v96;
+      for (v74 = v96; v74 < v89 - 1; v74++)
+      {
+          v83 = text[v74];
+          if ((ubyte)v83 == 0x01)
+          {
+              if ((lbDisplay.DrawFlags & 0x0004) != 0) {
+                  lbDisplay.DrawFlags &= ~0x0004;
+              } else {
+                  lbDisplay.DrawFlags |= 0x0004;
+              }
+          }
+          else if (v83 == 0x0C)
+          {
+              if ((lbDisplay.DrawFlags & 0x0040) != 0) {
+                  lbDisplay.DrawFlags &= ~0x0040;
+              } else {
+                  lbDisplay.DrawFlags |= 0x0040;
+              }
+          }
+          else if ((ubyte)v83 == 0x0E)
+          {
+              lbDisplay.DrawColour = text_colours[text[++v74] - 1];
+          }
+          else if ((ubyte)v83 == 0x1B)
+          {
+              lbDisplay.DrawFlags |= 0x0040;
+          }
+          else if ((ubyte)v83 == 0x1C)
+          {
+              lbDisplay.DrawFlags &= ~0x0040;
+          }
+          else if ((ubyte)v83 == 0x1E)
+          {
+              lbDisplay.DrawFlags &= ~0x0004;
+          }
+          else if ((ubyte)v83 > 0x1F)
+          {
+              v101 = text[v74];
+              if ((lbFontPtr != small_med_font) || (language_3str[0] != 'e')) {
+                  v101 = fontchrtoupper(v101);
+              }
+              v017 = my_font_to_yshift(lbFontPtr, v101);
+              if ((lbDisplay.DrawFlags & 0x0040) != 0) {
+                  LbSpriteDrawOneColour(v008, v97_hw - v017,
+                    &lbFontPtr[v101 - 31], lbDisplay.DrawColour);
+              } else {
+                  LbSpriteDraw(v008, v97_hw - v017, &lbFontPtr[v101 - 31]);
+              }
+              v008 += LbTextCharWidth(v101);
+          }
+      }
+      return v100 + 1;
     }
-    else if ((lbDisplay.DrawFlags & 0x0100) != 0)
+
+    for (v84 = v96; v84 < v009 - 1; v84++)
     {
-        v73 = (v99 - (ushort)v90) >> 1;
-        v008 += v73;
-    }
-    v74 = v96;
-    for (v74 = v96; v74 < v89 - 1; v74++)
-    {
-        v83 = text[v74];
-        if ((ubyte)v83 == 0x01)
+        v88 = text[v84];
+        if ((ubyte)v88 == 0x01)
         {
-            if ((lbDisplay.DrawFlags & 0x0004) != 0) {
-                lbDisplay.DrawFlags &= ~0x0004;
-            } else {
+            if ((lbDisplay.DrawFlags & 0x0004) == 0) {
                 lbDisplay.DrawFlags |= 0x0004;
-            }
-        }
-        else if (v83 == 0x0C)
-        {
-            if ((lbDisplay.DrawFlags & 0x0040) != 0) {
-                lbDisplay.DrawFlags &= ~0x0040;
             } else {
-                lbDisplay.DrawFlags |= 0x0040;
+                lbDisplay.DrawFlags &= ~0x0004;
             }
         }
-        else if ((ubyte)v83 == 0x0E)
+        else if ((ubyte)v88 == 0x0C)
         {
-            lbDisplay.DrawColour = text_colours[text[++v74] - 1];
+            if ((lbDisplay.DrawFlags & 0x0040) == 0) {
+                lbDisplay.DrawFlags |= 0x0040;
+            } else {
+                lbDisplay.DrawFlags &= ~0x0040;
+            }
         }
-        else if ((ubyte)v83 == 0x1B)
+        else if ((ubyte)v88 == 0x0E)
+        {
+            v84++;
+            lbDisplay.DrawColour = text_colours[text[v84] - 1];
+        }
+        else if (v88 == 0x1B)
         {
             lbDisplay.DrawFlags |= 0x0040;
         }
-        else if ((ubyte)v83 == 0x1C)
+        else if ((ubyte)v88 == 0x1C)
         {
             lbDisplay.DrawFlags &= ~0x0040;
         }
-        else if ((ubyte)v83 == 0x1E)
+        else if ((ubyte)v88 == 0x1E)
         {
             lbDisplay.DrawFlags &= ~0x0004;
         }
-        else if ((ubyte)v83 > 0x1F)
-        {
-            v101 = text[v74];
-            if ((lbFontPtr != small_med_font) || (language_3str[0] != 'e')) {
-                v101 = fontchrtoupper(v101);
-            }
-            v017 = my_font_to_yshift(lbFontPtr, v101);
-            if ((lbDisplay.DrawFlags & 0x0040) != 0) {
-                LbSpriteDrawOneColour(v008, v97_hw - v017,
-                  &lbFontPtr[v101 - 31], lbDisplay.DrawColour);
-            } else {
-                LbSpriteDraw(v008, v97_hw - v017, &lbFontPtr[v101 - 31]);
-            }
-            v008 += LbTextCharWidth(v101);
-        }
     }
-    return v100 + 1;
-  }
-  v84 = v96;
-  v85 = v009 - 1;
-  if ( v96 >= v009 - 1 )
     return v100;
-  while ( 1 )
-  {
-LABEL_476:
-    while ( 1 )
-    {
-      v88 = text[v84];
-      if ((ubyte)v88 < 0x0E)
-        break;
-      if ((ubyte)v88 == 0x0E)
-      {
-          lbDisplay.DrawColour = text_colours[text[v84 + 1] - 1];
-          v84 += 2;
-          if (v84 >= v85)
-            return v100;
-      }
-      else if ((ubyte)v88 < 0x1C)
-      {
-        if (v88 == 0x1B) {
-          goto LABEL_467;
-        }
-        if (++v84 >= v85) {
-          return v100;
-        }
-      }
-      else
-      {
-        if ((ubyte)v88 <= 0x1C)
-          goto LABEL_466;
-        if ( v88 == 30 )
-        {
-LABEL_470:
-          lbDisplay.DrawFlags &= ~0x0004;
-          if ( ++v84 >= v85 )
-            return v100;
-          continue;
-        }
-        if ( ++v84 >= v85 )
-          return v100;
-      }
-    }
-    if (v88 == 0)
-      goto LABEL_489;
-    if ( (ubyte)v88 > 1u )
-      break;
-    if ((lbDisplay.DrawFlags & 0x0004) != 0)
-      goto LABEL_470;
-    lbDisplay.DrawFlags |= 0x0004;
-    if ( ++v84 >= v85 )
-      return v100;
-  }
-  if ( v88 != 12 )
-    goto LABEL_489;
-  if ((lbDisplay.DrawFlags & 0x0040) == 0)
-  {
-LABEL_467:
-    lbDisplay.DrawFlags |= 0x0040;
-    if ( ++v84 >= v85 )
-      return v100;
-    goto LABEL_476;
-  }
-LABEL_466:
-  lbDisplay.DrawFlags &= ~0x0040;
-LABEL_489:
-  if ( ++v84 < v85 )
-    goto LABEL_476;
-  return v100;
 }
 
 /******************************************************************************/
