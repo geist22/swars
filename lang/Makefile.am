@@ -232,8 +232,7 @@ langallpol_POFILES_P = \
 	alltext_comm_pol.po
 
 langallpoldir = $(prefix)/$(PACKAGE)/language/pol
-langallpol_DATA = $(langallpol_DATFILES_C)
-# files not created yet for polish: $(langallpol_WADFILES_S) $(langallpol_WADFILES_Z) $(langallpol_WADFILES_P)
+langallpol_DATA = $(langallpol_DATFILES_C) $(langallpol_WADFILES_S) $(langallpol_WADFILES_Z) $(langallpol_WADFILES_P)
 
 $(langallpol_DATFILES_C): $(langallpol_POFILES_C)
 	$(MKDIR_P) "$(@D)"

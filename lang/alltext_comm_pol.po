@@ -1,6 +1,6 @@
 #  Syndicate Wars Fan Expansion, source port of the classic game from Bullfrog.
 # *****************************************************************************
-#   @file alltext_comm_eng.pot
+#   @file alltext_comm_pol.po
 #      Menu text for SyndWarsFX translation file
 #  @par Purpose:
 #      Contains translation of the national text in the game.
