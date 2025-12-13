@@ -57,7 +57,7 @@ int font_word_length(const char *text)
     return len;
 }
 
-int my_font_to_yshift(const struct TbSprite *p_font, char chr)
+static int my_font_to_yshift(const struct TbSprite *p_font, char chr)
 {
     if ((p_font == small_font) || (p_font == small2_font))
     {
@@ -85,7 +85,7 @@ int my_font_to_yshift(const struct TbSprite *p_font, char chr)
 
 /** Parse control char from given string, return num bytes recognized.
  */
-ubyte my_draw_apply_control_char(const char *ctext)
+static ubyte my_draw_apply_control_char(const char *ctext)
 {
     ubyte cc;
 
@@ -221,62 +221,47 @@ ushort my_draw_text(short x, short y, const char *text, ushort startline)
     return ret;
 #endif
     int beg_x, scr_x;
-    int v009;
-    ubyte NewChar;
-    int v29;
-    const char *v32;
-    int v33;
-    const char *v35;
-    int v36;
-    int v89;
-    int v90;
-    short v91;
-    short v92;
-    ushort v93;
-    ushort v95;
-    ushort v96;
+    ubyte uch;
+    int ck_end;
+    int ck_width, cur_ck_width;
+    ushort fin_ck_width;
+    ushort ck_beg, pv_ck_end;
     short scr_y;
-    int v98;
     ushort wndw_width;
     int cur_line;
 
-    v89 = 0;
+    ck_end = 0;
     cur_line = 0;
-    v98 = 0;
-    v90 = 0;
+    ck_width = 0;
+    cur_ck_width = 0;
     if (text == NULL)
         return 0;
-    v95 = 0;
+    pv_ck_end = 0;
     beg_x = text_window_x1 + x;
-    v96 = 0;
     scr_x = beg_x;
     scr_y = text_window_y1 + y;
     wndw_width = text_window_x2 - scr_x;
+    ck_beg = 0;
 
     while ( 1 )
     {
-        v009 = v89 + 1;
-        NewChar = text[v89++];
-        if (NewChar == '\0')
+        uch = text[ck_end++];
+        if (uch == '\0')
             break;
         if ((lbFontPtr != small_med_font) || (language_3str[0] != 'e')) {
-            NewChar = fontchrtoupper(NewChar);
+            uch = fontchrtoupper(uch);
         }
 
-        if (NewChar == 1)
-        {
-            goto LABEL_144;
-        }
-        else if (NewChar == 0x0A)
+        if (uch == 0x0A)
         {
             if (cur_line < startline)
             {
-                my_skip_chunk(scr_x, scr_y, wndw_width - v90, text, v96, v89 - 1);
+                my_skip_chunk(scr_x, scr_y, wndw_width - cur_ck_width, text, ck_beg, ck_end - 1);
             }
             else
             {
                 if (scr_y >= text_window_y1) {
-                    scr_x += my_draw_chunk(scr_x, scr_y, wndw_width - v90, text, v96, v89 - 1);
+                    scr_x += my_draw_chunk(scr_x, scr_y, wndw_width - cur_ck_width, text, ck_beg, ck_end - 1);
                 }
                 scr_y += font_height('A') + byte_197160;
                 if (scr_y + font_height('A') > text_window_y2)
@@ -284,88 +269,65 @@ ushort my_draw_text(short x, short y, const char *text, ushort startline)
             }
 
             scr_x = beg_x;
-            if ( text[v89] )
+            if (text[ck_end] != '\0')
                   ++cur_line;
-            v96 = v89;
-            v95 = v89;
-            v90 = 0;
-            goto LABEL_144;
+            ck_beg = ck_end;
+            pv_ck_end = ck_end;
+            cur_ck_width = 0;
         }
-        else if (NewChar == 0x0C)
+        else if (uch == 0x0E)
         {
-            goto LABEL_144;
+            ck_end++;
         }
-        else if (NewChar == 0x0E)
+        if (uch > 0x1F)
         {
-            v89++;
-            goto LABEL_144;
-        }
-        else if ((NewChar >= 0x1B) && (NewChar <= 0x1C))
-        {
-            goto LABEL_144;
-        }
-        else if (NewChar == 0x2D)
-        {
-            v95 = v89;
-            v29 = v90 + LbTextCharWidth(NewChar);
-            v98 = v29;
-        }
-        else if (NewChar == 0x20)
-        {
-            v95 = v89;
-            v29 = v90;
-            v98 = v29;
-        }
-        else if (NewChar == 0x1E)
-        {
-          goto LABEL_144;
-        }
-        else
-        {
-          goto LABEL_131;
+            if (uch == '-')
+            {
+                pv_ck_end = ck_end;
+                ck_width = cur_ck_width + LbTextCharWidth(uch);
+            }
+            else if (uch == ' ')
+            {
+                pv_ck_end = ck_end;
+                ck_width = cur_ck_width;
+            }
+            cur_ck_width += LbTextCharWidth(uch);
         }
 
-LABEL_131:
-        if ( NewChar > 0x1Fu )
+        if ((ushort)cur_ck_width > wndw_width)
         {
-            v90 += LbTextCharWidth(NewChar);
-        }
-
-LABEL_144:
-        if ( (ushort)v90 > wndw_width )
-        {
-          if ( v95 == v96 )
+          if (pv_ck_end == ck_beg)
           {
-            if ( text[v89] )
-            {
-              v90 -= LbTextCharWidth(text[v89]);
+            uch = text[ck_end];
+            if (uch != '\0') {
+                cur_ck_width -= LbTextCharWidth(uch);
             }
-            v32 = &text[v89];
-            do
-            {
-              v33 = *--v32;
-              --v89;
-            }
-            while ( v33 < 32 );
-            v91 = v90 - LbTextCharWidth(*v32);
-            v35 = &text[v89];
-            do
-            {
-              v36 = *--v35;
-              --v89;
-            }
-            while ( v36 < 32 );
-            v92 = v91 - LbTextCharWidth(*v35);
-            v93 = v92 + LbTextCharWidth('-');
+
+            // go back with ck_end to the previous non-control char
+            do {
+                ck_end--;
+            } while ((ubyte)text[ck_end] <= 0x1F);
+
+            uch = text[ck_end];
+            fin_ck_width = cur_ck_width - LbTextCharWidth(uch);
+
+            // go back with ck_end to the previous non-control char again
+            do {
+                ck_end--;
+            } while ((ubyte)text[ck_end] <= 0x1F);
+
+            uch = text[ck_end];
+            fin_ck_width = fin_ck_width - LbTextCharWidth(uch);
+            fin_ck_width = fin_ck_width + LbTextCharWidth('-');
 
             if (startline > cur_line)
             {
-                my_skip_chunk(scr_x, scr_y, wndw_width - v93, text, v96, v89 - 1);
+                my_skip_chunk(scr_x, scr_y, wndw_width - fin_ck_width, text, ck_beg, ck_end - 1);
             }
             else
             {
                 if (scr_y < text_window_y1) {
-                    scr_x += my_draw_chunk(scr_x, scr_y, wndw_width - v93, text, v96, v89);
+                    scr_x += my_draw_chunk(scr_x, scr_y, wndw_width - fin_ck_width, text, ck_beg, ck_end);
                     scr_x += my_draw_one_char(scr_x, scr_y, '-');
                 }
                 scr_y += font_height('A') + byte_197160;
@@ -373,23 +335,20 @@ LABEL_144:
                     return cur_line;
             }
 
-            scr_x = beg_x;
-            v95 = v89;
-            v96 = v89;
-            v98 = 0;
-            v90 = 0;
-            ++cur_line;
+            pv_ck_end = ck_end;
+            ck_width = 0;
+            cur_ck_width = 0;
           }
           else
           {
             if (cur_line < startline)
             {
-                my_skip_chunk(scr_x, scr_y, wndw_width - v98, text, v96, v89 - 1);
+                my_skip_chunk(scr_x, scr_y, wndw_width - ck_width, text, ck_beg, ck_end - 1);
             }
             else
             {
                 if (scr_y >= text_window_y1) {
-                    scr_x += my_draw_chunk(scr_x, scr_y, wndw_width - v98, text, v96, v95);
+                    scr_x += my_draw_chunk(scr_x, scr_y, wndw_width - ck_width, text, ck_beg, pv_ck_end);
                 }
                 scr_y += font_height('A') + byte_197160;
                 if (scr_y + font_height('A') > text_window_y2)
@@ -397,26 +356,25 @@ LABEL_144:
             }
 
 
-            v96 = v95;
-            ++cur_line;
-            v90 -= v98;
-            if ( text[v95 - 1] == 32 )
-            {
-              v90 = (ushort)v90 - LbTextCharWidth(32);
+            cur_ck_width -= ck_width;
+            if (text[pv_ck_end - 1] == ' ') {
+              cur_ck_width -= LbTextCharWidth(' ');
             }
-            scr_x = beg_x;
           }
+          scr_x = beg_x;
+          ck_beg = pv_ck_end;
+          cur_line++;
         }
     }
 
     if (cur_line < startline)
     {
-        my_draw_chunk(scr_x, scr_y, wndw_width - v90, text, v96, v009 - 1);
+        my_draw_chunk(scr_x, scr_y, wndw_width - cur_ck_width, text, ck_beg, ck_end - 1);
     }
     else
     {
         if (scr_y >= text_window_y1) {
-            scr_x += my_draw_chunk(scr_x, scr_y, wndw_width - v90, text, v96, v89 - 1);
+            scr_x += my_draw_chunk(scr_x, scr_y, wndw_width - cur_ck_width, text, ck_beg, ck_end - 1);
         }
         cur_line += 1;
     }
