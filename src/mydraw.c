@@ -117,8 +117,6 @@ ushort my_draw_text(short x, short y, const char *text, ushort startline)
   char v71;
   int v73;
   int v74;
-  ubyte v78;
-  ubyte v79;
   char v83;
   int v84;
   int v85;
@@ -174,7 +172,7 @@ ushort my_draw_text(short x, short y, const char *text, ushort startline)
         if ( (ushort)v100 >= startline )
         {
             if ( v97_hw < text_window_y1 )
-              goto LABEL_33;
+                goto LABEL_33;
             if ((lbDisplay.DrawFlags & 0x0080) != 0) {
                 v008 = v99 - v90 + v008;
             } else if ((lbDisplay.DrawFlags & 0x0100) != 0) {
@@ -191,7 +189,6 @@ ushort my_draw_text(short x, short y, const char *text, ushort startline)
                     } else {
                         lbDisplay.DrawFlags |= 0x0004;
                     }
-                    goto LABEL_80;
                 }
                 else if ((ubyte)v22 == 0x0C)
                 {
@@ -200,33 +197,26 @@ ushort my_draw_text(short x, short y, const char *text, ushort startline)
                     } else {
                         lbDisplay.DrawFlags |= 0x0040;
                     }
-                    goto LABEL_80;
                 }
                 else if ((ubyte)v22 == 0x0E)
                 {
                     lbDisplay.DrawColour = text_colours[text[++v013] - 1];
-                    goto LABEL_80;
                 }
                 else if ((ubyte)v22 == 0x1B)
                 {
                     lbDisplay.DrawFlags |= 0x0040;
-                    goto LABEL_80;
                 }
                 else if ((ubyte)v22 == 0x1C)
                 {
                     lbDisplay.DrawFlags &= 0x0040;
-                    goto LABEL_80;
                 }
                 else if ((ubyte)v22 == 0x1E)
                 {
                     lbDisplay.DrawFlags &= ~0x0004;
-                    goto LABEL_80;
                 }
-                else
+                else if ((ubyte)v22 > 0x1F)
                 {
                     v104 = text[v013];
-                    if ( v104 <= 0x1Fu )
-                        goto LABEL_80;
                     if ((lbFontPtr != small_med_font) || (language_3str[0] != 'e')) {
                         v104 = fontchrtoupper(v104);
                     }
@@ -238,10 +228,7 @@ ushort my_draw_text(short x, short y, const char *text, ushort startline)
                         LbSpriteDraw(v008, v97_hw - v017, &lbFontPtr[v104 - 31]);
                     }
                     v008 += LbTextCharWidth(v104);
-                    goto LABEL_80;
                 }
-LABEL_80:
-                ;
             }
 
 LABEL_33:
@@ -421,57 +408,53 @@ LABEL_144:
                 } else {
                     lbDisplay.DrawFlags &= ~0x0004;
                 }
-                continue;
             }
-            if ((ubyte)v50 == 0x0C)
+            else if ((ubyte)v50 == 0x0C)
             {
                 if ((lbDisplay.DrawFlags & 0x0040) == 0) {
                     lbDisplay.DrawFlags |= 0x0040;
                 } else {
                     lbDisplay.DrawFlags &= ~0x0040;
                 }
-                continue;
             }
-            if ((ubyte)v50 == 0x0E) {
-                lbDisplay.DrawColour = text_colours[text[++k] - 1];
-                continue;
-            }
-            if ((ubyte)v50 == 0x1B) {
-                lbDisplay.DrawFlags |= 0x0040;
-                continue;
-            }
-            if ((ubyte)v50 == 0x1C) {
-                lbDisplay.DrawFlags &= ~0x0040;
-                continue;
-            }
-            if ((ubyte)v50 == 0x1E) {
-                lbDisplay.DrawFlags &= ~0x0004;
-                continue;
-            }
-
-            v102 = text[k];
-            if (v102 > 0x1F)
+            else if ((ubyte)v50 == 0x0E)
             {
-              if ((lbFontPtr != small_med_font) || (language_3str[0] != 'e')) {
-                  v102 = fontchrtoupper(v102);
-              }
-              v017 = my_font_to_yshift(lbFontPtr, v102);
-              if ((lbDisplay.DrawFlags & 0x0040) != 0) {
-                  LbSpriteDrawOneColour(v008, v97_hw - v017,
-                    &lbFontPtr[v102 - 31], lbDisplay.DrawColour);
-              } else {
-                  LbSpriteDraw(v008, v97_hw - v017, &lbFontPtr[v102 - 31]);
-              }
-              v008 += LbTextCharWidth(v102);
-              continue;
+                lbDisplay.DrawColour = text_colours[text[++k] - 1];
+            }
+            else if ((ubyte)v50 == 0x1B)
+            {
+                lbDisplay.DrawFlags |= 0x0040;
+            }
+            else if ((ubyte)v50 == 0x1C)
+            {
+                lbDisplay.DrawFlags &= ~0x0040;
+            }
+            else if ((ubyte)v50 == 0x1E)
+            {
+                lbDisplay.DrawFlags &= ~0x0004;
+            }
+            else if ((ubyte)v50 > 0x1F)
+            {
+                v102 = text[k];
+                if ((lbFontPtr != small_med_font) || (language_3str[0] != 'e')) {
+                    v102 = fontchrtoupper(v102);
+                }
+                v017 = my_font_to_yshift(lbFontPtr, v102);
+                if ((lbDisplay.DrawFlags & 0x0040) != 0) {
+                    LbSpriteDrawOneColour(v008, v97_hw - v017,
+                      &lbFontPtr[v102 - 31], lbDisplay.DrawColour);
+                } else {
+                    LbSpriteDraw(v008, v97_hw - v017, &lbFontPtr[v102 - 31]);
+                }
+                v008 += LbTextCharWidth(v102);
             }
         }
         v017 = my_font_to_yshift(lbFontPtr, 31+14);
         if ((lbDisplay.DrawFlags & 0x0040) != 0) {
-              LbSpriteDrawOneColour(v008, v97_hw - v017,
-                &lbFontPtr[14], lbDisplay.DrawColour);
+            LbSpriteDrawOneColour(v008, v97_hw - v017,
+              &lbFontPtr[14], lbDisplay.DrawColour);
         } else {
-              LbSpriteDraw(v008, v97_hw - v017, &lbFontPtr[14]);
+            LbSpriteDraw(v008, v97_hw - v017, &lbFontPtr[14]);
         }
 LABEL_261:
         v97_hw += font_height(0x41u) + (ubyte)byte_197160;
@@ -571,14 +554,11 @@ LABEL_292:
                 {
                     lbDisplay.DrawFlags &= ~0x0004;
                 }
-                else
+                else if ((ubyte)v67 > 0x1F)
                 {
                     v103 = text[n];
-                    if ( v103 <= 0x1Fu )
-                      goto LABEL_338;
-                    if ((lbFontPtr != small_med_font) || (language_3str[0] != 'e'))
-                    {
-                      v103 = fontchrtoupper(v103);
+                    if ((lbFontPtr != small_med_font) || (language_3str[0] != 'e')) {
+                        v103 = fontchrtoupper(v103);
                     }
                     v017 = my_font_to_yshift(lbFontPtr, v103);
                     if ((lbDisplay.DrawFlags & 0x0040) != 0) {
@@ -588,11 +568,7 @@ LABEL_292:
                         LbSpriteDraw(v008, v97_hw - v017, &lbFontPtr[v103 - 31]);
                     }
                     v008 += LbTextCharWidth(v103);
-                    goto LABEL_338;
                 }
-
-LABEL_338:
-                ;
               }
 
 
@@ -624,23 +600,21 @@ LABEL_382:
   }
   if ( (ushort)v100 >= startline )
   {
-    if ( v97_hw < text_window_y1 )
-      return v100 + 1;
+    if (v97_hw < text_window_y1)
+        return v100 + 1;
+
     if ((lbDisplay.DrawFlags & 0x0080) != 0)
     {
-      v73 = v99 - v90;
-      goto LABEL_394;
+        v73 = v99 - v90;
+        v008 += v73;
     }
-    if ((lbDisplay.DrawFlags & 0x0100) != 0)
+    else if ((lbDisplay.DrawFlags & 0x0100) != 0)
     {
-      v73 = (v99 - (ushort)v90) >> 1;
-LABEL_394:
-      v008 += v73;
+        v73 = (v99 - (ushort)v90) >> 1;
+        v008 += v73;
     }
     v74 = v96;
-    if ( v96 >= v89 - 1 )
-      return v100 + 1;
-    while ( 2 )
+    for (v74 = v96; v74 < v89 - 1; v74++)
     {
         v83 = text[v74];
         if ((ubyte)v83 == 0x01)
@@ -650,62 +624,48 @@ LABEL_394:
             } else {
                 lbDisplay.DrawFlags |= 0x0004;
             }
-            goto LABEL_442;
         }
         else if (v83 == 0x0C)
         {
-            if ((lbDisplay.DrawFlags & 0x0040) != 0)
-            {
-              lbDisplay.DrawFlags &= ~0x0040;
-              goto LABEL_442;
+            if ((lbDisplay.DrawFlags & 0x0040) != 0) {
+                lbDisplay.DrawFlags &= ~0x0040;
+            } else {
+                lbDisplay.DrawFlags |= 0x0040;
             }
-            lbDisplay.DrawFlags |= 0x0040;
-            goto LABEL_442;
         }
         else if ((ubyte)v83 == 0x0E)
         {
             lbDisplay.DrawColour = text_colours[text[++v74] - 1];
-            goto LABEL_442;
         }
         else if ((ubyte)v83 == 0x1B)
         {
             lbDisplay.DrawFlags |= 0x0040;
-            goto LABEL_442;
         }
         else if ((ubyte)v83 == 0x1C)
         {
             lbDisplay.DrawFlags &= ~0x0040;
-            goto LABEL_442;
         }
         else if ((ubyte)v83 == 0x1E)
         {
             lbDisplay.DrawFlags &= ~0x0004;
-            goto LABEL_442;
         }
-        else
+        else if ((ubyte)v83 > 0x1F)
         {
-          v101 = text[v74];
-          if (v101 <= 0x1F)
-            goto LABEL_442;
-          if ((lbFontPtr != small_med_font) || (language_3str[0] != 'e')) {
-            v101 = fontchrtoupper(v101);
-          }
-          v017 = my_font_to_yshift(lbFontPtr, v101);
-          if ((lbDisplay.DrawFlags & 0x0040) != 0) {
-              LbSpriteDrawOneColour(v008, v97_hw - v017,
-                &lbFontPtr[v101 - 31], lbDisplay.DrawColour);
-          } else {
-              LbSpriteDraw(v008, v97_hw - v017, &lbFontPtr[v101 - 31]);
-          }
-          v008 += LbTextCharWidth(v101);
-          goto LABEL_442;
+            v101 = text[v74];
+            if ((lbFontPtr != small_med_font) || (language_3str[0] != 'e')) {
+                v101 = fontchrtoupper(v101);
+            }
+            v017 = my_font_to_yshift(lbFontPtr, v101);
+            if ((lbDisplay.DrawFlags & 0x0040) != 0) {
+                LbSpriteDrawOneColour(v008, v97_hw - v017,
+                  &lbFontPtr[v101 - 31], lbDisplay.DrawColour);
+            } else {
+                LbSpriteDraw(v008, v97_hw - v017, &lbFontPtr[v101 - 31]);
+            }
+            v008 += LbTextCharWidth(v101);
         }
-
-LABEL_442:
-        if ( ++v74 >= v89 - 1 )
-            return v100 + 1;
-        continue;
     }
+    return v100 + 1;
   }
   v84 = v96;
   v85 = v009 - 1;
