@@ -499,7 +499,7 @@ void draw_pause_screen_static(struct ScreenBox *box)
     else
     {
         // If no special sprites, draw the text in the normal font available in-game
-        s = gui_strings[606]; // "uplink paused"
+        s = gui_strings[633]; // "uplink paused"
         w = my_string_width(s);
         x = pause_main_box.X + (pause_main_box.Width - w) / 2 + 3;
         y = pause_main_box.Y + pause_main_box.Height * 2 / 60;
