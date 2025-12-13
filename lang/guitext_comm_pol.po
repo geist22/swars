@@ -21,7 +21,7 @@ msgstr ""
 "Project-Id-Version: GUI text for SyndWarsFX\n"
 "Report-Msgid-Bugs-To: https://github.com/swfans/syndwarsfx/issues\n"
 "POT-Creation-Date: 2025-12-13 19:42+0100\n"
-"PO-Revision-Date: 2025-12-13 19:55+0100\n"
+"PO-Revision-Date: 2025-12-13 20:18+0100\n"
 "Last-Translator: Mefistotelis <mefistotelis@gmail.com>\n"
 "Language-Team: Syndicate Wars Fans <github.com/swfans>\n"
 "Language: pl_PL\n"
@@ -3889,7 +3889,7 @@ msgstr "Kolor Linii Głęb. Radaru"
 #: guitext:827
 msgctxt "Controls"
 msgid "Deep Radar expand"
-msgstr "Rozszerzony Głęb. Radar"
+msgstr "Wszędzie Głęb. Radar"
 
 #. Key for increasing brightness of the scanner area, or whole panel if set to transfluent.
 #: guitext:828
