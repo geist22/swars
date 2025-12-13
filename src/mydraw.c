@@ -83,6 +83,75 @@ int my_font_to_yshift(const struct TbSprite *p_font, char chr)
     }
 }
 
+/** Parse control char from given string, return num bytes recognized.
+ */
+ubyte my_draw_apply_control_char(const char *ctext)
+{
+    ubyte cc;
+
+    cc = (ubyte)ctext[0];
+
+    if (cc == 0x01)
+    {
+        if ((lbDisplay.DrawFlags & 0x0004) != 0) {
+            lbDisplay.DrawFlags &= ~0x0004;
+        } else {
+            lbDisplay.DrawFlags |= 0x0004;
+        }
+        return 1;
+    }
+    if (cc == 0x0C)
+    {
+        if ((lbDisplay.DrawFlags & 0x0040) != 0) {
+            lbDisplay.DrawFlags &= 0x0040;
+        } else {
+            lbDisplay.DrawFlags |= 0x0040;
+        }
+        return 1;
+    }
+    if (cc == 0x0E)
+    {
+        lbDisplay.DrawColour = text_colours[ctext[1] - 1];
+        return 2;
+    }
+    if (cc == 0x1B)
+    {
+        lbDisplay.DrawFlags |= 0x0040;
+        return 1;
+    }
+    if (cc == 0x1C)
+    {
+        lbDisplay.DrawFlags &= 0x0040;
+        return 1;
+    }
+    if (cc == 0x1E)
+    {
+        lbDisplay.DrawFlags &= ~0x0004;
+        return 1;
+    }
+    return 0;
+}
+
+short my_draw_one_char(short x, short y, char c)
+{
+    ubyte uc;
+    short dy;
+
+    uc = (ubyte)c;
+    if ((lbFontPtr != small_med_font) || (language_3str[0] != 'e')) {
+        uc = fontchrtoupper(c);
+    }
+    dy = my_font_to_yshift(lbFontPtr, c);
+
+    if ((lbDisplay.DrawFlags & 0x0040) != 0) {
+        LbSpriteDrawOneColour(x, y - dy,
+          &lbFontPtr[uc - 31], lbDisplay.DrawColour);
+    } else {
+        LbSpriteDraw(x, y - dy, &lbFontPtr[uc - 31]);
+    }
+    return LbTextCharWidth(uc);
+}
+
 ushort my_draw_text(short x, short y, const char *text, ushort startline)
 {
 #if 0
@@ -91,6 +160,7 @@ ushort my_draw_text(short x, short y, const char *text, ushort startline)
         : "=r" (ret) : "a" (x), "d" (y), "b" (text), "c" (startline));
     return ret;
 #endif
+    ubyte nb;
   int v007;
   int v008;
   int v009;
@@ -181,52 +251,15 @@ ushort my_draw_text(short x, short y, const char *text, ushort startline)
             for (v013 = v96; v013 < v89 - 1; v013++)
             {
                 v22 = text[v013];
-                if ((ubyte)v22 == 0x01)
+                if ((ubyte)v22 <= 0x1f)
                 {
-                    if ((lbDisplay.DrawFlags & 0x0004) != 0) {
-                        lbDisplay.DrawFlags &= ~0x0004;
-                    } else {
-                        lbDisplay.DrawFlags |= 0x0004;
-                    }
+                    nb = my_draw_apply_control_char(&text[v013]);
+                    if (nb > 1)
+                        v013 += nb - 1;
                 }
-                else if ((ubyte)v22 == 0x0C)
+                else
                 {
-                    if ((lbDisplay.DrawFlags & 0x0040) != 0) {
-                        lbDisplay.DrawFlags &= 0x0040;
-                    } else {
-                        lbDisplay.DrawFlags |= 0x0040;
-                    }
-                }
-                else if ((ubyte)v22 == 0x0E)
-                {
-                    lbDisplay.DrawColour = text_colours[text[++v013] - 1];
-                }
-                else if ((ubyte)v22 == 0x1B)
-                {
-                    lbDisplay.DrawFlags |= 0x0040;
-                }
-                else if ((ubyte)v22 == 0x1C)
-                {
-                    lbDisplay.DrawFlags &= 0x0040;
-                }
-                else if ((ubyte)v22 == 0x1E)
-                {
-                    lbDisplay.DrawFlags &= ~0x0004;
-                }
-                else if ((ubyte)v22 > 0x1F)
-                {
-                    v104 = text[v013];
-                    if ((lbFontPtr != small_med_font) || (language_3str[0] != 'e')) {
-                        v104 = fontchrtoupper(v104);
-                    }
-                    v017 = my_font_to_yshift(lbFontPtr, v104);
-                    if ((lbDisplay.DrawFlags & 0x0040) != 0) {
-                        LbSpriteDrawOneColour(v008, v97_hw - v017,
-                          &lbFontPtr[v104 - 31], lbDisplay.DrawColour);
-                    } else {
-                        LbSpriteDraw(v008, v97_hw - v017, &lbFontPtr[v104 - 31]);
-                    }
-                    v008 += LbTextCharWidth(v104);
+                    v008 += my_draw_one_char(v008, v97_hw, v22);
                 }
             }
 
