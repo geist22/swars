@@ -136,7 +136,7 @@ msgid ""
 "The non-believers climbed for days to confront the master in the mountains. "
 "\"Where do you get your so-called faith?\" they asked."
 msgstr ""
-"Niewierni wspinali się przez wiele dni, by stanąć przed Mistrzem w górach. "
+"Niewierni wspinali się przez wiele dni, by stanąć przed Mistrzem u szczytów gór. "
 "„Skąd bierzesz tę swoją tak zwaną wiarę?” - spytali."
 
 #: mission.brief.mail1.par8.c1
