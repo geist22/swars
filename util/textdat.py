@@ -101,10 +101,10 @@ def enctable_string_to_bytes(cte, s):
 def datitem_string_national_adjust(stri):
     stro = ""
     for c in stri:
-        if c in "êô":
+        if c in "êô": # TODO characters missing in fonts: 00ea, 00f4
             stro = stro + unicodedata.normalize('NFKD', c).encode('ascii', 'ignore').decode('ascii', errors='ignore')
-        elif c in "ÍÓÚ": # TODO is that really needed? remove, if it will not cause regression in these chars
-            stro = stro + c.lower()
+        elif c in "ìäåéöüñáàèíòúùąćęłńśźż": # TODO characters missing in fonts: ..., 0106, 0107, 0119, 0142, 0145, 015b, 017a
+            stro = stro + c.upper()
         else:
             stro = stro + c
     return stro
