@@ -96,33 +96,6 @@ static int my_font_to_yshift(const struct TbSprite *p_font, char chr)
     }
 }
 
-u32 my_string_width(const char *text)
-{
-#if 0
-    int ret;
-    asm volatile ("call ASM_my_string_width\n"
-        : "=r" (ret) : "a" (text));
-    return ret;
-#endif
-    const char *p_chr;
-    u32 str_w;
-    ubyte c;
-
-    str_w = 0;
-    for (p_chr = text; *p_chr != '\0'; p_chr++)
-    {
-        c = *p_chr;
-        if (c > 31)
-        {
-            if (!my_font_has_lowcase_chars(lbFontPtr)) {
-                c = my_char_to_upper(*p_chr);
-            }
-            str_w += LbTextCharHeight(c);
-        }
-    }
-    return str_w;
-}
-
 ubyte my_char_height(uchar c)
 {
 #if 0
@@ -158,6 +131,39 @@ ubyte my_char_height(uchar c)
     {
         return LbSprFontCharHeight(lbFontPtr, c);
     }
+}
+
+ubyte my_char_width(uchar c)
+{
+    if (!my_font_has_lowcase_chars(lbFontPtr)) {
+        c = my_char_to_upper(c);
+    }
+    return LbTextCharWidth(c);
+}
+
+
+u32 my_string_width(const char *text)
+{
+#if 0
+    int ret;
+    asm volatile ("call ASM_my_string_width\n"
+        : "=r" (ret) : "a" (text));
+    return ret;
+#endif
+    const char *p_chr;
+    u32 str_w;
+    ubyte c;
+
+    str_w = 0;
+    for (p_chr = text; *p_chr != '\0'; p_chr++)
+    {
+        c = *p_chr;
+        if (c > 31)
+        {
+            str_w += my_char_width(c);
+        }
+    }
+    return str_w;
 }
 
 /** Parse control char from given string, return num bytes recognized.

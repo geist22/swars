@@ -28,6 +28,7 @@ extern "C" {
 
 #pragma pack(1)
 
+struct TbSprite;
 
 #pragma pack()
 /******************************************************************************/
@@ -41,6 +42,8 @@ ubyte my_char_height(uchar c);
 u32 my_string_width(const char *text);
 
 ushort my_draw_text(short x, short y, const char *text, ushort startline);
+
+TbBool my_font_has_lowcase_chars(const struct TbSprite *p_font);
 
 /******************************************************************************/
 #ifdef __cplusplus

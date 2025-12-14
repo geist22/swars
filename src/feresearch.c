@@ -546,8 +546,7 @@ void draw_unkn20_subfunc_01(int x, int y, char *text, ubyte a4)
             ch = text[i++];
             if (ch == '\0')
               return;
-            if (lbFontPtr != small_med_font || language_3str[0] != 'e')
-            {
+            if (!my_font_has_lowcase_chars(lbFontPtr)) {
                 ch = fontchrtoupper(ch);
             }
             w = LbSprFontCharWidth(lbFontPtr, ch);
