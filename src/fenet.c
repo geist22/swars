@@ -43,6 +43,7 @@
 #include "game_sprts.h"
 #include "game.h"
 #include "keyboard.h"
+#include "mydraw.h"
 #include "network.h"
 #include "packetfe.h"
 #include "purpldrw.h"

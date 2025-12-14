@@ -86,6 +86,14 @@ static int my_font_to_yshift(const struct TbSprite *p_font, char chr)
     }
 }
 
+u32 my_string_width(const char *text)
+{
+    int ret;
+    asm volatile ("call ASM_my_string_width\n"
+        : "=r" (ret) : "a" (text));
+    return ret;
+}
+
 /** Parse control char from given string, return num bytes recognized.
  */
 static ubyte my_draw_apply_control_char(const char *ctext)

@@ -53,6 +53,7 @@
 #include "game_sprts.h"
 #include "game.h"
 #include "keyboard.h"
+#include "mydraw.h"
 #include "network.h"
 #include "packetfe.h"
 #include "player.h"
@@ -412,7 +413,7 @@ void init_alert_screen_boxes(void)
 
     lbFontPtr = med_font;
     loading_INITIATING_box.Height = font_height('A') + 8;
-    w = my_string_width(gui_strings[376]);
+    w = my_string_width(loading_INITIATING_box.Text);
     loading_INITIATING_box.Width = w + 9;
     loading_INITIATING_box.X = (scr_w - (w + 9)) / 2 - 1;
     loading_INITIATING_box.Y = 219 - (loading_INITIATING_box.Height >> 1);

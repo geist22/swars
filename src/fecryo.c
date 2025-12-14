@@ -44,6 +44,7 @@
 #include "game_data.h"
 #include "game_sprts.h"
 #include "game.h"
+#include "mydraw.h"
 #include "packetfe.h"
 #include "player.h"
 #include "purpldrw.h"

@@ -24,6 +24,7 @@
 #include "bftext.h"
 
 #include "display.h"
+#include "mydraw.h"
 #include "purpldrw.h"
 #include "swlog.h"
 /******************************************************************************/

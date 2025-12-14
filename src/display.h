@@ -122,7 +122,6 @@ TbResult cover_screen_rect_with_raw_file(short x, short y,
 
 
 void my_set_text_window(ushort x1, ushort y1, ushort w, ushort h);
-u32 my_string_width(const char *text);
 u32 my_str_len(const char *t);
 ubyte font_height(uchar c);
 

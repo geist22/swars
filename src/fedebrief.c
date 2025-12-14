@@ -34,6 +34,7 @@
 #include "keyboard.h"
 #include "thing.h"
 #include "misstat.h"
+#include "mydraw.h"
 #include "player.h"
 #include "purpldrw.h"
 #include "research.h"

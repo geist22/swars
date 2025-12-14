@@ -39,6 +39,7 @@
 #include "purpldrw.h"
 #include "purpldrwlst.h"
 #include "keyboard.h"
+#include "mydraw.h"
 #include "network.h"
 #include "sound.h"
 #include "wrcities.h"

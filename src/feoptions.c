@@ -34,6 +34,7 @@
 #include "game_options.h"
 #include "game_sprts.h"
 #include "game.h"
+#include "mydraw.h"
 #include "purpldrw.h"
 #include "purpldrwlst.h"
 #include "sound.h"

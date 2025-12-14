@@ -34,6 +34,7 @@
 #include "guiboxes.h"
 #include "guitext.h"
 #include "keyboard.h"
+#include "mydraw.h"
 #include "purpldrwlst.h"
 #include "sound.h"
 #include "swlog.h"

@@ -34,6 +34,7 @@
 #include "guigraph.h"
 #include "guitext.h"
 #include "keyboard.h"
+#include "mydraw.h"
 #include "purpldrw.h"
 #include "player.h"
 #include "weapon.h"

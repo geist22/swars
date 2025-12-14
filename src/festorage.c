@@ -32,6 +32,7 @@
 #include "game_sprts.h"
 #include "game.h"
 #include "keyboard.h"
+#include "mydraw.h"
 #include "purpldrw.h"
 #include "sound.h"
 #include "swlog.h"
