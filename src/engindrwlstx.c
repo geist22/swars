@@ -517,6 +517,13 @@ void set_face_texture_uv(ushort stex, struct PolyPoint *p_pt1,
   struct PolyPoint *p_pt2, struct PolyPoint *p_pt3, ubyte gflags)
 {
     struct SingleTexture *p_stex;
+    int limit;
+
+    limit = get_memory_ptr_allocated_count((void **)&game_face_textures);
+    if ((limit >= 0) && (stex >= limit)) {
+        LOGERR("Texture %d above allocated count of %d", (int)stex, limit);
+        stex = 0; // continue with texture 0 instead
+    }
 
     p_stex = &game_face_textures[stex];
 
