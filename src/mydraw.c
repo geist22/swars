@@ -33,10 +33,13 @@ extern ubyte text_colours[15];
 
 ubyte my_char_to_upper(ubyte c)
 {
+#if 0
     ubyte ret;
     asm volatile ("call ASM_my_char_to_upper\n"
         : "=r" (ret) : "a" (c));
     return ret;
+#endif
+    return fontchrtoupper(c);
 }
 
 int font_word_length(const char *text)
