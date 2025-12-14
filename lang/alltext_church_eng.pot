@@ -838,6 +838,7 @@ msgctxt "mission brief tactical information"
 msgid "Satellite alert: EuroCorp agent type identkeys detected, tracks unstable"
 msgstr ""
 
+#. This mission name is a reference to one of previous games developed by Bullfrog.
 #: mission.title:44
 msgctxt "mission title"
 msgid "Powermonger"
@@ -1796,7 +1797,7 @@ msgstr ""
 
 #: mission.brief.mail24.map6.level3:2
 msgctxt "mission brief tactical information"
-msgid "The compound holding Brother Ix"
+msgid "The compound holding Brother IX"
 msgstr ""
 
 #: mission.brief.mail24.map6.level3:3

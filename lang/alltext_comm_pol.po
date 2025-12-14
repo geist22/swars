@@ -1239,7 +1239,7 @@ msgstr "Przemysł ciężki, Ścieki ludzkie"
 #: mapscreen.city15:1
 msgctxt "map screen location - name"
 msgid "Cape Town"
-msgstr "Cape Town"
+msgstr "Kapsztad"
 
 #: mapscreen.city15:2
 msgctxt "map screen location - population size"

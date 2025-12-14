@@ -137,7 +137,7 @@ msgstr "Lanca Plazmowa"
 #: guitext:18
 msgctxt "Weapon name - Eurocorp"
 msgid "Razor Wire"
-msgstr "Drut Kolczasty"
+msgstr "Drut Ostrzowy"
 
 #. Weapon name visible in Equip and Research menus, Debriafings, and within Missions.
 #: guitext:19
@@ -317,7 +317,7 @@ msgstr "Lanca plazmowa"
 #: guitext:48
 msgctxt "Weapon name - Church of N.E."
 msgid "Razor Wire"
-msgstr "Drut Kolczasty"
+msgstr "Drut Ostrzowy"
 
 #. Weapon name visible in Equip and Research menus, Debriafings, and within Missions.
 #: guitext:49
