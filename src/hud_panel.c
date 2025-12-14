@@ -185,7 +185,7 @@ int SCANNER_text_draw(const char *text, int start_x, int height)
     ubyte sel_c1;
 
     lbFontPtr = small_font;
-    fnt_height = font_height('A');
+    fnt_height = my_char_height('A');
      // detail 0 font has height equal 6
     height_base = 9 * fnt_height / 6;
     y = 0;

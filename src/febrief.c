@@ -38,6 +38,7 @@
 #include "game.h"
 #include "keyboard.h"
 #include "lvobjctv.h"
+#include "mydraw.h"
 #include "scanner.h"
 #include "sound.h"
 #include "wadfile.h"
@@ -171,7 +172,7 @@ ubyte show_brief_netscan_box(struct ScreenTextBox *p_box)
     my_set_text_window(p_box->X + border, p_box->ScrollWindowOffset + p_box->Y + border,
       p_box->Width - 2 * border - scrollbar_width, p_box->ScrollWindowHeight);
     lbFontPtr = small_med_font;
-    tx_height = font_height('A');
+    tx_height = my_char_height('A');
     ln_height = tx_height + margin;
     nlines = 0;
     start_shift = border - ln_height * p_box->TextTopLine;
@@ -287,7 +288,7 @@ void show_citymap_city_selection(struct ScreenBox *box)
     short dy;
     ulong bufpos;
 
-    text_h = font_height('A');
+    text_h = my_char_height('A');
     dy = text_h + 4;
     for (city_id = 0; city_id < num_cities; city_id++)
     {
@@ -308,7 +309,7 @@ ubyte input_citymap_city_selection(struct ScreenBox *p_box)
     short text_h;
     short dy;
 
-    text_h = font_height('A');
+    text_h = my_char_height('A');
     dy = text_h + 4;
     for (city_id = 0; city_id < num_cities; city_id++)
     {

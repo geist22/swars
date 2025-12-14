@@ -42,6 +42,11 @@ ubyte my_char_to_upper(ubyte c)
     return fontchrtoupper(c);
 }
 
+u32 my_str_len(const char *t)
+{
+    return strlen(t);
+}
+
 int font_word_length(const char *text)
 {
     const ubyte *p;
@@ -58,6 +63,11 @@ int font_word_length(const char *text)
         len += spr->SWidth;
     }
     return len;
+}
+
+TbBool my_font_has_lowcase_chars(const struct TbSprite *p_font)
+{
+    return (p_font == small_med_font) && (language_3str[0] == 'e');
 }
 
 static int my_font_to_yshift(const struct TbSprite *p_font, char chr)
@@ -88,10 +98,66 @@ static int my_font_to_yshift(const struct TbSprite *p_font, char chr)
 
 u32 my_string_width(const char *text)
 {
+#if 0
     int ret;
     asm volatile ("call ASM_my_string_width\n"
         : "=r" (ret) : "a" (text));
     return ret;
+#endif
+    const char *p_chr;
+    u32 str_w;
+    ubyte c;
+
+    str_w = 0;
+    for (p_chr = text; *p_chr != '\0'; p_chr++)
+    {
+        c = *p_chr;
+        if (c > 31)
+        {
+            if (!my_font_has_lowcase_chars(lbFontPtr)) {
+                c = my_char_to_upper(*p_chr);
+            }
+            str_w += LbTextCharHeight(c);
+        }
+    }
+    return str_w;
+}
+
+ubyte my_char_height(uchar c)
+{
+#if 0
+    int ret;
+    asm volatile ("call ASM_font_height\n"
+        : "=r" (ret) : "a" (c));
+    return ret;
+#endif
+    if (lbFontPtr == small_font || lbFontPtr == small2_font)
+    {
+        return LbSprFontCharHeight(lbFontPtr, c) - 1;
+    }
+    else if (lbFontPtr == small_med_font)
+    {
+        if (c < 97 || c > 122)
+        {
+          return LbSprFontCharHeight(lbFontPtr, c) - 2;
+        }
+        else
+        {
+          return LbSprFontCharHeight(lbFontPtr, c);
+        }
+    }
+    else if (lbFontPtr == med_font || lbFontPtr == med2_font)
+    {
+        return LbSprFontCharHeight(lbFontPtr, c) - 2;
+    }
+    else if (lbFontPtr == big_font)
+    {
+         return LbSprFontCharHeight(lbFontPtr, c) - 4;
+    }
+    else
+    {
+        return LbSprFontCharHeight(lbFontPtr, c);
+    }
 }
 
 /** Parse control char from given string, return num bytes recognized.
@@ -149,7 +215,7 @@ static short my_draw_one_char(short x, short y, char c)
     short dy;
 
     uc = (ubyte)c;
-    if ((lbFontPtr != small_med_font) || (language_3str[0] != 'e')) {
+    if (!my_font_has_lowcase_chars(lbFontPtr)) {
         uc = fontchrtoupper(c);
     }
     dy = my_font_to_yshift(lbFontPtr, uc);
@@ -165,7 +231,8 @@ static short my_draw_one_char(short x, short y, char c)
 
 /** Draw characters from `text` between `k_beg` and `k_end`, minding control sequences.
  */
-static short my_draw_chunk(short x, short y, short tot_width, const char *text, short k_beg, short k_end)
+static short my_draw_chunk(short x, short y, short tot_width,
+  const char *text, short k_beg, short k_end)
 {
     short cx, k;
 
@@ -204,7 +271,8 @@ static short my_draw_chunk(short x, short y, short tot_width, const char *text, 
  *
  * Replacement for `my_draw_chunk()` when the actual drawing should not be performed.
  */
-static void my_skip_chunk(short x, short y, short tot_width, const char *text, short k_beg, short k_end)
+static void my_skip_chunk(short x, short y, short tot_width,
+  const char *text, short k_beg, short k_end)
 {
     short k;
 
@@ -259,7 +327,7 @@ ushort my_draw_text(short x, short y, const char *text, ushort startline)
         uch = text[ck_end++];
         if (uch == '\0')
             break;
-        if ((lbFontPtr != small_med_font) || (language_3str[0] != 'e')) {
+        if (!my_font_has_lowcase_chars(lbFontPtr)) {
             uch = fontchrtoupper(uch);
         }
 
@@ -274,8 +342,8 @@ ushort my_draw_text(short x, short y, const char *text, ushort startline)
                 if (scr_y >= text_window_y1) {
                     scr_x += my_draw_chunk(scr_x, scr_y, wndw_width - cur_ck_width, text, ck_beg, ck_end - 1);
                 }
-                scr_y += font_height('A') + byte_197160;
-                if (scr_y + font_height('A') > text_window_y2)
+                scr_y += my_char_height('A') + byte_197160;
+                if (scr_y + my_char_height('A') > text_window_y2)
                     return cur_line;
             }
 
@@ -341,8 +409,8 @@ ushort my_draw_text(short x, short y, const char *text, ushort startline)
                     scr_x += my_draw_chunk(scr_x, scr_y, wndw_width - fin_ck_width, text, ck_beg, ck_end);
                     scr_x += my_draw_one_char(scr_x, scr_y, '-');
                 }
-                scr_y += font_height('A') + byte_197160;
-                if (scr_y + font_height('A') > text_window_y2)
+                scr_y += my_char_height('A') + byte_197160;
+                if (scr_y + my_char_height('A') > text_window_y2)
                     return cur_line;
             }
 
@@ -361,8 +429,8 @@ ushort my_draw_text(short x, short y, const char *text, ushort startline)
                 if (scr_y >= text_window_y1) {
                     scr_x += my_draw_chunk(scr_x, scr_y, wndw_width - ck_width, text, ck_beg, pv_ck_end);
                 }
-                scr_y += font_height('A') + byte_197160;
-                if (scr_y + font_height('A') > text_window_y2)
+                scr_y += my_char_height('A') + byte_197160;
+                if (scr_y + my_char_height('A') > text_window_y2)
                     return cur_line;
             }
 

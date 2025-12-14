@@ -379,48 +379,6 @@ void my_set_text_window(ushort x1, ushort y1, ushort w, ushort h)
     text_window_y2 = y1 + h - 1;
 }
 
-ubyte font_height(uchar c)
-{
-#if 0
-    int ret;
-    asm volatile ("call ASM_font_height\n"
-        : "=r" (ret) : "a" (c));
-    return ret;
-#endif
-    if (lbFontPtr == small_font || lbFontPtr == small2_font)
-    {
-        return LbSprFontCharHeight(lbFontPtr, c) - 1;
-    }
-    else if (lbFontPtr == small_med_font)
-    {
-        if (c < 97 || c > 122)
-        {
-          return LbSprFontCharHeight(lbFontPtr, c) - 2;
-        }
-        else
-        {
-          return LbSprFontCharHeight(lbFontPtr, c);
-        }
-    }
-    else if (lbFontPtr == med_font || lbFontPtr == med2_font)
-    {
-        return LbSprFontCharHeight(lbFontPtr, c) - 2;
-    }
-    else if (lbFontPtr == big_font)
-    {
-         return LbSprFontCharHeight(lbFontPtr, c) - 4;
-    }
-    else
-    {
-        return LbSprFontCharHeight(lbFontPtr, c);
-    }
-}
-
-u32 my_str_len(const char *t)
-{
-    return strlen(t);
-}
-
 void ingame_palette_load(int pal_id)
 {
     char locstr[DISKPATH_SIZE];

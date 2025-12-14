@@ -192,7 +192,7 @@ void cryo_display_box_redraw(struct ScreenTextBox *p_box)
         p_box->Lines = 0;
         p_box->Text = &weapon_text[cybmod_text_index[selected_mod]];
         lbFontPtr = small_font;
-        p_box->LineHeight = byte_197160 + font_height('A');
+        p_box->LineHeight = byte_197160 + my_char_height('A');
         lbFontPtr = p_box->Font;
         p_box->TextFadePos = -5;
         break;
@@ -1143,7 +1143,7 @@ ubyte draw_blokey_body_mods_names(struct ScreenBox *p_box)
 
     cx = p_box->X + 4;
     cy = p_box->Y + 20;
-    hline = font_height('A');
+    hline = my_char_height('A');
 
     for (ordpart = 0; ordpart < 5; ordpart++)
     {
@@ -1554,7 +1554,7 @@ ubyte show_cryo_cybmod_list_box(struct ScreenTextBox *p_box)
           text_window_x2 - text_window_x1 + 1, text_window_y2 - text_window_y1 + 1, 56);
 
         cy = 3;
-        text_h = font_height('A');
+        text_h = my_char_height('A');
         for (mtype = p_box->TextTopLine + 1; mtype < MOD_TYPES_COUNT; mtype++)
         {
             if (text_h + cy >= p_box->ScrollWindowHeight + 23)

@@ -670,7 +670,7 @@ TbBool AppTextDrawMissionStatus(int posx, int posy, const char *text)
     TbBool ret;
 
     lbFontPtr = small_font;
-    tx_height = font_height('A');
+    tx_height = my_char_height('A');
     // For window width=320, expect text height=5; so that should
     // produce unscaled sprite, which is 16 units per px.
     units_per_px = (lbDisplay.GraphicsWindowWidth * 5 / tx_height)  / (320 / 16);

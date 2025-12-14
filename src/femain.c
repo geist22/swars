@@ -380,7 +380,7 @@ void show_alert_box(void)
         alert_textpos = -5;
         my_preprocess_text(alert_text);
         nlines = my_count_lines(alert_text);
-        lnheight = font_height('A') + 4;
+        lnheight = my_char_height('A') + 4;
         alert_box.Y = alert_OK_button.Y - lnheight * nlines - 4;
         alert_box.Height = alert_OK_button.Height + 8 + lnheight * nlines;
     }
@@ -412,7 +412,7 @@ void init_alert_screen_boxes(void)
     loading_INITIATING_box.Text = gui_strings[376];
 
     lbFontPtr = med_font;
-    loading_INITIATING_box.Height = font_height('A') + 8;
+    loading_INITIATING_box.Height = my_char_height('A') + 8;
     w = my_string_width(loading_INITIATING_box.Text);
     loading_INITIATING_box.Width = w + 9;
     loading_INITIATING_box.X = (scr_w - (w + 9)) / 2 - 1;
@@ -484,7 +484,7 @@ ubyte show_title_box(struct ScreenTextBox *p_box)
     lbFontPtr = p_box->Font;
     cyan = (lbFontPtr == med2_font);
     tx_width = my_string_width(p_box->Text);
-    tx_height = font_height('A');
+    tx_height = my_char_height('A');
     scr_x = p_box->X + ((p_box->Width - tx_width) >> 1);
     scr_y = p_box->Y + ((p_box->Height - tx_height) >> 1);
     my_set_text_window(scr_x, scr_y, p_box->Width, p_box->Height);

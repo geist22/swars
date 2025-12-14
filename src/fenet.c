@@ -1174,7 +1174,7 @@ ubyte show_net_comms_box(struct ScreenBox *p_box)
     if ((p_box->Flags & 0x1000) != 0)
     {
         lbFontPtr = small_med_font;
-        tx_height = font_height('A');
+        tx_height = my_char_height('A');
     }
     else
     {
@@ -1184,7 +1184,7 @@ ubyte show_net_comms_box(struct ScreenBox *p_box)
         lbDisplay.DrawFlags = Lb_SPRITE_TRANSPAR4;
         draw_box_purple_list(p_box->X + 4, p_box->Y + 18, p_box->Width - 8, 61, 56);
         lbFontPtr = small_med_font;
-        tx_height = font_height('A');
+        tx_height = my_char_height('A');
         draw_box_purple_list(p_box->X + 4, p_box->Y + 87, p_box->Width - 8, tx_height + 6, 56);
         lbDisplay.DrawFlags = 0;
         copy_box_purple_list(p_box->X - 3, p_box->Y -  3, p_box->Width + 6, p_box->Height + 6);
@@ -1340,7 +1340,7 @@ ubyte show_net_protocol_box(struct ScreenBox *p_box)
     if (login_control__State == 5)
     {
         lbFontPtr = small_med_font;
-        tx_height = font_height('A');
+        tx_height = my_char_height('A');
         lbDisplay.DrawColour = 87;
 
         scr_y = 2;
@@ -1469,7 +1469,7 @@ ubyte show_net_protocol_box(struct ScreenBox *p_box)
         TbBool draw_option;
 
         lbFontPtr = med2_font;
-        tx_height = font_height('A');
+        tx_height = my_char_height('A');
         draw_option = true;
 
         if (nsvc.I.Type == NetSvc_IPX)
@@ -1621,13 +1621,13 @@ ubyte show_net_faction_box(struct ScreenBox *p_box)
     if ((p_box->Flags & 0x1000) == 0)
     {
         lbFontPtr = med2_font;
-        tx_height = font_height('A');
+        tx_height = my_char_height('A');
         lbDisplay.DrawFlags = 0x0100;
         draw_text_purple_list2(0, 0, gui_strings[392], 0);
         scr_y = tx_height + 10;
 
         lbFontPtr = small_med_font;
-        tx_height = font_height('A');
+        tx_height = my_char_height('A');
         lbDisplay.DrawFlags = 0x0004;
 
         for (i = 0; i < 2; i++)
@@ -1644,7 +1644,7 @@ ubyte show_net_faction_box(struct ScreenBox *p_box)
     }
 
     lbFontPtr = small_med_font;
-    tx_height = font_height('A');
+    tx_height = my_char_height('A');
 
     scr_y = 20;
     for (i = 0; i < 2; i++)
@@ -1695,19 +1695,19 @@ ubyte show_net_team_box(struct ScreenBox *p_box)
     if ((p_box->Flags & 0x1000) != 0)
     {
         lbFontPtr = small_med_font;
-        tx_height = font_height('A');
+        tx_height = my_char_height('A');
     }
     else
     {
         lbFontPtr = med2_font;
-        tx_height = font_height('A');
+        tx_height = my_char_height('A');
         scr_y = 0;
         lbDisplay.DrawFlags = 0x0100;
         draw_text_purple_list2(0, scr_y, gui_strings[391], 0);
         scr_y += tx_height + 3;
 
         lbFontPtr = small_med_font;
-        tx_height = font_height('A');
+        tx_height = my_char_height('A');
         lbDisplay.DrawFlags = 0x0004;
 
         for (i = 0; i < 4; i++)
@@ -1787,7 +1787,7 @@ ubyte show_net_groups_box(struct ScreenBox *p_box)
         my_set_text_window(p_box->X + 2, p_box->Y + 4, p_box->Width - 4, p_box->Height - 8);
 
         lbFontPtr = med2_font;
-        tx_height = font_height('A');
+        tx_height = my_char_height('A');
         scr_y = 1;
         lbDisplay.DrawFlags = Lb_TEXT_HALIGN_CENTER;
         text = gui_strings[390];
@@ -1796,7 +1796,7 @@ ubyte show_net_groups_box(struct ScreenBox *p_box)
 
         scr_y += tx_height + 4;
         lbFontPtr = small_med_font;
-        tx_height = font_height('A');
+        tx_height = my_char_height('A');
         lines_height = 8 * tx_height;
         lbDisplay.DrawFlags = Lb_SPRITE_TRANSPAR4;
         draw_box_purple_list(p_box->X + 4, p_box->Y + 4 + scr_y, p_box->Width - 8, lines_height + 34, 56);
@@ -1808,7 +1808,7 @@ ubyte show_net_groups_box(struct ScreenBox *p_box)
 
     my_set_text_window(p_box->X + 4, p_box->Y + 4, p_box->Width - 8, p_box->Height - 8);
     lbFontPtr = small_med_font;
-    tx_height = font_height('A');
+    tx_height = my_char_height('A');
 
     scr_y = 19;
     lbDisplay.DrawFlags = Lb_TEXT_HALIGN_CENTER;
@@ -1926,13 +1926,13 @@ ubyte show_net_users_box(struct ScreenBox *p_box)
     if ((p_box->Flags & 0x1000) == 0)
     {
         lbFontPtr = med2_font;
-        tx_height = font_height('A');
+        tx_height = my_char_height('A');
         lbDisplay.DrawFlags = 0x0100;
         draw_text_purple_list2(0, 1, gui_strings[389], 0);
         lbDisplay.DrawFlags = 0;
         scr_y = tx_height + 8;
         lbFontPtr = small_med_font;
-        tx_height = font_height('A');
+        tx_height = my_char_height('A');
         lbDisplay.DrawFlags = 0x0004;
         for (plyr = 0; plyr < 8; plyr++)
         {
@@ -1950,7 +1950,7 @@ ubyte show_net_users_box(struct ScreenBox *p_box)
     }
 
     lbFontPtr = small_med_font;
-    tx_height = font_height('A');
+    tx_height = my_char_height('A');
     scr_y = 18;
     if (login_control__State == 5)
     {

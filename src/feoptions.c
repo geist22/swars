@@ -169,7 +169,7 @@ void draw_horiz_proslider_main_body_text(struct ScreenShape *p_shp, struct Scree
     text = gui_strings[421];
     draw_text_purple_list2(box.X + 9, box.Y - 2, text, 0);
     text = gui_strings[422];
-    shift_y = box.Height - font_height('A');
+    shift_y = box.Height - my_char_height('A');
     draw_text_purple_list2(box.X + box.Width - 13 - wtext2, box.Y + shift_y - 4, text, 0);
 }
 
@@ -367,7 +367,7 @@ ubyte show_netgame_unkn1(struct ScreenBox *p_box)
 
     my_set_text_window(p_box->X + 4, p_box->Y + 4, p_box->Width - 8, p_box->Height - 8);
     lbFontPtr = med_font;
-    tx_height = font_height('A');
+    tx_height = my_char_height('A');
     scr_x = 20;
     scr_y = 20;
 
@@ -691,7 +691,7 @@ short horiz_proslider_prepare_main_body_pts(short *pts_x, short *pts_y, short wi
     // cut-ins for text at start and at end of slider
     wtext2 = my_string_width(gui_strings[422]) + 2;
     wtext1 = my_string_width(gui_strings[421]) + 2;
-    htext = font_height('A') + 4;
+    htext = my_char_height('A') + 4;
 
     pts_x[0] = 0;
     pts_y[0] = height - 1;

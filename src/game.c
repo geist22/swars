@@ -6497,7 +6497,7 @@ ubyte critical_action_input(void)
         int x, y, w, h;
         short tx_height;
 
-        tx_height = font_height('A');
+        tx_height = my_char_height('A');
         w = my_string_width(locstr) + 2 * tx_height;
         h = 3 * tx_height;
         x = (lbDisplay.GraphicsWindowWidth - w) / 2;

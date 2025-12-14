@@ -286,7 +286,7 @@ ubyte show_unkn21_box(struct ScreenTextBox *p_box)
     }
 
     scr_y = 3;
-    tx_height = font_height('A');
+    tx_height = my_char_height('A');
     line = p_box->TextTopLine;
     ln_height = tx_height + 4;
     while (line < 32)
@@ -582,7 +582,7 @@ void draw_unkn20_subfunc_01(int x, int y, char *text, ubyte a4)
             dy = 0;
         }
         draw_sprite_purple_list(scr_x - dx, scr_y - dy, LbFontCharSprite(lbFontPtr, ch));
-        scr_y += a4 + font_height(ch);
+        scr_y += a4 + my_char_height(ch);
     }
 }
 

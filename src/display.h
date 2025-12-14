@@ -122,8 +122,6 @@ TbResult cover_screen_rect_with_raw_file(short x, short y,
 
 
 void my_set_text_window(ushort x1, ushort y1, ushort w, ushort h);
-u32 my_str_len(const char *t);
-ubyte font_height(uchar c);
 
 void set_user_selected_brightness(void);
 void reset_user_selected_brightness(void);

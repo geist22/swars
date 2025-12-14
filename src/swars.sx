@@ -107433,7 +107433,7 @@ GLOBAL_FUNC(ASM_show_net_comms_box)	/* 0x08E7EC */
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		xor    %edx,%edx
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    %al,0x48(%esp)
 		mov    %al,%cl
 		mov    0x40(%esp),%eax
@@ -107470,7 +107470,7 @@ GLOBAL_FUNC(ASM_show_net_comms_box)	/* 0x08E7EC */
 		mov    small_med_font,%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    %al,0x48(%esp)
 	jump_8e965:
 		xor    %eax,%eax
@@ -107861,7 +107861,7 @@ GLOBAL_FUNC(ASM_show_net_protocol_box)	/* 0x08EDE0 */
 		mov    small_med_font,%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
-		call   ac_font_height
+		call   ac_my_char_height
 		and    $0xff,%eax
 		mov    %eax,0x14(%esp)
 		xor    %eax,%eax
@@ -107871,7 +107871,7 @@ GLOBAL_FUNC(ASM_show_net_protocol_box)	/* 0x08EDE0 */
 		mov    med2_font,%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
-		call   ac_font_height
+		call   ac_my_char_height
 		and    $0xff,%eax
 		mov    %eax,0x10(%esp)
 		xor    %eax,%eax
@@ -108939,7 +108939,7 @@ GLOBAL_FUNC(ASM_show_net_faction_box)	/* 0x08FBD8 */
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		mov    $0x100,%edx
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    %al,0x4(%esp)
 		mov    %dx,EXPORT_SYMBOL(lbDisplay)+96 # lbDisplay__DrawFlags
 		mov    EXPORT_SYMBOL(gui_strings)+0x620,%ebx
@@ -108955,7 +108955,7 @@ GLOBAL_FUNC(ASM_show_net_faction_box)	/* 0x08FBD8 */
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		add    $0xa,%edi
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    %al,0x8(%esp)
 		mov    %bx,EXPORT_SYMBOL(lbDisplay)+96 # lbDisplay__DrawFlags
 		xor    %edx,%edx
@@ -109011,7 +109011,7 @@ GLOBAL_FUNC(ASM_show_net_faction_box)	/* 0x08FBD8 */
 		mov    small_med_font,%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    %al,0x8(%esp)
 		xor    %edi,%edi
 		mov    $0x14,%esi
@@ -109177,7 +109177,7 @@ GLOBAL_FUNC(ASM_show_net_team_box)	/* 0x08FED4 */
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		mov    $0x100,%edx
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    %al,0x8(%esp)
 		mov    %dx,EXPORT_SYMBOL(lbDisplay)+96 # lbDisplay__DrawFlags
 		mov    EXPORT_SYMBOL(gui_strings)+0x61C,%ebx
@@ -109193,7 +109193,7 @@ GLOBAL_FUNC(ASM_show_net_team_box)	/* 0x08FED4 */
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		add    $0x3,%edi
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    %al,0x4(%esp)
 		mov    %bx,EXPORT_SYMBOL(lbDisplay)+96 # lbDisplay__DrawFlags
 		xor    %edx,%edx
@@ -109251,7 +109251,7 @@ GLOBAL_FUNC(ASM_show_net_team_box)	/* 0x08FED4 */
 		mov    small_med_font,%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    %al,0x4(%esp)
 		xor    %edi,%edi
 		mov    $0xd,%esi
@@ -109418,7 +109418,7 @@ GLOBAL_FUNC(ASM_show_net_groups_box)	/* 0x0901E0 */
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		mov    $0x100,%edx
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    %al,0x44(%esp)
 		mov    %dx,EXPORT_SYMBOL(lbDisplay)+96 # lbDisplay__DrawFlags
 		mov    $0x1,%edx
@@ -109435,7 +109435,7 @@ GLOBAL_FUNC(ASM_show_net_groups_box)	/* 0x0901E0 */
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		add    $0x5,%edx
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    %al,0x40(%esp)
 		push   $0x38
 		mov    %cx,EXPORT_SYMBOL(lbDisplay)+96 # lbDisplay__DrawFlags
@@ -109476,7 +109476,7 @@ GLOBAL_FUNC(ASM_show_net_groups_box)	/* 0x0901E0 */
 		mov    small_med_font,%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    %al,0x40(%esp)
 	jump_90320:
 		mov    0x6(%esi),%ax
@@ -109826,7 +109826,7 @@ GLOBAL_FUNC(ASM_show_net_users_box)	/* 0x0906E4 */
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		mov    $0x100,%edx
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    %al,0x34(%esp)
 		mov    %dx,EXPORT_SYMBOL(lbDisplay)+96 # lbDisplay__DrawFlags
 		mov    $0x1,%edx
@@ -109844,7 +109844,7 @@ GLOBAL_FUNC(ASM_show_net_users_box)	/* 0x0906E4 */
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		mov    $0x4,%ecx
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    %al,0x30(%esp)
 		mov    %cx,EXPORT_SYMBOL(lbDisplay)+96 # lbDisplay__DrawFlags
 		mov    %bx,0x24(%esp)
@@ -109925,7 +109925,7 @@ GLOBAL_FUNC(ASM_show_net_users_box)	/* 0x0906E4 */
 		mov    small_med_font,%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    %al,0x30(%esp)
 	jump_908b6:
 		xor    %eax,%eax
@@ -110521,7 +110521,7 @@ GLOBAL_FUNC(ASM_show_unkn21_box)	/* 0x0930DC */
 	jump_933cb:
 		mov    $0x41,%eax
 		mov    $0x3,%ebp
-		call   ac_font_height
+		call   ac_my_char_height
 		and    $0xff,%eax
 		mov    0x40(%esp),%edx
 		mov    %eax,0x3c(%esp)
@@ -111482,7 +111482,7 @@ GLOBAL_FUNC(ASM_show_audio_tracks_box)	/* 0x094844 */
 		and    $0xffff,%eax
 		call   ac_my_set_text_window
 		mov    $0x41,%eax
-		call   ac_font_height
+		call   ac_my_char_height
 		push   $0x0
 		push   $EXPORT_SYMBOL(textpos)
 		mov    $0x1,%ecx
@@ -111563,7 +111563,7 @@ GLOBAL_FUNC(ASM_show_netgame_unkn1)	/* 0x094990 */
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		xor    %ecx,%ecx
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    EXPORT_SYMBOL(gui_strings)+0x740,%ebx
 		movzbl %al,%ebp
 		mov    %edx,%eax
@@ -112752,7 +112752,7 @@ GLOBAL_FUNC(ASM_show_weapon_name)	/* 0x097654 */
 		xor    %edx,%edx
 		mov    $0x41,%eax
 		mov    0x6(%esi),%dx
-		call   ac_font_height
+		call   ac_my_char_height
 		and    $0xff,%eax
 		sub    %eax,%edx
 		xor    %eax,%eax
@@ -112760,7 +112760,7 @@ GLOBAL_FUNC(ASM_show_weapon_name)	/* 0x097654 */
 		mov    0x2(%esi),%ax
 		add    %eax,%edx
 		mov    $0x41,%eax
-		call   ac_font_height
+		call   ac_my_char_height
 		xor    %ah,%ah
 		xor    %ecx,%ecx
 		add    %edx,%eax
@@ -113777,7 +113777,7 @@ GLOBAL_FUNC(ASM_show_cryo_cybmod_list_box)	/* 0x098F1C */
 	jump_991c1:
 		mov    $0x41,%eax
 		mov    $0x3,%edi
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    %edi,-0x10(%ebp)
 		and    $0xff,%eax
 		mov    %eax,-0x18(%ebp)
@@ -114047,7 +114047,7 @@ GLOBAL_FUNC(ASM_show_cryo_cybmod_list_box)	/* 0x098F1C */
 		mov    EXPORT_SYMBOL(small_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    EXPORT_SYMBOL(byte_197160),%ah
 		mov    -0xc(%ebp),%edx
 		add    %ah,%al
@@ -114438,7 +114438,7 @@ GLOBAL_FUNC(ASM_show_cryo_cybmod_list_box)	/* 0x098F1C */
 		mov    EXPORT_SYMBOL(small_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    EXPORT_SYMBOL(byte_197160),%ah
 		mov    -0xc(%ebp),%edx
 		add    %ah,%al
@@ -114537,7 +114537,7 @@ GLOBAL_FUNC(ASM_show_brief_netscan_box)	/* 0x099AC8 */
 		mov    small_med_font,%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
-		call   ac_font_height
+		call   ac_my_char_height
 		xor    %ah,%ah
 		mov    (%esp),%esi
 		mov    %ax,0x8(%esp)
@@ -114916,7 +114916,7 @@ GLOBAL_FUNC(ASM_show_controls_joystick_box)	/* 0x09BBE4 */
 		and    $0xffff,%eax
 		call   ac_my_set_text_window
 		mov    $0x41,%eax
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    %al,0x50(%esp)
 		mov    %al,0x54(%esp)
 		mov    0x4c(%esp),%eax
@@ -115022,7 +115022,7 @@ GLOBAL_FUNC(ASM_show_controls_joystick_box)	/* 0x09BBE4 */
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		mov    %dh,0xb(%esi)
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    %al,0x54(%esp)
 	jump_9bdbe:
 		mov    EXPORT_SYMBOL(lbDisplay)+96,%cx # lbDisplay__DrawFlags
@@ -118084,7 +118084,7 @@ GLOBAL_FUNC(ASM_draw_unkn20_subfunc_01)	/* 0x0A38F0 */
 		call   ac_draw_sprite_purple_list
 		movsbl %cl,%eax
 		xor    %dh,%dh
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    %al,%dl
 		xor    %ah,%ah
 		mov    %ch,%al
@@ -118230,7 +118230,7 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		jl     jump_a3dfb
 	jump_a3be6:
 		mov    $0x41,%eax
-		call   ac_font_height
+		call   ac_my_char_height
 		xor    %edx,%edx
 		xor    %ah,%ah
 		mov    EXPORT_SYMBOL(byte_197160),%dl
@@ -118240,7 +118240,7 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		xor    %edx,%edx
 		mov    $0x41,%eax
 		mov    %cx,0x20(%esp)
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    %al,%dl
 		mov    0x1e(%esp),%eax
 		sar    $0x10,%eax
@@ -119047,7 +119047,7 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 	jump_a450f:
 		mov    $0x41,%eax
 		xor    %edx,%edx
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    %al,%dl
 		xor    %eax,%eax
 		mov    EXPORT_SYMBOL(byte_197160),%al
@@ -119056,7 +119056,7 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		add    %eax,%edx
 		mov    $0x41,%eax
 		mov    %dx,0x20(%esp)
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    0x1e(%esp),%edx
 		and    $0xff,%eax
 		sar    $0x10,%edx
@@ -119399,7 +119399,7 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 	jump_a492d:
 		mov    $0x41,%eax
 		xor    %edx,%edx
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    %al,%dl
 		xor    %eax,%eax
 		mov    EXPORT_SYMBOL(byte_197160),%al
@@ -119408,7 +119408,7 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		add    %eax,%ebx
 		mov    $0x41,%eax
 		mov    %bx,0x20(%esp)
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    0x1e(%esp),%edx
 		and    $0xff,%eax
 		sar    $0x10,%edx
@@ -133274,7 +133274,7 @@ GLOBAL_FUNC(ASM_button_text)	/* 0x0B26CC */
 		mov    %eax,%edi
 		mov    $0x41,%eax
 		mov    0x6(%esi),%dx
-		call   ac_font_height
+		call   ac_my_char_height
 		and    $0xff,%eax
 		sub    %eax,%edx
 		mov    %edx,%eax
@@ -133285,7 +133285,7 @@ GLOBAL_FUNC(ASM_button_text)	/* 0x0B26CC */
 		mov    %eax,%ebx
 		mov    $0x41,%eax
 		xor    %ecx,%ecx
-		call   ac_font_height
+		call   ac_my_char_height
 		xor    %ah,%ah
 		xor    %edx,%edx
 		add    %ebx,%eax
@@ -133345,7 +133345,7 @@ GLOBAL_FUNC(ASM_info_box_text)	/* 0x0B2780 */
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		add    $0x3,%edx
-		call   ac_font_height
+		call   ac_my_char_height
 		xor    %ah,%ah
 		xor    %ecx,%ecx
 		add    %edx,%eax
@@ -133390,7 +133390,7 @@ GLOBAL_FUNC(ASM_info_box_text)	/* 0x0B2780 */
 		mov    %ax,%bx
 		mov    $0x41,%eax
 		mov    0x6(%esi),%dx
-		call   ac_font_height
+		call   ac_my_char_height
 		movzbl %al,%edi
 		lea    -0x1(%edx),%eax
 		sub    %edi,%eax
@@ -133495,7 +133495,7 @@ GLOBAL_FUNC(ASM_init_screen_button)	/* 0x0B2964 */
 		add    $0x4,%eax
 		mov    %ax,0x4(%esi)
 		mov    $0x41,%eax
-		call   ac_font_height
+		call   ac_my_char_height
 		xor    %ah,%ah
 		add    $0x6,%eax
 		mov    %ax,0x6(%esi)
@@ -133546,7 +133546,7 @@ GLOBAL_FUNC(ASM_init_screen_info_box)	/* 0x0B2A14 */
 		mov    0x1c(%esp),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    %al,%dl
 		mov    %di,(%esi)
 		xor    %ah,%ah
@@ -133557,7 +133557,7 @@ GLOBAL_FUNC(ASM_init_screen_info_box)	/* 0x0B2A14 */
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		xor    %ebx,%ebx
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    %al,%bl
 		xor    %eax,%eax
 		mov    %dl,%al
@@ -133567,7 +133567,7 @@ GLOBAL_FUNC(ASM_init_screen_info_box)	/* 0x0B2A14 */
 		jmp    jump_b2a72
 	jump_b2a66:
 		mov    $0x41,%eax
-		call   ac_font_height
+		call   ac_my_char_height
 		xor    %ah,%ah
 	jump_b2a72:
 		add    $0x6,%eax
@@ -135164,7 +135164,7 @@ GLOBAL_FUNC(ASM_flashy_draw_purple_text_box)	/* 0x0B3DA4 */
 		test   %bh,%bh
 		jne    jump_b3ea7
 		mov    $0x41,%eax
-		call   ac_font_height
+		call   ac_my_char_height
 		mov    EXPORT_SYMBOL(byte_197160),%ah
 		add    %ah,%al
 		mov    %al,0x40(%esi)
@@ -163235,7 +163235,7 @@ GLOBAL_FUNC(ASM_check_buy_sell_button)	/* 0x0CE5A8 */
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC(ASM_font_height)	/* 0x0CE7C8 */
+GLOBAL_FUNC(ASM_my_char_height)	/* 0x0CE7C8 */
 /*----------------------------------------------------------------*/
 		push   %ebx
 		push   %edx
@@ -165536,7 +165536,7 @@ GLOBAL_FUNC(ASM_show_title_box)	/* 0x0D29A4 */
 		xor    %edx,%edx
 		mov    $0x41,%eax
 		mov    0x6(%esi),%dx
-		call   ac_font_height
+		call   ac_my_char_height
 		and    $0xff,%eax
 		sub    %eax,%edx
 		mov    %edx,%eax
@@ -165545,7 +165545,7 @@ GLOBAL_FUNC(ASM_show_title_box)	/* 0x0D29A4 */
 		mov    0x2(%esi),%dx
 		add    %eax,%edx
 		mov    $0x41,%eax
-		call   ac_font_height
+		call   ac_my_char_height
 		xor    %ah,%ah
 		xor    %ecx,%ecx
 		add    %edx,%eax
@@ -165662,7 +165662,7 @@ GLOBAL_FUNC(ASM_show_world_city_info_box)	/* 0x0D2A84 */
 		mov    small_med_font,%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
-		call   ac_font_height
+		call   ac_my_char_height
 		xor    %ah,%ah
 		mov    %eax,0x8(%esp)
 		mov    (%esp),%eax

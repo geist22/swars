@@ -165,7 +165,7 @@ ubyte show_world_city_info_box(struct ScreenTextBox *p_box)
 
     lbDisplay.DrawFlags |= Lb_TEXT_HALIGN_CENTER;
     lbFontPtr = small_med_font;
-    tx_height = font_height('A');
+    tx_height = my_char_height('A');
     my_set_text_window(p_box->X + 3, p_box->Y + 4, p_box->Width - 6, p_box->Height - 8);
     scr_y = 4;
     ln_height = tx_height + 4;

@@ -116,7 +116,7 @@ ubyte show_campaigns_list(struct ScreenBox *box)
     ncampgns = selectable_campaigns_count();
     campgn_height = box_height / (ncampgns + 1);
     cy = box_height / (ncampgns + 1);
-    line_height = font_height('A');
+    line_height = my_char_height('A');
     lbDisplay.DrawColour = 87;
 
     for (campgn = 0; campgn < ncampgns; campgn++)
@@ -290,7 +290,7 @@ void init_login_screen_boxes(void)
     login_abort_button.X = (scr_w - login_abort_button.Width) / 2  - 1;
 
     lbFontPtr = small_med_font;
-    ln_height = font_height('A') * 5 / 4;
+    ln_height = my_char_height('A') * 5 / 4;
     ncampgns = selectable_campaigns_count();
 
     login_campaigns_box.Height = 2 * border + 2 * ln_height + 3 * ln_height * (ncampgns + 1);

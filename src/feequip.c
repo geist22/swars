@@ -727,7 +727,7 @@ void draw_text_property_lv(struct ScreenBoxBase *box, const char *text)
     my_set_text_window(box->X, box->Y, box->Width, box->Height);
     lbDisplay.DrawFlags = Lb_TEXT_HALIGN_CENTER;
     lbFontPtr = small_med_font;
-    cy = box->Height - font_height('A');
+    cy = box->Height - my_char_height('A');
     draw_text_purple_list2(0, cy, text, 0);
 }
 
@@ -1116,7 +1116,7 @@ ubyte show_weapon_name(struct ScreenTextBox *box)
 
     lbFontPtr = box->Font;
     text_w = my_string_width(box->Text);
-    text_h = font_height('A');
+    text_h = my_char_height('A');
     scr_x = box->X + ((box->Width - text_w) >> 1);
     scr_y = box->Y + ((box->Height - text_h) >> 1);
     my_set_text_window(scr_x, scr_y, 640u, scr_y + text_h);

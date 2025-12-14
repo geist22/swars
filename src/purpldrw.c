@@ -432,7 +432,7 @@ short get_text_box_lines_visible(struct ScreenTextBox *p_box)
 
     lbFontPtr = p_box->Font;
     if (p_box->LineHeight == 0)
-        p_box->LineHeight = p_box->LineSpacing + font_height('A');
+        p_box->LineHeight = p_box->LineSpacing + my_char_height('A');
 
     return get_text_box_window_lines_visible(p_box);
 }
@@ -793,7 +793,7 @@ ubyte flashy_draw_purple_text_box(struct ScreenTextBox *p_box)
     lbFontPtr = p_box->Font;
     byte_197160 = p_box->LineSpacing;
     if (p_box->LineHeight == 0)
-        p_box->LineHeight = byte_197160 + font_height('A');
+        p_box->LineHeight = byte_197160 + my_char_height('A');
 
     lines_visible = get_text_box_window_lines_visible(p_box);
 
@@ -1497,7 +1497,7 @@ ubyte button_text(struct ScreenButton *p_btn)
 
     lbFontPtr = p_btn->Font;
     text_w = my_string_width(p_btn->Text);
-    text_h = font_height('A');
+    text_h = my_char_height('A');
     text_x = p_btn->X + ((p_btn->Width - text_w) >> 1) + 1;
     text_y = p_btn->Y + ((p_btn->Height - text_h) >> 1);
     my_set_text_window(text_x, text_y, lbDisplay.GraphicsScreenWidth, text_y + text_h);

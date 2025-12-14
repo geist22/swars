@@ -100,7 +100,7 @@ void draw_mission_stats_names_column(struct ScreenBox *box,
 
     lbDisplay.DrawFlags = 0;
     lbFontPtr = med_font;
-    fheight = font_height('A');
+    fheight = my_char_height('A');
     lnheight = fheight + 4;
     sepheight = fheight + 4;
 
@@ -160,7 +160,7 @@ void draw_mission_stats_vals_static(struct ScreenBox *box,
 
     lbDisplay.DrawFlags = 0;
     lbFontPtr = med_font;
-    fheight = font_height('A');
+    fheight = my_char_height('A');
     lnheight = fheight + 4;
     sepheight = fheight + 4;
 
@@ -309,7 +309,7 @@ void draw_mission_stats_vals_dynamic(struct ScreenBox *box,
 
     lbDisplay.DrawFlags = 0;
     lbFontPtr = med_font;
-    fheight = font_height('A');
+    fheight = my_char_height('A');
     lnheight = fheight + 4;
     sepheight = fheight + 4;
 
@@ -351,7 +351,7 @@ void draw_mission_stats_vals_dynamic(struct ScreenBox *box,
             draw_text_purple_list2(x, y, text, 0);
             dx = LbTextStringWidth(text) + 4;
             lbFontPtr = small_med_font;
-            dy = fheight - font_height('A'); // print at same level as previous test
+            dy = fheight - my_char_height('A'); // print at same level as previous test
             draw_text_purple_list2(x + dx, y + dy, text2, 0);
             lbFontPtr = med_font;
         } else {
@@ -439,7 +439,7 @@ void draw_mission_people_stats_names_column(struct ScreenBox *box,
 
     lbDisplay.DrawFlags = 0;
     lbFontPtr = med_font;
-    fheight = font_height('A');
+    fheight = my_char_height('A');
     lnheight = fheight + 4;
 
     // Row with names
@@ -484,7 +484,7 @@ void draw_mission_people_stats_vals_column(struct ScreenBox *box,
 
     lbDisplay.DrawFlags = 0;
     lbFontPtr = med_font;
-    fheight = font_height('A');
+    fheight = my_char_height('A');
     lnheight = fheight + 4;
 
     // Row with values
@@ -549,7 +549,7 @@ void draw_mission_mp_players_names_column(struct ScreenBox *box,
 
     lbDisplay.DrawFlags = 0;
     lbFontPtr = med_font;
-    fheight = font_height('A');
+    fheight = my_char_height('A');
     lnheight = fheight + 4;
 
     y = 2 * lnheight;
@@ -600,7 +600,7 @@ void draw_mission_mp_players_vals_column(struct ScreenBox *box,
 
     lbDisplay.DrawFlags = 0;
     lbFontPtr = med_font;
-    fheight = font_height('A');
+    fheight = my_char_height('A');
     lnheight = fheight + 4;
 
     y = 2 * lnheight;
