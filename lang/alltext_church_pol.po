@@ -250,7 +250,7 @@ msgstr ""
 #: mission.brief.mail2.par6.c5
 msgctxt "mission brief email paragraph"
 msgid "The Nine have said this."
-msgstr "Tak rzeko Dziewięcioro."
+msgstr "Tak rzekło Dziewięcioro."
 
 #: mission.brief.mail2.par8.c1
 msgctxt "mission brief book quote"
@@ -407,7 +407,7 @@ msgid ""
 "Mark thine enemy, for all that separates the damned from the chosen is a dot "
 "of monochrome light, projected onto the back of a neck."
 msgstr ""
-"Naznacz wroga swego, albowiem wszystko, co oddziela potępionych od "
+"Naznacz wroga swego, albowiem wszystko, co odróżnia potępionych od "
 "wybrańców, to punkt jednobarwnego światła, rzuconym na kark."
 
 #: mission.brief.mail4.map7.level3:1
@@ -588,7 +588,7 @@ msgstr ""
 "Oto słowo Dziewięciorga. Są tacy, co mają potężne mózgi, lecz zagubione "
 "umysły. Błąkają się po mrocznym pustkowiu, niezdolni jeszcze ujrzeć światła "
 "naszej wiary. Jeden z nich prowadzi obecnie wojnę przeciw Zwiastunowi w "
-"służbie EuroCorp. Dziewiątka zamierza ocalić jego duszę, oddając jego "
+"służbie EuroCorp. Dziewięcioro zamierza ocalić jego duszę, oddając jego "
 "intelekt boskiej sprawie przemiany Kodeksu w nową technologię."
 
 #: mission.brief.mail6.par6.c5
@@ -712,7 +712,7 @@ msgstr ""
 "Dziewięcioro miało widzenie. Niewiedzeni pragną podkopać nasze zamysły wobec "
 "Pacyficznego Kręgu. Heretyk, znany nam jako Ko-Paull Vissick, wypacza nasze "
 "przesłanie. Poddaje on motłoch Nieprowadzonych karykaturze pradawnej wiedzy, "
-"objawionej nam przez Dziewiątkę. Taka rozmyślna lekkomyślność szkodzi "
+"objawionej nam przez Dziewięcioro. Taka rozmyślna lekkomyślność szkodzi "
 "jedynie nieprzygotowanemu umysłowi, a przez to wichrzycielstwo Vissick "
 "wznieca większą wrogość wobec naszego Kościoła."
 

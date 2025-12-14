@@ -43,6 +43,7 @@
 #include "enginshadws.h"
 #include "enginshrapn.h"
 #include "engintrns.h"
+#include "game_data.h"
 #include "game_options.h"
 #include "game_speed.h"
 #include "game_sprani.h"
@@ -483,6 +484,13 @@ void set_floor_texture_uv(ushort sftex, struct PolyPoint *p_pt1, struct PolyPoin
   struct PolyPoint *p_pt3, struct PolyPoint *p_pt4, ubyte gflags)
 {
     struct SingleFloorTexture *p_sftex;
+    int limit;
+
+    limit = get_memory_ptr_allocated_count((void **)&game_textures);
+    if ((limit >= 0) && (sftex >= limit)) {
+        LOGERR("Texture %d above allocated count of %d", (int)sftex, limit);
+        sftex = 0; // continue with texture 0 instead
+    }
 
     p_sftex = &game_textures[sftex];
 
