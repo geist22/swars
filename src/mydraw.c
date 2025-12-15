@@ -55,11 +55,11 @@ int font_word_length(const char *text)
     len = 0;
     for (p = (const ubyte *)text; *p != '\0'; p++)
     {
-        struct TbSprite *spr;
+        const struct TbSprite *spr;
 
         if (*p == 32)
             break;
-        spr = &small_font[*p - 31];
+        spr = LbFontCharSprite(small_font, *p);
         len += spr->SWidth;
     }
     return len;
@@ -228,9 +228,10 @@ static short my_draw_one_char(short x, short y, char c)
 
     if ((lbDisplay.DrawFlags & Lb_TEXT_ONE_COLOR) != 0) {
         LbSpriteDrawOneColour(x, y - dy,
-          &lbFontPtr[uc - 31], lbDisplay.DrawColour);
+          LbFontCharSprite(lbFontPtr, uc),
+          lbDisplay.DrawColour);
     } else {
-        LbSpriteDraw(x, y - dy, &lbFontPtr[uc - 31]);
+        LbSpriteDraw(x, y - dy, LbFontCharSprite(lbFontPtr, uc));
     }
     return LbTextCharWidth(uc);
 }
