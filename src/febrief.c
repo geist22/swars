@@ -22,6 +22,7 @@
 #include "bftext.h"
 #include "bfmath.h"
 #include "bfmemut.h"
+#include "bfutility.h"
 #include "bfscrcopy.h"
 #include "ssampply.h"
 
@@ -76,10 +77,9 @@ ubyte ac_accept_mission(ubyte click);
 ubyte ac_do_unkn1_CANCEL(ubyte click);
 void ac_purple_unkn2_data_to_screen(void);
 void ac_SCANNER_data_to_screen(void);
-
 void update_netscan_cost_button(ubyte city_id)
 {
-    int k;
+    int k, max_width;
     ushort ninfo;
     char *text;
 
@@ -93,6 +93,21 @@ void update_netscan_cost_button(ubyte city_id)
         text = gui_strings[442];
     }
     brief_NETSCAN_COST_box.Text1 = text;
+
+    // Update label size, in case its text got longer
+    max_width = brief_NETSCAN_button.X - brief_NETSCAN_COST_box.X;
+    // Width of the cost field can normally only reach until the
+    // netscan button. Unless said button is hidden - then it can
+    // go through the button width as well
+    if (brief_NETSCAN_COST_box.Text2[0] == '\0') {
+        max_width += brief_NETSCAN_button.Width;
+    }
+    // width algorithm from init_screen_button()
+    lbFontPtr = brief_NETSCAN_COST_box.Font1;
+    k = my_string_width(brief_NETSCAN_COST_box.Text1) + 4;
+    k = max(k, 213);
+    brief_NETSCAN_COST_box.Width = min(k, max_width);
+    brief_NETSCAN_COST_box.Flags |= GBxFlg_Unkn0001;
 }
 
 void reveal_netscan_objective(short nsobv)
@@ -707,7 +722,6 @@ void init_brief_screen_boxes(void)
       gui_strings[442], unkn39_text, 6, med_font, small_med_font, 1);
     brief_NETSCAN_COST_box.Text2 = brief_netscan_cost_text;
     brief_NETSCAN_button.CallBackFn = ac_brief_do_netscan_enhance;
-    brief_netscan_box.Flags |= (GBxFlg_RadioBtn|GBxFlg_IsMouseOver);
     brief_netscan_box.DrawTextFn = ac_show_brief_netscan_box;
 
     init_screen_text_box(&brief_mission_text_box, 338u, 72u, 295u, 354, 6, small_font, 3);
@@ -717,13 +731,14 @@ void init_brief_screen_boxes(void)
       gui_strings[437], 6, med2_font, 1, 0x80);
     brief_mission_text_box.Buttons[0] = &unkn1_ACCEPT_button;
     brief_mission_text_box.Buttons[1] = &unkn1_CANCEL_button;
-    brief_mission_text_box.Flags |= (GBxFlg_RadioBtn|GBxFlg_IsMouseOver);
     brief_mission_text_box.Text = mission_briefing_text;
     unkn1_ACCEPT_button.CallBackFn = ac_accept_mission;
     unkn1_CANCEL_button.CallBackFn = ac_do_unkn1_CANCEL;
 
     init_screen_box(&brief_graphical_box, 7, 72, 322, 200, 6);
     brief_graphical_box.SpecialDrawFn = show_citymap_box;
+
+    reset_brief_screen_boxes_flags();
 
     // Reposition the components to current resolution
 
@@ -784,7 +799,7 @@ void reset_brief_screen_player_state(void)
 
 void reset_brief_screen_boxes_flags(void)
 {
-    brief_NETSCAN_COST_box.Flags = GBxFlg_Unkn0001;
+    brief_NETSCAN_COST_box.Flags = GBxFlg_Unkn0001 | GBxFlg_NoBkCopy;
     brief_netscan_box.Flags = GBxFlg_Unkn0001 | GBxFlg_RadioBtn | GBxFlg_IsMouseOver;
     brief_graphical_box.Flags = GBxFlg_Unkn0001;
     brief_mission_text_box.Flags = GBxFlg_Unkn0001 | GBxFlg_RadioBtn | GBxFlg_IsMouseOver;
