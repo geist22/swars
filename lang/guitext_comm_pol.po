@@ -149,7 +149,7 @@ msgstr "Pocisk Dźwiękowy"
 #: guitext:20
 msgctxt "Weapon name - Eurocorp"
 msgid "Graviton Gun"
-msgstr "Działo Grawitacyjne"
+msgstr "Działo Grawitacyj."
 
 #. Weapon name visible in Equip and Research menus, Debriafings, and within Missions.
 #: guitext:21
@@ -287,7 +287,7 @@ msgstr "Mina Jonowa"
 #: guitext:43
 msgctxt "Weapon name - Church of N.E."
 msgid "High Explosive"
-msgstr "Materiał Wybuchowy"
+msgstr "Mater. Wybuchowy"
 
 #. Weapon name visible in Equip and Research menus, Debriafings, and within Missions.
 #: guitext:44
@@ -329,7 +329,7 @@ msgstr "Pocisk Dźwiękowy"
 #: guitext:50
 msgctxt "Weapon name - Church of N.E."
 msgid "Graviton Gun"
-msgstr "Działo grawitacyjne"
+msgstr "Działo Grawitacyj."
 
 #. Weapon name visible in Equip and Research menus, Debriafings, and within Missions.
 #: guitext:51
@@ -2447,7 +2447,7 @@ msgstr "Tech"
 #: guitext:403
 msgctxt "MP settings"
 msgid "Funds"
-msgstr "Fundusze"
+msgstr "Środki"
 
 #. Text on button for ejecting unwanted players from a game, needs to be short.
 #: guitext:404

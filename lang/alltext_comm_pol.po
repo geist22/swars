@@ -921,7 +921,7 @@ msgstr "Złożona zabudowa miejska"
 #: mapscreen.city2:4 mapscreen.city22:4
 msgctxt "map screen location - language"
 msgid "New American"
-msgstr "Nowoamerykański"
+msgstr "Nowo-amerykański"
 
 #: mapscreen.city2:5
 msgctxt "map screen location - industry"
@@ -931,7 +931,7 @@ msgstr "Produkcja pojazdów"
 #: mapscreen.city2:6
 msgctxt "map screen location - toxicity"
 msgid "Heavy Industrial, Radioactive Waste"
-msgstr "Przemysł ciężki, odpady radioaktywne"
+msgstr "Przemysł ciężki, odpady radioaktyw."
 
 #: mapscreen.city3:1
 msgctxt "map screen location - name"
@@ -989,7 +989,7 @@ msgstr "Produkcja tworzyw sztucznych, produkcja sprzętu"
 #: mapscreen.city4:6
 msgctxt "map screen location - toxicity"
 msgid "Radioactive Waste, Human Effluent"
-msgstr "Odpady radioaktywne, ścieki ludzkie"
+msgstr "Odpady radioaktyw., ścieki ludzkie"
 
 #: mapscreen.city5:1
 msgctxt "map screen location - name"
@@ -1037,7 +1037,7 @@ msgstr "Detoksykacja wody, przetwarzanie powietrza"
 #: mapscreen.city6:6 mapscreen.city9:6 mapscreen.city18:6 mapscreen.city29:6
 msgctxt "map screen location - toxicity"
 msgid "Radioactive Waste"
-msgstr "Odpady radioaktywne"
+msgstr "Odpady radioaktyw."
 
 #: mapscreen.city7:1
 msgctxt "map screen location - name"
@@ -1184,7 +1184,7 @@ msgstr "Produkcja broni"
 #: mapscreen.city12:6
 msgctxt "map screen location - toxicity"
 msgid "Ultra-Heavy Industrial, Radioactive Waste, Human Effluent"
-msgstr "Przemysł ultra-ciężki, Odpady radioaktywne, Pozostałości ludzkie"
+msgstr "Przemysł ultra-ciężki, Odpady radioaktyw., Pozostałości ludzkie"
 
 #: mapscreen.city13:1
 msgctxt "map screen location - name"
@@ -1339,7 +1339,7 @@ msgstr "Wytwarzanie odzieży, Destylacja"
 #: mapscreen.city19:6
 msgctxt "map screen location - toxicity"
 msgid "Radioactive Fallout, Human Effluent"
-msgstr "Odpady radioaktywne, Ścieki ludzkie"
+msgstr "Odpady radioaktyw., Ścieki ludzkie"
 
 #: mapscreen.city20:1
 msgctxt "map screen location - name"
@@ -1793,7 +1793,7 @@ msgstr "Manipulacja pogodą"
 #: mapscreen.city44:6
 msgctxt "map screen location - toxicity"
 msgid "High Radioactive, Light Industrial"
-msgstr "Odpady wysoce radioaktywne, Przemysł lekki"
+msgstr "Odpady wysoce radioaktyw., Przemysł lekki"
 
 #: mapscreen.city45:1
 msgctxt "map screen location - name"
@@ -1838,7 +1838,7 @@ msgstr "Powietrze"
 #: mapscreen.city46:6
 msgctxt "map screen location - toxicity"
 msgid "Low Radioactive"
-msgstr "Nisko radioaktywne"
+msgstr "Nisko radioaktyw."
 
 #: mapscreen.city47:1
 msgctxt "map screen location - name"
@@ -1873,7 +1873,7 @@ msgstr "3,4 mln"
 #: mapscreen.city48:6
 msgctxt "map screen location - toxicity"
 msgid "High Radioactive Waste, Heavy Industrial"
-msgstr "Odpady wysoce radioaktywne, Przemysł ciężki"
+msgstr "Odpady wysoce radioaktyw., Przemysł ciężki"
 
 #: mapscreen.city49:1
 msgctxt "map screen location - name"
@@ -1893,7 +1893,7 @@ msgstr "Portugalski (Dawny)"
 #: mapscreen.city49:6
 msgctxt "map screen location - toxicity"
 msgid "Radioactive Waste, Light Industrial"
-msgstr "Odpady radioaktywne, Przemysł lekki"
+msgstr "Odpady radioaktyw., Przemysł lekki"
 
 #: sci.death.reason:1
 msgctxt "scientists death reason"
