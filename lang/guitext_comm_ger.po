@@ -3658,6 +3658,12 @@ msgctxt "Date formatting"
 msgid "Hours"
 msgstr "Stunden"
 
+#. Short name for mission duration, put before the time period string.
+#: guitext:633
+msgctxt "Mission metrics"
+msgid "Time"
+msgstr "Zeit"
+
 #. Title on pause secreen.
 #: guitext:634
 msgctxt "In-mission menu title"
@@ -4211,7 +4217,7 @@ msgstr "Ungeleiteter"
 #: guitext:608 guitext:609 guitext:610 guitext:611 guitext:612 guitext:613
 #: guitext:614 guitext:615 guitext:616 guitext:617 guitext:618 guitext:619
 #: guitext:620 guitext:621 guitext:622 guitext:623 guitext:624 guitext:625
-#: guitext:630 guitext:631 guitext:632 guitext:633 guitext:643 guitext:644
+#: guitext:630 guitext:631 guitext:632 guitext:643 guitext:644
 #: guitext:645 guitext:652 guitext:653 guitext:654 guitext:655 guitext:656
 #: guitext:657 guitext:658 guitext:659 guitext:660 guitext:661 guitext:662
 #: guitext:663 guitext:664 guitext:665 guitext:666 guitext:667 guitext:668
