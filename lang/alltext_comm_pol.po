@@ -387,7 +387,7 @@ msgstr "Wyeliminuj Dziewiątkę"
 
 #: scanner.objective:73
 msgctxt "objective text shown on scanner"
-msgid "The Nine have activated the ion gate. you have been defeated."
+msgid "The Nine have activated the ion gate. You have been defeated."
 msgstr "Dziewiątka aktywowała bramę jonową. Zostałeś pokonany."
 
 #: scanner.objective:74
@@ -883,7 +883,7 @@ msgstr "21,13 mln"
 #: mapscreen.city1:3
 msgctxt "map screen location - landscape"
 msgid "Post-industrial"
-msgstr "Postindustrialny"
+msgstr "Post-industrialny"
 
 #: mapscreen.city1:4
 msgctxt "map screen location - language"
@@ -893,7 +893,7 @@ msgstr "Niski angielski"
 #: mapscreen.city1:5
 msgctxt "map screen location - industry"
 msgid "Software Engineering, Financial Services"
-msgstr "Inżynieria oprogramowania, Usługi finansowe"
+msgstr "Inżynieria oprogramow., Usługi finansowe"
 
 #: mapscreen.city1:6 mapscreen.city21:6 mapscreen.city34:6
 msgctxt "map screen location - toxicity"
