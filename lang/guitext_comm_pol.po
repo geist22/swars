@@ -269,7 +269,7 @@ msgstr "Zakłócacz"
 #: guitext:40
 msgctxt "Weapon name - Church of N.E."
 msgid "Psycho Gas"
-msgstr "Gaz Psychoaktywny"
+msgstr "Gaz Psychoaktyw."
 
 #. Weapon name visible in Equip and Research menus, Debriafings, and within Missions.
 #: guitext:41
@@ -299,7 +299,7 @@ msgstr "Mina Napalmowa"
 #: guitext:45
 msgctxt "Weapon name - Church of N.E."
 msgid "Long Range Rifle"
-msgstr "Karabin Dalekostrzelny"
+msgstr "Karab. Dalekostrz."
 
 #. Weapon name visible in Equip and Research menus, Debriafings, and within Missions.
 #: guitext:46
@@ -1451,13 +1451,13 @@ msgstr ""
 #: guitext:237
 msgctxt "Zealot female names pool"
 msgid "Martha"
-msgstr ""
+msgstr "Marta"
 
 #. Church of N.E. zealots are called by selected biblical names.
 #: guitext:238
 msgctxt "Zealot female names pool"
 msgid "Natalie"
-msgstr ""
+msgstr "Natalia"
 
 #. Church of N.E. zealots are called by selected biblical names.
 #: guitext:239
@@ -1469,7 +1469,7 @@ msgstr ""
 #: guitext:240
 msgctxt "Zealot female names pool"
 msgid "Lucia"
-msgstr ""
+msgstr "Łucja"
 
 #. Church of N.E. zealots are called by selected biblical names.
 #: guitext:241
@@ -1487,13 +1487,13 @@ msgstr ""
 #: guitext:243
 msgctxt "Zealot female names pool"
 msgid "Sarah"
-msgstr ""
+msgstr "Sara"
 
 #. Church of N.E. zealots are called by selected biblical names.
 #: guitext:244
 msgctxt "Zealot female names pool"
 msgid "Angela"
-msgstr ""
+msgstr "Andżela"
 
 #. Church of N.E. zealots are called by selected biblical names.
 #: guitext:245
@@ -1529,7 +1529,7 @@ msgstr ""
 #: guitext:250
 msgctxt "Zealot female names pool"
 msgid "Caroline"
-msgstr ""
+msgstr "Karolina"
 
 #. Church of N.E. zealots are called by selected biblical names.
 #: guitext:251
@@ -1541,13 +1541,13 @@ msgstr ""
 #: guitext:252
 msgctxt "Zealot female names pool"
 msgid "Julie"
-msgstr ""
+msgstr "Julia"
 
 #. Church of N.E. zealots are called by selected biblical names.
 #: guitext:253
 msgctxt "Zealot female names pool"
 msgid "Kirsten"
-msgstr ""
+msgstr "Krystyna"
 
 #. Church of N.E. zealots are called by selected biblical names.
 #: guitext:254
@@ -1619,7 +1619,7 @@ msgstr ""
 #: guitext:265
 msgctxt "Zealot female names pool"
 msgid "Louise"
-msgstr ""
+msgstr "Luiza"
 
 #. Church of N.E. zealots are called by selected biblical names.
 #: guitext:266
@@ -1673,13 +1673,13 @@ msgstr ""
 #: guitext:274
 msgctxt "Zealot female names pool"
 msgid "Stephanie"
-msgstr ""
+msgstr "Stefania"
 
 #. Church of N.E. zealots are called by selected biblical names.
 #: guitext:275
 msgctxt "Zealot female names pool"
 msgid "Eve"
-msgstr ""
+msgstr "Ewa"
 
 #. Church of N.E. zealots are called by selected biblical names.
 #: guitext:276
@@ -1813,7 +1813,7 @@ msgctxt "Outcast names pool"
 msgid "Cook"
 msgstr ""
 
-#. Unguided outcasts are called by whatever they chose, names or pseudonyms. Often Bullfrog employees or their friends.
+#. Unguided outcasts are called by whatever they chose, names or pseudonyms. One based on Bullfrog employee, Glenn.
 #: guitext:298
 msgctxt "Outcast names pool"
 msgid "Corpes"
@@ -1843,7 +1843,7 @@ msgctxt "Outcast names pool"
 msgid "Deane"
 msgstr ""
 
-#. Unguided outcasts are called by whatever they chose, names or pseudonyms. Often Bullfrog employees or their friends.
+#. Unguided outcasts are called by whatever they chose, names or pseudonyms. One based on Bullfrog employee, Mike.
 #: guitext:303
 msgctxt "Outcast names pool"
 msgid "Diskett"
@@ -1855,13 +1855,13 @@ msgctxt "Outcast names pool"
 msgid "Harrison"
 msgstr ""
 
-#. Unguided outcasts are called by whatever they chose, names or pseudonyms. Often Bullfrog employees or their friends.
+#. Unguided outcasts are called by whatever they chose, names or pseudonyms. One based on Bullfrog employee, Kevin.
 #: guitext:305
 msgctxt "Outcast names pool"
 msgid "Donkin"
 msgstr ""
 
-#. Unguided outcasts are called by whatever they chose, names or pseudonyms. Often Bullfrog employees or their friends.
+#. Unguided outcasts are called by whatever they chose, names or pseudonyms. One based on Bullfrog founder, Les.
 #: guitext:306
 msgctxt "Outcast names pool"
 msgid "Edgar"
@@ -1915,7 +1915,7 @@ msgctxt "Outcast names pool"
 msgid "Heywood"
 msgstr ""
 
-#. Unguided outcasts are called by whatever they chose, names or pseudonyms. Often Bullfrog employees or their friends.
+#. Unguided outcasts are called by whatever they chose, names or pseudonyms. One based on Bullfrog employee, Chris.
 #: guitext:315
 msgctxt "Outcast names pool"
 msgid "Hill"
@@ -1939,7 +1939,7 @@ msgctxt "Outcast names pool"
 msgid "Jarrett"
 msgstr ""
 
-#. Unguided outcasts are called by whatever they chose, names or pseudonyms. Often Bullfrog employees or their friends.
+#. Unguided outcasts are called by whatever they chose, names or pseudonyms. One based on Bullfrog employee, Andy.
 #: guitext:319
 msgctxt "Outcast names pool"
 msgid "Jones"
@@ -2035,7 +2035,7 @@ msgctxt "Outcast names pool"
 msgid "Metcalf"
 msgstr ""
 
-#. Unguided outcasts are called by whatever they chose, names or pseudonyms. Often Bullfrog employees or their friends.
+#. Unguided outcasts are called by whatever they chose, names or pseudonyms. One based on Bullfrog founder, Peter.
 #: guitext:335
 msgctxt "Outcast names pool"
 msgid "Molyneux"
@@ -2131,7 +2131,7 @@ msgctxt "Outcast names pool"
 msgid "Robson"
 msgstr ""
 
-#. Unguided outcasts are called by whatever they chose, names or pseudonyms. Often Bullfrog employees or their friends.
+#. Unguided outcasts are called by whatever they chose, names or pseudonyms. One based on Bullfrog employee, Russell.
 #: guitext:351
 msgctxt "Outcast names pool"
 msgid "Shaw"
@@ -2185,13 +2185,13 @@ msgctxt "Outcast names pool"
 msgid "Thomas"
 msgstr ""
 
-#. Unguided outcasts are called by whatever they chose, names or pseudonyms. Often Bullfrog employees or their friends.
+#. Unguided outcasts are called by whatever they chose, names or pseudonyms. One based on Bullfrog employee, Alex.
 #: guitext:360
 msgctxt "Outcast names pool"
 msgid "Trowers"
 msgstr ""
 
-#. Unguided outcasts are called by whatever they chose, names or pseudonyms. Often Bullfrog employees or their friends.
+#. Unguided outcasts are called by whatever they chose, names or pseudonyms. One based on Bullfrog employee, Mark.
 #: guitext:361
 msgctxt "Outcast names pool"
 msgid "Webley"
@@ -2687,7 +2687,7 @@ msgstr "Netskan"
 #: guitext:443
 msgctxt "Generic property"
 msgid "Cost:"
-msgstr "Koszt"
+msgstr "Cena"
 
 #. Button text on the first screen after launching the game.
 #: guitext:444

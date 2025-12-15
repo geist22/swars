@@ -1813,7 +1813,7 @@ msgctxt "Outcast names pool"
 msgid "Cook"
 msgstr ""
 
-#. Unguided outcasts are called by whatever they chose, names or pseudonyms. Often Bullfrog employees or their friends.
+#. Unguided outcasts are called by whatever they chose, names or pseudonyms. One based on Bullfrog employee, Glenn.
 #: guitext:298
 msgctxt "Outcast names pool"
 msgid "Corpes"
@@ -1843,7 +1843,7 @@ msgctxt "Outcast names pool"
 msgid "Deane"
 msgstr ""
 
-#. Unguided outcasts are called by whatever they chose, names or pseudonyms. Often Bullfrog employees or their friends.
+#. Unguided outcasts are called by whatever they chose, names or pseudonyms. One based on Bullfrog employee, Mike.
 #: guitext:303
 msgctxt "Outcast names pool"
 msgid "Diskett"
@@ -1855,13 +1855,13 @@ msgctxt "Outcast names pool"
 msgid "Harrison"
 msgstr ""
 
-#. Unguided outcasts are called by whatever they chose, names or pseudonyms. Often Bullfrog employees or their friends.
+#. Unguided outcasts are called by whatever they chose, names or pseudonyms. One based on Bullfrog employee, Kevin.
 #: guitext:305
 msgctxt "Outcast names pool"
 msgid "Donkin"
 msgstr ""
 
-#. Unguided outcasts are called by whatever they chose, names or pseudonyms. Often Bullfrog employees or their friends.
+#. Unguided outcasts are called by whatever they chose, names or pseudonyms. One based on Bullfrog founder, Les.
 #: guitext:306
 msgctxt "Outcast names pool"
 msgid "Edgar"
@@ -1915,7 +1915,7 @@ msgctxt "Outcast names pool"
 msgid "Heywood"
 msgstr ""
 
-#. Unguided outcasts are called by whatever they chose, names or pseudonyms. Often Bullfrog employees or their friends.
+#. Unguided outcasts are called by whatever they chose, names or pseudonyms. One based on Bullfrog employee, Chris.
 #: guitext:315
 msgctxt "Outcast names pool"
 msgid "Hill"
@@ -1939,7 +1939,7 @@ msgctxt "Outcast names pool"
 msgid "Jarrett"
 msgstr ""
 
-#. Unguided outcasts are called by whatever they chose, names or pseudonyms. Often Bullfrog employees or their friends.
+#. Unguided outcasts are called by whatever they chose, names or pseudonyms. One based on Bullfrog employee, Andy.
 #: guitext:319
 msgctxt "Outcast names pool"
 msgid "Jones"
@@ -2035,7 +2035,7 @@ msgctxt "Outcast names pool"
 msgid "Metcalf"
 msgstr ""
 
-#. Unguided outcasts are called by whatever they chose, names or pseudonyms. Often Bullfrog employees or their friends.
+#. Unguided outcasts are called by whatever they chose, names or pseudonyms. One based on Bullfrog founder, Peter.
 #: guitext:335
 msgctxt "Outcast names pool"
 msgid "Molyneux"
@@ -2131,7 +2131,7 @@ msgctxt "Outcast names pool"
 msgid "Robson"
 msgstr ""
 
-#. Unguided outcasts are called by whatever they chose, names or pseudonyms. Often Bullfrog employees or their friends.
+#. Unguided outcasts are called by whatever they chose, names or pseudonyms. One based on Bullfrog employee, Russell.
 #: guitext:351
 msgctxt "Outcast names pool"
 msgid "Shaw"
@@ -2185,13 +2185,13 @@ msgctxt "Outcast names pool"
 msgid "Thomas"
 msgstr ""
 
-#. Unguided outcasts are called by whatever they chose, names or pseudonyms. Often Bullfrog employees or their friends.
+#. Unguided outcasts are called by whatever they chose, names or pseudonyms. One based on Bullfrog employee, Alex.
 #: guitext:360
 msgctxt "Outcast names pool"
 msgid "Trowers"
 msgstr ""
 
-#. Unguided outcasts are called by whatever they chose, names or pseudonyms. Often Bullfrog employees or their friends.
+#. Unguided outcasts are called by whatever they chose, names or pseudonyms. One based on Bullfrog employee, Mark.
 #: guitext:361
 msgctxt "Outcast names pool"
 msgid "Webley"
