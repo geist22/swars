@@ -21,7 +21,7 @@ msgstr ""
 "Project-Id-Version: Menu text for SyndWarsFX\n"
 "Report-Msgid-Bugs-To: https://github.com/swfans/syndwarsfx/issues\n"
 "POT-Creation-Date: 2023-09-05 11:32+0200\n"
-"PO-Revision-Date: 2025-12-16 03:33+0100\n"
+"PO-Revision-Date: 2025-12-16 18:35+0100\n"
 "Last-Translator: Mefistotelis <mefistotelis@gmail.com>\n"
 "Language-Team: Syndicate Wars Fans <github.com/swfans>\n"
 "Language: pl_PL\n"
@@ -106,7 +106,7 @@ msgstr "Rozkazy"
 #: mission.brief.mail1.par5.c2
 msgctxt "mission brief email orders"
 msgid "London: Quell disorder."
-msgstr "Londyn: Zdławić nieporządek."
+msgstr "Londyn: Zdławić rozruchy."
 
 #: mission.brief.mail1.par6.c5
 msgctxt "mission brief email paragraph"
@@ -118,8 +118,8 @@ msgid ""
 msgstr ""
 "Zgłaszane są nadzwyczajne awarie chipów UTOPIA. Wszystkie przypadki dotyczą całkowitych "
 "wyłączeń, pełnych zniszczeń CHIP-ów. Dotknięta populacja została zaklasyfikowana jako U–"
-"Niewiedzeni. Odnotowujemy cywili kategorii U jako naruszających kody zachowań w promieniu "
-"jednego kilometra kwadratowego od tej podstacji."
+"Niewiedzeni. Odnotowujemy cywili kategorii U naruszających kody zachowań w obszarze jednego "
+"kilometra kwardratowego wokół tej podstacji."
 
 #: mission.brief.mail1.par7.c4 mission.brief.mail31.par9.c4 mission.brief.mail32.par9.c4
 msgctxt "mission brief email sender"
@@ -130,7 +130,7 @@ msgstr "EuroCorp Core 0-1-0/171261/26D: Londyńska Sztuczna Inteligencja, UTOPIA
 #: mission.brief.mail32.par10.expansion
 msgctxt "mission brief email sender"
 msgid "Universal Transferred Organic Processing Interface Architecture"
-msgstr "Uniwersalna Architektura Przetwarzania Organicznego z Transferem Interfejsów"
+msgstr "Uniwersalny Transfer z Organicznego Przetwarzania w Interfejs Architektury"
 
 #: mission.brief.mail1.map30.level16:1
 msgctxt "mission brief tactical information"
@@ -218,7 +218,7 @@ msgstr ""
 #: mission.brief.mail2.par10.c5
 msgctxt "mission brief email paragraph"
 msgid "You will direct agents to execute these missions."
-msgstr "Będziesz kierować agentami w realizacji tych misji."
+msgstr "Będziesz bezpośrednio kierować agentami w celu realizacji tych misji."
 
 #: mission.brief.mail2.par11.c5
 msgctxt "mission brief email paragraph"
@@ -229,9 +229,10 @@ msgid ""
 "works, it's shifting from AI to AI faster than we can track it."
 msgstr ""
 "Sytuacja ogólna jest niekorzystna. Przeprowadzono globalny atak na Syndykat. UTOPIA SI w "
-"Detroit była celem, a mój odpowiednik na miejscu został zlikwidowany. Napastnicy wprowadzili "
-"do UTOPIA zaawansowanego wirusa. Zabezpieczenia nie aktywują się. Wirus, niezależnie od "
-"mechanizmu działania, przenosi się między SI szybciej, niż jesteśmy w stanie go śledzić."
+"Detroit była celem i tenże mój odpowiednik na miejscu został zlikwidowany. Napastnicy "
+"wprowadzili do UTOPIA zaawansowanego wirusa. Zabezpieczenia nie aktywują się. Wirus, "
+"niezależnie od mechanizmu działania, przenosi się między SI szybciej, niż jesteśmy w stanie "
+"go śledzić."
 
 #: mission.brief.mail2.par12.c5
 msgctxt "mission brief email paragraph"
@@ -255,7 +256,7 @@ msgid ""
 "and can be distinguished by caped body armour."
 msgstr ""
 "Najbardziej fanatyczni wyznawcy tej tak zwanej „Świątyni” określają siebie mianem „Uczniów” i "
-"wyróżniają się noszeniem pancerzy z pelerynami."
+"wyróżniają się noszeniem pancerzy z kapturami i pelerynami."
 
 #: mission.brief.mail2.par14.c4 mission.brief.mail3.par12.c4 mission.brief.mail4.par12.c4
 #: mission.brief.mail5.par8.c4 mission.brief.mail6.par10.c4 mission.brief.mail7.par10.c4
@@ -296,7 +297,7 @@ msgstr "Fuzja"
 #: mission.title:3
 msgctxt "mission title"
 msgid "Friendly Persuasion"
-msgstr "Perswazja Przyjazna"
+msgstr "Przyjazna Perswazja"
 
 #: mission.brief.mail3.par2.h mission.brief.mail4.par2.h mission.brief.mail5.par2.h
 #: mission.brief.mail6.par2.h mission.brief.mail7.par2.h mission.brief.mail8.par2.h
@@ -371,7 +372,7 @@ msgstr ""
 "Aby dopełnić uderzenie wymierzone w Yamaguchi, odwiedź ich biura w Pekinie. Zlokalizuj i "
 "poddaj perswazji kluczowych dyrektorów. Zneutralizuj wszelkich napotkanych agentów. Symulacje "
 "misji Londyńskiej SI wskazują na potrzebę pozyskania dodatkowych agentów w celu uzupełnienia "
-"zasobów utrzymywanych w stazie kriogenicznej. Autoryzuje się użycie Persuadertronu według "
+"zasobów utrzymywanych w stazie kriogenicznej. Autoryzuje się użycie Perswadertronu według "
 "uznania."
 
 #: mission.brief.mail3.par11.c5
@@ -380,7 +381,7 @@ msgid ""
 "By the time you complete your objectives, Yamaguchi should be eager to discard any notion of "
 "leaving the EuroCorp fold."
 msgstr ""
-"Po zakończeniu realizacji celów Yamaguchi powinno wykazywać pełną gotowość do porzucenia "
+"Po zakończeniu realizacji celów, Yamaguchi powinno wykazywać pełną gotowość do porzucenia "
 "wszelkich zamiarów opuszczenia struktury EuroCorp."
 
 #: mission.brief.mail3b.map1.level1:1 mission.brief.mail8a.map1.level15:1
@@ -506,7 +507,7 @@ msgid ""
 "its zealots."
 msgstr ""
 "Co istotne, obywatele Niewiedzeni niekoniecznie dołączają do tego kultu, nawet w przypadku "
-"bezpośredniego kontaktu z jego fanatykami."
+"bezpośredniego kontaktu z jego zelotami."
 
 #: mission.brief.mail4.par11.c5
 msgctxt "mission brief email paragraph"
@@ -555,7 +556,7 @@ msgstr "Podsłuch: aktywność Niewiedzonych monitorowana przez policję"
 msgctxt "mission brief tactical information"
 msgid "Satellite Alert: Zealot personnel carriers detected approaching city from south west"
 msgstr ""
-"Alert satelitarny: wykryto transportery personelu fanatyków zbliżające się do miasta od "
+"Alert satelitarny: wykryto transportery personelu Zelotów zbliżające się do miasta od "
 "południowego zachodu"
 
 #: mission.brief.mail4b.map2.level1:1
@@ -581,7 +582,7 @@ msgstr "Podsłuch: przelew kredytów namierzony do świątyni Kościoła Nowej E
 #: mission.title:34
 msgctxt "mission title"
 msgid "Open Re-Bullion"
-msgstr "Otwarta Rekwizycja Kruszcu"
+msgstr "Otwarta Rekwizycja"
 
 #: mission.brief.mail5.par5.c2
 msgctxt "mission brief email orders"
@@ -616,7 +617,7 @@ msgstr ""
 "Tang Assurance nierozważnie ogłosiła miasto niezależnym. W konsekwencji kruszec ma zostać "
 "przetransportowany pod uzbrojoną eskortą z sejfu banku centralnego do siedziby Tang. Nie ma "
 "czasu na zniszczenie banku, ponieważ operatorzy Tang dotrą tam przed Twoimi agentami. "
-"Sytuacja ta stwarza jednak możliwość przejęcia konwoju opancerzonego przed osiągnięciem celu."
+"Sytuacja ta stwarza jednak możliwość przejęcia opancerzonego konwoju przed osiągnięciem celu."
 
 #: mission.brief.mail5.map9.level1:1
 msgctxt "mission brief tactical information"
@@ -636,7 +637,7 @@ msgstr "Główny sejf (podziemny)"
 #: mission.brief.mail5.map9.level1:4
 msgctxt "mission brief tactical information"
 msgid "Tang Protective bullion convoy"
-msgstr "Konwój kruszcu Tang Protective"
+msgstr "Konwój kruszcu Tang Assurance"
 
 #: mission.brief.mail5.map9.level1:5
 msgctxt "mission brief tactical information"
@@ -656,7 +657,7 @@ msgstr "Kwatera główna Tang"
 #: mission.title:21
 msgctxt "mission title"
 msgid "Phoenix In Flames"
-msgstr "Phoenix w Ogniu"
+msgstr "Phoenix w Płomieniach"
 
 #: mission.brief.mail6.par5.c2
 msgctxt "mission brief email orders"
@@ -694,7 +695,7 @@ msgstr ""
 "Zgodnie z korelacją skanów sieciowych i obserwacji satelitarnych, Kult ustanowił główne "
 "centrum operacyjne w Phoenix, gdzie Zwiastun całkowicie skaził lokalną SI UTOPIA, "
 "umożliwiając niemal pełne obalenie władzy EuroCorp. Starszyzna kultu, określana przez "
-"konwertytów mianem „akolitów”, poddaje nowo nawróconych fanatyków intensywnej indoktrynacji i "
+"konwertytów mianem „akolitów”, poddaje nowo nawróconych zelotów intensywnej indoktrynacji i "
 "szkoleniu. Skuteczność świeżo nawróconych jest jednak ograniczana przez chaos wywołany przez "
 "tysiące obywateli, którzy po ataku wirusa stali się Niewiedzonymi."
 
@@ -750,7 +751,7 @@ msgstr ""
 #: mission.brief.mail7.par6.c2
 msgctxt "mission brief email orders"
 msgid "Prevent emergence of independent syndicate by annihilating the local garrison."
-msgstr "Zapobiec powstaniu niezależnego syndykatu poprzez unicestwienie lokalnego garnizonu."
+msgstr "Zapobież powstaniu niezależnego syndykatu poprzez unicestwienie lokalnego garnizonu."
 
 #: mission.brief.mail7.par7.c5
 msgctxt "mission brief email paragraph"
@@ -765,8 +766,8 @@ msgid ""
 "block."
 msgstr ""
 "Zwiastun okazał się szczególnie skuteczny w Rzymie. Po jego przejściu ulice zalewa fala "
-"chaosu. Niewiedzeni gromadzą się i przystępują do systematycznego niszczenia miasta, kwartał "
-"po kwartale."
+"chaosu. Niewiedzeni gromadzą się i przystępują do systematycznego niszczenia miasta, kwadrant "
+"po kwadrancie."
 
 #: mission.brief.mail7.par9.c5
 msgctxt "mission brief email paragraph"
@@ -777,7 +778,7 @@ msgid ""
 msgstr ""
 "Dawny garnizon ochrony EuroCorp odizolował się, podczas gdy stacjonujący tam agent próbuje "
 "odzyskać kontrolę nad lokalną, skażoną wirusem SI. Warunki te czynią jednak sejf garnizonu "
-"podatnym na przejęcie. Zneutralizować cały personel garnizonu."
+"podatnym na przejęcie. Zneutralizuj cały personel garnizonu."
 
 #: mission.brief.mail7.map28.level46:1 mission.brief.mail9.map28.level15:1
 msgctxt "mission brief tactical information"
@@ -788,7 +789,7 @@ msgstr "Strefa desantu: Rzym – łącze IML"
 msgctxt "mission brief tactical information"
 msgid "Low-order domicile bunker complexes fortified by category U-Unguided citizens"
 msgstr ""
-"Kompleksy bunkrów mieszkalnych niskiej klasy wzmocnione przez obywateli kategorii U–"
+"Kompleksy bunkrów mieszkalnych niskiego standardu okupowane przez obywateli kategorii U–"
 "Niewiedzeni"
 
 #: mission.brief.mail7.map28.level46:3
@@ -808,12 +809,12 @@ msgid ""
 "forces unknown"
 msgstr ""
 "Alert satelitarny: kontrola nad strategicznym satelitą obronnym Rzymu została utracona na "
-"rzecz nieznanych sił wrogich"
+"rzecz nieznanych wrogich sił"
 
 #: mission.title:55
 msgctxt "mission title"
 msgid "Body Matters"
-msgstr "Znaczenie Ciała"
+msgstr "Sprawy Doczesne"
 
 #: mission.title:56
 msgctxt "mission title"
@@ -823,7 +824,7 @@ msgstr "Intruz"
 #: mission.title:58
 msgctxt "mission title"
 msgid "Semi-Automatic"
-msgstr "Pół-automat"
+msgstr "Pół-Automat"
 
 #: mission.brief.mail8.par5.c2
 msgctxt "mission brief email orders"
@@ -885,7 +886,7 @@ msgid ""
 "in their reports."
 msgstr ""
 "Zaleca się przeprowadzenie rozpoznania tych obszarów. Agenci powinni uwzględnić w raportach "
-"ocenę swoich nowych modyfikacji."
+"ocenę swoich nowych wszczepów."
 
 #: mission.brief.mail8.par16.c3
 msgctxt "mission brief email paragraph"
@@ -958,7 +959,7 @@ msgstr "Podsłuch: systemy zabezpieczeń banku zostały niedawno wzmocnione"
 #: mission.title:57
 msgctxt "mission title"
 msgid "Head Hunt"
-msgstr "Polowanie na Głowę"
+msgstr "Łowienie Głów"
 
 #: mission.brief.mail9.par5.c2
 msgctxt "mission brief email orders"
@@ -1009,8 +1010,8 @@ msgid ""
 "the Syndicate could have done what he did. God only knows why he's hooked up with this "
 "Unguided scum. I'll look into it."
 msgstr ""
-"Monitorujemy maksymalną możliwą ilość ruchu UTOPII. Kościół Nowej Epoki przejął znaczną jego "
-"część, a reszta to w większości bezwartościowe pozostałości po Zwiastunie. Londyńska SI "
+"Monitorujemy maksymalną możliwą ilość transferów UTOPII. Kościół Nowej Epoki przejął znaczną "
+"ich część, a reszta to w większości bezwartościowe pozostałości po Zwiastunie. Londyńska SI "
 "odnotowała jednak jeszcze jeden przypadek ingerencji w UTOPIĘ – teraz, gdy stało się to w "
 "ogóle możliwe. Wszystko wskazywało na Vissicka. Ostatecznie okazało się, że był to duch – bez "
 "możliwości ustalenia źródła transmisji. Musiał to jednak być Vissick. Mało kto w Syndykacie "
@@ -1177,8 +1178,8 @@ msgid ""
 "Hexagon scientists in Santiago, Buenos Aires, Cape Town and Adelaide. Seek out and persuade "
 "these scientists at your discretion."
 msgstr ""
-"Ostatnie zadanie Vissicka było objęte tak ścisłą klauzulą tajności – a UTOPIA została tak "
-"dotkliwie zdewastowana przez wirusa Zwiastuna – że informacje o charakterze tej misji są "
+"Ostatnie zadanie Vissicka sprzed wirusa było objęte tak ścisłą klauzulą tajności – a UTOPIA "
+"została tak dotkliwie zdewastowana przez Zwiastuna – że informacje o charakterze tej misji są "
 "fragmentaryczne. Wiemy jednak, że pracował on w zespole czołowych badaczy Gel Data oraz "
 "korporacji Hexagon nad projektem realizowanym w Islandii. Jennifer Taks przekazała nam "
 "lokalizacje naukowców Gel Data i Hexagon w Santiago, Buenos Aires, Kapsztadzie oraz Adelaide. "
@@ -1203,7 +1204,7 @@ msgstr "Naukowiec docelowy"
 #: mission.brief.mail11b.map7.level1:4
 msgctxt "mission brief tactical information"
 msgid "North Side over-run by zealots"
-msgstr "Północna dzielnica opanowana przez fanatyków"
+msgstr "Północna dzielnica opanowana przez zelotów"
 
 #: mission.brief.mail11d.map26.level1:1
 msgctxt "mission brief tactical information"
@@ -1218,7 +1219,7 @@ msgstr "Siedziba korporacji Hexagon"
 #: mission.brief.mail11d.map26.level1:5
 msgctxt "mission brief tactical information"
 msgid "Eavesdrop: Hexagon reserves vault"
-msgstr "Podsłuch: sejf rezerw Hexagon"
+msgstr "Podsłuch: Sejf rezerw Hexagon"
 
 #: mission.brief.mail11d.map26.level1:6
 msgctxt "mission brief tactical information"
@@ -1238,7 +1239,7 @@ msgstr "Wejście do ośrodka badawczego Hexagon"
 #: mission.brief.mail11c.map44.level1:5
 msgctxt "mission brief tactical information"
 msgid "Eavesdrop: Zealots have taken control of this installation"
-msgstr "Podsłuch: fanatycy przejęli kontrolę nad tą instalacją"
+msgstr "Podsłuch: Zeloci przejęli kontrolę nad tą instalacją"
 
 #: mission.brief.mail11a.map6.level1:1
 msgctxt "mission brief tactical information"
@@ -1261,7 +1262,7 @@ msgid ""
 "Christchurch: Despatch a team of agents immediately. Locate and secure the trans-polar IML "
 "Link."
 msgstr ""
-"Christchurch: natychmiast wysłać zespół agentów. Zlokalizować i zabezpieczyć transpolarne "
+"Christchurch: Datychmiast wysłać zespół agentów. Zlokalizować i zabezpieczyć transpolarne "
 "łącze IML."
 
 #: mission.brief.mail12.par6.c5
@@ -1290,7 +1291,7 @@ msgid ""
 "EuroCorp's R&D elite."
 msgstr ""
 "Dziesięciu kluczowych członków zespołu znanych było zbiorczo jako Cybernetyczna Konferencja "
-"Poznawcza, w skrócie C3. Na jej czele stał Ko-Paull Vissick. Wszyscy członkowie C3 wywodzili "
+"Kognitywna, w skrócie C3. Na jej czele stał Ko-Paull Vissick. Wszyscy członkowie C3 wywodzili "
 "się z elity działu B+R EuroCorp."
 
 #: mission.brief.mail12.par8.c5
@@ -1325,7 +1326,7 @@ msgstr "Obszar docelowy: Christchurch – łącze IML B"
 #: mission.brief.mail12.map36.level1:3
 msgctxt "mission brief tactical information"
 msgid "Tang Protective agents detected"
-msgstr "Wykryto agentów Tang Protective"
+msgstr "Wykryto agentów Tang Assurance"
 
 #: mission.brief.mail12.map36.level1:4
 msgctxt "mission brief tactical information"
@@ -1340,7 +1341,7 @@ msgstr "Mroczne Anioły w Architekturze"
 #: mission.title:28
 msgctxt "mission title"
 msgid "The Hive"
-msgstr "Rój"
+msgstr "Rój w Ulu"
 
 #: mission.brief.mail13.par5.c2
 msgctxt "mission brief email orders"
@@ -1436,7 +1437,7 @@ msgid ""
 "mechanics and evolutionary cognition. The Codex contains enough revolutionary science to keep "
 "every AI in UTOPIA busy for years. London AI is going to do the best it can to study it alone."
 msgstr ""
-"Wbrew rozkazom Ko-Paulla Vissicka, niektórzy członkowie zespołu użyli eksperymentalnego "
+"Wbrew zakazowi Ko-Paulla Vissicka, niektórzy członkowie zespołu użyli eksperymentalnego "
 "wzmacniacza mózgowego na samych sobie. Pierwszym był członek C3, Tyrone Chodak, który "
 "prowadził również dziennik misji. Kilka wpisów odnosi się do drugiej księgi, którą Chodak "
 "zaczął pisać, aby wyjaśnić teorie naukowe, jakie jego wzmocniony umysł był w stanie "
@@ -1720,12 +1721,12 @@ msgid ""
 "suspect her of being able to detect our agents."
 msgstr ""
 "Informacje te otrzymałem od emerytowanego agenta EuroCorp, którego archaiczna technologia "
-"cybernetyczna pozwoliła mu przetrwać niezależnie od początku przestoju. Nazywa się Wu. Ze "
-"względu na jego wyjątkową zaradność zawarłem z nim porozumienie. Wu udostępni mi pełen zakres "
+"cybernetyczna pozwoliła mu przetrwać niezależnie od początku awarii sieci. Nazywa się Wu. "
+"Doceniając jego wyjątkową zaradność zawarłam z nim porozumienie. Wu udostępni mi pełen zakres "
 "wyższych funkcji mózgowych na czas jednej dodatkowej misji. Jeśli ją ukończy, rozbuduję "
-"własną pamięć pęcherzykową i włączę jego świadomość do mojej struktury, gdy tylko UTOPIA "
-"zostanie przywrócona. Wu ma spróbować perswadować De Saxo. Podejrzewam, że jest zdolna "
-"wykrywać naszych agentów."
+"własną pamięć o dodatkowy pęcherzyk obliczeniowy i włączę jego świadomość do mojej struktury, "
+"gdy tylko UTOPIA zostanie przywrócona. Wu ma spróbować perswadować De Saxo. Podejrzewam, że "
+"jest zdolna wykrywać naszych agentów."
 
 #: mission.brief.mail17.par9.c5
 msgctxt "mission brief email paragraph"
@@ -1733,9 +1734,9 @@ msgid ""
 "Wu has already equipped himself with one of the Church's modified Persuadertrons and is fully "
 "prepared for the task ahead of him. If he succeeds, almost eternal consciousness is his."
 msgstr ""
-"Wu wyposażył się już w jeden z modyfikowanych Persuadertronów Kościoła i jest w pełni "
-"przygotowany do realizacji zadania. W razie powodzenia niemal wieczna świadomość stanie się "
-"jego udziałem."
+"Wu wyposażył się już w jeden z modyfikowanych Perswadertronów Kościoła i jest w pełni "
+"przygotowany do realizacji zadania. W razie powodzenia, otworzy się przed nim perspektywa "
+"niemal wiecznej świadomości."
 
 #: mission.brief.mail17.map22.level16:1
 msgctxt "mission brief tactical information"
@@ -1750,7 +1751,7 @@ msgstr "Aktualna pozycja De Saxo"
 #: mission.brief.mail17.map22.level16:3
 msgctxt "mission brief tactical information"
 msgid "Zealot held facilities"
-msgstr "Obiekty zajęte przez fanatyków"
+msgstr "Obiekty zajęte przez Zelotów"
 
 #: mission.title:83
 msgctxt "mission title"
@@ -1812,7 +1813,7 @@ msgstr "Eksodus"
 #: mission.title:24
 msgctxt "mission title"
 msgid "Edge Of Darkness"
-msgstr "Na Krawędzi Ciemności"
+msgstr "Krawędź Ciemności"
 
 #: mission.brief.mail19.par5.c2
 msgctxt "mission brief email orders"
@@ -1882,7 +1883,7 @@ msgid ""
 "must bring under control."
 msgstr ""
 "Aktualizacja: przechwycona komunikacja pomiędzy Ko-Paullem Vissickiem a jego porucznikami "
-"wskazuje, że Niewiedzeni planują wydostać się poza granice miast. Vissick spodziewa się, że "
+"wskazuje, że Niewiedzeni planują wydostać się poza granice miasta. Vissick spodziewa się, że "
 "jego wyznawcy zbiorą się nad jeziorem Margui Caka na Wyżynie Tybetańskiej, gdzie — według "
 "niego — przetrwają Kataklizm. W rzeczywistości ich koniec nastąpi na długo przed osiągnięciem "
 "celu. Niemniej jednak w Delhi i Sewastopolu odnotowano masowe powstania, a kontrola EuroCorp "
@@ -1896,7 +1897,7 @@ msgid ""
 "be waiting for something, perhaps a final instruction from Vissick, before attempting to "
 "break through the city perimeter controls."
 msgstr ""
-"Ciężki sektor przemysłowy Sewastopola został całkowicie opanowany przez tłumy Niewiedzonych. "
+"Sektor przemysłu ciężkiego Sewastopola został całkowicie opanowany przez tłumy Niewiedzonych. "
 "Wszystko, co nie zostało jeszcze zniszczone, znajduje się obecnie w ich rękach. Na szczęście "
 "wydają się na coś oczekiwać — być może na ostateczne instrukcje od Vissicka — zanim podejmą "
 "próbę przełamania kontroli perymetru miasta."
@@ -1943,7 +1944,7 @@ msgstr "Centrum dystrybucyjne FoamSteel Defence Industries"
 #: mission.brief.mail19a.map27.level2:4
 msgctxt "mission brief tactical information"
 msgid "Satellite Alert: EuroCorp operatives and MBT"
-msgstr "Alert satelitarny: agenci EuroCorp oraz czołg podstawowy"
+msgstr "Alert satelitarny: Agenci EuroCorp oraz Czołg Bitewny"
 
 #: mission.brief.mail19b.map5.level1:1
 msgctxt "mission brief tactical information"
@@ -2059,7 +2060,7 @@ msgid ""
 "can mount a search for the bodies."
 msgstr ""
 "Sam Vissick zdołał uciec, jednak jego rebelia została zakończona. On oraz kilku pozostałych "
-"zginą na toksycznych pustkowiach poza granicami miast. Po rozprawieniu się z Kościołem "
+"zginą na toksycznych pustkowiach poza granicami miast. Po rozprawieniu się z Kościołem, "
 "będziemy mogli przystąpić do poszukiwań ciał."
 
 #: mission.brief.mail21.par7.c5
@@ -2139,7 +2140,7 @@ msgid ""
 "disorder."
 msgstr ""
 "Tokio: uzbrojeni obywatele kategorii U — Niewiedzeni — zgłaszani za naruszenia kodów "
-"zachowań. Stłumić nieporządek."
+"zachowań. Stłumić protesty."
 
 #: mission.brief.mail31.par6.h mission.brief.mail32.par6.h
 msgctxt "mission brief email header"
@@ -2243,7 +2244,7 @@ msgid ""
 msgstr ""
 "Laser ten wykorzystuje bazowy gaz TriSodium 89 (opracowany około −20 NK). Broń może zostać "
 "przeciążona poprzez opóźnienie zwolnienia spustu. W krytycznych sytuacjach walki na bliskim "
-"dystansie pojedynczy przeciążony impuls może być wystarczająco gorący, by zdezintegruje cel."
+"dystansie pojedynczy przeciążony impuls może być wystarczająco gorący, by zdezintegrować cel."
 
 #: weapons.BEAM.description
 msgctxt "weapons description - plasma lance"
@@ -2256,11 +2257,11 @@ msgid ""
 "tempered materials."
 msgstr ""
 "Techniki anihilacji elektronowej doprowadziły do opracowania tej potężnej broni. Wykorzystuje "
-"ona monopolarne ognisko do projekcji pola wiązkowego, które przekształca cząsteczki atmosfery "
-"w plazmę. Materia stała ulega odparowaniu przy kontakcie z plazmą, uwalniając dodatkową "
-"energię. Pole to może siać całkowite zniszczenie na znacznym dystansie. Cofnięcie ogniska "
-"monopolarnego poprzez opóźnienie zwolnienia spustu zwiększa skuteczność przeciwko materiałom "
-"gęstym lub hartowanym."
+"ona monopolarne ogniskowanie do projekcji pola wielowiązkowego, które przekształca cząsteczki "
+"atmosfery w plazmę. Materia stała ulega odparowaniu przy kontakcie z plazmą, uwalniając "
+"dodatkową energię. Pole to może siać całkowite zniszczenie na znacznym dystansie. Wydłużenie "
+"okresu ogniskowanie monopolarnego poprzez opóźnienie zwolnienia spustu zwiększa skuteczność "
+"przeciwko materiałom gęstym lub hartowanym."
 
 #: weapons.RAP.description
 msgctxt "weapons description - launcher"
@@ -2300,7 +2301,7 @@ msgid ""
 msgstr ""
 "Standardowe narzędzie służące do przejmowania wyższych funkcji mózgowych obywateli "
 "wyposażonych w chipy UTOPIA. Choć charakteryzuje się niskim poborem mocy i niewielką masą, "
-"znaczenie historyczne Persuadertronu jest nie do przecenienia — odegrał kluczową rolę w "
+"znaczenie historyczne Perswadertronu jest nie do przecenienia — odegrał kluczową rolę w "
 "ustanowieniu globalnej dominacji EuroCorp. Osoby poddane perswazji podążają za agentem bez "
 "wahania, uzbrajają się i podejmują walkę bez strachu."
 
@@ -2325,10 +2326,10 @@ msgid ""
 "all the targets persuaded followers to their previously un-persuaded state."
 msgstr ""
 "To urządzenie bliskiego zasięgu generuje rezonansową falę jonową, która zakłóca programowanie "
-"CHIP-ów u jednostek objętych jej frontem. W praktyce oznacza to cofnięcie stanu perswazji. "
-"Destruktor jest szczególnie skuteczny przeciwko użytkownikom Persuadertronu, ponieważ fala "
-"jonowa atakuje sygnał u źródła, przywracając wszystkich podporządkowanych obserwatorów do ich "
-"pierwotnego, niepoddawanego perswazji stanu."
+"CHIP-ów u jednostek objętych jej frontem. W praktyce oznacza to cofnięcie stanu "
+"perswadowania. Zakłócacz jest szczególnie skuteczny przeciwko użytkownikom Perswadertronu, "
+"ponieważ fala jonowa atakuje sygnał u źródła, przywracając wszystkie podporządkowane "
+"jednostki do ich pierwotnego, niepoddawanego perswazji stanu."
 
 #: weapons.CRAZYGAS.description
 msgctxt "weapons description - psycho gas"
@@ -2364,9 +2365,9 @@ msgid ""
 "are burned out. Conductors such as vehicles, street furniture and cyborgs take most of the "
 "charge. Can affect persuaded status of anyone caught in its area of effect."
 msgstr ""
-"Mina impulsu elektromagnetycznego aktywowana zbliżeniowo. Sprzęt znajdujący się w polu "
-"impulsu zostaje czasowo, a w niektórych przypadkach trwale, unieszkodliwiony, a elektryczne "
-"mechanizmy tkanek organicznych ulegają wypaleniu. Przewodniki, takie jak pojazdy, "
+"Mina generująca impuls elektromagnetyczny, aktywowana zbliżeniowo. Sprzęt znajdujący się w "
+"polu impulsu zostaje czasowo, a w niektórych przypadkach trwale, unieszkodliwiony, a "
+"elektryczne mechanizmy tkanek organicznych ulegają wypaleniu. Przewodniki, takie jak pojazdy, "
 "infrastruktura uliczna i cyborgi, absorbują największą część ładunku. Może wpływać na stan "
 "perswazji jednostek objętych obszarem działania."
 
@@ -2393,12 +2394,12 @@ msgid ""
 "other delivery systems. In keeping with the design spec, the rate-of-fire sacrifice buys on-"
 "the-fly re-calibration, making this the optimal sniper's weapon."
 msgstr ""
-"Nowy karabin LR wykorzystuje technologię sanek monopolarnych do rozpędzania amunicji z "
-"zubożonego uranu dużego kalibru do prędkości Mach 5,2. Kondensatory sanek rozładowują się "
-"całkowicie przy pojedynczym strzale i wymagają pełnego doładowania przed kolejnym użyciem, "
-"jednak precyzja i zasięg operacyjny nie mają odpowiednika w innych systemach rażenia. Zgodnie "
-"ze specyfikacją projektową poświęcenie szybkostrzelności umożliwia bieżącą rekalkibrację, "
-"czyniąc tę broń optymalnym narzędziem snajperskim."
+"Nowy karabin dalekostrzelny wykorzystuje technologię sanek monopolarnych do rozpędzania "
+"amunicji z zubożonego uranu dużego kalibru do prędkości Mach 5,2. Kondensatory sanek "
+"rozładowują się całkowicie przy pojedynczym strzale i wymagają pełnego doładowania przed "
+"kolejnym użyciem, jednak precyzja i zasięg operacyjny nie mają odpowiednika w innych "
+"systemach rażenia. Zgodnie ze specyfikacją projektową poświęcenie szybkostrzelności umożliwia "
+"bieżącą rekalkibrację, czyniąc tę broń optymalnym narzędziem snajperskim."
 
 #: weapons.AIRSTRIKE.description
 msgctxt "weapons description - satellite rain"
@@ -2433,7 +2434,7 @@ msgstr ""
 "łańcuchowej, która odwraca silne wiązania molekularne wzdłuż trajektorii określonej przez "
 "polaryzację grawityczną. Reakcja rozpoczyna się po naciśnięciu spustu i jest utrzymywana w "
 "komorze Noxonu, gdzie narasta aż do momentu jego zwolnienia. Materia celu jest rozrywana "
-"cząsteczka po cząsteczce. Broń może powodować straty uboczne wskutek emisji nadmiarowej "
+"cząsteczka po cząsteczce. Broń może powodować wiązki boczne wskutek emisji nadmiarowej "
 "energii."
 
 #: weapons.RAZORWIRE.description
@@ -2458,8 +2459,8 @@ msgid ""
 "they followed the Church's twisted teachings."
 msgstr ""
 "Prowadzone przez profesora Drennana badania nad technologią Kościoła zaowocowały opracowaniem "
-"Persuadertronu II. Urządzenie to potrafi infiltrować umysły nawet najbardziej zahartowanych w "
-"walce fanatyków. Po poddaniu jego wpływowi wyznawcy będą wykonywać polecenia z taką samą "
+"Perswadertronu II. Urządzenie to potrafi infiltrować umysły nawet najbardziej zahartowanych w "
+"walce zelotów. Po poddaniu jego wpływowi wyznawcy będą wykonywać polecenia z taką samą "
 "determinacją, z jaką wcześniej podążali za wypaczonymi doktrynami Kościoła."
 
 #: weapons.STASISFLD.description
@@ -2490,10 +2491,10 @@ msgid ""
 msgstr ""
 "W jednym z najbardziej ezoterycznych przełomów Dziewięciorga, odkryto sposób na uwolnienie "
 "sił elektrochemicznych wciąż uwięzionych w ciałach zneutralizowanych organizmów. Zrozumienie "
-"tych mechanizmów daje nam nad nimi pełną kontrolę. Na tej technologii opiera się Chromotap. "
+"tych mechanizmów daje nam nad nimi pełną kontrolę. Na tej technologii opiera się Chromossak. "
 "Urządzenie to pozyskuje energię z materii organicznej na poziomie komórkowym i przekazuje ją "
-"operatorowi. Chromotap jest szczególnie użyteczny do doładowywania agentów po wymianie ognia, "
-"gdyż potrafi wykorzystać energię komórkową poległych."
+"operatorowi. Chromossak jest szczególnie użyteczny do doładowywania agentów po wymianie "
+"ognia, gdyż potrafi wykorzystać energię komórkową poległych."
 
 #: weapons.TIMEGUN.description
 msgctxt "weapons description - displacertron"
@@ -2503,7 +2504,7 @@ msgid ""
 "dimensional time. This causes the target to vanish entirely and reappear at a point in the "
 "near future. Never has the saboteur been given a more powerful tool."
 msgstr ""
-"Profesor Drennan po raz kolejny dostarczył rezultaty. Displacertron wykorzystuje rdzeń z "
+"Profesor Drennan po raz kolejny dostarczył rezultaty. Wypieracz Czasowy wykorzystuje rdzeń z "
 "ultragęstej materii otoczony stroboskopową powłoką stazy, zapewniając ograniczony dostęp do "
 "czasu wyższych wymiarów. Skutkuje to całkowitym zniknięciem celu i jego ponownym pojawieniem "
 "się w niedalekiej przyszłości. Nigdy wcześniej sabotażyści nie dysponowali narzędziem o "
@@ -2518,7 +2519,7 @@ msgid ""
 "exhausts its power pack or is destroyed."
 msgstr ""
 "Ten elektroniczny strażnik może znacząco zwiększyć skuteczność działań defensywnych i "
-"ofensywnych agentów. Umieszczony w odpowiednim miejscu i uzbrojony w laser impulsowy pełni "
+"ofensywnych agentów. Umieszczony w odpowiednim miejscu i uzbrojony w lasery impulsowe pełni "
 "funkcję wartowniczą, otwierając ogień do każdego nieświadomego wrogiego celu, który znajdzie "
 "się w zasięgu, aż do wyczerpania źródła zasilania lub zniszczenia urządzenia."
 
@@ -2555,10 +2556,10 @@ msgid ""
 "molecules thick, Trigger Wire is very difficult to see with even the later modification eyes, "
 "yet when touched activates multiple explosions along its length."
 msgstr ""
-"Podobnie jak Drut Ostrzowy, Drut Spustowy jest doskonałym narzędziem do blokowania dostępu. O "
-"grubości zaledwie kilku cząsteczek, jest wyjątkowo trudny do wykrycia nawet dla oczu z "
-"zaawansowanymi modyfikacjami, a dotknięcie go powoduje aktywację wielu eksplozji na całej "
-"jego długości."
+"Podobnie jak Drut Ostrzowy, Drut Wyzwalający jest doskonałym narzędziem do blokowania "
+"dostępu. O grubości zaledwie kilku cząsteczek, jest wyjątkowo trudny do wykrycia nawet dla "
+"oczu z zaawansowanymi modyfikacjami, a dotknięcie go powoduje aktywację wielu eksplozji na "
+"całej jego długości."
 
 #: weapons.CLONESHLD.description
 msgctxt "weapons description - clone shield"

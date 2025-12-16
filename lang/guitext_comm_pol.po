@@ -3209,19 +3209,19 @@ msgstr "Rozszerzenia dźwięku"
 #: guitext:532
 msgctxt "Audio Track button"
 msgid "Trk 1"
-msgstr "Ściż. 1"
+msgstr "Ściż.1"
 
 #. Text on a button for selection of audio track, either CD or tension.
 #: guitext:533
 msgctxt "Audio Track button"
 msgid "Trk 2"
-msgstr "Ściż. 2"
+msgstr "Ściż.2"
 
 #. Text on a button for selection of audio track, either CD or tension.
 #: guitext:534
 msgctxt "Audio Track button"
 msgid "Trk 3"
-msgstr "Ściż. 3"
+msgstr "Ściż.3"
 
 #. Allows performin Equip/Cryo screen operation (putchease/sell) on all 4 agents.
 #: guitext:535
