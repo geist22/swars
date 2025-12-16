@@ -412,7 +412,7 @@ ushort my_draw_text(short x, short y, const char *text, ushort startline)
             }
             else
             {
-                if (scr_y < text_window_y1) {
+                if (scr_y >= text_window_y1) {
                     scr_x += my_draw_chunk(scr_x, scr_y, wndw_width - fin_ck_width, text, ck_beg, ck_end);
                     scr_x += my_draw_one_char(scr_x, scr_y, '-');
                 }
