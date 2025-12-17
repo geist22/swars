@@ -176,19 +176,19 @@ static ubyte my_draw_apply_control_char(const char *ctext)
 
     if (cc == 0x01)
     {
-        if ((lbDisplay.DrawFlags & 0x0004) != 0) {
-            lbDisplay.DrawFlags &= ~0x0004;
+        if ((lbDisplay.DrawFlags & Lb_SPRITE_TRANSPAR4) != 0) {
+            lbDisplay.DrawFlags &= ~Lb_SPRITE_TRANSPAR4;
         } else {
-            lbDisplay.DrawFlags |= 0x0004;
+            lbDisplay.DrawFlags |= Lb_SPRITE_TRANSPAR4;
         }
         return 1;
     }
     if (cc == 0x0C)
     {
-        if ((lbDisplay.DrawFlags & 0x0040) != 0) {
-            lbDisplay.DrawFlags &= 0x0040;
+        if ((lbDisplay.DrawFlags & Lb_TEXT_ONE_COLOR) != 0) {
+            lbDisplay.DrawFlags &= Lb_TEXT_ONE_COLOR;
         } else {
-            lbDisplay.DrawFlags |= 0x0040;
+            lbDisplay.DrawFlags |= Lb_TEXT_ONE_COLOR;
         }
         return 1;
     }
@@ -199,17 +199,17 @@ static ubyte my_draw_apply_control_char(const char *ctext)
     }
     if (cc == 0x1B)
     {
-        lbDisplay.DrawFlags |= 0x0040;
+        lbDisplay.DrawFlags |= Lb_TEXT_ONE_COLOR;
         return 1;
     }
     if (cc == 0x1C)
     {
-        lbDisplay.DrawFlags &= 0x0040;
+        lbDisplay.DrawFlags &= ~Lb_TEXT_ONE_COLOR;
         return 1;
     }
     if (cc == 0x1E)
     {
-        lbDisplay.DrawFlags &= ~0x0004;
+        lbDisplay.DrawFlags &= ~Lb_SPRITE_TRANSPAR4;
         return 1;
     }
     return 0;
