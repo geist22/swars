@@ -273,8 +273,11 @@ TbResult load_sprites_fe_mouse_pointers(ubyte **pp_buf,
       fe_mouseptr_sprites, fe_mouseptr_sprites_end,
       fe_mouseptr_sprites_data, &p_buf, NULL, styleno, max_detail);
 
-    if (ret != Lb_FAIL)
+    if (ret != Lb_FAIL) {
         *pp_buf = p_buf;
+    } else { // If load failed, still allocate the area for TAB file - the buffer is zero-filled
+        *pp_buf = fe_mouseptr_sprites_data;
+    }
 
     return ret;
 }

@@ -6186,9 +6186,11 @@ void mouse_sprite_animate(void)
 {
     if (gameturn & 1)
     {
+      struct TbSprite *p_mspr;
       if (++mouse_sprite_anim_frame > 7)
           mouse_sprite_anim_frame = 0;
-      LbMouseChangeSprite(&fe_mouseptr_sprites[mouse_sprite_anim_frame + 1]);
+      p_mspr = &fe_mouseptr_sprites[1 + mouse_sprite_anim_frame];
+      LbMouseChangeSprite(p_mspr);
     }
 }
 

@@ -1252,13 +1252,17 @@ TbResult load_all_sprites_purple_mode(void)
     return tret;
 }
 
-void init_purple_mode_colors_and_sprites(void)
+TbBool init_purple_mode_colors_and_sprites(void)
 {
+    TbBool ret;
     LOGSYNC("Start");
 
-    load_all_sprites_purple_mode();
+    ret = true;
+    if (load_all_sprites_purple_mode() == Lb_FAIL)
+        ret = false;
     LbMouseChangeSpriteOffset(0, 0);
-    LbFileLoadAt("data/s-proj.pal", display_palette);
+    if (LbFileLoadAt("data/s-proj.pal", display_palette) == Lb_FAIL)
+        ret = false;
     // Colour tables should be loaded when we can provide palette data
     LbColourTablesLoad(display_palette, "data/bgtables.dat");
     LbGhostTableGenerate(display_palette, 66, "data/startgho.dat");
@@ -1272,7 +1276,8 @@ void init_purple_mode_colors_and_sprites(void)
     show_black_screen();
     reload_background();
 
-    LOGSYNC("Done");
+    LOGSYNC("Done, ret=%s", ret ? "success" : "fail");
+    return ret;
 }
 
 /******************************************************************************/
