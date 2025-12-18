@@ -3430,7 +3430,7 @@ void game_startup_fail_screen(void)
     TbBool was_locked;
     int i, step;
     short cent_x, cent_y, circle_diam;
-    short base_x, base_y;
+    short base_x, base_y, embeded_square_dim;
     TbPixel col_grey1, col_grey2, col_white;
 
     was_locked = LbScreenIsLocked();
@@ -3445,6 +3445,7 @@ void game_startup_fail_screen(void)
         return;
     }
 
+    lbDisplay.DrawFlags = 0;
     LbPaletteDataFillDefVGA(vga_pal);
     LbPaletteSet(vga_pal);
     LbScreenClear(0);
@@ -3469,6 +3470,12 @@ void game_startup_fail_screen(void)
 
     LbDrawCircle(cent_x, cent_y, circle_diam*32/64, col_grey1);
     LbDrawCircle(cent_x, cent_y, circle_diam*31/64, 0);
+
+    embeded_square_dim = circle_diam * 128 / 181; // circle_diam divided by sqrt(2)
+
+    LbPaletteDraw(cent_x - embeded_square_dim/2, cent_y - embeded_square_dim/2, embeded_square_dim/16, embeded_square_dim/16, 0);
+    LbDrawBox(cent_x - embeded_square_dim/6, cent_y - circle_diam*2/64, embeded_square_dim * 2 / 6, circle_diam*5/64, 0);
+
     draw_text(cent_x, cent_y - circle_diam*1/64, "U.T.O.P.I.A.", col_white);
     draw_text(cent_x, cent_y - circle_diam*0/64, "Game startup failed!", col_white);
     draw_text(cent_x, cent_y + circle_diam*1/64, "Check \"error.log\".", col_white);
