@@ -3426,9 +3426,12 @@ void create_tables_file_from_palette(void)
  */
 void game_startup_fail_screen(void)
 {
+    ubyte vga_pal[PALETTE_8b_SIZE];
     TbBool was_locked;
-    int i;
+    int i, step;
     short cent_x, cent_y, circle_diam;
+    short base_x, base_y;
+    TbPixel col_grey1, col_grey2, col_white;
 
     was_locked = LbScreenIsLocked();
     if (!was_locked) {
@@ -3442,16 +3445,33 @@ void game_startup_fail_screen(void)
         return;
     }
 
+    LbPaletteDataFillDefVGA(vga_pal);
+    LbPaletteSet(vga_pal);
     LbScreenClear(0);
+
+    col_white = LbPaletteFindColour(vga_pal, 63, 63, 63);
+    col_grey2 = LbPaletteFindColour(vga_pal, 32, 32, 32);
+    col_grey1 = LbPaletteFindColour(vga_pal, 16, 16, 16);
+
     cent_x = lbDisplay.GraphicsScreenWidth / 2;
     cent_y = lbDisplay.GraphicsScreenHeight / 2;
     circle_diam = min(lbDisplay.GraphicsScreenWidth, lbDisplay.GraphicsScreenHeight);
 
-    LbDrawCircle(cent_x, cent_y, circle_diam*32/64, 63);
+    step = circle_diam / 20;
+    base_x = ((lbDisplay.GraphicsScreenWidth % step) / 2) - circle_diam*1/256;
+    base_y = ((lbDisplay.GraphicsScreenHeight % step) / 2) - circle_diam*1/256;
+    for (i = 0; i < lbDisplay.GraphicsScreenWidth; i += step) {
+        LbDrawBox(base_x + i, 0, circle_diam*1/128, lbDisplay.GraphicsScreenHeight, col_grey2);
+    }
+    for (i = 0; i < lbDisplay.GraphicsScreenHeight; i += step) {
+        LbDrawBox(0, base_y + i, lbDisplay.GraphicsScreenWidth, circle_diam*1/128, col_grey2);
+    }
+
+    LbDrawCircle(cent_x, cent_y, circle_diam*32/64, col_grey1);
     LbDrawCircle(cent_x, cent_y, circle_diam*31/64, 0);
-    draw_text(cent_x, cent_y - circle_diam*1/64, "U.T.O.P.I.A.", 63);
-    draw_text(cent_x, cent_y - circle_diam*0/64, "Game startup failed!", 63);
-    draw_text(cent_x, cent_y + circle_diam*1/64, "Check \"error.log\".", 63);
+    draw_text(cent_x, cent_y - circle_diam*1/64, "U.T.O.P.I.A.", col_white);
+    draw_text(cent_x, cent_y - circle_diam*0/64, "Game startup failed!", col_white);
+    draw_text(cent_x, cent_y + circle_diam*1/64, "Check \"error.log\".", col_white);
 
     if (!was_locked)
         LbScreenUnlock();
