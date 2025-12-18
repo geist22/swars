@@ -3431,7 +3431,7 @@ void game_startup_fail_screen(void)
     int i, step;
     short cent_x, cent_y, circle_diam;
     short base_x, base_y, embeded_square_dim;
-    TbPixel col_grey1, col_grey2, col_white;
+    TbPixel col_grey1, col_grey2, col_white, col_blue1;
 
     was_locked = LbScreenIsLocked();
     if (!was_locked) {
@@ -3453,6 +3453,7 @@ void game_startup_fail_screen(void)
     col_white = LbPaletteFindColour(vga_pal, 63, 63, 63);
     col_grey2 = LbPaletteFindColour(vga_pal, 32, 32, 32);
     col_grey1 = LbPaletteFindColour(vga_pal, 16, 16, 16);
+    col_blue1 = LbPaletteFindColour(vga_pal,  0,  0, 16);
 
     cent_x = lbDisplay.GraphicsScreenWidth / 2;
     cent_y = lbDisplay.GraphicsScreenHeight / 2;
@@ -3469,16 +3470,16 @@ void game_startup_fail_screen(void)
     }
 
     LbDrawCircle(cent_x, cent_y, circle_diam*32/64, col_grey1);
-    LbDrawCircle(cent_x, cent_y, circle_diam*31/64, 0);
+    LbDrawCircle(cent_x, cent_y, circle_diam*31/64, col_blue1);
 
     embeded_square_dim = circle_diam * 128 / 181; // circle_diam divided by sqrt(2)
 
     LbPaletteDraw(cent_x - embeded_square_dim/2, cent_y - embeded_square_dim/2, embeded_square_dim/16, embeded_square_dim/16, 0);
     LbDrawBox(cent_x - embeded_square_dim/6, cent_y - circle_diam*2/64, embeded_square_dim * 2 / 6, circle_diam*5/64, 0);
 
-    draw_text(cent_x, cent_y - circle_diam*1/64, "U.T.O.P.I.A.", col_white);
-    draw_text(cent_x, cent_y - circle_diam*0/64, "Game startup failed!", col_white);
-    draw_text(cent_x, cent_y + circle_diam*1/64, "Check \"error.log\".", col_white);
+    draw_text(cent_x - 40, cent_y - circle_diam*1/64, "U.T.O.P.I.A.", col_white);
+    draw_text(cent_x - 40, cent_y - circle_diam*0/64, "Game startup failed!", col_white);
+    draw_text(cent_x - 40, cent_y + circle_diam*1/64, "Check \"error.log\".", col_white);
 
     if (!was_locked)
         LbScreenUnlock();
