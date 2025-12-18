@@ -6,6 +6,7 @@
 #include <sys/types.h>
 
 #include "bfconfig.h"
+#include "bfcircle.h"
 #include "bfdata.h"
 #include "bfendian.h"
 #include "bfsprite.h"
@@ -3417,6 +3418,51 @@ void create_tables_file_from_palette(void)
       "data/tables.dat");
 }
 
+/** Shows a screen with startup fail message.
+ *
+ * This special screen requires zero data files, so it can shown even
+ * if the data load has failed. It is supposed to be the last information
+ * message before the game terminates.
+ */
+void game_startup_fail_screen(void)
+{
+    TbBool was_locked;
+    int i;
+    short cent_x, cent_y, circle_diam;
+
+    was_locked = LbScreenIsLocked();
+    if (!was_locked) {
+        while (LbScreenLock() != Lb_SUCCESS)
+            ;
+    }
+
+    if (lbDisplay.WScreen == NULL) {
+        if (!was_locked)
+            LbScreenUnlock();
+        return;
+    }
+
+    LbScreenClear(0);
+    cent_x = lbDisplay.GraphicsScreenWidth / 2;
+    cent_y = lbDisplay.GraphicsScreenHeight / 2;
+    circle_diam = min(lbDisplay.GraphicsScreenWidth, lbDisplay.GraphicsScreenHeight);
+
+    LbDrawCircle(cent_x, cent_y, circle_diam*32/64, 63);
+    LbDrawCircle(cent_x, cent_y, circle_diam*31/64, 0);
+    draw_text(cent_x, cent_y - circle_diam*1/64, "U.T.O.P.I.A.", 63);
+    draw_text(cent_x, cent_y - circle_diam*0/64, "Game startup failed!", 63);
+    draw_text(cent_x, cent_y + circle_diam*1/64, "Check \"error.log\".", 63);
+
+    if (!was_locked)
+        LbScreenUnlock();
+    swap_wscreen();
+
+    for (i = 5*game_num_fps; i > 0; i--)
+    {
+        game_update();
+    }
+}
+
 TbBool game_setup(void)
 {
     TbBool ret;
@@ -3500,6 +3546,7 @@ TbBool game_setup(void)
     }
     if (!ret) {
         LOGERR("Part of the game startup has failed. See the log lines above for a cause.");
+        game_startup_fail_screen();
     }
     return ret;
 }
