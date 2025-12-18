@@ -127,8 +127,11 @@ TbResult load_pop_sprites_for_current_mode(void)
         name = "pop";
     }
     ret = load_pop_sprites_up_to(pinfo->directory, name, styleno, max_detail);
-    setup_pop_sprites();
-    size_panels_for_detail(pop1_sprites_scale - 1);
+    if (ret != Lb_FAIL)
+    {
+        setup_pop_sprites();
+        size_panels_for_detail(pop1_sprites_scale - 1);
+    }
     return ret;
 }
 

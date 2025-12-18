@@ -275,7 +275,7 @@ char *misc_text[] = {
  * files will be stored in the same buffer upon switch, so the buffer allocated
  * here must fit all the variants.
  */
-struct TbLoadFiles unk02_load_files[] =
+struct TbLoadFiles missionspr_load_files[] =
 {
   { "*VESA",			(void **)&lbVesaData,		(void **)NULL,LB_VESA_DATA_SIZE, 1, 0 },
 #if 1 // !defined(LB_WSCREEN_CONTROL)
@@ -457,11 +457,13 @@ void colour_tables_ghost_fixup(void)
         opal[i] = ipal[i];
 }
 
-void game_setup_stuff(void)
+TbBool game_setup_stuff(void)
 {
     TbFileHandle fh;
     ushort i;
+    TbBool ret;
 
+    ret = true;
     for (i = 0; i < PALETTE_8b_COLORS; i++)
         linear_vec_pal[i] = i;
     vec_pal = linear_vec_pal;
@@ -470,11 +472,23 @@ void game_setup_stuff(void)
     if (fh != INVALID_FILE) {
         nsta_size = LbFileSeek(fh, 0, Lb_FILE_SEEK_END);
         LbFileClose(fh);
+    } else {
+        ret = false;
     }
 
-    colour_brown2 = LbPaletteFindColour(display_palette, 42, 37, 30);
-    colour_grey2 = LbPaletteFindColour(display_palette, 32, 32, 32);
-    colour_grey1 = LbPaletteFindColour(display_palette, 16, 16, 16);
+    if (display_palette != NULL) {
+        colour_brown2 = LbPaletteFindColour(display_palette, 42, 37, 30);
+        colour_grey2 = LbPaletteFindColour(display_palette, 32, 32, 32);
+        colour_grey1 = LbPaletteFindColour(display_palette, 16, 16, 16);
+    } else {
+        colour_brown2 = 60;
+        colour_grey2 = 61;
+        colour_grey1 = 62;
+        LOGERR("Display palette not set, using dummies");
+        ret = false;
+    }
+
+    return ret;
 }
 
 void anim_show_FLI_SS2_NP(void)
@@ -930,7 +944,7 @@ void play_intro(void)
             play_smk(fname, 13, 0);
             smack_malloc_free_all();
         }
-        LbMouseChangeSprite(&pointer_sprites[1]);
+        do_change_mouse(1);
     }
     if (cmdln_param_bcg)
         setup_screen_mode(screen_mode_menu);
@@ -2013,17 +2027,27 @@ void init_scanner(void)
 /**
  * Updates engine parameters for best display for current video mode within the tactical mission.
  */
-void adjust_mission_engine_to_video_mode(void)
+TbBool adjust_mission_engine_to_video_mode(void)
 {
+    TbBool ret;
+
+    ret = true;
     game_high_resolution = (lbDisplay.ScreenMode == screen_mode_game_hi);
     // Set scale 15% over the min, to create a nice pan effect
     overall_scale = (get_overall_scale_min() * 295) >> 8;
-    load_pop_sprites_for_current_mode();
-    load_mouse_pointers_sprites_for_current_mode();
-    load_small_font_for_current_ingame_mode();
+
+    if (load_pop_sprites_for_current_mode() == Lb_FAIL)
+        ret = false;
+    if (load_mouse_pointers_sprites_for_current_mode() == Lb_FAIL)
+        ret = false;
+    if (load_small_font_for_current_ingame_mode() == Lb_FAIL)
+        ret = false;
+
     render_area_a = render_area_b = \
       get_render_area_for_zoom(user_zoom_min);
     srm_scanner_size_update();
+
+    return ret;
 }
 
 void show_simple_load_screen(void)
@@ -2070,8 +2094,15 @@ void setup_initial_screen_mode(void)
     setup_simple_screen_mode(lbDisplay.ScreenMode);
     show_black_screen();
     // Setup colour conversion tables, allowing generation
-    LbColourTablesLoad(display_palette, "data/tables.dat");
-    LbGhostTableGenerate(display_palette, 50, "data/synghost.tab");
+    if (display_palette != NULL)
+    {
+        LbColourTablesLoad(display_palette, "data/tables.dat");
+        LbGhostTableGenerate(display_palette, 50, "data/synghost.tab");
+    }
+    else
+    {
+        LOGERR("Palette not ready - skipping colour tables setup");
+    }
 #if 0
     // Not sure why we would do this fixup. Maybe it's only for
     // sprite generation? If used before gameplay, it causes bad
@@ -2234,8 +2265,11 @@ TbResult prep_multicolor_sprites(void)
     return ret;
 }
 
-void setup_host(void)
+TbBool setup_host(void)
 {
+    TbBool ret;
+
+    ret = true;
     BAT_unknsub_20(0, 0, 0, 0, vec_tmap[4] + 160 * 256 + 64);
     smack_malloc_setup();
     LOGDBG("&setup_host() = 0x%p", (void *)setup_host);
@@ -2249,19 +2283,32 @@ void setup_host(void)
 
     setup_mouse_pointers();
     lbMouseAutoReset = false;
-    LbMouseSetup(&pointer_sprites[1],
-      2 * NORMAL_MOUSE_MOVE_RATIO, 2 * NORMAL_MOUSE_MOVE_RATIO);
+    mouse_setup(true);
 
     setup_debug_obj_trace();
 
-    // Default Trenchcoat color loaded from unk02_load_files[]
-    ingame.TrenchcoatPreference = 0;
+    // Default Trenchcoat color loaded from missionspr_load_files[]
+    // should be set earlier with default user options
+    assert(ingame.TrenchcoatPreference == 0);
     setup_multicolor_sprites();
-    ingame.PanelPermutation = -2;
-    load_pop_sprites_for_current_mode();
-    load_mouse_pointers_sprites_for_current_mode();
-    load_small_font_for_current_ingame_mode();
-    init_memory(mem_game);
+    assert(ingame.PanelPermutation == -2);
+
+    if (load_pop_sprites_for_current_mode() == Lb_FAIL) {
+        LOGERR("Load pop sprites failed.");
+        ret = false;
+    }
+    if (load_mouse_pointers_sprites_for_current_mode() == Lb_FAIL) {
+        LOGERR("Load mouse pinters sprites failed.");
+        ret = false;
+    }
+    if (load_small_font_for_current_ingame_mode() == Lb_FAIL) {
+        LOGERR("Load small font sprites failed.");
+        ret = false;
+    }
+    if (init_memory(mem_game) == Lb_FAIL) {
+        LOGERR("Init memory failed.");
+        ret = false;
+    }
 
     init_syndwars();
     LoadSounds(0);
@@ -2270,6 +2317,8 @@ void setup_host(void)
     setup_host_sub6();
     play_intro();
     flic_unkn03(AniSl_BILLBOARD);
+
+    return ret;
 }
 
 void init_engine(void)
@@ -3368,12 +3417,25 @@ void create_tables_file_from_palette(void)
       "data/tables.dat");
 }
 
-void game_setup(void)
+TbBool game_setup(void)
 {
+    TbBool ret;
+
+    ret = true;
     engine_mem_alloc_ptr = LbMemoryAlloc(engine_mem_alloc_size);
+    if (engine_mem_alloc_ptr == NULL) {
+        LOGERR("Allocating engine memory failed.");
+        ret = false;
+    }
     load_texturemaps();
-    LbDataLoadAll(unk02_load_files);
-    read_rules_file();
+    if (LbDataLoadAll(missionspr_load_files) != 0) {
+        LOGERR("Initial loading of mission sprite files failed.");
+        ret = false;
+    }
+    if (!read_rules_file()) {
+        LOGERR("Rules config file loading failed.");
+        ret = false;
+    }
     read_weapons_conf_file();
     read_cybmods_conf_file();
     bang_init();
@@ -3383,9 +3445,16 @@ void game_setup(void)
     FIRE_init_or_samples_init();
     ingame.draw_unknprop_01 = 0;
     debug_trace_setup(-5);
-    game_setup_stuff();
-    create_strings_list(gui_strings, gui_strings_data, gui_strings_data_end);
-    setup_host();
+    if (!game_setup_stuff()) {
+        LOGERR("Setting up some misc stuff failed.");
+        ret = false;
+    }
+    if (!create_strings_list(gui_strings, gui_strings_data, gui_strings_data_end)) {
+        LOGERR("National strings list creation failed.");
+        ret = false;
+    }
+    if (!setup_host())
+        ret = false;
     debug_trace_setup(-4);
     read_user_settings();
     debug_trace_setup(-3);
@@ -3429,6 +3498,10 @@ void game_setup(void)
         create_tables_file_from_fade();
         break;
     }
+    if (!ret) {
+        LOGERR("Part of the game startup has failed. See the log lines above for a cause.");
+    }
+    return ret;
 }
 
 void anim_show_draw_next_frame(struct Animation *p_anim)
@@ -6956,6 +7029,6 @@ void game_reset(void)
 {
     host_reset();
     free_texturemaps();
-    LbDataFreeAll(unk02_load_files);
+    LbDataFreeAll(missionspr_load_files);
 }
 

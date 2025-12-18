@@ -159,6 +159,10 @@ void setup_mouse_pointers(void)
 {
     struct TbSprite *spr;
 
+    if ((pointer_sprites == NULL) || (pointer_data == NULL)) {
+        LOGERR("Pointer sprite memory not allocated, skipping");
+        return;
+    }
     LbSpriteSetup(pointer_sprites, pointer_sprites_end, pointer_data);
     // Make mouse pointer sprite 1 an empty (zero size) sprite
     spr = &pointer_sprites[1];

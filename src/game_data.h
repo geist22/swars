@@ -98,7 +98,7 @@ void get_user_settings_fname(char *fname, const char *name);
 void get_saved_game_fname(char *fname, ushort slot);
 
 void adjust_memory_use(void);
-void init_memory(MemSystem *mem_table);
+TbResult init_memory(MemSystem *mem_table);
 long get_memory_ptr_allocated_count(void **mgptr);
 
 /******************************************************************************/

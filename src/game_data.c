@@ -452,7 +452,7 @@ uint memory_table_entries(MemSystem *mem_table)
     return i;
 }
 
-void init_memory(MemSystem *mem_table)
+TbResult init_memory(MemSystem *mem_table)
 {
     MemSystem *ment;
     int mem_table_len;
@@ -460,9 +460,16 @@ void init_memory(MemSystem *mem_table)
     ubyte *p;
     int i;
     ulong k;
+    TbResult ret;
 
+    ret = Lb_SUCCESS;
     totlen = 8192;
     mem_table_len = memory_table_entries(mem_table);
+
+    if (engine_mem_alloc_ptr == NULL) {
+        LOGWARN("Memory for engine not allocated; further init will not work correctly");
+        ret = Lb_FAIL;
+    }
 
     p = scratch_malloc_mem;
     for (i = mem_table_len - 1; i >= 0; i--)
@@ -476,7 +483,7 @@ void init_memory(MemSystem *mem_table)
             if ((engine_mem_alloc_size & 0x80000000) == 0)
               ment->PrivBuffer = engine_mem_alloc_ptr + totlen;
             else
-              exit_game = 1;
+              ret = Lb_FAIL;
 
             if (ment->N * (ulong)ment->ESize >= dword_1810D5 || mem_game_index_is_prim(i))
             {
@@ -497,8 +504,27 @@ void init_memory(MemSystem *mem_table)
         }
     }
     scratch_malloc_mem = p;
+    if (scratch_malloc_mem == NULL) {
+        LOGWARN("Memory for scratch_malloc not prepared");
+        ret = Lb_FAIL;
+    }
+
     memset(game_sort_sprites, 0, 0x20u);
+
     scratch_buf1 = *ment[23].BufferPtr; // prim_objects
+    if (scratch_malloc_mem == NULL) {
+        LOGWARN("Memory for scratch_buf1 not prepared");
+        ret = Lb_FAIL;
+    }
+
+    if (ret == Lb_FAIL) {
+        LOGSYNC("Memory init failed, game will exit");
+        exit_game = 1;
+    } else {
+        LOGSYNC("Memory init performed");
+    }
+
+    return ret;
 }
 
 /******************************************************************************/

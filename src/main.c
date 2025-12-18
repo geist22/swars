@@ -562,7 +562,8 @@ main (int argc, char **argv)
 
     set_default_user_settings();
     read_strings_file();
-    game_setup();
+    if (!game_setup())
+        return 1;
 
     game_process();
 

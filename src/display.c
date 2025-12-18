@@ -30,13 +30,13 @@
 #include "bfsprite.h"
 #include "bffont.h"
 #include "bftext.h"
-#include "bfmouse.h"
 #include "bfplanar.h"
 #include "bfutility.h"
 #include "poly.h"
 
 #include "game_options.h"
 #include "game_sprts.h"
+#include "mouse.h"
 #include "util.h"
 #include "swlog.h"
 
@@ -151,7 +151,6 @@ void display_unlock(void)
 void setup_simple_screen_mode(TbScreenMode mode)
 {
     TbScreenModeInfo *mdinfo;
-    short ratio;
 
     printf("%s %d\n", __func__, (int)mode);
     mdinfo = LbScreenGetModeInfo(mode);
@@ -161,18 +160,13 @@ void setup_simple_screen_mode(TbScreenMode mode)
     }
     LbScreenSetup(mode, mdinfo->Width, mdinfo->Height, display_palette);
 
-    if (lbDisplay.GraphicsScreenHeight < 400)
-        ratio = 2 * NORMAL_MOUSE_MOVE_RATIO;
-    else
-        ratio = 1 * NORMAL_MOUSE_MOVE_RATIO;
-    LbMouseSetup(NULL, ratio, ratio);
+    mouse_update_on_screen_mode_change(false);
 }
 
 void setup_screen_mode(TbScreenMode mode)
 {
     TbBool was_locked;
     TbScreenModeInfo *mdinfo;
-    short ratio;
 
     printf("%s %d\n", __func__, (int)mode);
     mdinfo = LbScreenGetModeInfo(mode);
@@ -191,11 +185,7 @@ void setup_screen_mode(TbScreenMode mode)
             ;
     }
 
-    if (lbDisplay.GraphicsScreenHeight < 400)
-        ratio = 2 * NORMAL_MOUSE_MOVE_RATIO;
-    else
-        ratio = 1 * NORMAL_MOUSE_MOVE_RATIO;
-    LbMouseSetup(&pointer_sprites[1], ratio, ratio);
+    mouse_update_on_screen_mode_change(true);
 
     setup_vecs(lbDisplay.WScreen, vec_tmap[0], lbDisplay.PhysicalScreenWidth,
         lbDisplay.PhysicalScreenWidth, lbDisplay.PhysicalScreenHeight);
@@ -312,6 +302,10 @@ void setup_color_lookups(void)
     asm volatile ("call ASM_setup_color_lookups\n"
         :  :  : "eax" );
 #endif
+    if (display_palette == NULL) {
+        LOGERR("Display palette not set, skipping");
+        return;
+    }
     dword_1AA270 = 1;
     colour_lookup[ColLU_BLACK] = LbPaletteFindColour(display_palette, 0, 0, 0);
     colour_lookup[ColLU_WHITE] = LbPaletteFindColour(display_palette, 63, 63, 63);
