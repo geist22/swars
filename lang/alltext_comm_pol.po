@@ -893,7 +893,7 @@ msgstr "Niski angielski"
 #: mapscreen.city1:5
 msgctxt "map screen location - industry"
 msgid "Software Engineering, Financial Services"
-msgstr "Inżynieria oprogramow., Usługi finansowe"
+msgstr "Inżynieria oprogram., Usługi finansowe"
 
 #: mapscreen.city1:6 mapscreen.city21:6 mapscreen.city34:6
 msgctxt "map screen location - toxicity"
@@ -916,7 +916,7 @@ msgstr "10,98 mln"
 #: mapscreen.city38:3 mapscreen.city45:3 mapscreen.city48:3
 msgctxt "map screen location - landscape"
 msgid "Complex Urban"
-msgstr "Złożona zabudowa miejska"
+msgstr "Gęsta miejska"
 
 #: mapscreen.city2:4 mapscreen.city22:4
 msgctxt "map screen location - language"
@@ -1007,12 +1007,12 @@ msgstr "6,99 mln"
 #: mapscreen.city41:3 mapscreen.city42:3 mapscreen.city44:3
 msgctxt "map screen location - landscape"
 msgid "Simple Urban"
-msgstr "Prosta miejska zabudowa"
+msgstr "Prosta miejska"
 
 #: mapscreen.city5:4 mapscreen.city6:4
 msgctxt "map screen location - language"
 msgid "C.C.E. (Common Central European)"
-msgstr "C.C.E. (Wspólny środkowoeuropejski)"
+msgstr "C.C.E. (Komunalny Centralno-Europejski)"
 
 #: mapscreen.city5:5
 msgctxt "map screen location - industry"
@@ -1570,7 +1570,7 @@ msgstr "0,023 mln"
 #: mapscreen.city43:3 mapscreen.city47:3
 msgctxt "map screen location - landscape"
 msgid "Sub-Simple Urban"
-msgstr "Pod–prosty miejski"
+msgstr "Mocno Prosty miejski"
 
 #: mapscreen.city32:4
 msgctxt "map screen location - language"
