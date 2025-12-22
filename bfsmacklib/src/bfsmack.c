@@ -34,6 +34,10 @@
 void *(*smack_malloc)(int);
 void (*smack_free)(void *);
 
+// Currenlty only in the main game
+//TODO make a copy here, we only need the bflibrary calls
+extern int game_hacky_update(void);
+
 extern ubyte byte_1E56DC[PALETTE_8b_SIZE];
 /******************************************************************************/
 
@@ -113,7 +117,7 @@ void RADAPI SMACKTOBUFFER(uint32_t Flags, const void *buf,
 
 TbResult play_smk_direct(const char *fname, ulong smkflags, ushort plyflags, ushort mode)
 {
-#if 1
+#if 0
     TbResult ret;
     asm volatile ("call ASM_play_smk_direct\n"
         : "=r" (ret) : "a" (fname), "d" (smkflags), "b" (plyflags), "c" (mode));
@@ -201,6 +205,7 @@ TbResult play_smk_direct(const char *fname, ulong smkflags, ushort plyflags, ush
 
         while (SMACKWAIT(p_smk))
         {
+            game_hacky_update();
             if ((plyflags & 0x0002) != 0)
                 continue;
             if (lbKeyOn[KC_ESCAPE] || lbKeyOn[KC_RETURN] || lbKeyOn[KC_SPACE] || lbDisplay.MLeftButton)
