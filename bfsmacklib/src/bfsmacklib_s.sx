@@ -6817,7 +6817,7 @@ GLOBAL_FUNC (ASM_play_smk_direct)
 		test   %edx,%edx
 		je     jump_eb2d9
 		mov    $0x300,%ecx
-		mov    $data_1e56dc,%edi
+		mov    $EXPORT_SYMBOL(byte_1E56DC),%edi
 		mov    %edx,%esi
 		push   %edi
 		mov    %ecx,%eax
@@ -6842,7 +6842,7 @@ GLOBAL_FUNC (ASM_play_smk_direct)
 		mov    $0x1,%ah
 		mov    $0x300,%ecx
 		mov    (%esp),%esi
-		mov    $data_1e56dc,%edi
+		mov    $EXPORT_SYMBOL(byte_1E56DC),%edi
 		mov    %ah,0xc(%esp)
 		push   %edi
 		mov    %ecx,%eax
@@ -6858,7 +6858,7 @@ GLOBAL_FUNC (ASM_play_smk_direct)
 		cmpb   $0x0,0xc(%esp)
 		je     jump_eb32f
 		call   ac_LbScreenWaitVbi
-		push   $data_1e56dc
+		push   $EXPORT_SYMBOL(byte_1E56DC)
 		call   ac_LbPaletteSet
 		add    $0x4,%esp
 	jump_eb32f:
@@ -6874,7 +6874,6 @@ GLOBAL_FUNC (ASM_play_smk_direct)
 		testb  $0x2,0x4(%esp)
 		jne    jump_eb33a
 		/* XXX: intro loop */
-		call   ac_game_handle_sdl_events
 		call   ac_LbScreenWaitVbi
 		call   ac_game_hacky_update
 		cmpb   $0x0,EXPORT_SYMBOL(lbKeyOn)+1
@@ -6964,7 +6963,7 @@ GLOBAL_FUNC (ASM_play_smk_via_buffer)
 		mov    %edi,0x18(%esp)
 		add    $0x6c,%esi
 		push   $0x0
-		mov    $data_1e56dc,%edi
+		mov    $EXPORT_SYMBOL(byte_1E56DC),%edi
 		mov    %esi,0x24(%esp)
 		call   SMACKTOBUFFER
 		jmp    jump_eb436
@@ -6995,7 +6994,7 @@ GLOBAL_FUNC (ASM_play_smk_via_buffer)
 		call   SMACKDOFRAME
 		call   ac_LbScreenWaitVbi
 		call   ac_game_hacky_update
-		push   $data_1e56dc
+		push   $EXPORT_SYMBOL(byte_1E56DC)
 		call   ac_LbPaletteSet
 		add    $0x4,%esp
 		mov    0x8(%ebp),%ebx
@@ -10741,7 +10740,7 @@ data_159e2c:
 data_159e30:
 		.fill   0x10
 
-data_1e56dc:
+GLOBAL (byte_1E56DC)	/* 0x1E56DC */
 		.fill   0x350
 GLOBAL (smack_draw_callback)	/* 0x1E5A2C */
 		.long	0x0
