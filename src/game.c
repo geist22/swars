@@ -147,6 +147,10 @@
  */
 #define EXPECTED_LANG_TXT_SIZE 8000
 
+/** How many game turns should pass before intro is replayed.
+ */
+#define INTRO_REPLAY_TURNS 1100
+
 enum PostRenderAction {
     PRend_NONE = 0,
     PRend_SaveScreenshot,
@@ -930,25 +934,17 @@ void play_smacker_then_back_to_menu(ushort vid_type)
 
 void play_intro(void)
 {
-    char fname[FILENAME_MAX];
-
     LOGSYNC("Starting");
-    lbDisplay.LeftButton = 0;
-    clear_key_pressed(KC_ESCAPE);
     if ( (cmdln_param_bcg || is_single_game) &&
       ((ingame.Flags & GamF_SkipIntro) == 0))
     {
-        setup_screen_mode(screen_mode_fmvid_lo);
-        LbMouseChangeSprite(NULL);
-        sprint_fmv_filename(MPly_Intro, fname, sizeof(fname));
-        if (fname[0] != '\0') {
-            play_smk(fname, 13, 0);
-            smack_malloc_free_all();
-        }
-        do_change_mouse(1);
+        // After this function, we return either to engine or to menu,
+        // depending on how the app was started
+        if (cmdln_param_bcg)
+            play_smacker_then_back_to_menu(MPly_Intro);
+        else
+            play_smacker_then_back_to_engine(MPly_Intro);
     }
-    if (cmdln_param_bcg)
-        setup_screen_mode(screen_mode_menu);
 }
 
 char func_cc638(const char *text, const char *fname)
@@ -6341,7 +6337,7 @@ void show_menu_screen(void)
     if (screentype == SCRT_MAINMENU)
     {
         replay_intro_timer++;
-        if (replay_intro_timer > 1100)
+        if (replay_intro_timer > INTRO_REPLAY_TURNS)
         {
             play_smacker_then_back_to_menu(MPly_Intro);
             replay_intro_timer = 0;
