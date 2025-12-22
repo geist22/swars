@@ -19,6 +19,8 @@
 /******************************************************************************/
 #include "bfsmack.h"
 
+#include <assert.h>
+
 #include "bfkeybd.h"
 #include "bfmemut.h"
 #include "bfpalette.h"
@@ -45,6 +47,70 @@ void set_smack_free(void (*cb)(void *ptr))
     smack_free = cb;
 }
 
+//TODO place SMACK* functions into separate file
+struct Smack * RADAPI SMACKOPEN(uint32_t extrabuf, uint32_t flags, const char *name)
+{
+    struct Smack *p_smk;
+    asm volatile (
+      "push %3\n"
+      "push %2\n"
+      "push %1\n"
+      "call ASM_SMACKOPEN\n"
+        : "=r" (p_smk) : "g" (extrabuf), "g" (flags), "g" (name));
+    return p_smk;
+}
+
+uint32_t RADAPI SMACKDOFRAME(struct Smack *p_smk)
+{
+    uint32_t ret;
+    asm volatile (
+      "push %1\n"
+      "call ASM_SMACKDOFRAME\n"
+        : "=r" (ret) : "g" (p_smk));
+    return ret;
+}
+
+void RADAPI SMACKNEXTFRAME(struct Smack *p_smk)
+{
+    asm volatile (
+      "push %0\n"
+      "call ASM_SMACKNEXTFRAME\n"
+        : : "g" (p_smk));
+}
+
+uint32_t RADAPI SMACKWAIT(struct Smack *p_smk)
+{
+    uint32_t ret;
+    asm volatile (
+      "push %1\n"
+      "call ASM_SMACKWAIT\n"
+        : "=r" (ret) : "g" (p_smk));
+    return ret;
+}
+
+void RADAPI SMACKCLOSE(struct Smack *p_smk)
+{
+    asm volatile (
+      "push %0\n"
+      "call ASM_SMACKCLOSE\n"
+        : : "g" (p_smk));
+}
+
+void RADAPI SMACKTOBUFFER(uint32_t Flags, const void *buf,
+ uint32_t destheight, uint32_t Pitch, uint32_t top, uint32_t left, struct Smack *p_smk)
+{
+    asm volatile (
+      "push %6\n"
+      "push %5\n"
+      "push %4\n"
+      "push %3\n"
+      "push %2\n"
+      "push %1\n"
+      "push %0\n"
+      "call ASM_SMACKTOBUFFER\n"
+        : : "g" (Flags), "g" (buf), "g" (destheight), "g" (Pitch), "g" (top), "g" (left), "g" (p_smk));
+}
+
 TbResult play_smk_direct(const char *fname, ulong smkflags, ushort plyflags, ushort mode)
 {
 #if 1
@@ -55,7 +121,7 @@ TbResult play_smk_direct(const char *fname, ulong smkflags, ushort plyflags, ush
 #else
     struct Smack *p_smk;
     int scr_x, scr_y;
-    int frm_no;
+    uint frm_no;
     TbBool finish, update_pal;
     uint32_t soflags;
 

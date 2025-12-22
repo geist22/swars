@@ -5670,7 +5670,7 @@ func_13c203:
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC (Unsmack)
+GLOBAL_FUNC(Unsmack)
 /*----------------------------------------------------------------*/
 		push   %ebp
 		mov    %esp,%ebp
@@ -5931,7 +5931,7 @@ GLOBAL_FUNC (Unsmack)
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC (SmackDoPCM)
+GLOBAL_FUNC(SmackDoPCM)
 /*----------------------------------------------------------------*/
 		push   %ebp
 		mov    %esp,%ebp
@@ -6593,7 +6593,7 @@ GLOBAL_FUNC (SmackDoPCM)
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC (SmackGetSizeDeltas)
+GLOBAL_FUNC(SmackGetSizeDeltas)
 /*----------------------------------------------------------------*/
 		push   %ebp
 		mov    %esp,%ebp
@@ -6611,7 +6611,7 @@ GLOBAL_FUNC (SmackGetSizeDeltas)
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC (SmackRemapTables)
+GLOBAL_FUNC(SmackRemapTables)
 /*----------------------------------------------------------------*/
 		push   %ebp
 		mov    %esp,%ebp
@@ -6705,14 +6705,14 @@ GLOBAL_FUNC (SmackRemapTables)
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC (ASM_set_smack_malloc)
+GLOBAL_FUNC(ASM_set_smack_malloc)
 /*----------------------------------------------------------------*/
 		mov    %eax,_smack_malloc
 		ret
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC (ASM_set_smack_free)
+GLOBAL_FUNC(ASM_set_smack_free)
 /*----------------------------------------------------------------*/
 		mov    %eax,_smack_free
 		ret
@@ -6721,7 +6721,7 @@ GLOBAL_FUNC (ASM_set_smack_free)
 /*----------------------------------------------------------------*/
 /* long play_smk_direct(char *, long , long)
  */
-GLOBAL_FUNC (ASM_play_smk_direct)
+GLOBAL_FUNC(ASM_play_smk_direct)
 /*----------------------------------------------------------------*/
 		push   %ecx
 		push   %esi
@@ -6756,7 +6756,7 @@ GLOBAL_FUNC (ASM_play_smk_direct)
 		push   %esi
 		push   %eax
 		push   %ebp
-		call   SMACKOPEN
+		call   ac_SMACKOPEN
 		mov    %eax,%ebp
 		test   %eax,%eax
 		je     jump_eb37e
@@ -6796,7 +6796,7 @@ GLOBAL_FUNC (ASM_play_smk_direct)
 		push   %eax
 	jump_eb279:
 		push   $0x0
-		call   SMACKTOBUFFER
+		call   ac_SMACKTOBUFFER
 		xor    %esi,%esi
 		lea    0x6c(%ebp),%eax
 		mov    %esi,0x8(%esp)
@@ -6832,7 +6832,7 @@ GLOBAL_FUNC (ASM_play_smk_direct)
 		add    $0x4,%esp
 	jump_eb2d9:
 		push   %ebp
-		call   SMACKDOFRAME
+		call   ac_SMACKDOFRAME
 		jmp    jump_eb334
 	jump_eb2e1:
 		xor    %al,%al
@@ -6854,7 +6854,7 @@ GLOBAL_FUNC (ASM_play_smk_direct)
 		pop    %edi
 	jump_eb310:
 		push   %ebp
-		call   SMACKDOFRAME
+		call   ac_SMACKDOFRAME
 		cmpb   $0x0,0xc(%esp)
 		je     jump_eb32f
 		call   ac_LbScreenWaitVbi
@@ -6865,10 +6865,10 @@ GLOBAL_FUNC (ASM_play_smk_direct)
 		call   ac_LbScreenSwap
 	jump_eb334:
 		push   %ebp
-		call   SMACKNEXTFRAME
+		call   ac_SMACKNEXTFRAME
 	jump_eb33a:
 		push   %ebp
-		call   SMACKWAIT
+		call   ac_SMACKWAIT
 		test   %eax,%eax
 		je     jump_eb28e
 		testb  $0x2,0x4(%esp)
@@ -6886,7 +6886,7 @@ GLOBAL_FUNC (ASM_play_smk_direct)
 		je     jump_eb33a
 	jump_eb373:
 		push   %ebp
-		call   SMACKCLOSE
+		call   ac_SMACKCLOSE
 		mov    $0x1,%eax
 	jump_eb37e:
 		add    $0x10,%esp
@@ -6900,7 +6900,7 @@ GLOBAL_FUNC (ASM_play_smk_direct)
 /*----------------------------------------------------------------*/
 /* long play_smk_via_buffer(char *, long , long)
  */
-GLOBAL_FUNC (ASM_play_smk_via_buffer)
+GLOBAL_FUNC(ASM_play_smk_via_buffer)
 /*----------------------------------------------------------------*/
 		push   %ecx
 		push   %esi
@@ -6935,7 +6935,7 @@ GLOBAL_FUNC (ASM_play_smk_via_buffer)
 		push   %ebp
 		push   %eax
 		push   %esi
-		call   SMACKOPEN
+		call   ac_SMACKOPEN
 		mov    %eax,%esi
 		mov    %eax,%ebp
 		test   %eax,%eax
@@ -6947,7 +6947,7 @@ GLOBAL_FUNC (ASM_play_smk_via_buffer)
 		test   %eax,%eax
 		jne    jump_eb40a
 		push   %esi
-		call   SMACKCLOSE
+		call   ac_SMACKCLOSE
 		xor    %eax,%eax
 		jmp    jump_eb4e2
 	jump_eb40a:
@@ -6965,7 +6965,7 @@ GLOBAL_FUNC (ASM_play_smk_via_buffer)
 		push   $0x0
 		mov    $EXPORT_SYMBOL(byte_1E56DC),%edi
 		mov    %esi,0x24(%esp)
-		call   SMACKTOBUFFER
+		call   ac_SMACKTOBUFFER
 		jmp    jump_eb436
 	jump_eb433:
 		incl   (%esp)
@@ -6991,7 +6991,7 @@ GLOBAL_FUNC (ASM_play_smk_via_buffer)
 		pop    %edi
 	jump_eb468:
 		push   %ebp
-		call   SMACKDOFRAME
+		call   ac_SMACKDOFRAME
 		call   ac_LbScreenWaitVbi
 		call   ac_game_hacky_update
 		push   $EXPORT_SYMBOL(byte_1E56DC)
@@ -7003,10 +7003,10 @@ GLOBAL_FUNC (ASM_play_smk_via_buffer)
 		mov    0x4(%esp),%eax
 		call   copy_to_screen_smk
 		push   %ebp
-		call   SMACKNEXTFRAME
+		call   ac_SMACKNEXTFRAME
 	jump_eb499:
 		push   %ebp
-		call   SMACKWAIT
+		call   ac_SMACKWAIT
 		test   %eax,%eax
 		je     jump_eb433
 		testb  $0x2,0xc(%esp)
@@ -7021,7 +7021,7 @@ GLOBAL_FUNC (ASM_play_smk_via_buffer)
 		je     jump_eb499
 	jump_eb4ce:
 		push   %ebp
-		call   SMACKCLOSE
+		call   ac_SMACKCLOSE
 		mov    0x4(%esp),%eax
 		call   ac_LbMemoryFree
 		mov    $0x1,%eax
@@ -7035,7 +7035,7 @@ GLOBAL_FUNC (ASM_play_smk_via_buffer)
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC (ASM_SMACKSOUNDUSEMSS)
+GLOBAL_FUNC(ASM_SMACKSOUNDUSEMSS)
 /*----------------------------------------------------------------*/
 		push   %esi
 		push   %edi
@@ -7089,7 +7089,7 @@ GLOBAL_FUNC (ASM_SMACKSOUNDUSEMSS)
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC (RADMALLOC)
+GLOBAL_FUNC(RADMALLOC)
 /*----------------------------------------------------------------*/
 		mov    0x4(%esp),%eax
 		test   %eax,%eax
@@ -7105,7 +7105,7 @@ GLOBAL_FUNC (RADMALLOC)
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC (RADFREE)
+GLOBAL_FUNC(RADFREE)
 /*----------------------------------------------------------------*/
 		mov    0x4(%esp),%eax
 		call   *_smack_free
@@ -7366,7 +7366,7 @@ copy_to_screen_smk:
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC (SMACKWRAPCOPY)
+GLOBAL_FUNC(SMACKWRAPCOPY)
 /*----------------------------------------------------------------*/
 		push   %esi
 		push   %edi
@@ -7422,7 +7422,7 @@ GLOBAL_FUNC (SMACKWRAPCOPY)
 
 
 /*----------------------------------------------------------------*/
-SMACKWAIT:	/* 0x0FC3C0 */
+GLOBAL_FUNC(ASM_SMACKWAIT)	/* 0x0FC3C0 */
 /*----------------------------------------------------------------*/
 		push   %esi
 		push   %edi
@@ -7763,7 +7763,7 @@ func_fcbf3:
 
 
 /*----------------------------------------------------------------*/
-SMACKTOBUFFER:
+GLOBAL_FUNC(ASM_SMACKTOBUFFER)
 /*----------------------------------------------------------------*/
 		push   %esi
 		push   %edi
@@ -7948,7 +7948,7 @@ SMACKTOBUFFER:
 
 
 /*----------------------------------------------------------------*/
-SMACKNEXTFRAME:
+GLOBAL_FUNC(ASM_SMACKNEXTFRAME)
 /*----------------------------------------------------------------*/
 		push   %esi
 		push   %edi
@@ -8076,7 +8076,7 @@ timeframe_:	/* 0x0FD680 */
 
 
 /*----------------------------------------------------------------*/
-SMACKDOFRAME:	/* 0x0FD7A0 */
+GLOBAL_FUNC(ASM_SMACKDOFRAME)	/* 0x0FD7A0 */
 /*----------------------------------------------------------------*/
 		push   %esi
 		push   %ebp
@@ -8415,7 +8415,7 @@ soundnext_:
 
 
 /*----------------------------------------------------------------*/
-SMACKCLOSE:
+GLOBAL_FUNC(ASM_SMACKCLOSE)
 /*----------------------------------------------------------------*/
 		push   %esi
 		push   %edi
@@ -8524,7 +8524,7 @@ SMACKCLOSE:
 
 
 /*----------------------------------------------------------------*/
-SMACKOPEN:
+GLOBAL_FUNC(ASM_SMACKOPEN)
 /*----------------------------------------------------------------*/
 		push   %esi
 		push   %edi

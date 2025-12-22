@@ -99,6 +99,42 @@ struct Smack { // sizeof=1196
 
 /******************************************************************************/
 
+/** Open .SMK video file for playback.
+ *
+ * Note, the order of parameters is reverted in later versions of Smacker API.
+ * Well, these were clearly implemented assumung the correct order, just
+ * the used calling convention was incorrect.
+ *
+ * @param extrabuf Extra space to be alocated at end of Smack structure.
+ * @param flags Open options flags.
+ * @param name File name to be opened.
+ * @return The Smack playback state structure, or NULL on error.
+ */
+struct Smack * RADAPI SMACKOPEN(uint32_t extrabuf, uint32_t flags, const char *name);
+
+/** Process the next frame for SMK file playback.
+ */
+uint32_t RADAPI SMACKDOFRAME(struct Smack *p_smk);
+
+/** Signal the playback engine to advance SMK file playback to the next frame.
+ */
+void RADAPI SMACKNEXTFRAME(struct Smack *p_smk);
+
+/** Wait the proper amount of time before each frame to ensure correct playback speed.
+ */
+uint32_t RADAPI SMACKWAIT(struct Smack *p_smk);
+
+/** Gracefully close a SMK file and releases any resources used for playback.
+ */
+void RADAPI SMACKCLOSE(struct Smack *p_smk);
+
+/** Decode a frame of SMK video into the specified memory buffer.
+ */
+void RADAPI SMACKTOBUFFER(uint32_t Flags, const void *buf,
+ uint32_t destheight, uint32_t Pitch, uint32_t top, uint32_t left, struct Smack *p_smk);
+
+/******************************************************************************/
+
 #ifdef __cplusplus
 };
 #endif
