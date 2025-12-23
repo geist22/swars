@@ -474,14 +474,14 @@ _SmackInternal004:	/* 0x139500 */
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC (func_139590)
+GLOBAL_FUNC(func_139590)
 /*----------------------------------------------------------------*/
 		mov    $0x7468,%eax
 		ret
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC (func_1395a0)
+GLOBAL_FUNC(func_1395a0)
 /*----------------------------------------------------------------*/
 		push   %ebp
 		mov    %esp,%ebp
@@ -7512,7 +7512,7 @@ GLOBAL_FUNC(ASM_SMACKWAIT)	/* 0x0FC3C0 */
 		ret    $0x4
 	jump_fc4c3:
 		mov    %esi,%eax
-		call   backgroundload_
+		call   ac_backgroundload
 		mov    $0x1,%eax
 		pop    %edi
 		pop    %esi
@@ -7982,10 +7982,10 @@ GLOBAL_FUNC(ASM_SMACKNEXTFRAME)
 		mov    %esi,%eax
 		mov    (%ebx,%edx,4),%ebx
 		mov    0x3ac(%esi),%edx
-		call   blockread_
+		call   ac_blockread
 	jump_fd556:
 		mov    %esi,%eax
-		call   setuptheframe_
+		call   ac_setuptheframe
 		cmpl   $0x0,_sounds
 		je     jump_fd56c
 		call   *EXPORT_SYMBOL(LowSoundCheckAddr)
@@ -8600,7 +8600,7 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 		mov    %esi,%edx
 		mov    %esi,%eax
 		mov    %ecx,(%esi)
-		call   blockread_
+		call   ac_blockread
 		cmpl   $0x324b4d53,(%esi)
 		je     jump_fdfd7
 	jump_fdfaa:
@@ -8685,11 +8685,11 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 		mov    (%esp),%ebx
 		mov    %esi,%eax
 		shl    $0x2,%ebx
-		call   blockread_
+		call   ac_blockread
 		mov    (%esp),%ebx
 		mov    %esi,%eax
 		mov    0x3bc(%esi),%edx
-		call   blockread_
+		call   ac_blockread
 		mov    (%esp),%eax
 		mov    (%esp),%edi
 		shl    $0x2,%eax
@@ -8761,7 +8761,7 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 		lea    0x1000(%eax),%edx
 		mov    0x34(%esi),%ebx
 		mov    %esi,%eax
-		call   blockread_
+		call   ac_blockread
 		mov    0x44(%esi),%eax
 		push   %eax
 		mov    0x40(%esi),%edx
@@ -8994,7 +8994,7 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 		mov    %ebp,%ebx
 		mov    %esi,%eax
 		mov    0x3ac(%esi),%edx
-		call   blockread_
+		call   ac_blockread
 		testb  $0x10,0x31(%esp)
 		jne    jump_fe46c
 		mov    0x394(%esi),%ecx
@@ -9041,11 +9041,11 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 		mov    (%edx,%eax,4),%ebx
 		mov    %esi,%eax
 		mov    0x3ac(%esi),%edx
-		call   blockread_
+		call   ac_blockread
 	jump_fe508: /* XXX: abc no */
 		mov    %esi,%eax
 		movl   $0xffffffff,0x3b4(%esi)
-		call   setuptheframe_
+		call   ac_setuptheframe
 		movl   $0xffffffff,0x420(%esi)
 		mov    0x30(%esp),%eax
 		and    $0xffc01fff,%eax
@@ -9096,7 +9096,7 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 		je     jump_fe5f0
 	jump_fe5e5:
 		mov    %esi,%eax
-		call   backgroundload_
+		call   ac_backgroundload
 		test   %eax,%eax
 		jne    jump_fe5e5
 	jump_fe5f0:
@@ -9431,7 +9431,7 @@ soundopen_:
 
 
 /*----------------------------------------------------------------*/
-setuptheframe_:
+GLOBAL_FUNC(ASM_setuptheframe)
 /*----------------------------------------------------------------*/
 		push   %ebx
 		push   %ecx
@@ -9462,7 +9462,7 @@ setuptheframe_:
 		mov    0x300(%esp),%edx
 		mov    0x300(%esp),%eax
 		mov    0x3ac(%edx),%edx
-		call   blockread_
+		call   ac_blockread
 		jmp    jump_fea25
 	jump_fe9f5:
 		mov    0x300(%esp),%edx
@@ -9851,7 +9851,7 @@ gotoframe_:
 		sub    %eax,%ebx
 		mov    %ebp,%eax
 		movl   $0x0,0x42c(%ebp)
-		call   blockread_
+		call   ac_blockread
 		mov    0x438(%ebp),%edi
 		mov    %eax,0x43c(%ebp)
 		add    %eax,%edi
@@ -9880,7 +9880,7 @@ gotoframe_:
 		mov    (%eax,%edx,4),%ebx
 		mov    %ebp,%eax
 		mov    0x3ac(%ebp),%edx
-		call   blockread_
+		call   ac_blockread
 	jump_fef2a:
 		add    $0x4,%esp
 		pop    %ebp
@@ -9893,7 +9893,7 @@ gotoframe_:
 
 
 /*----------------------------------------------------------------*/
-blockread_:
+GLOBAL_FUNC(ASM_blockread)
 /*----------------------------------------------------------------*/
 		push   %ecx
 		push   %esi
@@ -10106,7 +10106,7 @@ blockread_:
 
 
 /*----------------------------------------------------------------*/
-backgroundload_:
+GLOBAL_FUNC(ASM_backgroundload)
 /*----------------------------------------------------------------*/
 		push   %ebx
 		push   %ecx
@@ -10216,7 +10216,7 @@ smkmalloc_:
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC (ASM_DEFSMACKTIMERSETUP)	/* 10f110 */
+GLOBAL_FUNC(ASM_DEFSMACKTIMERSETUP)	/* 10f110 */
 /*----------------------------------------------------------------*/
 		mov    $ac_DEFSMACKTIMERREAD,%edx
 		mov    $0x46c,%eax
@@ -10249,13 +10249,13 @@ GLOBAL_FUNC (ASM_DEFSMACKTIMERSETUP)	/* 10f110 */
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC (ASM_DEFSMACKTIMERDONE)	/* 0x10F150 */
+GLOBAL_FUNC(ASM_DEFSMACKTIMERDONE)	/* 0x10F150 */
 /*----------------------------------------------------------------*/
 		ret
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC (ASM_DEFSMACKTIMERREAD)
+GLOBAL_FUNC(ASM_DEFSMACKTIMERREAD)
 /*----------------------------------------------------------------*/
 		mov    $0x46c,%eax
 		mov    _lasttimerread,%edx

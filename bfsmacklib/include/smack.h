@@ -152,10 +152,10 @@ struct Smack { // sizeof=1196
  * @param extrabuf Extra space to be alocated as internal buffer referenced
  *   within Smack structure.
  * @param flags Open options flags.
- * @param name File name to be opened.
+ * @param name File name to be opened, or file handle depending on flags.
  * @return The Smack playback state structure, or NULL on error.
  */
-struct Smack * RADAPI SMACKOPEN(uint32_t extrabuf, uint32_t flags, const char *name);
+struct Smack * RADAPI SMACKOPEN(uint32_t extrabuf, uint32_t flags, char *name);
 
 /** Process the next frame for SMK file playback.
  */

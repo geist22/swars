@@ -42,7 +42,7 @@ typedef void (*SmackDrawCallback)(ubyte *frame_data, int32_t width, int32_t heig
 /******************************************************************************/
 extern SmackDrawCallback smack_draw_callback;
 
-TbResult play_smk(const char *fname, u32 smkflags, ushort plyflags);
+TbResult play_smk(char *fname, u32 smkflags, ushort plyflags);
 
 void set_smack_malloc(void *(*cb)(uint32_t));
 void set_smack_free(void (*cb)(void *ptr));

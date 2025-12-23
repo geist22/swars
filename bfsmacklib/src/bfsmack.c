@@ -52,6 +52,38 @@ void set_smack_free(void (*cb)(void *ptr))
 }
 
 //TODO place SMACK* functions into separate file
+int32_t blockread(struct Smack *p_smk, uint8_t *buf, int32_t sz)
+{
+#if 1
+    int32_t ret;
+    asm volatile (
+      "call ASM_blockread\n"
+        : "=r" (ret) : "a" (p_smk), "d" (buf), "b" (sz));
+    return ret;
+#endif
+}
+
+int backgroundload(struct Smack *p_smk)
+{
+#if 1
+    int ret;
+    asm volatile (
+      "call ASM_backgroundload\n"
+        : "=r" (ret) : "a" (p_smk));
+    return ret;
+#endif
+}
+
+void setuptheframe(struct Smack *p_smk)
+{
+#if 1
+    asm volatile (
+      "call ASM_setuptheframe\n"
+        :  : "a" (p_smk));
+#endif
+}
+
+
 void * RADAPI RADMALLOC(uint32_t size)
 {
     if (size == 0)
@@ -66,7 +98,7 @@ void RADAPI RADFREE(void *mem_ptr)
     smack_free(mem_ptr);
 }
 
-struct Smack * RADAPI SMACKOPEN(uint32_t extrabuf, uint32_t flags, const char *name)
+struct Smack * RADAPI SMACKOPEN(uint32_t extrabuf, uint32_t flags, char *name)
 {
     struct Smack *p_smk;
 
@@ -131,7 +163,7 @@ void RADAPI SMACKTOBUFFER(uint32_t Flags, const void *buf,
         : : "g" (Flags), "g" (buf), "g" (destheight), "g" (Pitch), "g" (top), "g" (left), "g" (p_smk));
 }
 
-TbResult play_smk_direct(const char *fname, u32 smkflags, ushort plyflags, ushort mode)
+TbResult play_smk_direct(char *fname, u32 smkflags, ushort plyflags, ushort mode)
 {
 #if 0
     TbResult ret;
@@ -243,7 +275,7 @@ TbResult play_smk_via_buffer(const char *fname, u32 smkflags, ushort plyflags, S
     return ret;
 }
 
-TbResult play_smk(const char *fname, u32 smkflags, ushort plyflags)
+TbResult play_smk(char *fname, u32 smkflags, ushort plyflags)
 {
     TbResult ret;
 
