@@ -8232,7 +8232,7 @@ soundnext_:
 		mov    0x384(%esi),%eax
 		mov    %eax,(%esp)
 		mov    %esp,%eax
-		call   GetFirstTrack_
+		call   ac_GetFirstTrack
 		mov    %al,0x10(%esp)
 		and    $0xff,%eax
 		shl    $0x2,%eax
@@ -8368,7 +8368,7 @@ soundnext_:
 		mov    %edx,0xc(%ebp)
 	jump_fdad1:
 		mov    %esp,%eax
-		call   GetFirstTrack_
+		call   ac_GetFirstTrack
 		mov    %al,0x10(%esp)
 		cmp    $0xff,%al
 		je     jump_fdb15
@@ -8589,7 +8589,7 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 		je     jump_fdfc0
 		testb  $0x8,0x31(%esp)
 		je     jump_fdf8a
-		mov    _simspeed,%eax
+		mov    EXPORT_SYMBOL(simspeed),%eax
 		mov    %eax,0x4a0(%esi)
 	jump_fdf8a:
 		lea    0x64(%esi),%eax
@@ -9054,7 +9054,7 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 		je     jump_fe5d4
 	jump_fe540: /* XXX: abc - yes */
 		lea    0x30(%esp),%eax
-		call   GetFirstTrack_
+		call   ac_GetFirstTrack
 		and    $0xff,%eax
 		mov    $0x70,%edx
 		mov    %eax,(%esp)
@@ -9068,7 +9068,7 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 		xor    %edx,%edx
 		mov    %esi,%eax
 		mov    (%esp),%dl
-		call   soundopen_
+		call   ac_soundopen
 		test   %al,%al
 		je     jump_fe5a1
 		mov    (%esp),%ecx
@@ -9172,7 +9172,7 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 
 
 /*----------------------------------------------------------------*/
-GetFirstTrack_:
+GLOBAL_FUNC(ASM_GetFirstTrack)
 /*----------------------------------------------------------------*/
 		push   %ebx
 		push   %ecx
@@ -9208,7 +9208,7 @@ GetFirstTrack_:
 
 
 /*----------------------------------------------------------------*/
-soundopen_:
+GLOBAL_FUNC(ASM_soundopen)
 /*----------------------------------------------------------------*/
 		push   %ebx
 		push   %ecx
@@ -9473,7 +9473,7 @@ GLOBAL_FUNC(ASM_setuptheframe)
 		movl   $0x0,0x370(%edx)
 	jump_fea19:
 		mov    0x300(%esp),%eax
-		call   gotoframe_
+		call   ac_gotoframe
 	jump_fea25:
 		mov    0x300(%esp),%edx
 		mov    0x300(%esp),%ebx
@@ -9700,7 +9700,7 @@ GLOBAL_FUNC(ASM_setuptheframe)
 
 
 /*----------------------------------------------------------------*/
-gotoframe_:
+GLOBAL_FUNC(ASM_gotoframe)
 /*----------------------------------------------------------------*/
 		push   %ebx
 		push   %ecx
@@ -10708,7 +10708,7 @@ _sounds:
 _trackbuf:
 		.long	0x0
 
-_simspeed:
+GLOBAL (simspeed)
 		.long	0x0
 _forcerate:
 		.long	0x0

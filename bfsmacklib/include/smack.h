@@ -85,7 +85,7 @@ struct Smack { // sizeof=1196
     uint32_t Highest1SecFrame;
     uint32_t ReadError;
     void *IOBuffer;
-    uint32_t field_3B0;
+    void *field_3B0;
     uint32_t field_3B4;
     uint32_t *field_3B8;
     void *TrackTable;

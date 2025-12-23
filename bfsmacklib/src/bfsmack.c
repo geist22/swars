@@ -39,6 +39,7 @@ void (*smack_free)(void *);
 extern int game_hacky_update(void);
 
 extern ubyte byte_1E56DC[PALETTE_8b_SIZE];
+extern uint32_t simspeed;
 /******************************************************************************/
 
 void set_smack_malloc(void *(*cb)(uint32_t))
@@ -63,12 +64,59 @@ int32_t blockread(struct Smack *p_smk, uint8_t *buf, int32_t sz)
 #endif
 }
 
+int32_t readframe(struct Smack *p_smk)
+{
+    if ((p_smk->OpenFlags & 0x200) != 0)
+        return 0;
+    p_smk->field_3B0 = p_smk->IOBuffer;
+    return blockread(p_smk, p_smk->IOBuffer, p_smk->field_3B8[p_smk->CurrFrameNum]);
+}
+
 int backgroundload(struct Smack *p_smk)
 {
 #if 1
     int ret;
     asm volatile (
       "call ASM_backgroundload\n"
+        : "=r" (ret) : "a" (p_smk));
+    return ret;
+#endif
+}
+
+void SMACKSIMULATE(uint32_t speed)
+{
+    simspeed = speed;
+}
+
+uint8_t GetFirstTrack(u32 *p_a1)
+{
+#if 1
+    uint8_t ret;
+    asm volatile (
+      "call ASM_GetFirstTrack\n"
+        : "=r" (ret) : "a" (p_a1));
+    return ret;
+#endif
+}
+
+
+uint8_t soundopen(struct Smack *p_smk, uint8_t track)
+{
+#if 1
+    uint8_t ret;
+    asm volatile (
+      "call ASM_soundopen\n"
+        : "=r" (ret) : "a" (p_smk), "d" (track));
+    return ret;
+#endif
+}
+
+int32_t gotoframe(struct Smack *p_smk)
+{
+#if 1
+    int32_t ret;
+    asm volatile (
+      "call ASM_gotoframe\n"
         : "=r" (ret) : "a" (p_smk));
     return ret;
 #endif
@@ -82,7 +130,6 @@ void setuptheframe(struct Smack *p_smk)
         :  : "a" (p_smk));
 #endif
 }
-
 
 void * RADAPI RADMALLOC(uint32_t size)
 {
