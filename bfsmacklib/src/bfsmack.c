@@ -69,6 +69,8 @@ void RADAPI RADFREE(void *mem_ptr)
 struct Smack * RADAPI SMACKOPEN(uint32_t extrabuf, uint32_t flags, const char *name)
 {
     struct Smack *p_smk;
+
+    assert(sizeof(struct Smack) == 0x4AC);
     asm volatile (
       "push %3\n"
       "push %2\n"

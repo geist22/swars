@@ -51,11 +51,12 @@ struct SmackSndTrk { // sizeof=112
 };
 
 struct Smack { // sizeof=1196
-    uint32_t Version;
+    /* smacker file header starts, sizeof=0x68 */
+    uint32_t Version;	/*< Magic value, "SMK2" */
     uint32_t Width;
     uint32_t Height;
     uint32_t Frames;
-    uint32_t MSPerFrame;
+    uint32_t MSPerFrame;	/*< Milliseconds per frame, can be overriden during open */
     uint32_t SmackerType;
     uint32_t LargestInTrack[7];
     uint32_t tablesize;
@@ -66,27 +67,70 @@ struct Smack { // sizeof=1196
     uint32_t TrackType[7];
     uint32_t extra;
     uint32_t NewPalette;
+    /* smacker file header ends */
     uint8_t Palette[772];
-    uint32_t PalType;
+    uint32_t CurrFrameNum;
     uint32_t FrameNum;
     uint32_t FrameSize;
     uint32_t SndSize;
+    uint32_t LastRectxQ;
+    uint32_t OpenFlags;
     uint32_t LastRectx;
     uint32_t LastRecty;
-    uint32_t LastRectw;
-    uint32_t LastRecth;
-    uint32_t OpenFlags;
-    uint32_t LeftOfs;
-    uint32_t TopOfs;
-    uint32_t LargestFrameSize;
-    uint32_t Highest1SecRate;
+    uint32_t field_390;
+    uint32_t FHandle;
+    uint32_t IOBufferSize;
+    void *UnkBuf39C;
+    void *Highest1SecRate;
     uint32_t Highest1SecFrame;
     uint32_t ReadError;
-    uint32_t addr32;
-    uint8_t field_3B0[84];
-    uint8_t field_0[1024];
-    SmackSndTrk *Unkn404PerTrack[7];
-    uint8_t field_420[144];
+    void *IOBuffer;
+    uint32_t field_3B0;
+    uint32_t field_3B4;
+    uint32_t *field_3B8;
+    void *TrackTable;
+    uint8_t field_3C0[32];
+    uint32_t field_3E0;
+    uint32_t field_3E4;
+    uint32_t field_3E8;
+    uint8_t field_3EC[16];
+    uint32_t field_3FC;
+    uint32_t MS100PerFrame;
+    struct SmackSndTrk *Unkn404PerTrack[7];
+    uint32_t field_420;
+    uint8_t field_424[8];
+    uint32_t field_42C;
+    uint32_t field_430;
+    uint32_t field_434;
+    uint32_t field_438;
+    uint32_t field_43C;
+    uint32_t field_440;
+    uint32_t field_444;
+    uint32_t UnkReadTime1;
+    uint32_t LastReadTime;
+    uint32_t UnkReadTime2;
+    uint32_t TotalBackReadTime;
+    uint32_t field_458;
+    uint32_t field_45C;
+    uint32_t FrameStartTime;
+    uint32_t DecompStartTime;
+    uint32_t BlitStartTime;
+    uint32_t StartTime;
+    uint32_t TotalOpenTime;
+    uint32_t FirstReadTime;
+    uint32_t TotalFrames;
+    uint32_t SkippedFrames;
+    uint32_t TotalBlitTime;
+    uint32_t TotalDecompTime;
+    uint32_t SlowestFrameTime;
+    uint32_t Slowest2FrameTime;
+    uint32_t SlowestFrameNum;
+    uint32_t Slowest2FrameNum;
+    uint32_t AverageFrameSize;
+    uint32_t HighestMemAmount;
+    uint32_t SimSpeed;
+    uint32_t Highest1SecRate_2;
+    uint32_t field_4A8;
 };
 
 /******************************************************************************/
