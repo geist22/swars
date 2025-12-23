@@ -111,7 +111,7 @@ struct Smack { // sizeof=1196
     uint32_t UnkReadTime2;
     uint32_t TotalBackReadTime;
     uint32_t field_458;
-    uint32_t field_45C;
+    uint32_t AllocdMemAmount;
     uint32_t FrameStartTime;
     uint32_t DecompStartTime;
     uint32_t BlitStartTime;

@@ -9059,7 +9059,7 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 		mov    $0x70,%edx
 		mov    %eax,(%esp)
 		mov    %esi,%eax
-		call   smkmalloc_
+		call   ac_smkmalloc
 		mov    (%esp),%edx
 		mov    %eax,0x404(%esi,%edx,4)
 		mov    (%esp),%eax
@@ -9343,7 +9343,7 @@ soundopen_:
 		mov    0x404(%edi),%edx
 		mov    %esi,%eax
 		mov    0x18(%edx),%edx
-		call   smkmalloc_
+		call   ac_smkmalloc
 		mov    %eax,%edx
 		mov    0x404(%edi),%eax
 		mov    %edx,0x8(%eax)
@@ -10196,7 +10196,7 @@ GLOBAL_FUNC(ASM_backgroundload)
 
 
 /*----------------------------------------------------------------*/
-smkmalloc_:
+GLOBAL_FUNC(ASM_smkmalloc)
 /*----------------------------------------------------------------*/
 		push   %ebx
 		push   %ecx

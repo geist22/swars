@@ -98,6 +98,19 @@ void RADAPI RADFREE(void *mem_ptr)
     smack_free(mem_ptr);
 }
 
+void *smkmalloc(struct Smack *p_smk, uint32_t size)
+{
+    uint32_t new_tot_mem;
+    uint32_t prev_highest;
+
+    new_tot_mem = size + p_smk->AllocdMemAmount;
+    prev_highest = p_smk->HighestMemAmount;
+    p_smk->AllocdMemAmount = new_tot_mem;
+    if (new_tot_mem > prev_highest)
+        p_smk->HighestMemAmount = new_tot_mem;
+    return RADMALLOC(size);
+}
+
 struct Smack * RADAPI SMACKOPEN(uint32_t extrabuf, uint32_t flags, char *name)
 {
     struct Smack *p_smk;
