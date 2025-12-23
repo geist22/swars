@@ -102,10 +102,11 @@ struct Smack { // sizeof=1196
 /** Open .SMK video file for playback.
  *
  * Note, the order of parameters is reverted in later versions of Smacker API.
- * Well, these were clearly implemented assumung the correct order, just
+ * Well, these were clearly implemented assuming the correct order, just
  * the used calling convention was incorrect.
  *
- * @param extrabuf Extra space to be alocated at end of Smack structure.
+ * @param extrabuf Extra space to be alocated as internal buffer referenced
+ *   within Smack structure.
  * @param flags Open options flags.
  * @param name File name to be opened.
  * @return The Smack playback state structure, or NULL on error.
