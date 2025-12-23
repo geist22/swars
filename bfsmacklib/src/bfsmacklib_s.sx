@@ -8466,7 +8466,7 @@ GLOBAL_FUNC(ASM_SMACKCLOSE)
 		testb  $0x10,0x385(%ebp)
 		jne    jump_fdbed
 		push   %ebx
-		call   ac_dos_low_level_close
+		call   ac_AIL_lowfclose
 		add    $0x4,%esp
 	jump_fdbed:
 		mov    0x3a0(%ebp),%esi
@@ -8568,7 +8568,7 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 		mov    %esi,%edx
 		push   %eax
 		mov    %eax,0x394(%edx)
-		call   ac_dos_low_level_seek_relative
+		call   ac_AIL_lowfseekcur
 		mov    %esi,%edx
 		add    $0x8,%esp
 		mov    %eax,0x3a8(%edx)
@@ -8580,7 +8580,7 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 		push   %eax
 		mov    0x3c(%esp),%edi
 		push   %edi
-		call   ac_dos_low_level_open
+		call   ac_AIL_lowfopen
 		mov    %esi,%edx
 		add    $0xc,%esp
 		mov    %eax,0x394(%edx)
@@ -8608,7 +8608,7 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 		jne    jump_fdfc0
 		mov    0x394(%esi),%eax
 		push   %eax
-		call   ac_dos_low_level_close
+		call   ac_AIL_lowfclose
 		add    $0x4,%esp
 	jump_fdfc0:
 		push   %esi
@@ -8999,7 +8999,7 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 		jne    jump_fe46c
 		mov    0x394(%esi),%ecx
 		push   %ecx
-		call   ac_dos_low_level_close
+		call   ac_AIL_lowfclose
 		add    $0x4,%esp
 	jump_fe46c:
 		movl   $0xffffffff,0x394(%esi)
@@ -9023,7 +9023,7 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 		push   %edx
 		mov    0x394(%esi),%ebx
 		push   %ebx
-		call   ac_dos_low_level_read
+		call   ac_AIL_fread
 		add    $0x14,%esp
 		mov    0x42c(%esi),%eax
 		mov    (%esp),%edx
@@ -9841,7 +9841,7 @@ GLOBAL_FUNC(ASM_gotoframe)
 		add    %eax,%edx
 		push   %ecx
 		mov    %edx,0x430(%ebp)
-		call   ac_dos_low_level_seek
+		call   ac_AIL_lowfseekbegin
 		mov    %esi,%eax
 		add    $0x8,%esp
 		and    $0xfff,%eax
@@ -9922,7 +9922,7 @@ GLOBAL_FUNC(ASM_blockread)
 		push   %edi
 		mov    0x394(%ebp),%eax
 		push   %eax
-		call   ac_dos_low_level_read
+		call   ac_AIL_fread
 		add    $0x14,%esp
 		mov    (%esp),%eax
 		mov    %eax,0x10(%esp)
@@ -10018,7 +10018,7 @@ GLOBAL_FUNC(ASM_blockread)
 		push   %edi
 		mov    0x394(%ebp),%eax
 		push   %eax
-		call   ac_dos_low_level_read
+		call   ac_AIL_fread
 		add    $0x14,%esp
 		mov    0x4(%esp),%eax
 		mov    0xc(%esp),%edx
@@ -10056,7 +10056,7 @@ GLOBAL_FUNC(ASM_blockread)
 		push   %esi
 		mov    0x394(%ebp),%ebx
 		push   %ebx
-		call   ac_dos_low_level_read
+		call   ac_AIL_fread
 		add    $0x14,%esp
 		mov    0x4(%esp),%eax
 		add    %eax,(%esp)
@@ -10137,7 +10137,7 @@ GLOBAL_FUNC(ASM_backgroundload)
 		push   %ebx
 		mov    0x394(%esi),%edi
 		push   %edi
-		call   ac_dos_low_level_read
+		call   ac_AIL_fread
 		add    $0x14,%esp
 		mov    0x43c(%esi),%edx
 		mov    (%esp),%eax

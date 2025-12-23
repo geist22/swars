@@ -47,6 +47,7 @@ syndwarsfx_SOURCES = \
 	../bfsmacklib/include/smack.h \
 	../bfsmacklib/include/smack2ail.h \
 	../bfsmacklib/src/smack2ail.c \
+	../bfsmacklib/src/smailfile.c \
 	../bfsmacklib/src/bfsmacklib_s.sx \
 	linksmk.h \
 	linksmk.c \
