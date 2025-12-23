@@ -234,7 +234,7 @@ GLOBAL_FUNC (ASM_MSSLOWSOUNDCLOSE)
 		add    $0x8,%esp
 		mov    0x54(%esi),%ebp
 		push   %ebp
-		call   RADFREE
+		call   ac_RADFREE
 		mov    _fss,%eax
 		cmp    %eax,%esi
 		jne    jump_fbf16
@@ -389,7 +389,7 @@ GLOBAL_FUNC (ASM_MSSLOWSOUNDOPEN)
 		mov    0x3c(%esi),%eax
 		add    %eax,%eax
 		push   %eax
-		call   RADMALLOC
+		call   ac_RADMALLOC
 		mov    %eax,0x54(%esi)
 		test   %eax,%eax
 		jne    jump_fc0cf
@@ -415,7 +415,7 @@ GLOBAL_FUNC (ASM_MSSLOWSOUNDOPEN)
 		jne    jump_fc10a
 		mov    0x54(%esi),%ebx
 		push   %ebx
-		call   RADFREE
+		call   ac_RADFREE
 		xor    %al,%al
 		pop    %ebp
 		pop    %edi

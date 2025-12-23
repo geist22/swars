@@ -7089,7 +7089,7 @@ GLOBAL_FUNC(ASM_SMACKSOUNDUSEMSS)
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC(RADMALLOC)
+GLOBAL_FUNC(ASM_RADMALLOC)
 /*----------------------------------------------------------------*/
 		mov    0x4(%esp),%eax
 		test   %eax,%eax
@@ -7105,7 +7105,7 @@ GLOBAL_FUNC(RADMALLOC)
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC(RADFREE)
+GLOBAL_FUNC(ASM_RADFREE)
 /*----------------------------------------------------------------*/
 		mov    0x4(%esp),%eax
 		call   *_smack_free
@@ -7778,7 +7778,7 @@ GLOBAL_FUNC(ASM_SMACKTOBUFFER)
 		test   %ecx,%ecx
 		je     jump_fcf27
 		push   %ecx
-		call   RADFREE
+		call   ac_RADFREE
 		mov    0x3a4(%esi),%eax
 		mov    0x45c(%esi),%ebp
 		movl   $0x0,0x3a0(%esi)
@@ -7813,7 +7813,7 @@ GLOBAL_FUNC(ASM_SMACKTOBUFFER)
 		cmp    $0x1,%bl
 		je     jump_fce34
 		push   %edi
-		call   RADFREE
+		call   ac_RADFREE
 		mov    0x3a4(%esi),%eax
 		sub    %eax,0x45c(%esi)
 	jump_fcdc4:
@@ -7835,7 +7835,7 @@ GLOBAL_FUNC(ASM_SMACKTOBUFFER)
 		mov    %eax,0x49c(%esi)
 	jump_fcdfe:
 		push   %edx
-		call   RADMALLOC
+		call   ac_RADMALLOC
 		mov    %eax,0x3a0(%esi)
 		test   %eax,%eax
 		je     jump_fcf27
@@ -8436,10 +8436,10 @@ GLOBAL_FUNC(ASM_SMACKCLOSE)
 		mov    0x404(%esi),%eax
 		mov    (%eax),%edx
 		push   %edx
-		call   RADFREE
+		call   ac_RADFREE
 		mov    0x404(%esi),%ebx
 		push   %ebx
-		call   RADFREE
+		call   ac_RADFREE
 		mov    _sounds,%ecx
 		dec    %ecx
 		movl   $0x0,0x404(%esi)
@@ -8457,7 +8457,7 @@ GLOBAL_FUNC(ASM_SMACKCLOSE)
 		test   %edi,%edi
 		je     jump_fdbd0
 		push   %edi
-		call   RADFREE
+		call   ac_RADFREE
 		mov    %esi,_trackbuf
 	jump_fdbd0:
 		mov    0x394(%ebp),%ebx
@@ -8473,31 +8473,31 @@ GLOBAL_FUNC(ASM_SMACKCLOSE)
 		test   %esi,%esi
 		je     jump_fdbfd
 		push   %esi
-		call   RADFREE
+		call   ac_RADFREE
 	jump_fdbfd:
 		mov    0x39c(%ebp),%eax
 		test   %eax,%eax
 		je     jump_fdc0d
 		push   %eax
-		call   RADFREE
+		call   ac_RADFREE
 	jump_fdc0d:
 		mov    0x3bc(%ebp),%ebx
 		test   %ebx,%ebx
 		je     jump_fdc1d
 		push   %ebx
-		call   RADFREE
+		call   ac_RADFREE
 	jump_fdc1d:
 		mov    0x3ac(%ebp),%esi
 		test   %esi,%esi
 		je     jump_fdc2d
 		push   %esi
-		call   RADFREE
+		call   ac_RADFREE
 	jump_fdc2d:
 		mov    0x42c(%ebp),%eax
 		test   %eax,%eax
 		je     jump_fdc3d
 		push   %eax
-		call   RADFREE
+		call   ac_RADFREE
 	jump_fdc3d:
 		mov    $0x4ac,%ecx
 		mov    %ebp,%edi
@@ -8514,7 +8514,7 @@ GLOBAL_FUNC(ASM_SMACKCLOSE)
 		and    $0x3,%cl
 		rep stos %al,%es:(%edi)
 		push   %ebp
-		call   RADFREE
+		call   ac_RADFREE
 		call   *EXPORT_SYMBOL(SmackTimerDoneAddr)
 	jump_fdc6c:
 		pop    %ebp
@@ -8537,7 +8537,7 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 		push   $0x4ac
 		xor    %ebp,%ebp
 		mov    %eax,0x8(%esp)
-		call   RADMALLOC
+		call   ac_RADMALLOC
 		mov    %eax,%esi
 		test   %eax,%eax
 		jne    jump_fdefb
@@ -8612,7 +8612,7 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 		add    $0x4,%esp
 	jump_fdfc0:
 		push   %esi
-		call   RADFREE
+		call   ac_RADFREE
 		call   *EXPORT_SYMBOL(SmackTimerDoneAddr)
 		xor    %eax,%eax
 		add    $0x1c,%esp
@@ -8675,7 +8675,7 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 		mov    %edi,0x49c(%esi)
 	jump_fe069: /* XXX: abc no */
 		push   %edx
-		call   RADMALLOC
+		call   ac_RADMALLOC
 		mov    %eax,0x3bc(%esi)
 		test   %eax,%eax
 		je     jump_fdfaa
@@ -8717,13 +8717,13 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 		mov    %ebx,0x49c(%esi)
 	jump_fe0f9: /* XXX: abc no */
 		push   %edx
-		call   RADMALLOC
+		call   ac_RADMALLOC
 		mov    %eax,0x39c(%esi)
 		test   %eax,%eax
 		jne    jump_fe11a
 		mov    0x3bc(%esi),%ebp
 		push   %ebp
-		call   RADFREE
+		call   ac_RADFREE
 		jmp    jump_fdfaa
 	jump_fe11a:
 		mov    0x34(%esi),%edx
@@ -8745,17 +8745,17 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 		mov    %ecx,0x49c(%eax)
 	jump_fe157:
 		push   %ebx
-		call   RADMALLOC
+		call   ac_RADMALLOC
 		mov    %eax,%edi
 		test   %eax,%eax
 		jne    jump_fe180
 	jump_fe163: /* XXX: abc - - */
 		mov    0x39c(%esi),%edi
 		push   %edi
-		call   RADFREE
+		call   ac_RADFREE
 		mov    0x3bc(%esi),%ebp
 		push   %ebp
-		call   RADFREE
+		call   ac_RADFREE
 		jmp    jump_fdfaa
 	jump_fe180:
 		lea    0x1000(%eax),%edx
@@ -8776,7 +8776,7 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 		call   func_1395a0
 		add    $0x18,%esp
 		push   %edi
-		call   RADFREE
+		call   ac_RADFREE
 		mov    0x34(%esi),%eax
 		mov    0x45c(%esi),%edx
 		add    $0x1000,%eax
@@ -8952,7 +8952,7 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 		mov    %ecx,0x49c(%esi)
 	jump_fe3b0:
 		push   %edx
-		call   RADMALLOC
+		call   ac_RADMALLOC
 		mov    %eax,0x42c(%esi)
 		mov    %eax,0x434(%esi)
 		mov    %eax,0x438(%esi)
@@ -8976,7 +8976,7 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 		mov    %ebx,0x49c(%esi)
 	jump_fe40b:
 		push   %edx
-		call   RADMALLOC
+		call   ac_RADMALLOC
 		mov    %eax,0x3ac(%esi)
 		test   %eax,%eax
 		jne    jump_fe434
@@ -8984,7 +8984,7 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 		test   %ebp,%ebp
 		je     jump_fe163
 		push   %ebp
-		call   RADFREE
+		call   ac_RADFREE
 		jmp    jump_fe163
 	jump_fe434:
 		mov    0x3a8(%esi),%eax
@@ -9083,7 +9083,7 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 		mov    (%esp),%eax
 		mov    0x404(%esi,%eax,4),%ecx
 		push   %ecx
-		call   RADFREE
+		call   ac_RADFREE
 		subl   $0x70,0x45c(%esi)
 		mov    (%esp),%eax
 		movl   $0x0,0x404(%esi,%eax,4)
@@ -9282,7 +9282,7 @@ soundopen_:
 		mov    %ecx,0x49c(%esi)
 	jump_fe7ab:
 		push   %edx
-		call   RADMALLOC
+		call   ac_RADMALLOC
 		mov    %eax,_trackbuf
 		test   %eax,%eax
 		jne    jump_fe7c5
@@ -9390,7 +9390,7 @@ soundopen_:
 		mov    0x404(%edi),%eax
 		mov    (%eax),%edx
 		push   %edx
-		call   RADFREE
+		call   ac_RADFREE
 		mov    0x404(%edi),%eax
 		mov    0x45c(%esi),%ebx
 		sub    0x18(%eax),%ebx
@@ -10209,7 +10209,7 @@ smkmalloc_:
 		mov    %ebx,0x49c(%eax)
 	jump_ff360:
 		push   %edx
-		call   RADMALLOC
+		call   ac_RADMALLOC
 		pop    %ecx
 		pop    %ebx
 		ret

@@ -25,16 +25,13 @@
 #include "game_data.h"
 
 /******************************************************************************/
-extern ulong smack_malloc_used_tot;
+extern u32 smack_malloc_used_tot;
 
 /******************************************************************************/
-// not callable outide ASM
-void *ac_opti_smack_malloc(int msize);
-void ac_opti_smack_mfree(void *ptr);
 
 /** Primitive but very fast mem allocation.
  */
-void *opti_smack_malloc(u32 msize)
+void *opti_smack_malloc(uint32_t msize)
 {
     void *ptr;
 
@@ -57,8 +54,8 @@ void smack_malloc_free_all(void)
 void smack_malloc_setup(void)
 {
     smack_malloc_used_tot = 0;
-    set_smack_malloc(ac_opti_smack_malloc);
-    set_smack_free(ac_opti_smack_mfree);
+    set_smack_malloc(opti_smack_malloc);
+    set_smack_free(opti_smack_mfree);
 }
 
 /******************************************************************************/
