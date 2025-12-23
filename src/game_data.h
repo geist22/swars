@@ -67,6 +67,11 @@ extern char language_3str[4];
 
 extern MemSystem mem_game[];
 
+/** Scratch memory, reused for different purposes in different parts of the game.
+ */
+extern void *scratch_malloc_mem;
+extern u32 scratch_malloc_size;
+
 /******************************************************************************/
 
 /** Returns absolute path to user files directory for the application.
@@ -99,7 +104,17 @@ void get_saved_game_fname(char *fname, ushort slot);
 
 void adjust_memory_use(void);
 TbResult init_memory(MemSystem *mem_table);
-long get_memory_ptr_allocated_count(void **mgptr);
+int get_memory_ptr_allocated_count(void **mgptr);
+
+/** Specialized version of get_memory_ptr_allocated_count(), to optimize speed.
+ *
+ * This function is called many times while creating drawlist, so it needs
+ * to give the value very fast.
+ */
+inline int get_memory_draw_items_allocated_count(void)
+{
+    return mem_game[31].N;
+}
 
 /******************************************************************************/
 #ifdef __cplusplus

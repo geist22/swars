@@ -173,8 +173,8 @@ extern long unkn01_pos_y;
 extern ushort current_map;
 extern short current_level;
 
-extern ulong engine_mem_alloc_size;
 extern void *engine_mem_alloc_ptr;
+extern u32 engine_mem_alloc_size;
 
 extern long navi2_unkn_counter;
 extern long navi2_unkn_counter_max;
@@ -311,7 +311,6 @@ extern sbyte selected_agent;
 extern int mouse_map_x;
 extern int mouse_map_y;
 extern int mouse_map_z;
-extern void *scratch_malloc_mem;
 
 extern ubyte game_gfx_advanced_lights;
 extern ubyte game_billboard_movies;

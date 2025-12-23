@@ -190,7 +190,7 @@ extern short word_1C6E0A;
 
 extern long dword_1DDECC;
 
-ulong engine_mem_alloc_size = 5900000;
+u32 engine_mem_alloc_size = 5900000;
 
 extern struct GamePanel unknstrct7_arr2[];
 

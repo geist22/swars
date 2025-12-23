@@ -52,6 +52,8 @@ static char data_path_user[DISKPATH_SIZE] = "";
 static char data_path_hdd[DISKPATH_SIZE] = "";
 static char game_dir_language[64] = "language/eng";
 
+u32 scratch_malloc_size = 0;
+
 /******************************************************************************/
 
 MemSystem mem_game[] = {
@@ -124,7 +126,7 @@ GetDirectoryUser(void)
         {
             snprintf(data_path_user, sizeof(data_path_user), ".");
         }
-        LbSyncLog("Dir for user files '%s'", data_path_user);
+        LbSyncLog("Dir for user files '%s'\n", data_path_user);
 
         pinfo = &game_dirs[DirPlace_Savegame];
         LbDirectoryMake(pinfo->directory, true);
@@ -144,7 +146,7 @@ GetDirectoryHdd(void)
         {
             snprintf(data_path_hdd, sizeof(data_path_hdd), "%s", ".");
         }
-        LbSyncLog("Dir with HDD data '%s'",data_path_hdd);
+        LbSyncLog("Dir with HDD data '%s'\n",data_path_hdd);
     }
     return data_path_hdd;
 }
@@ -308,7 +310,7 @@ int get_memory_ptr_index(void **mgptr)
     return -1;
 }
 
-long get_memory_ptr_allocated_count(void **mgptr)
+int get_memory_ptr_allocated_count(void **mgptr)
 {
     int i;
     for (i = 0; mem_game[i].Name != NULL; i++)
@@ -471,7 +473,7 @@ TbResult init_memory(MemSystem *mem_table)
         ret = Lb_FAIL;
     }
 
-    p = scratch_malloc_mem;
+    p = NULL;
     for (i = mem_table_len - 1; i >= 0; i--)
     {
         ment = &mem_table[i];
@@ -503,16 +505,20 @@ TbResult init_memory(MemSystem *mem_table)
             *(ment->BufferPtr) = ment->PrivBuffer;
         }
     }
-    scratch_malloc_mem = p;
-    if (scratch_malloc_mem == NULL) {
+    if (p != NULL) {
+        scratch_malloc_mem = p;
+        assert((ubyte *)engine_mem_alloc_ptr + engine_mem_alloc_size > p);
+        scratch_malloc_size = (ubyte *)engine_mem_alloc_ptr + engine_mem_alloc_size - p;
+    } else {
         LOGWARN("Memory for scratch_malloc not prepared");
+        scratch_malloc_size = 0;
         ret = Lb_FAIL;
     }
 
     memset(game_sort_sprites, 0, 0x20u);
 
     scratch_buf1 = *ment[23].BufferPtr; // prim_objects
-    if (scratch_malloc_mem == NULL) {
+    if (scratch_buf1 == NULL) {
         LOGWARN("Memory for scratch_buf1 not prepared");
         ret = Lb_FAIL;
     }
