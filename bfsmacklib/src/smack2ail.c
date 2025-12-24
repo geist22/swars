@@ -270,4 +270,27 @@ uint8_t RADAPI SMACKSOUNDUSEMSS(uint32_t speed, void *digdrv)
     return 1;
 }
 
+void RADAPI SmackTimerSetup(void)
+{
+    //return SmackTimerReadAddr(); -- incompatible calling convention
+    asm volatile ("call *%0\n"
+      :  : "g" (SmackTimerSetupAddr) : "eax" );
+}
+
+uint32_t RADAPI SmackTimerRead(void)
+{
+    uint32_t ret;
+    //return SmackTimerReadAddr(); -- incompatible calling convention
+    asm volatile ("call *%1\n"
+      : "=r" (ret) : "g" (SmackTimerReadAddr));
+    return ret;
+}
+
+void RADAPI SmackTimerDone(void)
+{
+    //SmackTimerDoneAddr(); -- incompatible calling convention
+    asm volatile ("call *%0\n"
+      : : "g" (SmackTimerDoneAddr) : "eax" );
+}
+
 /******************************************************************************/

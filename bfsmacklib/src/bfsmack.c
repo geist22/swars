@@ -20,6 +20,7 @@
 #include "bfsmack.h"
 
 #include <assert.h>
+#include <string.h>
 
 #include "bfkeybd.h"
 #include "bfmemut.h"
@@ -28,11 +29,16 @@
 #include "bfsvaribl.h"
 
 #include "smack2ail.h"
+#include "smailfile.h"
 
 /******************************************************************************/
 //SmackDrawCallback smack_draw_callback = NULL;
 void *(*smack_malloc)(uint32_t);
 void (*smack_free)(void *);
+
+void RADAPI SmackTimerSetup(void);
+uint32_t RADAPI SmackTimerRead(void);
+void RADAPI SmackTimerDone(void);
 
 // Currenlty only in the main game
 //TODO make a copy here, we only need the bflibrary calls
@@ -40,6 +46,8 @@ extern int game_hacky_update(void);
 
 extern ubyte byte_1E56DC[PALETTE_8b_SIZE];
 extern uint32_t simspeed;
+
+#define __DS__ 0
 /******************************************************************************/
 
 void set_smack_malloc(void *(*cb)(uint32_t))
@@ -158,17 +166,26 @@ void *smkmalloc(struct Smack *p_smk, uint32_t size)
     return RADMALLOC(size);
 }
 
+void smkmfree(struct Smack *p_smk, void *ptr, uint32_t size)
+{
+    RADFREE(ptr);
+    p_smk->AllocdMemAmount -= size;
+}
+
 struct Smack * RADAPI SMACKOPEN(uint32_t extrabuf, uint32_t flags, char *name)
 {
     struct Smack *p_smk;
 
     assert(sizeof(struct Smack) == 0x4AC);
+    assert(sizeof(struct SmackSndTrk) == 0x70);
+#if 1
     asm volatile (
       "push %3\n"
       "push %2\n"
       "push %1\n"
       "call ASM_SMACKOPEN\n"
         : "=r" (p_smk) : "g" (extrabuf), "g" (flags), "g" (name));
+#endif
     return p_smk;
 }
 

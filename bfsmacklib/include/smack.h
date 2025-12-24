@@ -78,7 +78,7 @@ struct Smack { // sizeof=1196
     uint32_t LastRectx;
     uint32_t LastRecty;
     uint32_t field_390;
-    uint32_t FHandle;
+    int FHandle;
     uint32_t IOBufferSize;
     void *UnkBuf39C;
     void *Highest1SecRate;
