@@ -157,7 +157,7 @@ void LbI_PointerHandler::Initialise(const struct TbSprite *spr,
 void LbI_PointerHandler::Draw(bool a1)
 {
     unsigned long flags;
-    flags = SSBlt_FLAG10 | SSBlt_TO_SCREEN | SSBlt_FLAG4;
+    flags = SSBlt_FLAG10 | SSBlt_TO_SCREEN | SSBlt_TRANSPRN;
     if ( a1 )
       flags |= SSBlt_FLAG2;
     LbScreenSurfaceBlit(&this->surf1, this->draw_pos_x, this->draw_pos_y, &spr_clip_rect, flags);

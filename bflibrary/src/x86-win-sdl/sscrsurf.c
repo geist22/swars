@@ -112,7 +112,7 @@ TbResult LbScreenSurfaceBlit(struct SSurface *surf, ulong x, ulong y,
       //to access front buffer in SDL
     }
 
-    if ((blflags & SSBlt_FLAG4) != 0) {
+    if ((blflags & SSBlt_TRANSPRN) != 0) {
         // enable color key
         SDL_SetColorKey(to_SDLSurf(surf->surf_data), SDL_SRCCOLORKEY, 255);
     }
