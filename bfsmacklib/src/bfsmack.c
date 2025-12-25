@@ -202,15 +202,353 @@ struct Smack * RADAPI SMACKOPEN(uint32_t extrabuf, uint32_t flags, char *name)
 
     assert(sizeof(struct Smack) == 0x4AC);
     assert(sizeof(struct SmackSndTrk) == 0x70);
-#if 1
+#if 0
     asm volatile (
       "push %3\n"
       "push %2\n"
       "push %1\n"
       "call ASM_SMACKOPEN\n"
         : "=r" (p_smk) : "g" (extrabuf), "g" (flags), "g" (name));
-#endif
     return p_smk;
+#else
+    uint32_t begin_time;
+    uint32_t n_frames;
+    uint32_t v59d;
+    uint32_t v63;
+
+    SmackTimerSetup();
+    begin_time = SmackTimerRead();
+    p_smk = (struct Smack *)RADMALLOC(sizeof(Smack));
+    if (p_smk == NULL) {
+        SmackTimerDone();
+        return NULL;
+    }
+
+    memset(p_smk, 0, sizeof(struct Smack));
+    p_smk->AllocdMemAmount += sizeof(Smack);
+
+    if ((flags & 0x1000) != 0)
+    {
+        p_smk->FHandle = (int)name;
+        p_smk->ReadError = AIL_lowfseekcur(p_smk->FHandle, 0);
+    }
+    else
+    {
+        p_smk->FHandle = AIL_lowfopen(name, __DS__, 0);
+    }
+
+    if (p_smk->FHandle == -1) {
+        goto __fail;
+    }
+    if ((flags & 0x0800) != 0) {
+        p_smk->SimSpeed = simspeed;
+    }
+    p_smk->Version = 0;
+    blockread(p_smk, (uint8_t *)p_smk, 0x68);
+    if (p_smk->Version != 0x324B4D53) { // "SMK2"
+        goto __fail;
+    }
+    if ((flags & 0x0080) != 0) {
+        p_smk->MSPerFrame = forcerate;
+    }
+    {
+        int ms_per_frm;
+        int ms100_per_frm;
+
+        ms_per_frm = p_smk->MSPerFrame;
+        if (ms_per_frm >= 0)
+            ms100_per_frm = 100 * ms_per_frm;
+        else
+            ms100_per_frm = -ms_per_frm;
+        p_smk->MS100PerFrame = ms100_per_frm;
+    }
+
+    if (p_smk->MS100PerFrame != 0)
+        v63 = 100000 / p_smk->MS100PerFrame;
+    else
+        v63 = 100000;
+    if (v63 == 0)
+        v63 = 1;
+    n_frames = p_smk->Frames + (p_smk->SmackerType & 1);
+    p_smk->TrackTable = smkmalloc(p_smk, n_frames + 4 * n_frames + 4);
+    if (p_smk->TrackTable == NULL) {
+        goto __fail;
+    }
+    p_smk->field_3B8 = (uint32_t *)&p_smk->TrackTable[n_frames];
+    blockread(p_smk, (uint8_t *)p_smk->field_3B8, 4 * n_frames);
+    p_smk->ReadError += 4 * n_frames;
+    blockread(p_smk, p_smk->TrackTable, n_frames);
+    p_smk->ReadError += n_frames;
+    {
+        uint32_t unk_buf39c_size;
+        unk_buf39c_size = p_smk->typesize + p_smk->detailsize + p_smk->absize + p_smk->codesize + SmackGetSizeTables();
+        p_smk->UnkBuf39C = smkmalloc(p_smk, unk_buf39c_size);
+        if (p_smk->UnkBuf39C == NULL)
+        {
+            RADFREE(p_smk->TrackTable);
+            goto __fail;
+        }
+    }
+    {
+        uint8_t *input_buffer;
+        uint32_t in_buf_sz;
+
+        in_buf_sz = p_smk->tablesize + 4096;
+        in_buf_sz = (in_buf_sz + 3) & ~0x03;
+        if (in_buf_sz < 0x2000)
+           in_buf_sz = 0x2000;
+        input_buffer = smkmalloc(p_smk, in_buf_sz);
+        if (input_buffer == NULL)
+        {
+            RADFREE(p_smk->UnkBuf39C);
+            RADFREE(p_smk->TrackTable);
+            goto __fail;
+        }
+        blockread(p_smk, input_buffer + 4096, p_smk->tablesize);
+        SmackDoTables(input_buffer, p_smk->UnkBuf39C, p_smk->codesize,
+           p_smk->absize, p_smk->detailsize, p_smk->typesize);
+        smkmfree(p_smk, input_buffer, in_buf_sz);
+    }
+
+    uint32_t v3;
+    uint32_t v29;
+    uint32_t v31;
+
+    int v27;
+    int v28;
+    uint32_t *v30;
+    int v62;
+    uint32_t largest_frame_sz;
+    uint32_t extrabuf_real;
+
+    largest_frame_sz = 0;
+    v27 = p_smk->Frames - 1;
+    v28 = p_smk->SmackerType & 1;
+    p_smk->ReadError += p_smk->tablesize;
+    p_smk->ReadError += 104;
+    v3 = 0;
+    v59d = v28 + v27;
+    v29 = 0;
+    v30 = p_smk->field_3B8;
+    if (v59d >= v63)
+    {
+        uint32_t v33;
+        uint32_t i;
+        uint32_t *v35;
+        int v36;
+        uint32_t limit32;
+        uint32_t *v64;
+        v64 = 0;
+        v33 = 0;
+        for (i = 0; i < v63; i++)
+        {
+            v33 += *v30;
+            v30++;
+        }
+        v35 = p_smk->field_3B8;
+        limit32 = v59d - v63;
+        v31 = 0;
+        v64 = &v35[v63];
+        do
+        {
+            if ( v33 > v29 && v31 )
+            {
+              v29 = v33;
+              v62 = v31;
+            }
+            v33 = *v64 + v33 - *v35;
+            if (largest_frame_sz < *v35)
+                largest_frame_sz = *v35;
+            v3 += *v35;
+            ++v31;
+            ++v64;
+            ++v35;
+        }
+        while ( v31 <= limit32 );
+
+        for (; v31 <= v59d; v31++)
+        {
+            if (*v35 > largest_frame_sz)
+                largest_frame_sz = *v35;
+            v36 = *v35++;
+            v3 += v36;
+        }
+    }
+    else
+    {
+        int v36;
+        v62 = 0;
+        for (v31 = 0; v31 <= v59d; v31++)
+        {
+            v29 += *v30;
+            if (*v30 > largest_frame_sz)
+                largest_frame_sz = *v30;
+            v36 = *v30++;
+            v3 += v36;
+        }
+    }
+    p_smk->field_4A8 = v62;
+    p_smk->Highest1SecRate_2 = v29;
+    p_smk->AverageFrameSize = v3 / v31;
+    if ((flags & 0x200) != 0)
+    {
+        p_smk->IOBufferSize = v3;
+    }
+    else
+    {
+        if (extrabuf == (uint32_t)-1)
+        {
+            if (p_smk->MS100PerFrame)
+                extrabuf = p_smk->Highest1SecRate_2;
+            else
+                extrabuf = 0x3000;
+            if (extrabuf > v3 >> 2)
+                extrabuf = v3 >> 2;
+            if (extrabuf < 0x3000)
+                extrabuf = 0x3000;
+        }
+
+        extrabuf_real = (extrabuf + 4095) >> 12 << 12;
+        if (extrabuf_real < 0x2000)
+            extrabuf_real = 0x2000;
+        if (4 * v3 / 5 > extrabuf_real)
+        {
+            void *p_exbuf;
+
+            p_smk->field_440 = extrabuf_real;
+            p_smk->IOBufferSize = largest_frame_sz;
+            p_exbuf = smkmalloc(p_smk, extrabuf_real + 4096);
+            p_smk->field_42C = p_exbuf;
+            p_smk->field_434 = p_exbuf;
+            p_smk->field_438 = p_exbuf;
+            if (p_exbuf == NULL) {
+                RADFREE(p_smk->UnkBuf39C);
+                RADFREE(p_smk->TrackTable);
+                goto __fail;
+            }
+            p_smk->field_430 = p_exbuf + p_smk->field_440;
+        }
+        else
+        {
+            flags |= 0x0200;
+            p_smk->IOBufferSize = v3;
+        }
+    }
+
+    p_smk->IOBuffer = smkmalloc(p_smk, p_smk->IOBufferSize + 8);
+    if (p_smk->IOBuffer == NULL)
+    {
+        if (p_smk->field_42C != NULL)
+            RADFREE(p_smk->field_42C);
+        RADFREE(p_smk->UnkBuf39C);
+        RADFREE(p_smk->TrackTable);
+        goto __fail;
+    }
+    int v46;
+    v46 = p_smk->ReadError;
+    p_smk->field_444 = v46;
+
+    if ((flags & 0x0200) != 0)
+    {
+        blockread(p_smk, p_smk->IOBuffer, v3);
+        if ((flags & 0x1000) == 0)
+            AIL_lowfclose(p_smk->FHandle);
+        p_smk->FHandle = -1;
+        p_smk->field_3B0 = p_smk->IOBuffer;
+    }
+    else
+    {
+        int new_f43C;
+
+        new_f43C = v46 & 0xFFF;
+        if (new_f43C != 0)
+        {
+            size_t bytes_read;
+            bytes_read = new_f43C;
+            AIL_fread(p_smk->FHandle, p_smk->field_42C, __DS__, 4096 - new_f43C, &bytes_read);
+            p_smk->field_438 = p_smk->field_42C + bytes_read;
+            p_smk->field_43C = bytes_read;
+        }
+        if ((p_smk->OpenFlags & 0x0200) == 0)
+        {
+            p_smk->field_3B0 = p_smk->IOBuffer;
+            blockread(p_smk, p_smk->IOBuffer, p_smk->field_3B8[p_smk->CurrFrameNum]);
+        }
+    }
+    p_smk->field_3B4 = -1;
+    setuptheframe(p_smk);
+    p_smk->field_420 = -1;
+    p_smk->OpenFlags = flags & ~0x3FE000;
+
+    while ((flags & 0xFE000) != 0)
+    {
+        struct SmackSndTrk *p_sndtrk;
+        int trk;
+        trk = GetFirstTrack(&flags);
+        p_sndtrk = (struct SmackSndTrk *)smkmalloc(p_smk, sizeof(struct SmackSndTrk));
+        p_smk->Unkn404PerTrack[trk] = p_sndtrk;
+        if (p_sndtrk != NULL)
+        {
+            if (soundopen(p_smk, trk)) {
+                p_smk->OpenFlags |= 1 << (trk + 13);
+            } else {
+                p_smk->Unkn404PerTrack[trk] = NULL;
+                smkmfree(p_smk, p_sndtrk, sizeof(struct SmackSndTrk));
+            }
+        }
+    }
+    p_smk->field_3FC = -1;
+    if ((flags & 0x100) != 0)
+    {
+        while (backgroundload(p_smk))
+            ;
+    }
+
+    switch (flags & 0x300000)
+    {
+    case 0x100000:
+        p_smk->SmackerType = (p_smk->SmackerType & ~0x06) | 0x02;
+        break;
+    case 0x200000:
+        p_smk->SmackerType = (p_smk->SmackerType & ~0x06) | 0x04;
+        break;
+    case 0x300000:
+        p_smk->SmackerType &= ~0x06;
+        break;
+    }
+
+    switch (p_smk->SmackerType & 6)
+    {
+    case 2:
+        p_smk->OpenFlags |= 0x00100000;
+        break;
+    case 4:
+        p_smk->OpenFlags |= 0x00200000;
+        break;
+    }
+    if ((p_smk->OpenFlags & 0x300000) != 0) {
+        p_smk->Height *= 2;
+    }
+
+    {
+        uint32_t tot_bk_read_time, unk_read_time2;
+        p_smk->TotalOpenTime = SmackTimerRead() - begin_time;
+        tot_bk_read_time = p_smk->TotalBackReadTime;
+        p_smk->TotalBackReadTime = 0;
+        unk_read_time2 = p_smk->UnkReadTime2;
+        p_smk->LastReadTime += tot_bk_read_time;
+        p_smk->UnkReadTime1 += unk_read_time2;
+        p_smk->FirstReadTime = p_smk->LastReadTime;
+    }
+    return p_smk;
+
+__fail:
+    if (((flags & 0x1000) == 0) && (p_smk->FHandle != -1))
+        AIL_lowfclose(p_smk->FHandle);
+    RADFREE(p_smk);
+    SmackTimerDone();
+    return NULL;
+#endif
 }
 
 uint32_t RADAPI SMACKDOFRAME(struct Smack *p_smk)
