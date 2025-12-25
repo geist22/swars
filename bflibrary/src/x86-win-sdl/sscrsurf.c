@@ -138,7 +138,7 @@ TbResult LbScreenSurfaceBlit(struct SSurface *surf, ulong x, ulong y,
 
     int blresult;
     // the blit
-    if ((blflags & SSBlt_FLAG8) != 0) {
+    if ((blflags & SSBlt_TO_SCREEN) != 0) {
         // surface to screen
         blresult = SDL_BlitSurface(to_SDLSurf(surf->surf_data),
           &srcRect, to_SDLSurf(lbDrawSurface), &destRect);
