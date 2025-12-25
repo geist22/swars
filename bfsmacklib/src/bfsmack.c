@@ -23,6 +23,7 @@
 #include <string.h>
 
 #include "bfkeybd.h"
+#include "bfmemory.h"
 #include "bfmemut.h"
 #include "bfpalette.h"
 #include "bfscreen.h"
@@ -706,12 +707,95 @@ TbResult play_smk_direct(char *fname, u32 smkflags, ushort plyflags, ushort mode
 #endif
 }
 
-TbResult play_smk_via_buffer(const char *fname, u32 smkflags, ushort plyflags, SmackDrawCallback callback)
+void copy_to_screen_smk(uint8_t *p_buf, u32 width, u32 height, ushort plyflags)
 {
+#if 1
+    asm volatile ("call ASM_copy_to_screen_smk\n"
+        : : "a" (p_buf), "d" (width), "b" (height), "c" (plyflags));
+#endif
+}
+
+TbResult play_smk_via_buffer(char *fname, u32 smkflags, ushort plyflags, SmackDrawCallback callback)
+{
+#if 0
     TbResult ret;
     asm volatile ("call ASM_play_smk_via_buffer\n"
         : "=r" (ret) : "a" (fname), "d" (smkflags), "b" (plyflags), "c" (callback));
     return ret;
+#else
+    struct Smack *p_smk;
+    uint8_t *frame_buf;
+    uint frm_no;
+    TbBool finish;
+    uint32_t soflags;
+
+    if ((plyflags & 0x0001) == 0)
+    {
+        struct DIG_DRIVER *p_snddrv;
+
+        p_snddrv = GetSoundDriver();
+        if (p_snddrv != NULL) {
+            SMACKSOUNDUSEMSS(0, p_snddrv);
+        } else {
+            plyflags |= 0x0001;
+        }
+    }
+
+    if ((plyflags & 0x0001) != 0)
+        soflags = 0;
+    else
+        soflags = 0xFE000;
+    p_smk = SMACKOPEN(0xFFFFFFFF, soflags, fname);
+    if (p_smk == NULL) {
+        return Lb_FAIL;
+    }
+
+    frame_buf = (uint8_t *)LbMemoryAlloc(p_smk->Height * p_smk->Width);
+    if (frame_buf == NULL)
+    {
+        SMACKCLOSE(p_smk);
+        return Lb_FAIL;
+    }
+
+    SMACKTOBUFFER(0, frame_buf, p_smk->Height, p_smk->Width, 0, 0, p_smk);
+
+    finish = false;
+    for (frm_no = 0; !finish; frm_no++)
+    {
+        if ((plyflags & 0x0400) == 0)
+        {
+            if (frm_no >= p_smk->Frames)
+                break;
+        }
+        {
+            if (p_smk != (struct Smack *)-108)
+            {
+                LbMemoryCopy(byte_1E56DC, p_smk->Palette, PALETTE_8b_SIZE);
+            }
+            SMACKDOFRAME(p_smk);
+            {
+                LbScreenWaitVbi();
+                LbPaletteSet(byte_1E56DC);
+            }
+            copy_to_screen_smk(frame_buf, p_smk->Width, p_smk->Height, plyflags);
+        }
+        SMACKNEXTFRAME(p_smk);
+
+        while (SMACKWAIT(p_smk))
+        {
+            game_hacky_update();
+            if ((plyflags & 0x0002) != 0)
+                continue;
+            if (lbKeyOn[KC_ESCAPE] || lbKeyOn[KC_RETURN] || lbKeyOn[KC_SPACE] || lbDisplay.MLeftButton)
+            {
+                finish = true;
+            }
+        }
+    }
+    SMACKCLOSE(p_smk);
+    LbMemoryFree(frame_buf);
+    return Lb_SUCCESS;
+#endif
 }
 
 TbResult play_smk(char *fname, u32 smkflags, ushort plyflags)

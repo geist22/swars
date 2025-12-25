@@ -7001,7 +7001,7 @@ GLOBAL_FUNC(ASM_play_smk_via_buffer)
 		mov    0x4(%ebp),%edx
 		mov    0xc(%esp),%ecx
 		mov    0x4(%esp),%eax
-		call   copy_to_screen_smk
+		call   ac_copy_to_screen_smk
 		push   %ebp
 		call   ac_SMACKNEXTFRAME
 	jump_eb499:
@@ -7113,9 +7113,9 @@ GLOBAL_FUNC(ASM_RADFREE)
 
 
 /*----------------------------------------------------------------*/
-/* void copy_to_screen_smk(unsigned char *, unsigned long, unsigned long, unsigned long)
+/* void copy_to_screen_smk(unsigned char *, unsigned long, unsigned long, unsigned short)
  */
-copy_to_screen_smk:
+GLOBAL_FUNC(ASM_copy_to_screen_smk)
 /*----------------------------------------------------------------*/
 		push   %esi
 		push   %edi
