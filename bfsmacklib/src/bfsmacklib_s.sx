@@ -481,7 +481,7 @@ GLOBAL_FUNC(func_139590)
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC(func_1395a0)
+GLOBAL_FUNC(ASM_SmackDoTables)
 /*----------------------------------------------------------------*/
 		push   %ebp
 		mov    %esp,%ebp
@@ -8623,7 +8623,7 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 	jump_fdfd7: /* XXX: abc */
 		testb  $0x80,0x30(%esp)
 		je     jump_fdfe6
-		mov    _forcerate,%eax
+		mov    EXPORT_SYMBOL(forcerate),%eax
 		mov    %eax,0x10(%esi)
 	jump_fdfe6:
 		mov    0x10(%esi),%eax
@@ -8773,7 +8773,7 @@ GLOBAL_FUNC(ASM_SMACKOPEN)
 		mov    0x39c(%esi),%eax
 		push   %eax
 		push   %edi
-		call   func_1395a0
+		call   ac_SmackDoTables
 		add    $0x18,%esp
 		push   %edi
 		call   ac_RADFREE
@@ -10710,7 +10710,7 @@ _trackbuf:
 
 GLOBAL (simspeed)
 		.long	0x0
-_forcerate:
+GLOBAL (forcerate)
 		.long	0x0
 GLOBAL (LowSoundOnAddr)	/* 0x1592F8 */
 		.long	0x0

@@ -88,7 +88,7 @@ struct Smack { // sizeof=1196
     void *field_3B0;
     uint32_t field_3B4;
     uint32_t *field_3B8;
-    void *TrackTable;
+    uint8_t *TrackTable;
     uint8_t field_3C0[32];
     uint32_t field_3E0;
     uint32_t field_3E4;
@@ -99,10 +99,10 @@ struct Smack { // sizeof=1196
     struct SmackSndTrk *Unkn404PerTrack[7];
     uint32_t field_420;
     uint8_t field_424[8];
-    uint32_t field_42C;
-    uint32_t field_430;
-    uint32_t field_434;
-    uint32_t field_438;
+    void *field_42C;
+    void *field_430;
+    void *field_434;
+    void *field_438;
     uint32_t field_43C;
     uint32_t field_440;
     uint32_t field_444;

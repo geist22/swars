@@ -46,6 +46,7 @@ extern int game_hacky_update(void);
 
 extern ubyte byte_1E56DC[PALETTE_8b_SIZE];
 extern uint32_t simspeed;
+extern uint32_t forcerate;
 
 #define __DS__ 0
 /******************************************************************************/
@@ -61,6 +62,11 @@ void set_smack_free(void (*cb)(void *ptr))
 }
 
 //TODO place SMACK* functions into separate file
+int32_t SmackGetSizeTables(void)
+{
+    return 0x7468;
+}
+
 int32_t blockread(struct Smack *p_smk, uint8_t *buf, int32_t sz)
 {
 #if 1
@@ -136,6 +142,24 @@ void setuptheframe(struct Smack *p_smk)
     asm volatile (
       "call ASM_setuptheframe\n"
         :  : "a" (p_smk));
+#endif
+}
+
+uint32_t SmackDoTables(uint8_t *p_inp, uint8_t *p_buf39c, int32_t codesz,
+  int32_t absz, int32_t detailsz, int32_t typesz)
+{
+#if 1
+    uint32_t ret;
+    asm volatile (
+      "push %6\n"
+      "push %5\n"
+      "push %4\n"
+      "push %3\n"
+      "push %2\n"
+      "push %1\n"
+      "call ASM_SmackDoTables\n"
+        : "=r" (ret) : "g" (p_inp), "g" (p_buf39c), "g" (codesz), "g" (absz), "g" (detailsz), "g" (typesz));
+    return ret;
 #endif
 }
 
