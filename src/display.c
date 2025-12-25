@@ -271,7 +271,7 @@ TbResult cover_screen_rect_with_raw_file(short x, short y, ushort w, ushort h, c
         return ret;
     }
     LbScreenUnlock();
-    ret = LbScreenSurfaceBlit(&surf, x, y, &srect, SSBlt_FLAG8 | SSBlt_FLAG4);
+    ret = LbScreenSurfaceBlit(&surf, x, y, &srect, SSBlt_TO_SCREEN | SSBlt_FLAG4);
     LbScreenSurfaceRelease(&surf);
     LbScreenLock();
     return ret;
