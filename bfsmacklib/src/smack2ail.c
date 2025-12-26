@@ -20,7 +20,9 @@
 #include "smack2ail.h"
 
 #include <stddef.h>
+#include <string.h>
 #include <time.h>
+
 #include "bftime.h"
 #include "bfutility.h"
 #include "bfwindows.h"
