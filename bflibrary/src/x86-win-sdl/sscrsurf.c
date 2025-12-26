@@ -33,6 +33,8 @@ OSSurfaceHandle lbDrawSurface;
 extern SDL_Color lbPaletteColors[256];
 
 TbResult LbIScreenDrawSurfaceCheck(void);
+int LbI_SDL_BlitScaled(SDL_Surface *src, const SDL_Rect *srcrect,
+  SDL_Surface *dst, SDL_Rect *dstrect);
 /******************************************************************************/
 void LbScreenSurfaceInit(struct SSurface *surf)
 {
