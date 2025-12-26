@@ -33,6 +33,8 @@ OSSurfaceHandle lbDrawSurface;
 extern SDL_Color lbPaletteColors[256];
 
 TbResult LbIScreenDrawSurfaceCheck(void);
+int LbI_SDL_BlitScaled(SDL_Surface *src, const SDL_Rect *srcrect,
+  SDL_Surface *dst, SDL_Rect *dstrect);
 /******************************************************************************/
 void LbScreenSurfaceInit(struct SSurface *surf)
 {
@@ -236,12 +238,12 @@ TbResult LbScreenSurfaceBlitScaled(struct SSurface *surf, struct TbRect *scrn_re
     // the blit
     if ((blflags & SSBlt_TO_SCREEN) != 0) {
         // surface to screen
-        blresult = SDL_BlitScaled(to_SDLSurf(surf->surf_data),
+        blresult = LbI_SDL_BlitScaled(to_SDLSurf(surf->surf_data),
           &srcRect, to_SDLSurf(lbDrawSurface), &destRect);
     }
     else {
         // screen to surface
-        blresult = SDL_BlitScaled(to_SDLSurf(lbDrawSurface),
+        blresult = LbI_SDL_BlitScaled(to_SDLSurf(lbDrawSurface),
           &destRect, to_SDLSurf(surf->surf_data), &srcRect);
     }
 
