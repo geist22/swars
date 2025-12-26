@@ -289,7 +289,7 @@ GLOBAL_FUNC (ASM_MSSLOWSOUNDOPEN)
 		mov    0x14(%esp),%esi
 		cmpl   $0x0,SmackMSSDigDriver
 		jne    jump_fc041
-		cmpl   $0x0,MSSLiteInit
+		cmpl   $0x0,EXPORT_SYMBOL(MSSLiteInit)
 		je     jump_fc026
 		testb  $0x20,0x10(%esp)
 		jne    jump_fbfae
@@ -655,8 +655,6 @@ aSblaster_dig:	/* 0x15F7F4 */
 .data
 
 GLOBAL (SmackMSSDigDriver)
-		.long	0x0
-MSSLiteInit:
 		.long	0x0
 GLOBAL (mss_i_count)
 		.long	0x0

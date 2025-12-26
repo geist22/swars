@@ -38,7 +38,8 @@ extern uint32_t mss_i_count;
 extern uint32_t sndinit;
 extern uint32_t msstimer;
 
-SmackSndTrk *fss;
+uint32_t MSSLiteInit = 0;
+SmackSndTrk *fss = NULL;
 
 extern uint8_t RADAPI (*LowSoundOpenAddr)(uint8_t, SmackSndTrk *);
 extern void RADAPI (*LowSoundCloseAddr)(SmackSndTrk *);
@@ -61,14 +62,10 @@ bool bothdone(struct SNDSAMPLE *p_smp)
     return p_smp->last_buffer >= 0 && p_smp->len[0] == p_smp->pos[0] && p_smp->len[1] == p_smp->pos[1];
 }
 
-void doinit(struct SmackSndTrk *p_sstrk)
+uint32_t get_track_format(struct SmackSndTrk *p_sstrk)
 {
-    uint32_t fld48;
     uint32_t format;
-
-    AIL_init_sample(p_sstrk->smp);
-    fld48 = p_sstrk->field_48;
-    if (fld48)
+    if (p_sstrk->field_48)
     {
         if (p_sstrk->field_4C)
             format = DIG_F_STEREO_16;
@@ -82,6 +79,16 @@ void doinit(struct SmackSndTrk *p_sstrk)
         else
             format = DIG_F_MONO_8;
     }
+    return format;
+}
+
+void doinit(struct SmackSndTrk *p_sstrk)
+{
+    uint32_t fld48, format;
+
+    AIL_init_sample(p_sstrk->smp);
+    fld48 = p_sstrk->field_48;
+    format = get_track_format(p_sstrk);
     AIL_set_sample_type(p_sstrk->smp, format, fld48 != 0);
     AIL_set_sample_playback_rate(p_sstrk->smp, p_sstrk->field_40);
     AIL_set_sample_user_data(p_sstrk->smp, 0, (intptr_t)p_sstrk);
@@ -114,15 +121,70 @@ uint8_t *SMACKWRAPCOPY(uint32_t buf_len, uint8_t *pv_tail,
     return cp_start;
 }
 
-uint8_t RADAPI MSSLOWSOUNDOPEN(uint8_t flags, SmackSndTrk *sstrk)
+uint8_t RADAPI MSSLOWSOUNDOPEN(uint8_t flags, SmackSndTrk *p_sstrk)
 {
+#if 0
     uint8_t ret;
     asm volatile (
       "push %2\n"
       "push %1\n"
       "call ASM_MSSLOWSOUNDOPEN\n"
-        : "=r" (ret) : "g" (flags), "g" (sstrk));
+        : "=r" (ret) : "g" (flags), "g" (p_sstrk));
     return ret;
+#endif
+    int format;
+    uint32_t bsize;
+
+    if ((SmackMSSDigDriver == NULL) && MSSLiteInit)
+    {
+        AIL_set_preference(DIG_USE_STEREO, ((flags & 0x20) != 0) || p_sstrk->field_4C);
+        AIL_set_preference(DIG_USE_16_BITS, p_sstrk->field_48 != 0);
+
+        if (SmackMSSDigDriver == NULL)
+            SmackMSSDigDriver = AIL_install_DIG_driver_file("SB16.DIG", 0);
+        if (SmackMSSDigDriver == NULL)
+            SmackMSSDigDriver = AIL_install_DIG_driver_file("SBPRO.DIG", 0);
+        if (SmackMSSDigDriver == NULL)
+            SmackMSSDigDriver = AIL_install_DIG_driver_file("SBLASTER.DIG", 0);
+    }
+    if (SmackMSSDigDriver == NULL)
+        SmackMSSDigDriver = (DIG_DRIVER *)-1;
+
+    if (SmackMSSDigDriver == (DIG_DRIVER *)-1)
+    {
+        return false;
+    }
+
+    format = get_track_format(p_sstrk);
+    bsize = AIL_minimum_sample_buffer_size(SmackMSSDigDriver, p_sstrk->field_40, format);
+    p_sstrk->field_64 = (bsize + 3) & ~3;
+
+    bsize = (p_sstrk->field_14 >> 2);
+    p_sstrk->field_3C = max(p_sstrk->field_64, (bsize + 0x0FFF) & ~0x0FFF);
+
+    p_sstrk->field_54[0] = RADMALLOC(2 * p_sstrk->field_3C);
+    if (p_sstrk->field_54[0] == NULL)
+    {
+        return false;
+    }
+    AIL_vmm_lock(p_sstrk->field_54[0], 2 * p_sstrk->field_3C);
+    p_sstrk->smp = AIL_allocate_sample_handle(SmackMSSDigDriver);
+    if (p_sstrk->smp == NULL)
+    {
+        RADFREE(p_sstrk->field_54[0]);
+        p_sstrk->field_54[0] = NULL;
+        return false;
+    }
+    p_sstrk->field_54[1] = p_sstrk->field_54[0] + p_sstrk->field_3C;
+
+    doinit(p_sstrk);
+    {
+        struct SmackSndTrk *p_nx_strk;
+        p_nx_strk = fss;
+        fss = p_sstrk;
+        p_sstrk->next = p_nx_strk;
+    }
+    return 1;
 }
 
 void rm_smack_track(SmackSndTrk *p_sstrk)
@@ -196,7 +258,7 @@ void RADAPI MSSLOWSOUNDCHECK(void)
 
         p_sstrk->field_8 = SMACKWRAPCOPY(mnlen, p_sstrk->field_4, p_sstrk->field_0,
           p_sstrk->field_8, p_sstrk->field_54[bufno]);
-        if ( !p_sstrk->field_6C || bothdone(p_sstrk->smp) || AIL_sample_status(p_sstrk->smp) == 2 )
+        if ( !p_sstrk->field_6C || bothdone(p_sstrk->smp) || AIL_sample_status(p_sstrk->smp) == SNDSMP_DONE)
         {
             int32_t n;
             p_sstrk->field_6C = SmackTimerRead();
