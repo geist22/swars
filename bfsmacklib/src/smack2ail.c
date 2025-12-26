@@ -35,6 +35,8 @@ extern uint32_t mss_i_count;
 extern uint32_t sndinit;
 extern uint32_t msstimer;
 
+SmackSndTrk *fss;
+
 extern uint8_t RADAPI (*LowSoundOpenAddr)(uint8_t, SmackSndTrk *);
 extern void RADAPI (*LowSoundCloseAddr)(SmackSndTrk *);
 extern uint32_t RADAPI (*LowSoundPlayedAddr)(SmackSndTrk *);
@@ -51,6 +53,33 @@ extern void RADAPI (*LowSoundVolPanAddr)(uint32_t, uint32_t, SmackSndTrk *);
 void RADAPI MSSSMACKTIMERSETUP(void);
 
 
+void doinit(struct SmackSndTrk *p_sstrk)
+{
+    uint32_t fld48;
+    uint32_t format;
+
+    AIL_init_sample(p_sstrk->smp);
+    fld48 = p_sstrk->field_48;
+    if (fld48)
+    {
+        if (p_sstrk->field_4C)
+            format = DIG_F_STEREO_16;
+        else
+            format = DIG_F_MONO_16;
+    }
+    else
+    {
+        if (p_sstrk->field_4C)
+            format = DIG_F_STEREO_8;
+        else
+            format = DIG_F_MONO_8;
+    }
+    AIL_set_sample_type(p_sstrk->smp, format, fld48 != 0);
+    AIL_set_sample_playback_rate(p_sstrk->smp, p_sstrk->field_40);
+    AIL_set_sample_user_data(p_sstrk->smp, 0, (intptr_t)p_sstrk);
+    AIL_set_sample_volume(p_sstrk->smp, 127);
+}
+
 uint8_t RADAPI MSSLOWSOUNDOPEN(uint8_t flags, SmackSndTrk *sstrk)
 {
     uint8_t ret;
@@ -62,13 +91,46 @@ uint8_t RADAPI MSSLOWSOUNDOPEN(uint8_t flags, SmackSndTrk *sstrk)
     return ret;
 }
 
-void RADAPI MSSLOWSOUNDCLOSE(SmackSndTrk *sstrk)
+void rm_smack_track(SmackSndTrk *p_sstrk)
 {
+    SmackSndTrk *cr_sstrk;
+    SmackSndTrk *nx_sstrk;
+
+    cr_sstrk = fss;
+    while (cr_sstrk->next != NULL)
+    {
+        nx_sstrk = cr_sstrk->next;
+        if (p_sstrk == nx_sstrk) {
+            cr_sstrk->next = nx_sstrk->next;
+            break;
+        }
+        cr_sstrk = cr_sstrk->next;
+    }
+}
+
+void RADAPI MSSLOWSOUNDCLOSE(SmackSndTrk *p_sstrk)
+{
+#if 0
     asm volatile (
       "push %0\n"
       "call ASM_MSSLOWSOUNDCLOSE\n"
-        :  : "g" (sstrk));
+        :  : "g" (p_sstrk));
     return;
+#endif
+    if (fss == NULL) {
+        return;
+    }
+
+    AIL_end_sample(p_sstrk->smp);
+    AIL_release_sample_handle(p_sstrk->smp);
+    AIL_vmm_unlock(p_sstrk->field_54, 2 * p_sstrk->field_3C);
+    RADFREE(p_sstrk->field_54);
+
+    if (p_sstrk == fss) {
+        fss = fss->next;
+        return;
+    }
+    rm_smack_track(p_sstrk);
 }
 
 void RADAPI MSSLOWSOUNDCHECK(void)
@@ -79,33 +141,41 @@ void RADAPI MSSLOWSOUNDCHECK(void)
     return;
 }
 
-uint32_t RADAPI MSSLOWSOUNDPLAYED(SmackSndTrk *sstrk)
+uint32_t RADAPI MSSLOWSOUNDPLAYED(SmackSndTrk *p_sstrk)
 {
 #if 0
     uint32_t ret;
     asm volatile (
       "push %1\n"
       "call ASM_MSSLOWSOUNDPLAYED\n"
-        : "=r" (ret) : "g" (sstrk));
+        : "=r" (ret) : "g" (p_sstrk));
     return ret;
 #endif
     uint32_t dt;
 
     MSSLOWSOUNDCHECK();
-    dt = (SmackTimerReadAddr() - sstrk->field_6C)
-      * (uint64_t)sstrk->field_14 / 1000;
-    if (dt > sstrk->field_68)
-        dt = sstrk->field_68;
-    return sstrk->field_50 + dt;
+    dt = (SmackTimerRead() - p_sstrk->field_6C)
+      * (uint64_t)p_sstrk->field_14 / 1000;
+    if (dt > p_sstrk->field_68)
+        dt = p_sstrk->field_68;
+    return p_sstrk->field_50 + dt;
 }
 
-void RADAPI MSSLOWSOUNDPURGE(SmackSndTrk *sstrk)
+void RADAPI MSSLOWSOUNDPURGE(SmackSndTrk *p_sstrk)
 {
+#if 0
     asm volatile (
       "push %0\n"
       "call ASM_MSSLOWSOUNDPURGE\n"
-        :  : "g" (sstrk));
+        :  : "g" (p_sstrk));
     return;
+#else
+    AIL_end_sample(p_sstrk->smp);
+    p_sstrk->field_50 = 0;
+    p_sstrk->field_68 = 0;
+    p_sstrk->field_6C = 0;
+    doinit(p_sstrk);
+#endif
 }
 
 /** Timer routine when linked to AIL; returns a timer value, in miliseconds.
@@ -249,7 +319,7 @@ uint8_t RADAPI SMACKSOUNDUSEMSS(uint32_t speed, void *digdrv)
         : "=r" (ret) : "g" (speed), "g" (digdrv));
     return ret;
 #endif
-    if (SmackTimerReadAddr)
+    if (SmackTimerReadAddr != NULL)
         return 0;
     SmackMSSDigDriver = digdrv;
     if (speed < 200)
@@ -272,7 +342,7 @@ uint8_t RADAPI SMACKSOUNDUSEMSS(uint32_t speed, void *digdrv)
 
 void RADAPI SmackTimerSetup(void)
 {
-    //return SmackTimerReadAddr(); -- incompatible calling convention
+    //SmackTimerSetupAddr(); -- incompatible calling convention
     asm volatile ("call *%0\n"
       :  : "g" (SmackTimerSetupAddr) : "eax" );
 }

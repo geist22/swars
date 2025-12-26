@@ -40,7 +40,6 @@ void *(*smack_malloc)(uint32_t);
 void (*smack_free)(void *);
 
 void RADAPI SmackTimerSetup(void);
-uint32_t RADAPI SmackTimerRead(void);
 void RADAPI SmackTimerDone(void);
 
 // Currenlty only in the main game
@@ -715,6 +714,7 @@ TbResult play_smk_direct(char *fname, u32 smkflags, ushort plyflags, ushort mode
 #endif
 }
 
+// used only from old ASM - remove pending
 void copy_to_screen_smk(uint8_t *p_buf, u32 width, u32 height, ushort plyflags)
 {
 #if 1
