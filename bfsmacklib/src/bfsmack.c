@@ -26,7 +26,9 @@
 #include "bfmemory.h"
 #include "bfmemut.h"
 #include "bfpalette.h"
+#include "bfplanar.h"
 #include "bfscreen.h"
+#include "bfscrsurf.h"
 #include "bfsvaribl.h"
 
 #include "smack2ail.h"
@@ -715,6 +717,34 @@ void copy_to_screen_smk(uint8_t *p_buf, u32 width, u32 height, ushort plyflags)
 #endif
 }
 
+void blit_to_screen_smk(struct SSurface *surf, u32 width, u32 height, ushort plyflags)
+{
+    struct TbRect srect;
+    struct TbRect brect;
+    u32 scr_w, scr_h;
+
+    if ((plyflags & SMK_PixelDoubleWidth) == 0)
+        scr_w = width;
+    else
+        scr_w = 2 * width;
+    if ((plyflags & SMK_PixelDoubleLine) == 0)
+        scr_h = height;
+    else
+        scr_h = 2 * height;
+    LbSetRect(&srect, 0, 0, scr_w, scr_h);
+    LbSetRect(&brect, 0, 0, width, height);
+    LbScreenUnlock();
+    if ((scr_w == width) && (scr_h == height))
+        LbScreenSurfaceBlit(surf, 0, 0, &srect, SSBlt_TO_SCREEN);
+    else
+        LbScreenSurfaceBlitScaled(surf, &srect, &brect, SSBlt_TO_SCREEN);
+    LbScreenLock();
+    if (smack_draw_callback != NULL) {
+        smack_draw_callback(lbDisplay.WScreen, lbDisplay.GraphicsScreenWidth, lbDisplay.GraphicsScreenHeight);
+    }
+    LbScreenSwap();
+}
+
 TbResult play_smk_via_buffer(char *fname, u32 smkflags, ushort plyflags, SmackDrawCallback callback)
 {
 #if 0
@@ -723,8 +753,9 @@ TbResult play_smk_via_buffer(char *fname, u32 smkflags, ushort plyflags, SmackDr
         : "=r" (ret) : "a" (fname), "d" (smkflags), "b" (plyflags), "c" (callback));
     return ret;
 #else
+    struct SSurface surf;
     struct Smack *p_smk;
-    uint8_t *frame_buf;
+    uint8_t *frame_buf, *pv_frame_buf;
     uint frm_no;
     TbBool finish;
     uint32_t soflags;
@@ -750,15 +781,12 @@ TbResult play_smk_via_buffer(char *fname, u32 smkflags, ushort plyflags, SmackDr
         return Lb_FAIL;
     }
 
-    frame_buf = (uint8_t *)LbMemoryAlloc(p_smk->Height * p_smk->Width);
-    if (frame_buf == NULL)
-    {
+    LbScreenSurfaceInit(&surf);
+    if (LbScreenSurfaceCreate(&surf, p_smk->Width, p_smk->Height) == Lb_FAIL) {
         SMACKCLOSE(p_smk);
         return Lb_FAIL;
     }
-
-    SMACKTOBUFFER(0, frame_buf, p_smk->Height, p_smk->Width, 0, 0, p_smk);
-
+    pv_frame_buf = NULL;
     finish = false;
     for (frm_no = 0; !finish; frm_no++)
     {
@@ -772,12 +800,21 @@ TbResult play_smk_via_buffer(char *fname, u32 smkflags, ushort plyflags, SmackDr
             {
                 LbMemoryCopy(byte_1E56DC, p_smk->Palette, PALETTE_8b_SIZE);
             }
+            frame_buf = LbScreenSurfaceLock(&surf);
+            if (frame_buf == NULL)
+                break;
+            if (pv_frame_buf != frame_buf) {
+                // If frame buffer address changed, update the reference in player
+                SMACKTOBUFFER(0, frame_buf, p_smk->Height, p_smk->Width, 0, 0, p_smk);
+                pv_frame_buf = frame_buf;
+            }
             SMACKDOFRAME(p_smk);
+            LbScreenSurfaceUnlock(&surf);
             {
                 LbScreenWaitVbi();
                 LbPaletteSet(byte_1E56DC);
             }
-            copy_to_screen_smk(frame_buf, p_smk->Width, p_smk->Height, plyflags);
+            blit_to_screen_smk(&surf, p_smk->Width, p_smk->Height, plyflags);
         }
         SMACKNEXTFRAME(p_smk);
 
@@ -793,7 +830,7 @@ TbResult play_smk_via_buffer(char *fname, u32 smkflags, ushort plyflags, SmackDr
         }
     }
     SMACKCLOSE(p_smk);
-    LbMemoryFree(frame_buf);
+    LbScreenSurfaceRelease(&surf);
     return Lb_SUCCESS;
 #endif
 }
