@@ -32,7 +32,11 @@ typedef struct SmackSndTrk SmackSndTrk;
 typedef struct Smack Smack;
 
 struct SmackSndTrk { // sizeof=112
-    uint32_t field_0[5];
+    uint8_t *field_0;
+    uint8_t *field_4;
+    uint8_t *field_8;
+    uint32_t field_C;
+    uint32_t field_10;
     uint32_t field_14;
     uint32_t field_18[7];
     SmackSndTrk *next;
@@ -43,9 +47,10 @@ struct SmackSndTrk { // sizeof=112
     uint32_t field_48;
     uint32_t field_4C;
     uint32_t field_50;
-    void *field_54;
-    uint32_t field_58;
-    uint32_t field_5C[3];
+    void *field_54[2];
+    uint32_t field_5C;
+    uint32_t field_60;
+    uint32_t field_64;
     uint32_t field_68;
     uint32_t field_6C;
 };

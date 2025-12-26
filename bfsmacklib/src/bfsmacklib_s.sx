@@ -7366,7 +7366,7 @@ GLOBAL_FUNC(ASM_copy_to_screen_smk)
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC(SMACKWRAPCOPY)
+GLOBAL_FUNC(ASM_SMACKWRAPCOPY)
 /*----------------------------------------------------------------*/
 		push   %esi
 		push   %edi

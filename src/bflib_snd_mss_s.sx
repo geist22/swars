@@ -571,7 +571,7 @@ GLOBAL_FUNC (ASM_MSSLOWSOUNDCHECK)	/* 0xfc210 */
 		mov    0x4(%esi),%eax
 		push   %eax
 		push   %edi
-		call   SMACKWRAPCOPY
+		call   ac_SMACKWRAPCOPY
 		mov    0x6c(%esi),%edx
 		mov    %eax,0x8(%esi)
 		test   %edx,%edx

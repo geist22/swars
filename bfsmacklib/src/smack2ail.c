@@ -22,6 +22,7 @@
 #include <stddef.h>
 #include <time.h>
 #include "bftime.h"
+#include "bfutility.h"
 #include "bfwindows.h"
 #include "aildebug.h"
 #include "memfile.h"
@@ -53,6 +54,11 @@ extern void RADAPI (*LowSoundVolPanAddr)(uint32_t, uint32_t, SmackSndTrk *);
 void RADAPI MSSSMACKTIMERSETUP(void);
 
 
+bool bothdone(struct SNDSAMPLE *p_smp)
+{
+    return p_smp->last_buffer >= 0 && p_smp->len[0] == p_smp->pos[0] && p_smp->len[1] == p_smp->pos[1];
+}
+
 void doinit(struct SmackSndTrk *p_sstrk)
 {
     uint32_t fld48;
@@ -78,6 +84,32 @@ void doinit(struct SmackSndTrk *p_sstrk)
     AIL_set_sample_playback_rate(p_sstrk->smp, p_sstrk->field_40);
     AIL_set_sample_user_data(p_sstrk->smp, 0, (intptr_t)p_sstrk);
     AIL_set_sample_volume(p_sstrk->smp, 127);
+}
+
+uint8_t *SMACKWRAPCOPY(uint32_t buf_len, uint8_t *pv_tail,
+  uint8_t *nx_tail, uint8_t *pv_head, uint8_t *nx_head)
+{
+    uint8_t *cp_start;
+    uint remain;
+
+    cp_start = pv_head;
+    remain = pv_tail - pv_head;
+    if (remain <= buf_len)
+    {
+        if (remain > 0)
+        {
+            memcpy(nx_head, pv_head, remain);
+            nx_head += remain;
+            buf_len -= remain;
+        }
+        cp_start = nx_tail;
+    }
+    if (buf_len > 0)
+    {
+        memcpy(nx_head, cp_start, buf_len);
+        cp_start += buf_len;
+    }
+    return cp_start;
 }
 
 uint8_t RADAPI MSSLOWSOUNDOPEN(uint8_t flags, SmackSndTrk *sstrk)
@@ -135,10 +167,45 @@ void RADAPI MSSLOWSOUNDCLOSE(SmackSndTrk *p_sstrk)
 
 void RADAPI MSSLOWSOUNDCHECK(void)
 {
+#if 0
     asm volatile (
       "call ASM_MSSLOWSOUNDCHECK\n"
         :  : );
     return;
+#endif
+    struct SmackSndTrk *p_sstrk;
+
+    for (p_sstrk = fss; p_sstrk != NULL; p_sstrk = p_sstrk->next)
+    {
+        uint32_t mnlen;
+        uint fld10;
+        int bufno;
+
+        fld10 = p_sstrk->field_10;
+        if ((fld10 <= p_sstrk->field_64) && (!p_sstrk->field_44 || fld10 <= 3)) {
+            continue;
+        }
+        bufno = AIL_sample_buffer_ready(p_sstrk->smp);
+        if (bufno < 0) {
+            continue;
+        }
+        mnlen = min(p_sstrk->field_10, p_sstrk->field_3C);
+        mnlen &= ~3;
+
+        p_sstrk->field_8 = SMACKWRAPCOPY(mnlen, p_sstrk->field_4, p_sstrk->field_0,
+          p_sstrk->field_8, p_sstrk->field_54[bufno]);
+        if ( !p_sstrk->field_6C || bothdone(p_sstrk->smp) || AIL_sample_status(p_sstrk->smp) == 2 )
+        {
+            int32_t n;
+            p_sstrk->field_6C = SmackTimerRead();
+            n = p_sstrk->field_68;
+            p_sstrk->field_68 = 0;
+            p_sstrk->field_50 += n;
+        }
+        AIL_load_sample_buffer(p_sstrk->smp, bufno, p_sstrk->field_54[bufno], mnlen);
+        p_sstrk->field_68 += mnlen;
+        p_sstrk->field_10 -= mnlen;
+    }
 }
 
 uint32_t RADAPI MSSLOWSOUNDPLAYED(SmackSndTrk *p_sstrk)
