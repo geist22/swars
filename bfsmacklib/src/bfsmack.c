@@ -605,6 +605,12 @@ void RADAPI SMACKTOBUFFER(uint32_t Flags, const void *buf,
         : : "g" (Flags), "g" (buf), "g" (destheight), "g" (Pitch), "g" (top), "g" (left), "g" (p_smk));
 }
 
+/** Play SMK video file by decoding it directly to work screen buffer.
+ *
+ * Allows fast playback, without the need of additional copy, as long as pixel format
+ * change or resize is not required. Can even decode into hardware frame buffer directly,
+ * if only the platform allows such access (modern OSes do not).
+ */
 TbResult play_smk_direct(char *fname, u32 smkflags, ushort plyflags, ushort mode)
 {
 #if 0
@@ -745,6 +751,13 @@ void blit_to_screen_smk(struct SSurface *surf, u32 width, u32 height, ushort ply
     LbScreenSwap();
 }
 
+/** Play SMK video file by decoding it into temporary surface before blitting onto screen.
+ *
+ * Uses fast blitting methods, as the decode buffer is in a surface with hardware-backing capability
+ * (whether it is actually hardware backed depends on platform). The blitting allows for resizing
+ * or changing pixel format of the image. After bit but before displaying the new image, a callback
+ * is executed allowing for applying effects or other modifications to the working screen buffer.
+ */
 TbResult play_smk_via_buffer(char *fname, u32 smkflags, ushort plyflags, SmackDrawCallback callback)
 {
 #if 0
