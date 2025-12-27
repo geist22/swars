@@ -122,13 +122,11 @@ ushort get_unscaled_zoom(ushort szoom)
         return  240 * szoom / h;
 }
 
-int get_weapon_zoom_min(WeaponType wtype)
+int get_zoom_from_range_bloks(ushort range_blocks)
 {
-    struct WeaponDef *wdef;
     int zoom;
 
-    wdef = &weapon_defs[wtype];
-    zoom = zoom_levels[wdef->RangeBlocks];
+    zoom = zoom_levels[range_blocks];
     if (zoom > user_zoom_max)
         zoom = user_zoom_max;
     if (zoom < user_zoom_min)

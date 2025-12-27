@@ -291,6 +291,8 @@ short current_hand_weapon_range(struct Thing *p_person);
  */
 int get_weapon_range(struct Thing *p_person);
 
+int get_weapon_zoom_min(WeaponType wtype);
+
 void choose_best_weapon_for_range(struct Thing *p_person, int dist);
 
 TbBool person_can_be_persuaded_now(ThingIdx attacker, ThingIdx target,

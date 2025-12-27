@@ -29,6 +29,7 @@
 #include "bigmap.h"
 #include "building.h"
 #include "enginsngtxtr.h"
+#include "enginzoom.h"
 #include "game.h"
 #include "game_data.h"
 #include "game_speed.h"
@@ -871,6 +872,14 @@ short get_hand_weapon_range(struct Thing *p_person, WeaponType wtype)
         range = (85 * range * (3 + cybmod_brain_level(&p_person->U.UPerson.UMod)) + range) >> 8;
 
     return range;
+}
+
+int get_weapon_zoom_min(WeaponType wtype)
+{
+    struct WeaponDef *wdef;
+
+    wdef = &weapon_defs[wtype];
+    return get_zoom_from_range_bloks(wdef->RangeBlocks);
 }
 
 short current_hand_weapon_range(struct Thing *p_person)
