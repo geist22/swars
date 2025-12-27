@@ -851,6 +851,7 @@ static void clear_smacker_skip_keys(void)
 void play_smacker(ushort vid_type)
 {
     char fname[FILENAME_MAX];
+    u32 plyflags;
     TbScreenMode scr_md_fmvid;
     TbBool prepare_draw_on_last_frame;
 
@@ -880,10 +881,12 @@ void play_smacker(ushort vid_type)
     }
     LbMouseChangeSprite(NULL);
 
+    plyflags = 0;
+
     if (fname[0] != '\0') {
         show_black_screen();
         clear_smacker_skip_keys();
-        play_smk(fname, 13, 0);
+        play_smk(fname, 13, plyflags);
         smack_malloc_free_all();
     }
 
