@@ -16,6 +16,8 @@ syndwarsfx_SOURCES = \
 	../swrendersoft/include/app_text_sf.h \
 	../swrendersoft/src/enginprops.c \
 	../swrendersoft/include/enginprops.h \
+	../swrendersoft/src/enginsngtxtr.c \
+	../swrendersoft/include/enginsngtxtr.h \
 	../swrendersoft/src/enginzoom.c \
 	../swrendersoft/include/enginzoom.h \
 	bflib_joyst.c \
@@ -97,8 +99,6 @@ syndwarsfx_SOURCES = \
 	enginshrapn.h \
 	enginsngobjs.c \
 	enginsngobjs.h \
-	enginsngtxtr.c \
-	enginsngtxtr.h \
 	enginshadws.c \
 	enginshadws.h \
 	enginpeff.c \

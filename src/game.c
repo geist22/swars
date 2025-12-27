@@ -185,7 +185,6 @@ extern unsigned short unkn2_pos_y;
 extern unsigned short unkn2_pos_z;
 extern int data_1c8428;
 const char *primvehobj_fname = "qdata/primveh.obj";
-extern unsigned char textwalk_data[640];
 
 extern short word_1C6E08;
 extern short word_1C6E0A;
@@ -379,17 +378,6 @@ ushort my_count_lines(const char *text)
     asm volatile ("call ASM_my_count_lines\n"
         : "=r" (ret) : "a" (text));
     return ret;
-}
-
-void read_textwalk(void)
-{
-    TbFileHandle handle;
-    handle = LbFileOpen("data/textwalk.dat", Lb_FILE_MODE_READ_ONLY);
-    if (handle != INVALID_FILE)
-    {
-        LbFileRead(handle, textwalk_data, 640);
-        LbFileClose(handle);
-    }
 }
 
 void load_prim_quad(void)

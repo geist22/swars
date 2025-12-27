@@ -18,6 +18,7 @@
 /******************************************************************************/
 #include "enginsngtxtr.h"
 
+#include "bffile.h"
 #include "bfmemut.h"
 
 #include "game_speed.h" // required for fifties_per_gameturn
@@ -31,6 +32,8 @@ ushort next_face_texture = 1;
 ushort next_floor_texture = 1;
 
 ushort next_local_mat = 1;
+
+extern ubyte textwalk_data[640];
 
 /******************************************************************************/
 
@@ -363,15 +366,109 @@ void face_texture_switch_to_index(struct SingleTexture *p_fctextr, int index)
     p_fctextr->TMapY3 = beg_y + (p_fctextr->TMapY3 - prev_beg_y);
 }
 
+TbResult read_textwalk(void)
+{
+    TbFileHandle handle;
+    handle = LbFileOpen("data/textwalk.dat", Lb_FILE_MODE_READ_ONLY);
+    if (handle == INVALID_FILE) {
+        return Lb_FAIL;
+    }
+    LbFileRead(handle, textwalk_data, 640);
+    LbFileClose(handle);
+    return Lb_SUCCESS;
+}
+
 ubyte get_my_texture_bits(short tex)
 {
-#if 1
+#if 0
     ubyte ret;
     asm volatile (
       "call ASM_get_my_texture_bits\n"
         : "=r" (ret) : "a" (tex));
     return ret;
 #endif
+    struct SingleFloorTexture *p_fltextr;
+    int tmapX_min, tmapY_min, tmapX_max, tmapY_max;
+    ubyte v7;
+    ubyte flags1, flags2, flags3, flags4;
+
+    p_fltextr = &game_textures[tex];
+
+    tmapX_min = p_fltextr->TMapX1;
+    if (tmapX_min > p_fltextr->TMapX2)
+        tmapX_min = p_fltextr->TMapX2;
+    if (tmapX_min > p_fltextr->TMapX3)
+        tmapX_min = p_fltextr->TMapX3;
+    if (tmapX_min > p_fltextr->TMapX4)
+        tmapX_min = p_fltextr->TMapX4;
+
+    tmapY_min = p_fltextr->TMapY1;
+    if (tmapY_min > p_fltextr->TMapY2)
+        tmapY_min = p_fltextr->TMapY2;
+    if (tmapY_min > p_fltextr->TMapY3)
+        tmapY_min = p_fltextr->TMapY3;
+    if (tmapY_min > p_fltextr->TMapY4)
+        tmapY_min = p_fltextr->TMapY4;
+
+    tmapX_max = p_fltextr->TMapX2;
+    if (tmapX_max < p_fltextr->TMapX1)
+        tmapX_max = p_fltextr->TMapX1;
+    if (tmapX_max < p_fltextr->TMapX3)
+        tmapX_max = p_fltextr->TMapX3;
+    if (tmapX_max < p_fltextr->TMapX4)
+        tmapX_max = p_fltextr->TMapX4;
+
+    tmapY_max = p_fltextr->TMapY1;
+    if (tmapY_max < p_fltextr->TMapY2)
+        tmapY_max = p_fltextr->TMapY2;
+    if (tmapY_max < p_fltextr->TMapY3)
+        tmapY_max = p_fltextr->TMapY3;
+    if (tmapY_max < p_fltextr->TMapY4)
+        tmapY_max = p_fltextr->TMapY4;
+
+    v7 = textwalk_data[64 * p_fltextr->Page + 8 * (tmapY_min >> 5) + (tmapX_min >> 5)];
+
+    flags1 = 0;
+    if (tmapX_min == p_fltextr->TMapX1 && tmapY_min == p_fltextr->TMapY1)
+        flags1 = (v7 & 0x03);
+    if (tmapX_max == p_fltextr->TMapX1 && tmapY_min == p_fltextr->TMapY1)
+        flags1 = (v7 & 0x0C) >> 2;
+    if (tmapX_min == p_fltextr->TMapX1 && tmapY_max == p_fltextr->TMapY1)
+        flags1 = (v7 & 0x30) >> 4;
+    if (tmapX_max == p_fltextr->TMapX1 && tmapY_max == p_fltextr->TMapY1)
+        flags1 = (v7 & 0xC0) >> 6;
+
+    flags2 = 0;
+    if (tmapX_min == p_fltextr->TMapX2 && tmapY_min == p_fltextr->TMapY2)
+        flags2 = (v7 & 0x03);
+    if (tmapX_max == p_fltextr->TMapX2 && tmapY_min == p_fltextr->TMapY2)
+        flags2 = (v7 & 0x0C) >> 2;
+    if (tmapX_min == p_fltextr->TMapX2 && tmapY_max == p_fltextr->TMapY2)
+        flags2 = (v7 & 0x30) >> 4;
+    if (tmapX_max == p_fltextr->TMapX2 && tmapY_max == p_fltextr->TMapY2)
+        flags2 = (v7 & 0xC0) >> 6;
+
+    flags3 = 0;
+    if (tmapX_min == p_fltextr->TMapX3 && tmapY_min == p_fltextr->TMapY3)
+        flags3 = (v7 & 0x03);
+    if (tmapX_max == p_fltextr->TMapX3 && tmapY_min == p_fltextr->TMapY3)
+        flags3 = (v7 & 0x0C) >> 2;
+    if (tmapX_min == p_fltextr->TMapX3 && tmapY_max == p_fltextr->TMapY3)
+        flags3 = (v7 & 0x30) >> 4;
+    if (tmapX_max == p_fltextr->TMapX3 && tmapY_max == p_fltextr->TMapY3)
+        flags3 = (v7 & 0xC0) >> 6;
+
+    flags4 = 0;
+    if (tmapX_min == p_fltextr->TMapX4 && tmapY_min == p_fltextr->TMapY4)
+        flags4 = (v7 & 0x03);
+    if (tmapX_max == p_fltextr->TMapX4 && tmapY_min == p_fltextr->TMapY4)
+        flags4 = (v7 & 0x0C) >> 2;
+    if (tmapX_min == p_fltextr->TMapX4 && tmapY_max == p_fltextr->TMapY4)
+        flags4 = (v7 & 0x30) >> 4;
+    if (tmapX_max == p_fltextr->TMapX4 && tmapY_max == p_fltextr->TMapY4)
+        flags4 = (v7 & 0xC0) >> 6;
+
+    return (flags4 << 6) | (flags3 << 4) | (flags2 << 2) | (flags1);
 }
 
 static void animate_texture(ushort tmap)
