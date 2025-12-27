@@ -33,7 +33,6 @@
 #include "bfanywnd.h"
 
 #include "display.h"
-#include "hud_panel.h"
 #include "swlog.h"
 
 #if defined(LB_ENABLE_SHADOW_COLOUR)
@@ -213,20 +212,20 @@ void put_down_shdcflshtext_sprites_resized(const char *sbuf, const char *ebuf,
 }
 
 void put_down_sf_sprites(const char *sbuf, const char *ebuf,
-  long x, long y, long space_len, int units_per_px, int plyr)
+  long x, long y, long space_len, int units_per_px, ushort ttl_turns)
 {
     if (units_per_px == 16)
     {
         put_down_shdcflshtext_sprites(sbuf, ebuf, x, y, space_len,
-          -180, 4 * player_unkn0C9[plyr]);
+          -180, 4 * ttl_turns);
     } else
     {
         put_down_shdcflshtext_sprites_resized(sbuf, ebuf, x, y, space_len,
-          units_per_px, -180, 4 * player_unkn0C9[plyr]);
+          units_per_px, -180, 4 * ttl_turns);
     }
 }
 
-TbBool AppTextDrawShadClFlashResized(int posx, int *posy, int units_per_px, int plyr, const char *text)
+TbBool AppTextDrawShadClFlashResized(int posx, int *posy, int units_per_px, ushort ttl_turns, const char *text)
 {
     struct TbAnyWindow grwnd;
     // Counter for amount of blank characters in a line
@@ -281,7 +280,7 @@ TbBool AppTextDrawShadClFlashResized(int posx, int *posy, int units_per_px, int 
             y = LbGetJustifiedCharPosY(starty, h, h, lbDisplay.DrawFlags);
             len = LbGetJustifiedCharWidth(posx, w, count, units_per_px, lbDisplay.DrawFlags);
             ebuf = prev_ebuf;
-            put_down_sf_sprites(sbuf, ebuf, x, y, len, units_per_px, plyr);
+            put_down_sf_sprites(sbuf, ebuf, x, y, len, units_per_px, ttl_turns);
             // We already know that alignment is set - don't re-check
             {
                 posx = startx;
@@ -305,7 +304,7 @@ TbBool AppTextDrawShadClFlashResized(int posx, int *posy, int units_per_px, int 
             x = LbGetJustifiedCharPosX(startx, posx, w, 1, lbDisplay.DrawFlags);
             y = LbGetJustifiedCharPosY(starty, h, h, lbDisplay.DrawFlags);
             len = LbGetJustifiedCharWidth(posx, w, count, units_per_px, lbDisplay.DrawFlags);
-            put_down_sf_sprites(sbuf, ebuf, x, y, len, units_per_px, plyr);
+            put_down_sf_sprites(sbuf, ebuf, x, y, len, units_per_px, ttl_turns);
             // End the line only if align method is set
             if (LbIAlignMethodSet(lbDisplay.DrawFlags))
             {
@@ -323,7 +322,7 @@ TbBool AppTextDrawShadClFlashResized(int posx, int *posy, int units_per_px, int 
             y = LbGetJustifiedCharPosY(starty, h, h, lbDisplay.DrawFlags);
             len = LbTextCharWidth(' ') * units_per_px / 16;
             y = starty;
-            put_down_sf_sprites(sbuf, ebuf, x, y, len, units_per_px, plyr);
+            put_down_sf_sprites(sbuf, ebuf, x, y, len, units_per_px, ttl_turns);
             // We've got EOL sign - end the line
             sbuf = ebuf;
             posx = startx;
@@ -344,7 +343,7 @@ TbBool AppTextDrawShadClFlashResized(int posx, int *posy, int units_per_px, int 
             x = LbGetJustifiedCharPosX(startx, posx, w, lbSpacesPerTab, lbDisplay.DrawFlags);
             y = LbGetJustifiedCharPosY(starty, h, h, lbDisplay.DrawFlags);
             len = LbGetJustifiedCharWidth(posx, w, count, units_per_px, lbDisplay.DrawFlags);
-            put_down_sf_sprites(sbuf, ebuf, x, y, len, units_per_px, plyr);
+            put_down_sf_sprites(sbuf, ebuf, x, y, len, units_per_px, ttl_turns);
             if (LbIAlignMethodSet(lbDisplay.DrawFlags))
             {
               posx = startx;
@@ -363,7 +362,7 @@ TbBool AppTextDrawShadClFlashResized(int posx, int *posy, int units_per_px, int 
               x = startx;
               y = starty;
               len = LbTextCharWidth(' ') * units_per_px / 16;
-              put_down_sf_sprites(sbuf, ebuf, x, y, len, units_per_px, plyr);
+              put_down_sf_sprites(sbuf, ebuf, x, y, len, units_per_px, ttl_turns);
               posx = startx;
               sbuf = ebuf;
               count = 0;
@@ -396,7 +395,7 @@ TbBool AppTextDrawShadClFlashResized(int posx, int *posy, int units_per_px, int 
     x = LbGetJustifiedCharPosX(startx, posx, 0, 1, lbDisplay.DrawFlags);
     y = LbGetJustifiedCharPosY(starty, h, h, lbDisplay.DrawFlags);
     len = LbTextCharWidth(' ') * units_per_px / 16;
-    put_down_sf_sprites(sbuf, ebuf, x, y, len, units_per_px, plyr);
+    put_down_sf_sprites(sbuf, ebuf, x, y, len, units_per_px, ttl_turns);
     LbScreenLoadGraphicsWindow(&grwnd);
     *posy = starty - justifyy + h;
     return true;

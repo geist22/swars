@@ -32,7 +32,6 @@
 #include "bfmemory.h"
 #include "bfanywnd.h"
 
-#include "display.h"
 #include "enginprops.h"
 #include "swlog.h"
 

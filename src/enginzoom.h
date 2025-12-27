@@ -35,6 +35,10 @@ extern "C" {
  */
 #define RENDER_AREA_MAX 88
 
+/** Range of allowed blocks-to-zoom conversion.
+ */
+#define ZOOM_RANGE_BLOCKS_LIMIT 27
+
 #pragma pack(1)
 
 #pragma pack()

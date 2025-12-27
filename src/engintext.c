@@ -27,6 +27,7 @@
 #include "app_text_sf.h"
 
 #include "game_sprts.h"
+#include "hud_panel.h"
 #include "mydraw.h"
 #include "swlog.h"
 /******************************************************************************/
@@ -341,7 +342,7 @@ TbBool AppTextDrawMissionChatMessage(int posx, int *posy, int plyr, const char *
     }
 #endif
     space_bkp = FontSpacingAlter(small_font, 12);
-    ret = AppTextDrawShadClFlashResized(posx, posy, units_per_px, plyr, text);
+    ret = AppTextDrawShadClFlashResized(posx, posy, units_per_px, player_unkn0C9[plyr], text);
     FontSpacingRestore(small_font, space_bkp);
     return ret;
 }

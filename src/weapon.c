@@ -18,6 +18,8 @@
 /******************************************************************************/
 #include "weapon.h"
 
+#include <assert.h>
+
 #include "bfmath.h"
 #include "bfmemory.h"
 #include "bfendian.h"
@@ -878,6 +880,8 @@ int get_weapon_zoom_min(WeaponType wtype)
 {
     struct WeaponDef *wdef;
 
+    // There is no reason for those two to not be equal
+    assert(WEAPON_RANGE_BLOCKS_LIMIT == ZOOM_RANGE_BLOCKS_LIMIT);
     wdef = &weapon_defs[wtype];
     return get_zoom_from_range_bloks(wdef->RangeBlocks);
 }

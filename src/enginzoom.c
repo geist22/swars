@@ -22,7 +22,6 @@
 #include "bfutility.h"
 
 #include "display.h"
-#include "weapon.h"
 #include "swlog.h"
 /******************************************************************************/
 
@@ -41,7 +40,7 @@ ushort render_area_b = 24;
 short user_zoom_min = 127;
 short user_zoom_max = 260;
 
-ushort zoom_levels[WEAPON_RANGE_BLOCKS_LIMIT+1] = {
+ushort zoom_levels[ZOOM_RANGE_BLOCKS_LIMIT+1] = {
     256, 256, 256, 256, 256, 256, 240, 230,
     220, 210, 200, 190, 180, 170, 170, 170,
     170, 170, 170, 170, 170, 165, 160, 155,
@@ -61,7 +60,7 @@ void zoom_update(short zoom_min, short zoom_max)
     dt = (zoom_max - zoom_min);
     zoom_arr_min = zoom_min + ((dt * 16) >> 8);
     zoom_arr_max = zoom_max - ((dt * 8) >> 8);
-    for (i = 0; i < WEAPON_RANGE_BLOCKS_LIMIT+1; i++)
+    for (i = 0; i < ZOOM_RANGE_BLOCKS_LIMIT+1; i++)
     {
         int n, val;
         // The curve has 3 steepness levels, set (from right) in FACTOR defines
@@ -89,7 +88,7 @@ void zoom_update(short zoom_min, short zoom_max)
 
         if (val > zoom_arr_max)
             val = zoom_arr_max;
-        zoom_levels[WEAPON_RANGE_BLOCKS_LIMIT-i] = val;
+        zoom_levels[ZOOM_RANGE_BLOCKS_LIMIT-i] = val;
     }
     user_zoom_min = zoom_min;
     user_zoom_max = zoom_max;
