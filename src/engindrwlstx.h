@@ -20,7 +20,6 @@
 #define ENGINDRWLSTX_H
 
 #include "bftypes.h"
-#include "game_bstype.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -94,7 +93,7 @@ void draw_sorted_sprite1a(ushort frm, short x, short y, ubyte csel);
 
 uint cummulate_shade_from_quick_lights(ushort light_first);
 
-void set_nuclear_shade_point(MapCoord x, MapCoord y, MapCoord z);
+void set_nuclear_shade_point(s32 x, s32 y, s32 z);
 void set_nuclear_shade_timer(ulong tmval);
 
 void draw_drawitem_1(ushort dihead);

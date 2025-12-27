@@ -321,6 +321,11 @@ int get_memory_ptr_allocated_count(void **mgptr)
     return -1;
 }
 
+int get_memory_draw_items_allocated_count(void)
+{
+    return mem_game[31].N;
+}
+
 TbBool mem_game_index_is_prim(int index)
 {
     static int prim_first = 18;

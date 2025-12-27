@@ -4,16 +4,16 @@ bindir = $(prefix)/$(PACKAGE)
 MKW = $(PYTHON) $(top_srcdir)/util/mkwrappers
 
 syndwarsfx_SOURCES = \
-	app_gengh.c \
-	app_gentab.h \
-	app_spr_init.c \
-	ap_gspr_map.c \
-	ap_spr_smap.c \
-	app_sprite.h \
-	app_text_cw.c \
-	app_text_cw.h \
-	app_text_sf.c \
-	app_text_sf.h \
+	../swrendersoft/src/app_gengh.c \
+	../swrendersoft/include/app_gentab.h \
+	../swrendersoft/src/app_spr_init.c \
+	../swrendersoft/src/ap_gspr_map.c \
+	../swrendersoft/src/ap_spr_smap.c \
+	../swrendersoft/include/app_sprite.h \
+	../swrendersoft/src/app_text_cw.c \
+	../swrendersoft/include/app_text_cw.h \
+	../swrendersoft/src/app_text_sf.c \
+	../swrendersoft/include/app_text_sf.h \
 	bflib_joyst.c \
 	bflib_joyst.h \
 	bflib_joyst_s.sx \
@@ -261,6 +261,7 @@ syndwarsfx_SOURCES = \
 
 syndwarsfx_CPPFLAGS = \
   -I"$(top_srcdir)/bfsmacklib/include" \
+  -I"$(top_srcdir)/swrendersoft/include" \
   -I"$(top_srcdir)/bfariadne/include"
 
 syndwarsfx_WRAPPERS = wrappers_dos.o wrappers_game.o wrappers_libc.o wrappers_util.o

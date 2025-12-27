@@ -46,7 +46,7 @@ TbBool draw_item_add(ubyte ditype, ushort offset, int bckt)
     if (bckt >= BUCKETS_COUNT)
         bckt = BUCKETS_COUNT-1;
 
-    if (next_draw_item >= mem_game[31].N)
+    if (next_draw_item >= get_memory_draw_items_allocated_count())
         return false;
 
     p_dritm = p_current_draw_item;

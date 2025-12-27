@@ -88,10 +88,10 @@ extern long dword_176D04;
 
 extern ubyte byte_176D49;
 
-extern long engn_nuclear_shade_timer;
-extern long engn_nuclear_shade_x;
-extern long engn_nuclear_shade_y;
-extern long engn_nuclear_shade_z;
+extern s32 engn_nuclear_shade_timer;
+extern s32 engn_nuclear_shade_x;
+extern s32 engn_nuclear_shade_y;
+extern s32 engn_nuclear_shade_z;
 
 extern short word_1A5834;
 extern short word_1A5836;
@@ -441,7 +441,7 @@ int calculate_enginepoint_shade_2(struct PolyPoint *p_pt1,
     return p_pt1->S;
 }
 
-void set_nuclear_shade_point(MapCoord x, MapCoord y, MapCoord z)
+void set_nuclear_shade_point(s32 x, s32 y, s32 z)
 {
     engn_nuclear_shade_x = x;
     engn_nuclear_shade_y = y;

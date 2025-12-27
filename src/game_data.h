@@ -111,10 +111,7 @@ int get_memory_ptr_allocated_count(void **mgptr);
  * This function is called many times while creating drawlist, so it needs
  * to give the value very fast.
  */
-inline int get_memory_draw_items_allocated_count(void)
-{
-    return mem_game[31].N;
-}
+int get_memory_draw_items_allocated_count(void);
 
 /******************************************************************************/
 #ifdef __cplusplus

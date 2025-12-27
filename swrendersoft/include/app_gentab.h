@@ -2,10 +2,10 @@
 // Bullfrog Engine Emulation Library - for use to remake classic games like
 // Syndicate Wars, Magic Carpet, Genewars or Dungeon Keeper.
 /******************************************************************************/
-/** @file app_gengh.c
- *     Implementation of related functions.
+/** @file app_gentab.h
+ *     Header file for ap_gengh.c.
  * @par Purpose:
- *     Unknown.
+ *     App-specific colour tables for mixing two colours in a special way.
  * @par Comment:
  *     None.
  * @author   Tomasz Lis
@@ -17,9 +17,35 @@
  *     (at your option) any later version.
  */
 /******************************************************************************/
-#include "app_gentab.h"
+#ifndef APP_GENTAB_H_
+#define APP_GENTAB_H_
 
+#include "bftypes.h"
+#include "bfpalette.h"
 
-struct ApColorTables appixmap;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+#pragma pack(1)
+
+/** Colour tables, used for fading and merging colours in palette mode.
+ */
+struct ApColorTables {
+  /** Table used for adding two colors without brightness change of the first. */
+  TbPixel ghost_add_table[PALETTE_8b_COLORS*PALETTE_8b_COLORS];
+};
+
+#pragma pack()
+
+extern struct ApColorTables appixmap;
+
+TbResult LbScreenTableGenerate(const ubyte *pal, short intens, const char *fname);
+TbResult LbScreenTableLoad(const ubyte *pal, short intens, const char *fname);
+
+#ifdef __cplusplus
+};
+#endif
+
+#endif // APP_GENTAB_H_
 /******************************************************************************/
