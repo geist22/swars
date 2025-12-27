@@ -40,6 +40,8 @@
 #include "bftringl.h"
 #include "bfscd.h"
 
+#include "enginprops.h"
+
 #include "linksmk.h"
 #include "bat.h"
 #include "bmbang.h"
@@ -1897,6 +1899,7 @@ void init_outro(void)
     outro_unkn02 = 0;
     outro_unkn03 = 0;
     gameturn = 0;
+    render_anim_turn = gameturn;
 
     screen_animate_draw_outro_text();
     // Sleep for up to 10 seconds
@@ -1941,6 +1944,7 @@ void init_outro(void)
         }
 
         gameturn++;
+        render_anim_turn = gameturn;
         traffic_unkn_func_01();
         process_engine_unk1();
         process_sound_heap();
@@ -6150,6 +6154,7 @@ void show_load_and_prep_mission(void)
         }
         debug_trace_place(19);
     }
+    render_anim_turn = gameturn;
 
     // Set up remaining graphics data and controls
     if (start_into_mission)
@@ -7025,6 +7030,7 @@ void game_process(void)
         update_unkn_changing_colors();
         game_process_orbital_station_explode();
         gameturn++;
+        render_anim_turn = gameturn;
         scene_post_effect_prepare();
     }
     PacketRecord_Close();

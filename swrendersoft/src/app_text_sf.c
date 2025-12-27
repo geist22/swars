@@ -528,7 +528,7 @@ TbBool AppTextDrawMissionChatMessage(int posx, int *posy, int plyr, const char *
     lbDisplay.ShadowColour = colour_lookup[ColLU_GREYLT];
 #endif
 #if 0 // old way of drawing mission status - remove pending
-    if (gameturn & 0x20) {
+    if (render_anim_turn & 0x20) {
     if (units_per_px < 24)
         draw_text_linewrap2(posx, posy, plyr, text);
     else
