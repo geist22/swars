@@ -48,8 +48,6 @@ TbBool AppTextDrawShadClFlash(int posx, int posy, const char *text);
  */
 TbBool AppTextDrawShadClFlashResized(int posx, int *posy, int units_per_px, int plyr, const char *text);
 
-TbBool AppTextDrawMissionChatMessage(int posx, int *posy, int plyr, const char *text);
-
 #ifdef __cplusplus
 };
 #endif

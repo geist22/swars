@@ -27,6 +27,14 @@
 extern "C" {
 #endif
 
+#pragma pack(1)
+
+struct TbSprite;
+
+#pragma pack()
+
+/******************************************************************************/
+
 /**
  * Draws a string in the current text window.
  *
@@ -48,7 +56,10 @@ TbBool AppTextDrawColourWave(int posx, int posy, const char *text);
  */
 TbBool AppTextDrawColourWaveResized(int posx, int posy, int units_per_px, const char *text);
 
-TbBool AppTextDrawMissionStatus(int posx, int posy, const char *text);
+/** Altered version of LbFontCharSprite() which returns non-const reference.
+ */
+struct TbSprite *AppFontCharSpriteRW(struct TbSprite *font,
+  const ulong chr);
 
 #ifdef __cplusplus
 };

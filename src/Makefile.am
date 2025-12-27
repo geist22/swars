@@ -101,6 +101,8 @@ syndwarsfx_SOURCES = \
 	enginshadws.h \
 	enginpeff.c \
 	enginpeff.h \
+	engintext.c \
+	engintext.h \
 	engintrns.c \
 	engintrns.h \
 	enginzoom.c \
