@@ -38,7 +38,40 @@ extern ushort word_1A7314;
 extern ushort word_1A7330[1000];
 extern ubyte byte_1A7B00[1000];
 extern ubyte byte_1A7EE8[9004];
-extern ubyte byte_165480[1024];
+
+void scene_post_effect_rain_init(void)
+{
+#if 0
+    asm volatile ("call ASM_scene_post_effect_rain_init\n"
+        :  :  : "eax" );
+    return;
+#endif
+    uint i;
+    ushort idx3;
+
+    for (i = 0; i < 999; i++)
+    {
+        idx3 = (i / 333) % 3;
+        if (idx3 == 0)
+        {
+            uint rnd;
+            ushort idx1, idx2;
+            ubyte *tmap;
+
+            rnd = (gameturn >> 2) + LbRandomAnyShort();
+            idx1 = (rnd >> 3) & 0x1FFF;
+            if ((byte_1A7EE8[idx1] & (1 << (idx1 & 7))) == 0)
+            {
+                idx2 = rnd & 0xFFFF;
+                word_1A7330[i] = idx2;
+                tmap = vec_tmap[0];
+                byte_1A7B00[i] = tmap[idx2];
+                tmap[idx2] = 63;
+                byte_1A7EE8[idx1] |= (1 << (idx1 & 7));
+            }
+        }
+    }
+}
 
 void water_droplets_on_floor(void)
 {

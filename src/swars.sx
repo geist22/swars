@@ -16820,7 +16820,7 @@ GLOBAL_FUNC (ASM_reset_user_selected_brightness)	/* 0x03D700 */
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC(ASM_func_3d904)	/* 0x3d904 */
+GLOBAL_FUNC(ASM_scene_post_effect_rain_init)	/* 0x3d904 */
 /*----------------------------------------------------------------*/
 		push   %ebx
 		push   %ecx
@@ -76681,7 +76681,7 @@ GLOBAL_FUNC(ASM_init_level)	/* 0x074CDC */
 		mov    $0x4d,%edx
 		xor    %eax,%eax
 		call   ac_play_sample_using_heap
-		call   ac_func_3d904
+		call   ac_scene_post_effect_rain_init
 		jmp    jump_750ae
 	jump_75066:
 		cmpw   $0x0,EXPORT_SYMBOL(gamep_scene_effect_type)

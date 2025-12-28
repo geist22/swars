@@ -42,6 +42,8 @@ extern ushort gamep_scene_effect_intensity;
 void scene_post_effect_prepare(void);
 void scene_post_effect_for_bucket(short bckt);
 
+void scene_post_effect_rain_init(void);
+
 void draw_background_stars(void);
 /******************************************************************************/
 #ifdef __cplusplus
