@@ -34,10 +34,67 @@
 ushort gamep_scene_effect_intensity = 1000;
 short gamep_scene_effect_change = -1;
 
-void game_process_sub08(void)
+extern ushort word_1A7314;
+extern ushort word_1A7330[1000];
+extern ubyte byte_1A7B00[1000];
+extern ubyte byte_1A7EE8[9004];
+extern ubyte byte_165480[1024];
+
+void water_droplets_on_floor(void)
 {
-    asm volatile ("call ASM_game_process_sub08\n"
+#if 0
+    asm volatile ("call ASM_water_droplets_on_floor\n"
         :  : );
+#else
+    ushort i, k;
+
+    for (i = 0; i < 999; i++)
+    {
+        ubyte *tmap;
+        ushort n, step;
+
+        step = (i / 333 + word_1A7314);
+        switch (step % 3)
+        {
+        case 0:
+            k = word_1A7330[i];
+            tmap = vec_tmap[0];
+            if (k != 0) {
+                tmap[k] = byte_1A7B00[i];
+            }
+            n = k >> 3;
+            byte_1A7EE8[n] &= ~(1 << (n & 7));
+            k = (gameturn >> 2) + LbRandomAnyShort();
+            n = k >> 3;
+            if (((1 << (n & 7)) & byte_1A7EE8[n]) == 0)
+            {
+                ubyte colA;
+
+                word_1A7330[i] = k;
+                colA = tmap[k];
+                byte_1A7B00[i] = colA;
+                tmap[k] = pixmap.fade_table[0x3200 + colA];
+                byte_1A7EE8[n] |= 1 << (n & 7);
+            }
+            break;
+        case 1:
+            k = word_1A7330[i];
+            tmap = vec_tmap[0];
+            if (k != 0) {
+                tmap[k] = lbDisplay.GlassMap[256 * byte_1A7B00[i] + tmap[k]];
+            }
+            break;
+        case 2:
+            k = word_1A7330[i];
+            tmap = vec_tmap[0];
+            if (k != 0) {
+                tmap[k] = lbDisplay.GlassMap[256 * byte_1A7B00[i] + tmap[k]];
+            }
+            break;
+        }
+    }
+    word_1A7314++;
+#endif
 }
 
 void scene_post_effect_texture_with_snow(void)
@@ -67,7 +124,7 @@ void scene_post_effect_prepare(void)
     switch (gamep_scene_effect_type)
     {
     case ScEff_RAIN:
-        game_process_sub08();
+        water_droplets_on_floor();
         break;
     case ScEff_SNOW:
         scene_post_effect_texture_with_snow();

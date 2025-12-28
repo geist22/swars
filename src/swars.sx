@@ -16900,7 +16900,7 @@ GLOBAL_FUNC(ASM_func_3d904)	/* 0x3d904 */
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC (ASM_game_process_sub08)	/* 0x3D9D8 */
+GLOBAL_FUNC (ASM_water_droplets_on_floor)	/* 0x3D9D8 */
 /*----------------------------------------------------------------*/
 		push   %ebx
 		push   %ecx
@@ -17014,7 +17014,7 @@ GLOBAL_FUNC (ASM_game_process_sub08)	/* 0x3D9D8 */
 		sar    $0x1f,%edx
 		idiv   %ecx
 		xor    %edx,%edx
-		mov    data_1a7314,%dx
+		mov    EXPORT_SYMBOL(word_1A7314),%dx
 		add    %eax,%edx
 		mov    $0x3,%ecx
 		mov    %edx,%eax
@@ -17038,7 +17038,7 @@ GLOBAL_FUNC (ASM_game_process_sub08)	/* 0x3D9D8 */
 		mov    %si,%bx
 		cmp    $0x3e7,%ebx
 		jl     jump_3db2c
-		incw   data_1a7314
+		incw   EXPORT_SYMBOL(word_1A7314)
 		pop    %ebp
 		pop    %edi
 		pop    %esi
@@ -182324,8 +182324,9 @@ data_1a730e:
 		.short  0x0
 GLOBAL (momentary_brightness)	/* 0x1A7310 */
 		.long	0x0
-data_1a7314:
-		.long	0x0
+GLOBAL (word_1A7314)
+		.short  0x0
+		.short  0x0
 GLOBAL (prev_tick_time)	/* 0x1A7318 */
 		.long	0x0
 GLOBAL (prev_gameturn)	/* 0x1A731C */
