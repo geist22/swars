@@ -182324,9 +182324,7 @@ data_1a730e:
 		.short  0x0
 GLOBAL (momentary_brightness)	/* 0x1A7310 */
 		.long	0x0
-GLOBAL (word_1A7314)
-		.short  0x0
-		.short  0x0
+
 GLOBAL (prev_tick_time)	/* 0x1A7318 */
 		.long	0x0
 GLOBAL (prev_gameturn)	/* 0x1A731C */
@@ -182339,12 +182337,7 @@ GLOBAL (sprite_over_16x16)	/* 0x1A7328 */
 		.long	0x0
 GLOBAL (navi2_unkn_counter_max)	/* 0x1A732C */
 		.long	0x0
-GLOBAL (word_1A7330)	/* 0x1A7330 */
-		.fill   0x7d0
-GLOBAL (byte_1A7B00)	/* 0x1A7B00 */
-		.fill   0x3e8
-GLOBAL (byte_1A7EE8)	/* 0x1A7EE8 */
-		.fill   0x232c
+
 GLOBAL (shpackets)	/* 0x1aa214 */
 		.short  0x0
 data_1aa216:

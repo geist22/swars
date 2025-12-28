@@ -232,9 +232,6 @@ extern short word_1774E8[2 * 150];
 
 char *data_15319c = unknmsg_str;
 
-extern ushort word_1A7330[1000];
-extern ubyte byte_1A7B00[1000];
-extern ubyte byte_1A7EE8[8192];
 extern ubyte billboard_anim_no;
 extern ubyte byte_1AAA88;
 extern long dword_1AAB74;

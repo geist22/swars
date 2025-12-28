@@ -26,18 +26,18 @@
 
 #include "display.h"
 #include "enginbckt.h"
+#include "enginprops.h"
 #include "engintrns.h"
-#include "game_speed.h"
 #include "scanner.h"
 #include "swlog.h"
 /******************************************************************************/
 ushort gamep_scene_effect_intensity = 1000;
 short gamep_scene_effect_change = -1;
 
-extern ushort word_1A7314;
-extern ushort word_1A7330[1000];
-extern ubyte byte_1A7B00[1000];
-extern ubyte byte_1A7EE8[9004];
+ushort word_1A7314;
+ushort word_1A7330[1000];
+ubyte byte_1A7B00[1000];
+ubyte byte_1A7EE8[9004];
 
 void scene_post_effect_rain_init(void)
 {
@@ -58,7 +58,7 @@ void scene_post_effect_rain_init(void)
             ushort idx1, idx2;
             ubyte *tmap;
 
-            rnd = (gameturn >> 2) + LbRandomAnyShort();
+            rnd = (render_anim_turn >> 2) + LbRandomAnyShort();
             idx1 = (rnd >> 3) & 0x1FFF;
             if ((byte_1A7EE8[idx1] & (1 << (idx1 & 7))) == 0)
             {
@@ -97,7 +97,7 @@ void water_droplets_on_floor(void)
             }
             n = k >> 3;
             byte_1A7EE8[n] &= ~(1 << (n & 7));
-            k = (gameturn >> 2) + LbRandomAnyShort();
+            k = (render_anim_turn >> 2) + LbRandomAnyShort();
             n = k >> 3;
             if (((1 << (n & 7)) & byte_1A7EE8[n]) == 0)
             {
@@ -137,7 +137,7 @@ void scene_post_effect_texture_with_snow(void)
     for (i = 0; i < 10; i++) {
         ushort pos;
         ubyte *ptr;
-        pos = LbRandomAnyShort() + (gameturn >> 2);
+        pos = LbRandomAnyShort() + (render_anim_turn >> 2);
         ptr = vec_tmap[0] + pos;
         *ptr = pixmap.fade_table[40*PALETTE_8b_COLORS + *ptr];
     }
@@ -193,7 +193,7 @@ void draw_falling_rain(int bckt)
     scanln = lbDisplay.GraphicsScreenWidth;
 
     icol = (BUCKETS_COUNT - bckt) / 416 << 7;
-    shift_y = gameturn * (BUCKETS_COUNT - bckt);
+    shift_y = render_anim_turn * (BUCKETS_COUNT - bckt);
     limit_y = 236 - (bckt >> 5);
     if (limit_y < 20)
         return;
@@ -261,10 +261,10 @@ void draw_falling_snow(int bckt)
 
         lbSeed = bckt;
         speed = (bckt >> 5) & 0x3;
-        shift1 = waft_table[(bckt + gameturn) & 0x1F];
+        shift1 = waft_table[(bckt + render_anim_turn) & 0x1F];
         // Moving with full background speed would be >> 19, dividing by half to make rotation look beter
         x = (shift1 >> (speed + 1)) + ((engn_zc * lbSinTable[angXZs]) >> 20) - ((engn_xc * lbSinTable[angXZc]) >> 20) + LbRandomAnyShort();
-        shift2 = (BUCKETS_COUNT - bckt) * gameturn;
+        shift2 = (BUCKETS_COUNT - bckt) * render_anim_turn;
         y = (shift2 >> (12 - speed/2)) + ((engn_xc * lbSinTable[angXZs]) >> 20) + ((engn_zc * lbSinTable[angXZc]) >> 20) + LbRandomAnyShort();
         lbDisplay.DrawFlags = Lb_SPRITE_TRANSPAR4;
         draw_static_dot((x * m) % scanln, (y % height) * m, m, m, 128 * ((BUCKETS_COUNT - bckt) / 416) + colour_lookup[ColLU_WHITE]);
@@ -333,7 +333,7 @@ void draw_background_stars(void)
         int simp_x, simp_y;
         int scr_x, scr_y;
 
-        gt = gameturn & 0x7FF;
+        gt = render_anim_turn & 0x7FF;
         plane = (i >> 4) + 1;
 #if 0 // some testing code which remained for no reason, remove later
         if (lbShift == KMod_SHIFT)

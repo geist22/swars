@@ -14,6 +14,8 @@ syndwarsfx_SOURCES = \
 	../swrendersoft/include/app_text_cw.h \
 	../swrendersoft/src/app_text_sf.c \
 	../swrendersoft/include/app_text_sf.h \
+	../swrendersoft/src/enginpeff.c \
+	../swrendersoft/include/enginpeff.h \
 	../swrendersoft/src/enginprops.c \
 	../swrendersoft/include/enginprops.h \
 	../swrendersoft/src/enginsngtxtr.c \
@@ -101,8 +103,6 @@ syndwarsfx_SOURCES = \
 	enginsngobjs.h \
 	enginshadws.c \
 	enginshadws.h \
-	enginpeff.c \
-	enginpeff.h \
 	engintext.c \
 	engintext.h \
 	engintrns.c \
