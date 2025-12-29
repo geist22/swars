@@ -33,6 +33,7 @@
 #include "enginlights.h"
 #include "enginpriobjs.h"
 #include "enginpritxtr.h"
+#include "enginprops.h"
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"
 #include "bigmap.h"
@@ -321,11 +322,6 @@ int get_memory_ptr_allocated_count(void **mgptr)
     return -1;
 }
 
-int get_memory_draw_items_allocated_count(void)
-{
-    return mem_game[31].N;
-}
-
 TbBool mem_game_index_is_prim(int index)
 {
     static int prim_first = 18;
@@ -534,6 +530,18 @@ TbResult init_memory(MemSystem *mem_table)
     } else {
         LOGSYNC("Memory init performed");
     }
+
+    return ret;
+}
+
+TbResult propagate_memory_sizes(void)
+{
+    TbResult ret;
+
+    ret = Lb_SUCCESS;
+
+    screen_points_limit = mem_game[30].N;
+    draw_items_limit = mem_game[31].N;
 
     return ret;
 }

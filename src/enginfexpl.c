@@ -24,8 +24,8 @@
 #include "enginbckt.h"
 #include "engindrwlstm.h"
 #include "engindrwlstx.h"
+#include "enginprops.h"
 #include "engintrns.h"
-#include "game_data.h"
 #include "swlog.h"
 /******************************************************************************/
 ulong next_ex_face = 1;
@@ -66,7 +66,7 @@ void draw_explode(void)
 
         p_exface = &ex_faces[exface];
 
-        if (next_screen_point + 4 > mem_game[30].N)
+        if (next_screen_point + 4 > screen_points_limit)
             break;
 
         if (p_exface->Timer == 0)

@@ -30,6 +30,7 @@
 #include "engindrwlstx.h"
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"
+#include "enginprops.h"
 #include "game.h"
 #include "game_data.h"
 #include "game_options.h"
@@ -276,7 +277,7 @@ void draw_vehicle_shadow(ushort veh, ushort sort)
         return;
 
     pt = next_screen_point;
-    if (pt + 4 > mem_game[30].N)
+    if (pt + 4 > screen_points_limit)
         return;
 
     next_special_face4++;

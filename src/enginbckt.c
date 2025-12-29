@@ -20,7 +20,7 @@
 
 #include "engindrwlstx.h"
 #include "enginpeff.h"
-#include "game_data.h"
+#include "enginprops.h"
 #include "swlog.h"
 /******************************************************************************/
 #define DEBUG_DRAWLIST_BUCKETS_LIMITS 0
@@ -46,7 +46,7 @@ TbBool draw_item_add(ubyte ditype, ushort offset, int bckt)
     if (bckt >= BUCKETS_COUNT)
         bckt = BUCKETS_COUNT-1;
 
-    if (next_draw_item >= get_memory_draw_items_allocated_count())
+    if (next_draw_item >= draw_items_limit)
         return false;
 
     p_dritm = p_current_draw_item;

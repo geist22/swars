@@ -43,6 +43,20 @@ extern "C" {
  */
 extern u32 render_anim_turn;
 
+/** Amount of available screen points, cached in render module to optimize speed.
+ *
+ * This variable is used many times while creating drawlist. It needs to be set
+ * by the app based on memory allocation.
+ */
+extern s32 screen_points_limit;
+
+/** Amount of available draw items, cached in render module to optimize speed.
+ *
+ * This variable is used many times while creating drawlist. It needs to be set
+ * by the app based on memory allocation.
+ */
+extern s32 draw_items_limit;
+
 /******************************************************************************/
 #ifdef __cplusplus
 }

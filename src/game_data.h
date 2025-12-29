@@ -105,13 +105,7 @@ void get_saved_game_fname(char *fname, ushort slot);
 void adjust_memory_use(void);
 TbResult init_memory(MemSystem *mem_table);
 int get_memory_ptr_allocated_count(void **mgptr);
-
-/** Specialized version of get_memory_ptr_allocated_count(), to optimize speed.
- *
- * This function is called many times while creating drawlist, so it needs
- * to give the value very fast.
- */
-int get_memory_draw_items_allocated_count(void);
+TbResult propagate_memory_sizes(void);
 
 /******************************************************************************/
 #ifdef __cplusplus

@@ -31,6 +31,7 @@
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"
 #include "enginshrapn.h"
+#include "enginprops.h"
 #include "engintrns.h"
 #include "game.h"
 #include "game_data.h"
@@ -131,7 +132,7 @@ struct SpecialPoint *draw_item_add_points(ubyte ditype, ushort offset, int bckt,
 {
     struct SpecialPoint *p_scrpoint;
 
-    if (next_screen_point + npoints > mem_game[30].N)
+    if (next_screen_point + npoints > screen_points_limit)
         return NULL;
 
     p_scrpoint = &game_screen_point_pool[next_screen_point];
@@ -551,7 +552,7 @@ struct SingleObjectFace4 *build_polygon_slice(short x1, short y1, short x2, shor
     }
 
     pt = next_screen_point;
-    if (pt + 4 > mem_game[30].N)
+    if (pt + 4 > screen_points_limit)
         return NULL;
 
     face = next_special_face4;
@@ -833,7 +834,7 @@ struct SingleObjectFace4 *build_glare(short x1, short y1, short z1, short r1)
         return NULL;
 
     pt = next_screen_point;
-    if (pt + 4 > mem_game[30].N)
+    if (pt + 4 > screen_points_limit)
         return NULL;
     next_screen_point += 4;
 
@@ -1200,7 +1201,7 @@ int draw_rot_object(int offset_x, int offset_y, int offset_z, struct SingleObjec
         int depth_max, bckt;
 
         // each transform_rot_object_shpoint() call could reserve a point
-        if (next_screen_point + 4 > mem_game[30].N)
+        if (next_screen_point + 4 > screen_points_limit)
             break;
 
         p_face = &game_object_faces[face];
@@ -1256,7 +1257,7 @@ int draw_rot_object(int offset_x, int offset_y, int offset_z, struct SingleObjec
         struct SingleObjectFace4 *p_face4;
         int depth_max, bckt;
 
-        if (next_screen_point + 5 > mem_game[30].N)
+        if (next_screen_point + 5 > screen_points_limit)
             break;
 
         p_face4 = &game_object_faces4[face];
@@ -1378,7 +1379,7 @@ short draw_rot_object2(int offset_x, int offset_y, int offset_z,
         struct SingleObjectFace3 *p_face;
         int depth_max, bckt;
 
-        if (next_screen_point + 4 > mem_game[30].N)
+        if (next_screen_point + 4 > screen_points_limit)
             break;
 
         p_face = &game_object_faces[face];
@@ -1446,7 +1447,7 @@ short draw_rot_object2(int offset_x, int offset_y, int offset_z,
         struct SingleObjectFace4 *p_face4;
         int depth_max, bckt;
 
-        if (next_screen_point + 5 > mem_game[30].N)
+        if (next_screen_point + 5 > screen_points_limit)
             break;
 
         p_face4 = &game_object_faces4[face];
@@ -1535,7 +1536,7 @@ short draw_object(int x, int y, int z, struct SingleObject *point_object)
 
     // Make sure we have enough free points to start drawing the object
     points_num = point_object->EndPoint - point_object->StartPoint;
-    if (next_screen_point + 1 * points_num > mem_game[30].N)
+    if (next_screen_point + 1 * points_num > screen_points_limit)
         return 0;
 
     for (snpoint = point_object->StartPoint; snpoint <= point_object->EndPoint; snpoint++)

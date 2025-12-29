@@ -2298,6 +2298,7 @@ TbBool setup_host(void)
         LOGERR("Init memory failed.");
         ret = false;
     }
+    propagate_memory_sizes();
 
     init_syndwars();
     LoadSounds(0);
