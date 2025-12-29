@@ -32,6 +32,8 @@
 #include "bfutility.h"
 #include "ssampply.h"
 
+#include "render_gpoly.h"
+
 #include "app_sprite.h"
 #include "engintext.h"
 #include "bflib_render_drspr.h"

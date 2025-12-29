@@ -36,6 +36,7 @@
 #include "game_options.h"
 #include "game_sprani.h"
 #include "matrix.h"
+#include "render_gpoly.h"
 #include "thing.h"
 #include "swlog.h"
 /******************************************************************************/

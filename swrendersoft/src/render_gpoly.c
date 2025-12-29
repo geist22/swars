@@ -2,12 +2,12 @@
 // Bullfrog Engine Emulation Library - for use to remake classic games like
 // Syndicate Wars, Magic Carpet or Dungeon Keeper.
 /******************************************************************************/
-/** @file bflib_render_gpoly.c
- *     Rendering function draw_gpoly() for drawing 3D view elements.
+/** @file render_gpoly.c
+ *     Wrappers for rendering functions for drawing 3D view elements.
  * @par Purpose:
- *     Function for rendering 3D elements.
+ *     Unified functions for rendering 3D elements, wrapping around bflibrary.
  * @par Comment:
- *     Go away from here, you bad optimizer! Do not compile this with optimizations.
+ *     None.
  * @author   Tomasz Lis
  * @date     20 Mar 2009 - 14 Feb 2010
  * @par  Copying and copyrights:
@@ -17,16 +17,15 @@
  *     (at your option) any later version.
  */
 /******************************************************************************/
-#include "poly.h"
+#include "render_gpoly.h"
 
 #include "bfendian.h"
 #include "bfgentab.h"
+#include "poly.h"
 #include "poly_gp.h"
 #include "poly_trigp.h"
 
-#include "globals.h"
 #include "swlog.h"
-
 /******************************************************************************/
 
 long gpoly_pro_enable_mode_ofs;

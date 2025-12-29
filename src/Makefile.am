@@ -28,11 +28,11 @@ syndwarsfx_SOURCES = \
 	../swrendersoft/include/enginsngtxtr.h \
 	../swrendersoft/src/enginzoom.c \
 	../swrendersoft/include/enginzoom.h \
+	../swrendersoft/include/render_gpoly.h \
+	../swrendersoft/src/render_gpoly.c \
 	bflib_joyst.c \
 	bflib_joyst.h \
 	bflib_joyst_s.sx \
-	bflib_render_gpoly.c \
-	bflib_render_plin_s.sx \
 	bflib_render_drspr.c \
 	bflib_render_drspr.h \
 	bflib_render_drspr_s.sx \

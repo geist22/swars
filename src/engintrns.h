@@ -101,8 +101,6 @@ void transform_shpoint_fpv(struct ShEnginePoint *p_sp, int dxc, int dyc, int dzc
  */
 int transform_shpoint_y(int dxc, int dyc, int dzc);
 
-void draw_trigpoly(struct PolyPoint *point_a, struct PolyPoint *point_b, struct PolyPoint *point_c);
-
 void process_engine_unk1(void);
 void process_engine_unk2(void);
 void setup_engine_nullsub4(void);
