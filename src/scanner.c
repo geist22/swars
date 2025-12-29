@@ -113,9 +113,9 @@ void SCANNER_init(void)
     asm volatile ("call ASM_SCANNER_init\n"
         :  :  : "eax" );
 #else
-    SCANNER_init_palette_bright();
+    LowTransGrey_InitPaletteBright();
     SCANNER_init_bbpoints();
-    SCANNER_init_bright_limit_table();
+    LowTransGrey_InitBrightLimitTable();
     SCANNER_init_people_colours();
 #endif
 }

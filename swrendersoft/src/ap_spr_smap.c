@@ -112,11 +112,11 @@ TbResult ApSpriteDrawLTGreyRemapUsingScalingUpDataTrans1RL(uchar *outbuf, int sc
                                 // App-specific code starts
                                 unsigned int pxmap;
                                 int pxbase;
-                                pxbase = dword_1DC36C + (SCANNER_pal_bright[*sprdata] >> 1);
+                                pxbase = dword_1DC36C + (low_trans_grey_pal_bright[*sprdata] >> 1);
                                 for (;xdup > 0; xdup--)
                                 {
-                                    pxmap = pxbase + (SCANNER_pal_bright[*out_end] >> 1);
-                                    pxmap = (SCANNER_bright_limit[pxmap] << 8) | ((*sprdata));
+                                    pxmap = pxbase + (low_trans_grey_pal_bright[*out_end] >> 1);
+                                    pxmap = (low_trans_grey_bright_limit[pxmap] << 8) | ((*sprdata));
                                     *out_end = transmap[pxmap];
                                     out_end--;
                                 }
@@ -223,11 +223,11 @@ TbResult ApSpriteDrawLTGreyRemapUsingScalingUpDataTrans1LR(uchar *outbuf, int sc
                                 // App-specific code starts
                                 unsigned int pxmap;
                                 int pxbase;
-                                pxbase = dword_1DC36C + (SCANNER_pal_bright[*sprdata] >> 1);
+                                pxbase = dword_1DC36C + (low_trans_grey_pal_bright[*sprdata] >> 1);
                                 for (;xdup > 0; xdup--)
                                 {
-                                    pxmap = pxbase + (SCANNER_pal_bright[*out_end] >> 1);
-                                    pxmap = (SCANNER_bright_limit[pxmap] << 8) | ((*sprdata));
+                                    pxmap = pxbase + (low_trans_grey_pal_bright[*out_end] >> 1);
+                                    pxmap = (low_trans_grey_bright_limit[pxmap] << 8) | ((*sprdata));
                                     *out_end = transmap[pxmap];
                                     out_end++;
                                 }
@@ -334,11 +334,11 @@ TbResult ApSpriteDrawLTGreyRemapUsingScalingUpDataTrans2RL(uchar *outbuf, int sc
                                 // App-specific code starts
                                 unsigned int pxmap;
                                 int pxbase;
-                                pxbase = dword_1DC36C + (SCANNER_pal_bright[*sprdata] >> 1);
+                                pxbase = dword_1DC36C + (low_trans_grey_pal_bright[*sprdata] >> 1);
                                 for (;xdup > 0; xdup--)
                                 {
-                                    pxmap = pxbase + (SCANNER_pal_bright[*out_end] >> 1);
-                                    pxmap = (SCANNER_bright_limit[pxmap]) | ((*sprdata) << 8);
+                                    pxmap = pxbase + (low_trans_grey_pal_bright[*out_end] >> 1);
+                                    pxmap = (low_trans_grey_bright_limit[pxmap]) | ((*sprdata) << 8);
                                     *out_end = transmap[pxmap];
                                     out_end--;
                                 }
@@ -445,11 +445,11 @@ TbResult ApSpriteDrawLTGreyRemapUsingScalingUpDataTrans2LR(uchar *outbuf, int sc
                                 // App-specific code starts
                                 unsigned int pxmap;
                                 int pxbase;
-                                pxbase = dword_1DC36C + (SCANNER_pal_bright[*sprdata] >> 1);
+                                pxbase = dword_1DC36C + (low_trans_grey_pal_bright[*sprdata] >> 1);
                                 for (;xdup > 0; xdup--)
                                 {
-                                    pxmap = pxbase + (SCANNER_pal_bright[*out_end] >> 1);
-                                    pxmap = (SCANNER_bright_limit[pxmap]) | ((*sprdata) << 8);
+                                    pxmap = pxbase + (low_trans_grey_pal_bright[*out_end] >> 1);
+                                    pxmap = (low_trans_grey_bright_limit[pxmap]) | ((*sprdata) << 8);
                                     *out_end = transmap[pxmap];
                                     out_end++;
                                 }
@@ -544,10 +544,10 @@ TbResult ApSpriteDrawLTGreyRemapUsingScalingDownDataTrans1RL(uchar *outbuf, int 
                             // App-specific code starts
                             unsigned int pxmap;
                             int pxbase;
-                            pxbase = dword_1DC36C + (SCANNER_pal_bright[*sprdata] >> 1);
+                            pxbase = dword_1DC36C + (low_trans_grey_pal_bright[*sprdata] >> 1);
                             {
-                                pxmap = pxbase + (SCANNER_pal_bright[*out_end] >> 1);
-                                pxmap = (SCANNER_bright_limit[pxmap] << 8) | ((*sprdata));
+                                pxmap = pxbase + (low_trans_grey_pal_bright[*out_end] >> 1);
+                                pxmap = (low_trans_grey_bright_limit[pxmap] << 8) | ((*sprdata));
                                 *out_end = transmap[pxmap];
                                 out_end--;
                             }
@@ -640,10 +640,10 @@ TbResult ApSpriteDrawLTGreyRemapUsingScalingDownDataTrans1LR(uchar *outbuf, int 
                             // App-specific code starts
                             unsigned int pxmap;
                             int pxbase;
-                            pxbase = dword_1DC36C + (SCANNER_pal_bright[*sprdata] >> 1);
+                            pxbase = dword_1DC36C + (low_trans_grey_pal_bright[*sprdata] >> 1);
                             {
-                                pxmap = pxbase + (SCANNER_pal_bright[*out_end] >> 1);
-                                pxmap = (SCANNER_bright_limit[pxmap] << 8) | ((*sprdata));
+                                pxmap = pxbase + (low_trans_grey_pal_bright[*out_end] >> 1);
+                                pxmap = (low_trans_grey_bright_limit[pxmap] << 8) | ((*sprdata));
                                 *out_end = transmap[pxmap];
                                 out_end++;
                             }
@@ -736,10 +736,10 @@ TbResult ApSpriteDrawLTGreyRemapUsingScalingDownDataTrans2RL(uchar *outbuf, int 
                             // App-specific code starts
                             unsigned int pxmap;
                             int pxbase;
-                            pxbase = dword_1DC36C + (SCANNER_pal_bright[*sprdata] >> 1);
+                            pxbase = dword_1DC36C + (low_trans_grey_pal_bright[*sprdata] >> 1);
                             {
-                                pxmap = pxbase + (SCANNER_pal_bright[*out_end] >> 1);
-                                pxmap = (SCANNER_bright_limit[pxmap]) | ((*sprdata) << 8);
+                                pxmap = pxbase + (low_trans_grey_pal_bright[*out_end] >> 1);
+                                pxmap = (low_trans_grey_bright_limit[pxmap]) | ((*sprdata) << 8);
                                 *out_end = transmap[pxmap];
                                 out_end--;
                             }
@@ -832,10 +832,10 @@ TbResult ApSpriteDrawLTGreyRemapUsingScalingDownDataTrans2LR(uchar *outbuf, int 
                             // App-specific code starts
                             unsigned int pxmap;
                             int pxbase;
-                            pxbase = dword_1DC36C + (SCANNER_pal_bright[*sprdata] >> 1);
+                            pxbase = dword_1DC36C + (low_trans_grey_pal_bright[*sprdata] >> 1);
                             {
-                                pxmap = pxbase + (SCANNER_pal_bright[*out_end] >> 1);
-                                pxmap = (SCANNER_bright_limit[pxmap]) | ((*sprdata) << 8);
+                                pxmap = pxbase + (low_trans_grey_pal_bright[*out_end] >> 1);
+                                pxmap = (low_trans_grey_bright_limit[pxmap]) | ((*sprdata) << 8);
                                 *out_end = transmap[pxmap];
                                 out_end++;
                             }

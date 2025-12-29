@@ -125417,7 +125417,7 @@ GLOBAL_FUNC (ASM_SCANNER_init)	/* 0x0ABA1C */
 		jne    jump_aba99
 		xor    %ebx,%ebx
 	jump_abadb:
-		mov    %bl,EXPORT_SYMBOL(SCANNER_bright_limit)(%ebx)
+		mov    %bl,EXPORT_SYMBOL(low_trans_grey_bright_limit)(%ebx)
 		inc    %ebx
 		cmp    $0x40,%ebx
 		jge    jump_abaf2
@@ -128219,7 +128219,7 @@ GLOBAL_FUNC(ASM_SCANNER_dnt_sub1_sub1)
 	jump_ae194:
 		xor    %eax,%eax
 		mov    (%edi),%al
-		mov    EXPORT_SYMBOL(SCANNER_pal_bright)(%eax),%ah
+		mov    EXPORT_SYMBOL(low_trans_grey_pal_bright)(%eax),%ah
 		shr    %ah
 		add    %dl,%ah
 		mov    $0x49,%al
@@ -128248,7 +128248,7 @@ GLOBAL_FUNC(ASM_SCANNER_dnt_sub1_sub3)
 	jump_ae3b6:
 		xor    %eax,%eax
 		mov    (%edi),%al
-		mov    EXPORT_SYMBOL(SCANNER_pal_bright)(%eax),%ah
+		mov    EXPORT_SYMBOL(low_trans_grey_pal_bright)(%eax),%ah
 		shr    %ah
 		add    %dl,%ah
 		mov    $0x49,%al
@@ -128294,13 +128294,13 @@ GLOBAL_FUNC(ASM_SCANNER_dnt_sub1_sub2)
 		ror    $0x10,%edx
 		mov    EXPORT_SYMBOL(SCANNER_data)(%ebx),%al
 		xor    %ecx,%ecx
-		mov    EXPORT_SYMBOL(SCANNER_pal_bright)(%eax),%ah
+		mov    EXPORT_SYMBOL(low_trans_grey_pal_bright)(%eax),%ah
 		mov    (%edi),%cl
-		mov    EXPORT_SYMBOL(SCANNER_pal_bright)(%ecx),%cl
+		mov    EXPORT_SYMBOL(low_trans_grey_pal_bright)(%ecx),%cl
 		shr    %cl
 		add    %ah,%cl
 		add    %dl,%cl
-		mov    EXPORT_SYMBOL(SCANNER_bright_limit)(%ecx),%ah
+		mov    EXPORT_SYMBOL(low_trans_grey_bright_limit)(%ecx),%ah
 		ror    $0x10,%edx
 		mov    EXPORT_SYMBOL(pixmap)(%eax),%al # pixmap.fade_table[?]
 		pop    %ecx
@@ -128340,7 +128340,7 @@ GLOBAL_FUNC(ASM_SCANNER_dnt_sub1_sub4)
 		jns    jump_ae447
 		xor    %eax,%eax
 		mov    (%edi),%al
-		mov    EXPORT_SYMBOL(SCANNER_pal_bright)(%eax),%ah
+		mov    EXPORT_SYMBOL(low_trans_grey_pal_bright)(%eax),%ah
 		shr    %ah
 		add    %dl,%ah
 		mov    $0x49,%al
@@ -128372,7 +128372,7 @@ GLOBAL_FUNC(ASM_SCANNER_dnt_sub1_sub5)
 		jl     jump_ae4c0
 		xor    %eax,%eax
 		mov    (%edi),%al
-		mov    EXPORT_SYMBOL(SCANNER_pal_bright)(%eax),%ah
+		mov    EXPORT_SYMBOL(low_trans_grey_pal_bright)(%eax),%ah
 		shr    %ah
 		add    %dl,%ah
 		mov    $0x49,%al
@@ -128404,7 +128404,7 @@ GLOBAL_FUNC(ASM_SCANNER_dnt_sub1_sub6)
 		jns    jump_ae535
 		xor    %eax,%eax
 		mov    (%edi),%al
-		mov    EXPORT_SYMBOL(SCANNER_pal_bright)(%eax),%ah
+		mov    EXPORT_SYMBOL(low_trans_grey_pal_bright)(%eax),%ah
 		shr    %ah
 		add    %dl,%ah
 		mov    $0x49,%al
@@ -128436,7 +128436,7 @@ GLOBAL_FUNC(ASM_SCANNER_dnt_sub1_sub7)
 		jl     jump_ae5ae
 		xor    %eax,%eax
 		mov    (%edi),%al
-		mov    EXPORT_SYMBOL(SCANNER_pal_bright)(%eax),%ah
+		mov    EXPORT_SYMBOL(low_trans_grey_pal_bright)(%eax),%ah
 		shr    %ah
 		add    %dl,%ah
 		mov    $0x49,%al
@@ -128470,7 +128470,7 @@ GLOBAL_FUNC(ASM_SCANNER_dnt_sub1_sub8)
 		jns    jump_ae627
 		xor    %eax,%eax
 		mov    (%edi),%al
-		mov    EXPORT_SYMBOL(SCANNER_pal_bright)(%eax),%ah
+		mov    EXPORT_SYMBOL(low_trans_grey_pal_bright)(%eax),%ah
 		shr    %ah
 		add    %dl,%ah
 		mov    $0x49,%al
@@ -128504,7 +128504,7 @@ GLOBAL_FUNC(ASM_SCANNER_dnt_sub1_sub9)
 		jns    jump_ae6a4
 		xor    %eax,%eax
 		mov    (%edi),%al
-		mov    EXPORT_SYMBOL(SCANNER_pal_bright)(%eax),%ah
+		mov    EXPORT_SYMBOL(low_trans_grey_pal_bright)(%eax),%ah
 		shr    %ah
 		add    %dl,%ah
 		mov    $0x49,%al
@@ -128538,7 +128538,7 @@ GLOBAL_FUNC(ASM_SCANNER_dnt_sub1_sub10)
 		jl     jump_ae721
 		xor    %eax,%eax
 		mov    (%edi),%al
-		mov    EXPORT_SYMBOL(SCANNER_pal_bright)(%eax),%ah
+		mov    EXPORT_SYMBOL(low_trans_grey_pal_bright)(%eax),%ah
 		shr    %ah
 		add    %dl,%ah
 		mov    $0x49,%al
@@ -128572,7 +128572,7 @@ GLOBAL_FUNC(ASM_SCANNER_dnt_sub1_sub11)
 		jl     jump_ae79f
 		xor    %eax,%eax
 		mov    (%edi),%al
-		mov    EXPORT_SYMBOL(SCANNER_pal_bright)(%eax),%ah
+		mov    EXPORT_SYMBOL(low_trans_grey_pal_bright)(%eax),%ah
 		shr    %ah
 		add    %dl,%ah
 		mov    $0x49,%al
@@ -128619,13 +128619,13 @@ GLOBAL_FUNC(ASM_SCANNER_dnt_sub1_sub12)
 		ror    $0x10,%edx
 		mov    EXPORT_SYMBOL(SCANNER_data)(%ebx),%al
 		xor    %ecx,%ecx
-		mov    EXPORT_SYMBOL(SCANNER_pal_bright)(%eax),%ah
+		mov    EXPORT_SYMBOL(low_trans_grey_pal_bright)(%eax),%ah
 		mov    (%edi),%cl
-		mov    EXPORT_SYMBOL(SCANNER_pal_bright)(%ecx),%cl
+		mov    EXPORT_SYMBOL(low_trans_grey_pal_bright)(%ecx),%cl
 		shr    %cl
 		add    %ah,%cl
 		add    %dl,%cl
-		mov    EXPORT_SYMBOL(SCANNER_bright_limit)(%ecx),%ah
+		mov    EXPORT_SYMBOL(low_trans_grey_bright_limit)(%ecx),%ah
 		ror    $0x10,%edx
 		mov    EXPORT_SYMBOL(pixmap)(%eax),%al # pixmap.fade_table[?]
 		pop    %ecx
@@ -130580,7 +130580,7 @@ GLOBAL_FUNC(ASM_SCANNER_unkn_func_203)	/* 0x0B00E8 */
 		mov    %edi,(%esp)
 		movzbl %cl,%edi
 		mov    0x1c(%esp),%ebx
-		movzbl EXPORT_SYMBOL(SCANNER_pal_bright)(%edi),%edi
+		movzbl EXPORT_SYMBOL(low_trans_grey_pal_bright)(%edi),%edi
 		mov    (%esp),%esi
 		sar    %edi
 		mov    EXPORT_SYMBOL(lbDisplay)+4,%edx # lbDisplay.WScreen
@@ -130593,10 +130593,10 @@ GLOBAL_FUNC(ASM_SCANNER_unkn_func_203)	/* 0x0B00E8 */
 	jump_b013e:
 		mov    (%eax),%dl
 		and    $0xff,%edx
-		mov    EXPORT_SYMBOL(SCANNER_pal_bright)(%edx),%dl
+		mov    EXPORT_SYMBOL(low_trans_grey_pal_bright)(%edx),%dl
 		and    $0xff,%edx
 		sar    %edx
-		mov    EXPORT_SYMBOL(SCANNER_bright_limit)(%edx,%edi,1),%dl
+		mov    EXPORT_SYMBOL(low_trans_grey_bright_limit)(%edx,%edi,1),%dl
 		and    $0xff,%edx
 		movzbl %cl,%esi
 		inc    %eax
@@ -130620,7 +130620,7 @@ GLOBAL_FUNC(ASM_SCANNER_unkn_func_203)	/* 0x0B00E8 */
 		mov    EXPORT_SYMBOL(lbDisplay)+4,%esi # lbDisplay.WScreen
 		movzbl %cl,%edi
 		add    %esi,%eax
-		movzbl EXPORT_SYMBOL(SCANNER_pal_bright)(%edi),%edi
+		movzbl EXPORT_SYMBOL(low_trans_grey_pal_bright)(%edi),%edi
 		add    %ebp,%eax
 		mov    %ebx,%ebp
 		sar    %edi
@@ -130633,10 +130633,10 @@ GLOBAL_FUNC(ASM_SCANNER_unkn_func_203)	/* 0x0B00E8 */
 	jump_b01b8:
 		mov    (%eax),%dl
 		and    $0xff,%edx
-		mov    EXPORT_SYMBOL(SCANNER_pal_bright)(%edx),%dl
+		mov    EXPORT_SYMBOL(low_trans_grey_pal_bright)(%edx),%dl
 		and    $0xff,%edx
 		sar    %edx
-		mov    EXPORT_SYMBOL(SCANNER_bright_limit)(%edx,%edi,1),%dl
+		mov    EXPORT_SYMBOL(low_trans_grey_bright_limit)(%edx,%edi,1),%dl
 		mov    %edx,%esi
 		and    $0xff,%esi
 		xor    %edx,%edx
@@ -183634,7 +183634,7 @@ GLOBAL (scanner_next_key_no)	/* 0x1CAB60 */
 		.ascii  "\x00\x00\x00"
 data_1cab63:
 		.byte	0x0
-GLOBAL (SCANNER_pal_bright)	/* 0x1CAB64 */
+GLOBAL (low_trans_grey_pal_bright)	/* 0x1CAB64 */
 		.fill   0x423
 data_1caf87:
 		.byte	0x0
@@ -183668,7 +183668,7 @@ GLOBAL (SCANNER_data)	/* 0x1CB088 */
 		.fill   0xffff
 data_1db087:
 		.byte	0x0
-GLOBAL (SCANNER_bright_limit)	/* 0x1DB088 */
+GLOBAL (low_trans_grey_bright_limit)	/* 0x1DB088 */
 		.fill   0x100
 GLOBAL (SCANNER_width)	/* 0x1DB188 */
 		.long	0x0

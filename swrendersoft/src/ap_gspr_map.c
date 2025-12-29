@@ -54,9 +54,9 @@ static inline void LbDrawBufferTrRemap(unsigned char **buf_out, const char *buf_
             // App-specific code starts
             unsigned int pxmap;
             int pxbase;
-            pxbase = dword_1DC36C + (SCANNER_pal_bright[*(const ubyte *)buf_inp] >> 1);
-            pxmap = pxbase + (SCANNER_pal_bright[**buf_out] >> 1);
-            pxmap = (SCANNER_bright_limit[pxmap] << 8) | ((*(const ubyte *)buf_inp));
+            pxbase = dword_1DC36C + (low_trans_grey_pal_bright[*(const ubyte *)buf_inp] >> 1);
+            pxmap = pxbase + (low_trans_grey_pal_bright[**buf_out] >> 1);
+            pxmap = (low_trans_grey_bright_limit[pxmap] << 8) | ((*(const ubyte *)buf_inp));
             **buf_out = transmap[pxmap];
             // App-specific code ends
             buf_inp++;
@@ -69,9 +69,9 @@ static inline void LbDrawBufferTrRemap(unsigned char **buf_out, const char *buf_
             // App-specific code starts
             unsigned int pxmap;
             int pxbase;
-            pxbase = dword_1DC36C + (SCANNER_pal_bright[*(const ubyte *)buf_inp] >> 1);
-            pxmap = pxbase + (SCANNER_pal_bright[**buf_out] >> 1);
-            pxmap = (SCANNER_bright_limit[pxmap]) | ((*(const ubyte *)buf_inp) << 8);
+            pxbase = dword_1DC36C + (low_trans_grey_pal_bright[*(const ubyte *)buf_inp] >> 1);
+            pxmap = pxbase + (low_trans_grey_pal_bright[**buf_out] >> 1);
+            pxmap = (low_trans_grey_bright_limit[pxmap]) | ((*(const ubyte *)buf_inp) << 8);
             **buf_out = transmap[pxmap];
             // App-specific code ends
             buf_inp++;
@@ -87,9 +87,9 @@ static inline void LbDrawBufferTrRemap(unsigned char **buf_out, const char *buf_
             // App-specific code starts
             unsigned int pxmap;
             int pxbase;
-            pxbase = dword_1DC36C + (SCANNER_pal_bright[*(const ubyte *)buf_inp] >> 1);
-            pxmap = pxbase + (SCANNER_pal_bright[**buf_out] >> 1);
-            pxmap = (SCANNER_bright_limit[pxmap] << 8) | ((*(const ubyte *)buf_inp));
+            pxbase = dword_1DC36C + (low_trans_grey_pal_bright[*(const ubyte *)buf_inp] >> 1);
+            pxmap = pxbase + (low_trans_grey_pal_bright[**buf_out] >> 1);
+            pxmap = (low_trans_grey_bright_limit[pxmap] << 8) | ((*(const ubyte *)buf_inp));
             **buf_out = transmap[pxmap];
             // App-specific code ends
             buf_inp++;
@@ -102,9 +102,9 @@ static inline void LbDrawBufferTrRemap(unsigned char **buf_out, const char *buf_
             // App-specific code starts
             unsigned int pxmap;
             int pxbase;
-            pxbase = dword_1DC36C + (SCANNER_pal_bright[*(const ubyte *)buf_inp] >> 1);
-            pxmap = pxbase + (SCANNER_pal_bright[**buf_out] >> 1);
-            pxmap = (SCANNER_bright_limit[pxmap]) | ((*(const ubyte *)buf_inp) << 8);
+            pxbase = dword_1DC36C + (low_trans_grey_pal_bright[*(const ubyte *)buf_inp] >> 1);
+            pxmap = pxbase + (low_trans_grey_pal_bright[**buf_out] >> 1);
+            pxmap = (low_trans_grey_bright_limit[pxmap]) | ((*(const ubyte *)buf_inp) << 8);
             **buf_out = transmap[pxmap];
             // App-specific code ends
             buf_inp++;

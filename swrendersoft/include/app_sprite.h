@@ -33,16 +33,16 @@ struct TbSprite;
 #pragma pack()
 
 extern long dword_1DC36C;
-extern ubyte SCANNER_pal_bright[];
-extern ubyte SCANNER_bright_limit[];
+extern ubyte low_trans_grey_pal_bright[];
+extern ubyte low_trans_grey_bright_limit[];
 
 /** Init a table storing brightness of each colour in the palette.
  */
-void SCANNER_init_palette_bright(void);
+void LowTransGrey_InitPaletteBright(void);
 
 /** Init a table used to limit colour value to 6-bit area.
  */
-void SCANNER_init_bright_limit_table(void);
+void LowTransGrey_InitBrightLimitTable(void);
 
 /** Sprite drawing routine with modified transparency support.
  * Instead of standard transparency, it converts input and background to

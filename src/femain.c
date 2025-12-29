@@ -1268,8 +1268,8 @@ TbBool init_purple_mode_colors_and_sprites(void)
     LbGhostTableGenerate(display_palette, 66, "data/startgho.dat");
     LbExtraGhostTableGenerate(display_palette, 66, 170, 170, 170,
       appixmap.ghost_add_table, "data/bgghoscr.dat");
-    SCANNER_init_palette_bright();
-    SCANNER_init_bright_limit_table();
+    LowTransGrey_InitPaletteBright();
+    LowTransGrey_InitBrightLimitTable();
 
     show_black_screen();
     LbPaletteSet(display_palette);

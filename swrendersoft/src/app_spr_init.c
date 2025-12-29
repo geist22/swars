@@ -28,7 +28,7 @@
 
 #include "display.h"
 
-void SCANNER_init_palette_bright(void)
+void LowTransGrey_InitPaletteBright(void)
 {
     ubyte *pal;
     int col;
@@ -49,18 +49,18 @@ void SCANNER_init_palette_bright(void)
         else
             col_C = col_b;
 
-        SCANNER_pal_bright[col] = (col_C + ((col_b + col_r + col_g) >> 1)) / 3;
+        low_trans_grey_pal_bright[col] = (col_C + ((col_b + col_r + col_g) >> 1)) / 3;
     }
 }
 
-void SCANNER_init_bright_limit_table(void)
+void LowTransGrey_InitBrightLimitTable(void)
 {
     int i;
 
     for (i = 0; i < 64; i++)
-        SCANNER_bright_limit[i] = i;
+        low_trans_grey_bright_limit[i] = i;
     for (; i < 256; i++)
-        SCANNER_bright_limit[i] = 63;
+        low_trans_grey_bright_limit[i] = 63;
 }
 
 /******************************************************************************/
