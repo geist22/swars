@@ -2952,10 +2952,10 @@ void draw_phwoar(ushort ph)
         lbDisplay.DrawFlags = p_elem->Flags & 0x07;
         if ((p_elem->Flags & 0xFE00) == 0)
         {
-            if (lbDisplay.GraphicsScreenHeight < 400)
-                LbSpriteDraw_1(point_x + (p_elem->X >> 1), point_y + (p_elem->Y >> 1), p_spr);
-            else
-                LbSpriteDraw_2(point_x + p_elem->X, point_y + p_elem->Y, p_spr);
+            int el_x, el_y;
+            el_x = point_x + ((p_elem->X * overall_scale) >> 9);
+            el_y = point_y + ((p_elem->Y * overall_scale) >> 9);
+            LbSpriteDrawResized(el_x, el_y, (16 * overall_scale) >> 8, p_spr);
         }
         if (word_1A5834 > p_elem->X >> 1)
             word_1A5834 = p_elem->X >> 1;
