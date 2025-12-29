@@ -27,7 +27,6 @@
 #include "insspr.h"
 #include <assert.h>
 
-#include "bflib_render_drspr.h"
 #include "render_gpoly.h"
 
 #include "bigmap.h"

@@ -20,8 +20,10 @@
 
 #include <limits.h>
 #include <stdlib.h>
+
 #include "bfmemut.h"
 #include "bfmath.h"
+
 #include "bigmap.h"
 #include "swlog.h"
 /******************************************************************************/

@@ -36,7 +36,6 @@
 
 #include "app_sprite.h"
 #include "engintext.h"
-#include "bflib_render_drspr.h"
 #include "bigmap.h"
 #include "display.h"
 #include "engintrns.h"

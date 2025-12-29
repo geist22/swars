@@ -33,9 +33,6 @@ syndwarsfx_SOURCES = \
 	bflib_joyst.c \
 	bflib_joyst.h \
 	bflib_joyst_s.sx \
-	bflib_render_drspr.c \
-	bflib_render_drspr.h \
-	bflib_render_drspr_s.sx \
 	bflib_snd_mss_s.sx \
 	bflib_vidraw.c \
 	bflib_vidraw.h \
