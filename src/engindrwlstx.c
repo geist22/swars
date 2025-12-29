@@ -43,10 +43,10 @@
 #include "enginshadws.h"
 #include "enginshrapn.h"
 #include "engintrns.h"
+#include "frame_sprani.h"
 #include "game_data.h"
 #include "game_options.h"
 #include "game_speed.h"
-#include "game_sprani.h"
 #include "game_sprts.h"
 #include "game.h"
 #include "player.h"
@@ -214,7 +214,8 @@ void draw_unkn2_scaled_alpha_sprite(ubyte *frv, ushort frm, short x, short y,
     min_y = 99999;
     p_frm = &frame[frm];
 
-    for (p_elem = &melement_ani[p_frm->FirstElement]; p_elem > melement_ani; p_elem = &melement_ani[p_elem->Next])
+    for (p_elem = &melement_ani[p_frm->FirstElement]; p_elem > melement_ani;
+      p_elem = &melement_ani[p_elem->Next])
     {
         struct TbSprite *p_spr;
 
@@ -256,9 +257,11 @@ void draw_unkn2_scaled_alpha_sprite(ubyte *frv, ushort frm, short x, short y,
             dword_176CEC = range_y;
             dword_176CF0 = (range_x * overall_scale) >> 8;
             dword_176CF4 = (range_y * overall_scale) >> 8;
-            SetAlphaScalingData(dword_176CE0, dword_176CE4, dword_176CE8, dword_176CEC, dword_176CF0, dword_176CF4);
+            SetAlphaScalingData(dword_176CE0, dword_176CE4, dword_176CE8,
+              dword_176CEC, dword_176CF0, dword_176CF4);
 
-            for (p_elem = &melement_ani[p_frm->FirstElement]; p_elem > melement_ani; p_elem = &melement_ani[p_elem->Next])
+            for (p_elem = &melement_ani[p_frm->FirstElement]; p_elem > melement_ani;
+              p_elem = &melement_ani[p_elem->Next])
             {
                 struct TbSprite *p_spr;
 
@@ -290,7 +293,8 @@ void draw_unkn3_scaled_alpha_sprite(ushort frm, short x, short y, ubyte bri)
     struct Element *p_elem;
 
     p_frm = &frame[frm];
-    for (p_elem = &melement_ani[p_frm->FirstElement]; p_elem > melement_ani; p_elem = &melement_ani[p_elem->Next])
+    for (p_elem = &melement_ani[p_frm->FirstElement]; p_elem > melement_ani;
+      p_elem = &melement_ani[p_elem->Next])
     {
         struct TbSprite *p_spr;
 
@@ -318,7 +322,8 @@ void draw_unkn4_scaled_alpha_sprite(ubyte *frv, ushort frm, short x, short y,
     struct Element *p_elem;
 
     p_frm = &frame[frm];
-    for (p_elem = &melement_ani[p_frm->FirstElement]; p_elem > melement_ani; p_elem = &melement_ani[p_elem->Next])
+    for (p_elem = &melement_ani[p_frm->FirstElement]; p_elem > melement_ani;
+      p_elem = &melement_ani[p_elem->Next])
     {
         struct TbSprite *p_spr;
 

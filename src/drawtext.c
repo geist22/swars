@@ -2,9 +2,11 @@
 // Syndicate Wars Fan Expansion, source port of the classic game from Bullfrog.
 /******************************************************************************/
 /** @file drawtext.c
- *     Math transformations required by the 3D engine.
+ *     Drawing simple text within the 3D world.
  * @par Purpose:
- *     Implement functions for transforming positions in 3D world.
+ *     Implement functions for drawing text, with its position transformed fro
+ *     in-mission map coordinated. Draws simple text, to be used for debug
+ *     or in-game editors; for proper playtime text, use bitmap fonts instead.
  * @par Comment:
  *     None.
  * @author   Tomasz Lis

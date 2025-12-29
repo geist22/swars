@@ -4,7 +4,7 @@
 /** @file drawtext.h
  *     Header file for drawtext.c.
  * @par Purpose:
- *     Math transformations required by the 3D engine.
+ *     Drawing simple text within the 3D world.
  * @par Comment:
  *     Just a header file - #defines, typedefs, function prototypes etc.
  * @author   Tomasz Lis

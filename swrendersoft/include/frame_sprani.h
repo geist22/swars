@@ -1,8 +1,8 @@
 /******************************************************************************/
 // Syndicate Wars Fan Expansion, source port of the classic game from Bullfrog.
 /******************************************************************************/
-/** @file game_sprani.h
- *     Header file for game_sprani.c.
+/** @file frame_sprani.h
+ *     Header file for frame_sprani.c.
  * @par Purpose:
  *     List of sprite animation frames used by the game.
  * @par Comment:
@@ -16,8 +16,8 @@
  *     (at your option) any later version.
  */
 /******************************************************************************/
-#ifndef GAME_SPRANI_H
-#define GAME_SPRANI_H
+#ifndef FRAME_SPRANI_H
+#define FRAME_SPRANI_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,7 +25,6 @@ extern "C" {
 /******************************************************************************/
 
 #include "bftypes.h"
-#include "game_bstype.h"
 
 /******************************************************************************/
 #pragma pack(1)

@@ -1,7 +1,7 @@
 /******************************************************************************/
 // Syndicate Wars Fan Expansion, source port of the classic game from Bullfrog.
 /******************************************************************************/
-/** @file game_sprani.c
+/** @file frame_sprani.c
  *     List of sprite animation frames used by the game.
  * @par Purpose:
  *     Defines frames of animations, and how they consitts of sprite elements.
@@ -16,7 +16,7 @@
  *     (at your option) any later version.
  */
 /******************************************************************************/
-#include "game_sprani.h"
+#include "frame_sprani.h"
 
 #include <assert.h>
 #include "bfsprite.h"

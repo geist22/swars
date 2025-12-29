@@ -28,6 +28,8 @@ syndwarsfx_SOURCES = \
 	../swrendersoft/include/enginsngtxtr.h \
 	../swrendersoft/src/enginzoom.c \
 	../swrendersoft/include/enginzoom.h \
+	../swrendersoft/src/frame_sprani.c \
+	../swrendersoft/include/frame_sprani.h \
 	../swrendersoft/include/render_gpoly.h \
 	../swrendersoft/src/render_gpoly.c \
 	bflib_joyst.c \
@@ -154,8 +156,6 @@ syndwarsfx_SOURCES = \
 	game_save.h \
 	game_speed.c \
 	game_speed.h \
-	game_sprani.c \
-	game_sprani.h \
 	game_sprts.c \
 	game_sprts.h \
 	game.h \
