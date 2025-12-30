@@ -40,8 +40,11 @@ const struct Direction angle_direction[] = {
     {-181,  181},
 };
 
-void map_coords_limit(MapCoord *cor_x, MapCoord *cor_y, MapCoord *cor_z, long map_x, long map_y, long map_z)
+TbBool map_coords_limit(MapCoord *cor_x, MapCoord *cor_y, MapCoord *cor_z, long map_x, long map_y, long map_z)
 {
+    TbBool altered;
+
+    altered = false;
     if (map_x < 0)
         map_x = 0;
     else if (map_x >= MAP_COORD_WIDTH)
@@ -57,12 +60,20 @@ void map_coords_limit(MapCoord *cor_x, MapCoord *cor_y, MapCoord *cor_z, long ma
     else if (map_z >= MAP_COORD_HEIGHT)
         map_z = MAP_COORD_HEIGHT - 1;
 
-    if (cor_x != NULL)
+    if (cor_x != NULL) {
+        altered |= (*cor_x != map_x);
         *cor_x = map_x;
-    if (cor_y != NULL)
+    }
+    if (cor_y != NULL) {
+        altered |= (*cor_y != map_y);
         *cor_y = map_y;
-    if (cor_z != NULL)
+    }
+    if (cor_z != NULL) {
+        altered |= (*cor_z != map_z);
         *cor_z = map_z;
+    }
+
+    return altered;
 }
 
 void clear_mapwho_on_whole_map(void)

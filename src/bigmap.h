@@ -132,8 +132,10 @@ extern ushort spiral_dist_tiles_limit;
 extern const struct Direction angle_direction[];
 
 /** Limit the map coordinates boundaries of valid map positions and ranges of data types used.
+ *
+ * @return Returns if the coordinates were altered (or would have been altered if not NULL).
  */
-void map_coords_limit(MapCoord *cor_x, MapCoord *cor_y, MapCoord *cor_z, long map_x, long map_y, long map_z);
+TbBool map_coords_limit(MapCoord *cor_x, MapCoord *cor_y, MapCoord *cor_z, long map_x, long map_y, long map_z);
 
 void clear_mapwho_on_whole_map(void);
 void refresh_old_my_big_map_format(struct MyMapElement *p_mapel,

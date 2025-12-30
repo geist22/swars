@@ -1159,12 +1159,41 @@ void remove_sthing(short tngno)
 
 short add_static(int x, int y, int z, ushort frame, int timer)
 {
+#if 0
     short ret;
     asm volatile (
       "push %5\n"
       "call ASM_add_static\n"
         : "=r" (ret) : "a" (x), "d" (y), "b" (z), "c" (frame), "g" (timer));
     return ret;
+#else
+    ThingIdx thing;
+    struct SimpleThing *p_sthing;
+
+    if (map_coords_limit(NULL, NULL, NULL, x, y, z))
+        return 0;
+    if (sthings_used > STHINGS_LIMIT - 5)
+        return 0;
+
+    thing = get_new_sthing();
+    if (thing == 0)
+        return 0;
+    if (thing <= -STHINGS_LIMIT-1)
+        return 0;
+    p_sthing = &sthings[thing];
+    p_sthing->Z = MAPCOORD_TO_PRCCOORD(z,127);
+    p_sthing->X = MAPCOORD_TO_PRCCOORD(x,127);
+    p_sthing->Y = y;
+    p_sthing->Parent = 0;
+    p_sthing->StartFrame = frame - 1;
+    p_sthing->Frame = nstart_ani[p_sthing->StartFrame + 1];
+    add_node_sthing(thing);
+    p_sthing->Type = SmTT_STATIC;
+    p_sthing->Radius = 64;
+    p_sthing->Flag = 4;
+    p_sthing->Timer1 = timer;
+    return thing;
+#endif
 }
 
 TbBool thing_is_within_circle(ThingIdx thing, short X, short Z, ushort R)
