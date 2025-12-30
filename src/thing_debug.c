@@ -23,10 +23,12 @@
 #include "bfline.h"
 #include "bfmath.h"
 
+#include "drawtext.h"
+
 #include "bigmap.h"
 #include "building.h"
 #include "command.h"
-#include "drawtext.h"
+#include "drawtext_wrp.h"
 #include "display.h"
 #include "engintrns.h"
 #include "game.h"

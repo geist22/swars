@@ -881,27 +881,13 @@ void check_mouse_over_face(struct PolyPoint *pt1, struct PolyPoint *pt2,
         : : "a" (pt1), "d" (pt2), "b" (pt3), "c" (face), "g" (type));
 }
 
-void draw_sort_sprite1a(ushort sspr)
+void draw_sort_sprite1a_callback(ushort sspr)
 {
-#if 0
-    asm volatile (
-      "call ASM_draw_sort_sprite1a\n"
-        : : "a" (a1));
-    return;
-#endif
-    struct SortSprite *p_sspr;
     struct Thing *p_thing;
     PlayerInfo *p_locplayer;
 
-    p_sspr = &game_sort_sprites[sspr];
-    p_thing = p_sspr->PThing;
     p_locplayer = &players[local_player_no];
-
-    word_1A5834 = 120;
-    word_1A5836 = 120;
-    draw_sorted_sprite1a(p_sspr->Frame, p_sspr->X, p_sspr->Y, p_sspr->Brightness);
     p_thing = game_sort_sprites[sspr].PThing;
-
     if ((p_locplayer->TargetType <= TrgTp_DroppedTng) && (p_thing->Type == SmTT_DROPPED_ITEM)) {
         check_mouse_overlap_item(sspr);
     }
@@ -913,6 +899,24 @@ void draw_sort_sprite1a(ushort sspr)
         else if (p_thing->SubType == 48)
             check_mouse_overlap(sspr);
     }
+}
+
+void draw_sort_sprite1a(ushort sspr)
+{
+#if 0
+    asm volatile (
+      "call ASM_draw_sort_sprite1a\n"
+        : : "a" (a1));
+    return;
+#endif
+    struct SortSprite *p_sspr;
+
+    p_sspr = &game_sort_sprites[sspr];
+
+    word_1A5834 = 120;
+    word_1A5836 = 120;
+    draw_sorted_sprite1a(p_sspr->Frame, p_sspr->X, p_sspr->Y, p_sspr->Brightness);
+    draw_sort_sprite1a_callback(sspr);
 }
 
 void draw_ex_face(ushort exface)

@@ -14,6 +14,8 @@ syndwarsfx_SOURCES = \
 	../swrendersoft/include/app_text_cw.h \
 	../swrendersoft/src/app_text_sf.c \
 	../swrendersoft/include/app_text_sf.h \
+	../swrendersoft/src/drawtext.c \
+	../swrendersoft/include/drawtext.h \
 	../swrendersoft/src/enginbckt.c \
 	../swrendersoft/include/enginbckt.h \
 	../swrendersoft/src/enginfloor.c \
@@ -86,8 +88,8 @@ syndwarsfx_SOURCES = \
 	display.h \
 	dos.c \
 	dos.h \
-	drawtext.c \
-	drawtext.h \
+	drawtext_wrp.c \
+	drawtext_wrp.h \
 	engindrwlstm.c \
 	engindrwlstm.h \
 	engindrwlstx.c \

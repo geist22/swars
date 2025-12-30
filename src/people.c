@@ -30,6 +30,7 @@
 #include "building.h"
 #include "command.h"
 #include "display.h"
+#include "drawtext_wrp.h"
 #include "drawtext.h"
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"
