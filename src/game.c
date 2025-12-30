@@ -3510,7 +3510,7 @@ TbBool game_setup(void)
     }
     test_open(15);
     debug_trace_setup(1);
-    if (is_single_game && (ingame.CurrentMission != 0))
+    if (is_single_game && (ingame.CurrentMission != 0) && ret)
     {
         prep_single_mission();
     }
