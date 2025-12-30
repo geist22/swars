@@ -56,6 +56,7 @@
 #include "enginbckt.h"
 #include "engindrwlstm.h"
 #include "engindrwlstx.h"
+#include "engindrwlstx_tng.h"
 #include "enginfexpl.h"
 #include "enginfloor.h"
 #include "enginlights.h"

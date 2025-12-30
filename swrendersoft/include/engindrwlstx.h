@@ -99,9 +99,6 @@ void set_nuclear_shade_timer(ulong tmval);
 void draw_drawitem_1(ushort dihead);
 void draw_drawitem_2(ushort dihead);
 
-// Drawing outside of the drawlist
-void number_player(struct Thing *p_person, ubyte n);
-
 /******************************************************************************/
 #ifdef __cplusplus
 }
