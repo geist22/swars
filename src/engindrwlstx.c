@@ -96,8 +96,6 @@ extern s32 engn_nuclear_shade_z;
 extern short word_1A5834;
 extern short word_1A5836;
 
-extern long sprite_over_16x16;
-
 extern ubyte byte_1C844E;
 
 struct DrawItem *game_draw_list;
@@ -136,11 +134,12 @@ ubyte byte_15399C[] = {
   2, 0, 2, 0, 0,
 };
 /******************************************************************************/
-void draw_unkn2_scaled_alpha_sprite(ubyte *frv, ushort frm, short x, short y,
-  ubyte bri);
-void draw_unkn3_scaled_alpha_sprite(ushort frm, short x, short y, ubyte bri);
-void draw_unkn4_scaled_alpha_sprite(ubyte *frv, ushort frm, short x, short y,
-  ubyte bri);
+void draw_sorted_sprite1b(ubyte *frv, ushort frm, short x, short y,
+  ubyte bri, ubyte angle);
+void draw_sort_sprite1c(ushort sspr);
+void draw_phwoar(ushort ph);
+void draw_sort_sprite_number(ushort sspr);
+void draw_fire_flame(ushort flm);
 
 void reset_drawlist(void)
 {
@@ -700,36 +699,6 @@ void draw_object_face3_textrd_dk(ushort face)
     }
     if (byte_1C844E) {
         swap_wscreen();
-    }
-}
-
-void debug_check_unkn_sprite_size(const char *src_fname, int src_line)
-{
-    if (!sprite_over_16x16 && (m_sprites[1158].SWidth > 16 || m_sprites[1158].SHeight > 16))
-        sprite_over_16x16 = 1;
-}
-
-void draw_sorted_sprite1b(ubyte *frv, ushort frm, short x, short y,
-  ubyte bri, ubyte angle)
-{
-#if 0
-    debug_check_unkn_sprite_size(__FILE__, __LINE__);
-#endif
-
-    if ((frv[4] != 0) && (angle > 1) && (angle < 7))
-        bri += 15;
-    if (bri < 10)
-        bri = 10;
-    if (bri > 60)
-        bri = 60;
-
-    if ((overall_scale == 256) || (overall_scale <= 0) || (overall_scale >= 4096))
-    {
-        draw_unkn4_scaled_alpha_sprite(frv, frm, x, y, bri);
-    }
-    else
-    {
-        draw_unkn2_scaled_alpha_sprite(frv, frm, x, y, bri);
     }
 }
 
@@ -1857,64 +1826,6 @@ void draw_object_face4_pole(ushort face4)
     draw_trigpoly(&point4, &point1, &point3);
 }
 
-void draw_sorted_sprite1a(ushort frm, short x, short y, ubyte bright)
-{
-#if 0
-    asm volatile (
-      "call ASM_draw_sorted_sprite1a\n"
-        : : "a" (frm), "d" (x), "b" (y), "c" (bright));
-    return;
-#endif
-    int sscale;
-    ubyte bri;
-
-    sscale = overall_scale;
-    bri = bright;
-    if (bri < 10)
-        bri = 10;
-    if (bri > 48)
-        bri = 48;
-
-    if ((sscale == 256) || (sscale <= 0) || (sscale >= 4096))
-    {
-        draw_unkn3_scaled_alpha_sprite(frm, x, y, bri);
-    }
-    else
-    {
-        draw_unkn1_scaled_alpha_sprite(frm, x, y, sscale, bri);
-    }
-}
-
-void draw_sort_sprite1c_sub(ushort frm, short x, short y, ubyte bright, ushort scale)
-{
-    int sscale;
-    ubyte bri;
-
-    sscale = (scale * overall_scale) >> 8;
-
-    bri = bright;
-    if (bri < 10)
-        bri = 10;
-    if (bri > 48)
-        bri = 48;
-
-    if (sscale == 256 || sscale == 0 || sscale >= 0x1000)
-    {
-        draw_unkn3_scaled_alpha_sprite(frm, x, y, bri);
-    }
-    else
-    {
-        draw_unkn1_scaled_alpha_sprite(frm, x, y, sscale, bri);
-    }
-}
-
-void draw_sort_sprite1c(ushort sspr)
-{
-    struct SortSprite *p_sspr;
-    p_sspr = &game_sort_sprites[sspr];
-    draw_sort_sprite1c_sub(p_sspr->Frame, p_sspr->X, p_sspr->Y, p_sspr->Brightness, p_sspr->Scale);
-}
-
 void draw_sort_line1a(ushort sln)
 {
     struct SortLine *p_sline;
@@ -2717,53 +2628,6 @@ void draw_shrapnel(ushort shrap)
 }
 
 /**
- * Draw smoke cloud sprite.
- *
- * @param ph Index of Phwoar instance.
- */
-void draw_phwoar(ushort ph)
-{
-    struct Phwoar *p_phwoar;
-    struct Element *p_elem;
-    ushort el;
-    int point_x, point_y;
-
-    p_phwoar = &phwoar[ph];
-    {
-        struct SpecialPoint *p_scrpoint;
-
-        p_scrpoint = &game_screen_point_pool[p_phwoar->PointOffset];
-        point_x = p_scrpoint->X + dword_176D00;
-        point_y = p_scrpoint->Y + dword_176D04;
-    }
-
-    el = frame[p_phwoar->f].FirstElement;
-    for (p_elem = &melement_ani[el]; p_elem > melement_ani; p_elem = &melement_ani[el])
-    {
-        struct TbSprite *p_spr;
-
-        el = p_elem->Next;
-        p_spr = (struct TbSprite *)((ubyte *)m_sprites + p_elem->ToSprite);
-        if ((p_spr <= m_sprites) || (p_spr >= m_sprites_end))
-            continue;
-
-        lbDisplay.DrawFlags = p_elem->Flags & 0x07;
-        if ((p_elem->Flags & 0xFE00) == 0)
-        {
-            int el_x, el_y;
-            el_x = point_x + ((p_elem->X * overall_scale) >> 9);
-            el_y = point_y + ((p_elem->Y * overall_scale) >> 9);
-            LbSpriteDrawResized(el_x, el_y, (16 * overall_scale) >> 8, p_spr);
-        }
-        if (word_1A5834 > p_elem->X >> 1)
-            word_1A5834 = p_elem->X >> 1;
-        if (word_1A5836 > p_elem->Y >> 1)
-            word_1A5836 = p_elem->Y >> 1;
-    }
-    lbDisplay.DrawFlags = 0;
-}
-
-/**
  * Draw health bar of a vehicle.
  *
  * @param sspr Index of SortSprite instance which stores reference to the vehicle thing.
@@ -2968,36 +2832,6 @@ void draw_object_face3_deep_rdr(ushort face)
             check_mouse_over_face(&point1, &point2, &point3, face, 1);
         }
     }
-}
-
-void draw_fire_flame(ushort flm)
-{
-    struct FireFlame *p_flame;
-    struct SpecialPoint *p_scrpoint;
-
-    p_flame = &FIRE_flame[flm];
-    if (p_flame->big != 0)
-    {
-        p_scrpoint = &game_screen_point_pool[p_flame->PointOffset];
-        draw_unkn1_scaled_alpha_sprite(p_flame->frame, p_scrpoint->X + dword_176D00,
-          p_scrpoint->Y + dword_176D04, (overall_scale * (p_flame->big + 128)) >> 7, 0x20);
-    }
-    else
-    {
-        p_scrpoint = &game_screen_point_pool[p_flame->PointOffset];
-        draw_sorted_sprite1a(p_flame->frame, p_scrpoint->X + dword_176D00,
-          p_scrpoint->Y + dword_176D04, 0x20);
-    }
-}
-
-void draw_sort_sprite_number(ushort sspr)
-{
-    char locstr[50];
-    struct SortSprite *p_sspr;
-
-    p_sspr = &game_sort_sprites[sspr];
-    sprintf(locstr, "%d", (int)p_sspr->PThing);
-    draw_text(p_sspr->X, p_sspr->Y, locstr, colour_lookup[ColLU_RED]);
 }
 
 void number_player(struct Thing *p_person, ubyte n)
