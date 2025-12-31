@@ -939,6 +939,7 @@ struct ThingOldV9 { // sizeof=216
 /******************************************************************************/
 extern struct Thing *things;
 extern ThingIdx things_used_head;
+extern ThingIdx things_empty_head;
 extern ushort things_used;
 extern ThingIdx same_type_head[256+32];
 extern short static_radii[];

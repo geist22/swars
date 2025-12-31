@@ -18411,7 +18411,7 @@ GLOBAL_FUNC (ASM_veh_add)	/* 0x041A80 */
 
 
 /*----------------------------------------------------------------*/
-find_face_texture:	/* 0x041EC0 */
+GLOBAL_FUNC(ASM_find_face_texture)	/* 0x041EC0 */
 /*----------------------------------------------------------------*/
 		push   %ebx
 		push   %ecx
@@ -18951,7 +18951,7 @@ draw_purple_rect:	/* 0x042574 */
 
 
 /*----------------------------------------------------------------*/
-point_unkn_func_03:	/* 0x042864 */
+GLOBAL_FUNC(ASM_point_unkn_func_03)	/* 0x042864 */
 /*----------------------------------------------------------------*/
 		push   %ebx
 		push   %ecx
@@ -59210,16 +59210,16 @@ GLOBAL_FUNC(ASM_sub_6031C)	/* 0x6031C */
 		xor    %dh,%ah
 		mov    %eax,0x10(%esp)
 		mov    EXPORT_SYMBOL(next_object),%ax
-		mov    %ax,data_1aa320
+		mov    %ax,EXPORT_SYMBOL(old_next_object)
 		mov    EXPORT_SYMBOL(next_object_face),%ax
-		mov    %ax,data_1aa322
+		mov    %ax,EXPORT_SYMBOL(old_next_object_face)
 		mov    0x18(%esp),%eax
-		mov    %ax,data_1aa326
+		mov    %ax,EXPORT_SYMBOL(old_next_object_point)
 		mov    EXPORT_SYMBOL(next_normal),%ax
-		mov    %ax,data_1aa328
+		mov    %ax,EXPORT_SYMBOL(old_next_normal)
 		mov    EXPORT_SYMBOL(next_face_texture),%ax
 		mov    EXPORT_SYMBOL(mem_game)+125,%ebx
-		mov    %ax,data_1aa32a
+		mov    %ax,EXPORT_SYMBOL(old_next_face_texture)
 		xor    %eax,%eax
 		mov    %esi,%edi
 		mov    EXPORT_SYMBOL(next_object),%ax
@@ -59259,7 +59259,7 @@ GLOBAL_FUNC(ASM_sub_6031C)	/* 0x6031C */
 		mov    %si,0x14(%eax)
 		mov    0x10(%esp),%ebx
 		mov    %dx,0x16(%eax)
-		mov    things_empty_head,%dx
+		mov    EXPORT_SYMBOL(things_empty_head),%dx
 		mov    %bx,0x10(%eax)
 		mov    %dx,0xa(%eax)
 		mov    EXPORT_SYMBOL(next_object_face),%dx
@@ -59307,7 +59307,7 @@ GLOBAL_FUNC(ASM_sub_6031C)	/* 0x6031C */
 		inc    %ebx
 		add    %esi,%eax
 		mov    %bx,EXPORT_SYMBOL(next_object_point)
-		call   point_unkn_func_03
+		call   ac_point_unkn_func_03
 		xor    %eax,%eax
 		mov    EXPORT_SYMBOL(ingame)+0x965,%ax # ingame.LowerMemoryUse
 		cmp    $0x3,%eax
@@ -59464,7 +59464,7 @@ GLOBAL_FUNC(ASM_sub_6031C)	/* 0x6031C */
 		mov    prim_face_textures,%esi
 		shl    $0x4,%eax
 		add    %esi,%eax
-		call   find_face_texture
+		call   ac_find_face_texture
 		mov    %ax,0x6(%edx)
 		xor    %eax,%eax
 		mov    0x6(%edx),%ax
@@ -77703,7 +77703,7 @@ init_just_things:	/* 0x075CF0 */
 		mov    $0x1,%ecx
 		mov    things,%eax
 		xor    %esi,%esi
-		mov    %cx,things_empty_head
+		mov    %cx,EXPORT_SYMBOL(things_empty_head)
 		mov    %si,things_used_head
 		mov    %si,EXPORT_SYMBOL(things_used)
 		mov    %si,EXPORT_SYMBOL(sthings_used)
@@ -77750,7 +77750,7 @@ GLOBAL_FUNC (ASM_get_new_thing)	/* 0x075E30 */
 		push   %edx
 		push   %esi
 		push   %edi
-		mov    things_empty_head,%si
+		mov    EXPORT_SYMBOL(things_empty_head),%si
 		mov    things_used_head,%di
 		xor    %eax,%eax
 		mov    EXPORT_SYMBOL(things_used),%ax
@@ -77794,7 +77794,7 @@ GLOBAL_FUNC (ASM_get_new_thing)	/* 0x075E30 */
 		mov    %dx,EXPORT_SYMBOL(things_used)
 	jump_75ee2:
 		mov    %di,things_used_head
-		mov    %si,things_empty_head
+		mov    %si,EXPORT_SYMBOL(things_empty_head)
 		pop    %edi
 		pop    %esi
 		pop    %edx
@@ -77850,12 +77850,12 @@ func_75ef8:
 		test   %ax,%ax
 		jne    jump_75f3b
 	jump_75f6c:
-		cmp    things_empty_head,%bx
+		cmp    EXPORT_SYMBOL(things_empty_head),%bx
 		jne    jump_75fa1
 		mov    0x4(%esi),%edx
 		mov    0x6(%esi),%ax
 		sar    $0x10,%edx
-		mov    %ax,things_empty_head
+		mov    %ax,EXPORT_SYMBOL(things_empty_head)
 		lea    0x0(,%edx,4),%eax
 		add    %edx,%eax
 		shl    $0x2,%eax
@@ -77968,16 +77968,16 @@ GLOBAL_FUNC(ASM_remove_thing)	/* 0x076050 */
 		shl    $0x2,%eax
 		mov    things,%esi
 		add    %ebx,%eax
-		mov    things_empty_head,%bx
+		mov    EXPORT_SYMBOL(things_empty_head),%bx
 		mov    %bx,0x6(%esi,%eax,8)
 		xor    %ebx,%ebx
-		mov    things_empty_head,%bx
+		mov    EXPORT_SYMBOL(things_empty_head),%bx
 		movw   $0x0,0x4(%esi,%eax,8)
 		lea    0x0(,%ebx,4),%eax
 		add    %ebx,%eax
 		shl    $0x2,%eax
 		add    %ebx,%eax
-		mov    %dx,things_empty_head
+		mov    %dx,EXPORT_SYMBOL(things_empty_head)
 		mov    %dx,0x4(%esi,%eax,8)
 		decw   EXPORT_SYMBOL(things_used)
 		pop    %edi
@@ -181899,7 +181899,7 @@ sthings_empty_head:	/* 0x19EC82 */
 		.short  0x0
 GLOBAL (sthings_used_head)	/* 0x19EC84 */
 		.short  0x0
-things_empty_head:	/* 0x19EC86 */
+GLOBAL (things_empty_head)	/* 0x19EC86 */
 		.short  0x0
 GLOBAL (things_used_head)	/* 0x19EC88 */
 		.short  0x0
@@ -182368,16 +182368,18 @@ data_1aa2c0:
 		.fill   0x38
 ingame__Tmaps:	/* 0x1AA2F8 */
 		.fill   0x28
-data_1aa320:
+GLOBAL (ASM_old_next_object)	/* 0x1AA320 */
 		.short  0x0
-data_1aa322:
-		.long	0x0
-data_1aa326:
+GLOBAL (ASM_old_next_object_face)
 		.short  0x0
-data_1aa328:
 		.short  0x0
-data_1aa32a:
-		.long	0x0
+GLOBAL (ASM_old_next_object_point)
+		.short  0x0
+GLOBAL (ASM_old_next_normal)
+		.short  0x0
+GLOBAL (ASM_old_next_face_texture)
+		.short  0x0
+		.short  0x0
 data_1aa32e:
 		.short  0x0
 GLOBAL (data_1aa330)	/* 0x1aa330 */

@@ -181,9 +181,6 @@ extern ulong stored_l3d_next_local_mat[1];
 extern ulong stored_level3d_inuse;
 
 extern unsigned char *display_palette;
-extern unsigned short unkn2_pos_x;
-extern unsigned short unkn2_pos_y;
-extern unsigned short unkn2_pos_z;
 extern int data_1c8428;
 const char *primvehobj_fname = "qdata/primveh.obj";
 
