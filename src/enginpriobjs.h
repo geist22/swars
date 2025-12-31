@@ -32,26 +32,6 @@ struct SinglePoint;
 struct SingleObjectFace3;
 struct SingleObjectFace4;
 
-/*typedef struct {
-  char field_0[35];
-  char field_23;
-} PrimObject;
-
-typedef struct {
-  char field_0[39];
-  char field_27;
-} PrimObjectFace4;
-
-typedef struct {
-  char field_0[31];
-  char field_1F;
-} PrimObjectFace;
-
-typedef struct {
-  char field_0[9];
-  char field_9;
-} PrimObjectPoint;*/
-
 #pragma pack()
 /******************************************************************************/
 extern struct SinglePoint *prim_object_points;
