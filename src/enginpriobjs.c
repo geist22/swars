@@ -135,13 +135,47 @@ ushort find_floor_texture(struct SingleFloorTexture *p_textr)
     return 0;
 }
 
-ushort obj_face3_create_normal(ushort a1, struct SingleObjectFace3 *p_oface)
+void calc_normal(short face, struct Normal *p_normal)
 {
+    asm volatile ("call ASM_calc_normal\n"
+        : : "a" (face), "d" (p_normal));
+}
+
+ushort obj_face3_create_normal(short face)
+{
+#if 0
     ushort ret;
     asm volatile (
       "call ASM_obj_face3_create_normal\n"
-        : "=r" (ret) : "a" (a1), "d" (p_oface));
+        : "=r" (ret) : "a" (face));
     return ret;
+#else
+    struct Normal loc_norm;
+    struct Normal *p_nnorm;
+    ushort i;
+
+    calc_normal(face, &loc_norm);
+    for (i = 0; i < next_normal; i++) //TODO why are we treating 0 as correct value?
+    {
+        p_nnorm = &game_normals[i];
+        if ((loc_norm.NX == p_nnorm->NX) &&
+          (loc_norm.NY == p_nnorm->NY) &&
+          (loc_norm.NZ == p_nnorm->NZ))
+            break;
+    }
+    if (i == next_normal)
+    {
+        ushort new_norm;
+
+        if (next_normal + 1 >= mem_game[8].N)
+            return 0;
+        new_norm = next_normal++;
+        p_nnorm = &game_normals[new_norm];
+        memcpy(p_nnorm, &loc_norm, sizeof(struct Normal));
+        i = new_norm;
+    }
+    return i;
+#endif
 }
 
 void update_texture_from_anim_tmap(ushort ani_tmap)
@@ -305,7 +339,7 @@ void copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty)
         p_nface->PointNo[0] = new_pt_beg + p_pface->PointNo[0] - pt_beg;
         p_nface->PointNo[1] = new_pt_beg + p_pface->PointNo[1] - pt_beg;
         p_nface->PointNo[2] = new_pt_beg + p_pface->PointNo[2] - pt_beg;
-        p_nface->FaceNormal = obj_face3_create_normal(new_face, p_nface);
+        p_nface->FaceNormal = obj_face3_create_normal(new_face);
         p_nface->Light0 = 0;
         p_nface->Light1 = 0;
         p_nface->Light2 = 0;
