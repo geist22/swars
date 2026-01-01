@@ -28,15 +28,11 @@ extern "C" {
 #pragma pack(1)
 
 struct SingleTexture;
-
-typedef struct {
-  char field_0[17];
-  char field_11;
-} Prim4Texture;
+struct SingleFloorTexture;
 
 #pragma pack()
 /******************************************************************************/
-extern Prim4Texture *prim4_textures;
+extern struct SingleFloorTexture *prim4_textures;
 extern struct SingleTexture *prim_face_textures;
 extern ushort prim4_textures_count;
 extern ushort prim_face_textures_count;

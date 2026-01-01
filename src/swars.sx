@@ -59527,7 +59527,7 @@ GLOBAL_FUNC(ASM_sub_6031C)	/* 0x6031C */
 		xor    %eax,%eax
 		mov    0x8(%ebx),%ax
 		lea    0x0(,%eax,2),%esi
-		mov    %cx,data_19cb58(%esi)
+		mov    %cx,EXPORT_SYMBOL(word_19CB58)(%esi)
 		mov    %ecx,%eax
 		mov    %cx,0x8(%edx)
 		mov    EXPORT_SYMBOL(next_anim_tmap),%cx
@@ -59662,7 +59662,7 @@ GLOBAL_FUNC(ASM_sub_6031C)	/* 0x6031C */
 		xor    %eax,%eax
 		mov    0x8(%ebx),%ax
 		lea    0x0(,%eax,2),%esi
-		mov    data_19cb58(%esi),%di
+		mov    EXPORT_SYMBOL(word_19CB58)(%esi),%di
 		test   %di,%di
 		je     jump_60779
 		mov    %di,0x8(%edx)
@@ -181798,7 +181798,7 @@ GLOBAL (linear_vec_pal)	/* 0x19CA54 */
 		.fill   0x100
 GLOBAL (scratch_buf1)	/* 0x19CB54 */
 		.long	0x0
-data_19cb58:
+GLOBAL (word_19CB58)	/* 0x19CB58 */
 		.fill   0x84
 
 		.long	0x0
