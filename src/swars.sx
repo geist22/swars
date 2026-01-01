@@ -18540,7 +18540,7 @@ GLOBAL_FUNC(ASM_find_floor_texture)
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC(ASM_func_420f8)	/* 0x420f8 */
+GLOBAL_FUNC(ASM_obj_face4_create_normal)	/* 0x420f8 */
 /*----------------------------------------------------------------*/
 		push   %ebx
 		push   %ecx
@@ -20825,7 +20825,7 @@ quick_light_unkn_func_06:	/* 0x043F88 */
 	jump_4413b:
 		xor    %eax,%eax
 		mov    %cx,%ax
-		call   ac_func_420f8
+		call   ac_obj_face4_create_normal
 		mov    %ax,0x20(%ebx)
 	jump_44149:
 		mov    EXPORT_SYMBOL(next_quick_light),%si
@@ -59613,7 +59613,7 @@ GLOBAL_FUNC(ASM_sub_6031C)	/* 0x6031C */
 		mov    %bx,0x6(%edx)
 		dec    %eax
 		and    $0xffff,%eax
-		call   ac_func_420f8
+		call   ac_obj_face4_create_normal
 		movw   $0x0,0x18(%edx)
 		movw   $0x0,0x1a(%edx)
 		mov    %ax,0x20(%edx)

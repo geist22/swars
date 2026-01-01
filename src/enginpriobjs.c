@@ -153,11 +153,11 @@ ushort update_texture_from_anim_tmap(ushort a1)
     return ret;
 }
 
-int func_420f8(ushort a1)
+int obj_face4_create_normal(ushort a1)
 {
     int ret;
     asm volatile (
-      "call ASM_func_420f8\n"
+      "call ASM_obj_face4_create_normal\n"
         : "=r" (ret) : "a" (a1));
     return ret;
 }
@@ -376,7 +376,7 @@ void sub_6031C(short tx, short tz, short prim_obj, short ty)
         p_nface->PointNo[1] = p_pface->PointNo[1] - pt_beg + new_pt_beg;
         p_nface->PointNo[2] = p_pface->PointNo[2] - pt_beg + new_pt_beg;
         p_nface->PointNo[3] = p_pface->PointNo[3] - pt_beg + new_pt_beg;
-        p_nface->FaceNormal = func_420f8(new_face);
+        p_nface->FaceNormal = obj_face4_create_normal(new_face);
         p_nface->Light0 = 0;
         p_nface->Light1 = 0;
         p_nface->Light2 = 0;
