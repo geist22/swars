@@ -18191,7 +18191,7 @@ GLOBAL_FUNC (ASM_veh_add)	/* 0x041A80 */
 		mov    0x18(%ebp),%eax
 		sar    $0x8,%eax
 		and    $0xffff,%eax
-		call   ac_sub_6031C
+		call   ac_copy_prim_obj_to_game_object
 		mov    (%esp),%eax
 		movl   $0x0,0x18(%eax)
 		movl   $0x2800,0x1c(%eax)
@@ -18277,7 +18277,7 @@ GLOBAL_FUNC (ASM_veh_add)	/* 0x041A80 */
 		mov    0x18(%ebp),%eax
 		sar    $0x8,%eax
 		and    $0xffff,%eax
-		call   ac_sub_6031C
+		call   ac_copy_prim_obj_to_game_object
 		mov    (%esp),%eax
 		movl   $0x0,0x18(%eax)
 		movl   $0x1e00,0x1c(%eax)
@@ -18363,7 +18363,7 @@ GLOBAL_FUNC (ASM_veh_add)	/* 0x041A80 */
 		mov    0x18(%ebp),%eax
 		sar    $0x8,%eax
 		and    $0xffff,%eax
-		call   ac_sub_6031C
+		call   ac_copy_prim_obj_to_game_object
 		mov    (%esp),%eax
 		movl   $0x0,0x18(%eax)
 		movl   $0x1e00,0x1c(%eax)
@@ -59185,7 +59185,7 @@ create_unkn_building_subtp27:	/* 0x0601FC */
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC(ASM_sub_6031C)	/* 0x6031C */
+GLOBAL_FUNC(ASM_copy_prim_obj_to_game_object)	/* 0x6031C */
 /*----------------------------------------------------------------*/
 		push   %esi
 		push   %edi
@@ -60198,7 +60198,7 @@ func_61628:
 		movswl %ax,%ebx
 		xor    %ecx,%ecx
 		mov    %edi,%eax
-		call   ac_sub_6031C
+		call   ac_copy_prim_obj_to_game_object
 		mov    EXPORT_SYMBOL(next_object),%ax
 		dec    %eax
 		and    $0xffff,%eax
@@ -75993,7 +75993,7 @@ GLOBAL_FUNC (ASM_init_level_3d)	/* 0x07445C */
 		mov    %ebp,%edx
 		movswl %ax,%ebx
 		mov    %ebp,%eax
-		call   ac_sub_6031C
+		call   ac_copy_prim_obj_to_game_object
 		mov    EXPORT_SYMBOL(next_object),%ax
 		dec    %eax
 		and    $0xffff,%eax
@@ -141061,7 +141061,7 @@ init_unkn1thing:	/* 0x0BBFC0 */
 		sar    $0x8,%eax
 		and    $0xffff,%eax
 		mov    %esi,%ebx
-		call   ac_sub_6031C
+		call   ac_copy_prim_obj_to_game_object
 		mov    EXPORT_SYMBOL(next_object),%ax
 		dec    %eax
 		and    $0xffff,%eax

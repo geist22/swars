@@ -166,10 +166,10 @@ void prim_obj_mem_debug(int itm_beg, int itm_end)
 {
 }
 
-void sub_6031C(short tx, short tz, short prim_obj, short ty)
+void copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty)
 {
 #if 0
-    asm volatile ("call ASM_sub_6031C\n"
+    asm volatile ("call ASM_copy_prim_obj_to_game_object\n"
         : : "a" (tx), "d" (tz), "b" (prim_obj), "c" (ty));
 #else
     struct SingleObject *p_psngobj;
@@ -193,10 +193,7 @@ void sub_6031C(short tx, short tz, short prim_obj, short ty)
     old_next_normal = next_normal;
     old_next_face_texture = next_face_texture;
 
-    if (next_object > mem_game[5].N)
-        return;
-
-    if (prim_obj <= 0)
+    if (prim_obj < 0)
         prim_obj = -prim_obj;
 
     new_pt_beg = next_object_point;
@@ -206,6 +203,8 @@ void sub_6031C(short tx, short tz, short prim_obj, short ty)
     pt_beg = p_psngobj->StartPoint;
     pt_end = p_psngobj->EndPoint;
 
+    if (next_object > mem_game[5].N)
+        return;
     new_obj = next_object++;
     p_nsngobj = &game_objects[new_obj];
     p_nsngobj->OffsetX = tx;
@@ -327,7 +326,7 @@ void sub_6031C(short tx, short tz, short prim_obj, short ty)
                 struct AnimTmap *p_panitmap;
                 ushort new_anitmap;
 
-                if (next_anim_tmap + 1 > mem_game[10].N)
+                if (next_anim_tmap > mem_game[10].N)
                     return;
                 new_anitmap = next_anim_tmap++;
                 p_nanitmap = &game_anim_tmaps[new_anitmap];

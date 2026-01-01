@@ -309,7 +309,7 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
                 byte_1C83D1 = 0;
 
                 n = next_normal;
-                sub_6031C(PRCCOORD_TO_MAPCOORD(p_thing->X), PRCCOORD_TO_MAPCOORD(p_thing->Z),
+                copy_prim_obj_to_game_object(PRCCOORD_TO_MAPCOORD(p_thing->X), PRCCOORD_TO_MAPCOORD(p_thing->Z),
                   -prim_unknprop01 - p_thing->StartFrame, PRCCOORD_TO_MAPCOORD(p_thing->Y));
                 k = next_normal;
                 unkn_object_shift_03(next_object - 1);
