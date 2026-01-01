@@ -144,13 +144,37 @@ ushort obj_face3_create_normal(ushort a1, struct SingleObjectFace3 *p_oface)
     return ret;
 }
 
-ushort update_texture_from_anim_tmap(ushort a1)
+void update_texture_from_anim_tmap(ushort ani_tmap)
 {
-    ushort ret;
+#if 0
     asm volatile (
       "call ASM_update_texture_from_anim_tmap\n"
-        : "=r" (ret) : "a" (a1));
-    return ret;
+        :  : "a" (ani_tmap));
+#else
+    struct AnimTmap *p_panitmap;
+    ushort i;
+
+    p_panitmap = &game_anim_tmaps[ani_tmap];
+
+    for (i = 0; i < 10; i++)
+    {
+        ushort prv_txtr;
+
+        prv_txtr = p_panitmap->TMap[i];
+        if (prv_txtr != 0)
+        {
+            struct SingleFloorTexture *p_nftextr;
+            struct SingleFloorTexture *p_pftextr;
+            ushort new_txtr;
+
+            new_txtr = next_floor_texture++;
+            p_nftextr = &game_textures[new_txtr];
+            p_pftextr = &game_textures[prv_txtr];
+            memcpy(p_nftextr, p_pftextr, sizeof(struct SingleFloorTexture));
+            p_panitmap->TMap[i] = new_txtr;
+        }
+    }
+#endif
 }
 
 int obj_face4_create_normal(ushort a1)
