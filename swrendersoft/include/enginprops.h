@@ -57,6 +57,25 @@ extern s32 screen_points_limit;
  */
 extern s32 draw_items_limit;
 
+/** Amount of available quadrangular game textures, cached in render module to optimize speed.
+ *
+ * This variable is used many times while creating drawlist. It needs to be set
+ * by the app based on memory allocation.
+ */
+extern s32 game_textures_limit;
+
+/** Amount of available triangular face textures, cached in render module to optimize speed.
+ *
+ * This variable is used many times while creating drawlist. It needs to be set
+ * by the app based on memory allocation.
+ */
+extern s32 face_textures_limit;
+
+/** Extra buffer, used as texture or mapping data if flags demand.
+ * Declared and controlled by the app.
+ */
+extern ubyte *scratch_buf1;
+
 /******************************************************************************/
 #ifdef __cplusplus
 }

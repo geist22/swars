@@ -541,7 +541,13 @@ TbResult propagate_memory_sizes(void)
     ret = Lb_SUCCESS;
 
     screen_points_limit = mem_game[30].N;
+    assert(screen_points_limit > 0);
     draw_items_limit = mem_game[31].N;
+    assert(draw_items_limit > 0);
+    game_textures_limit = get_memory_ptr_allocated_count((void **)&game_textures);
+    assert(game_textures_limit > 0);
+    face_textures_limit = get_memory_ptr_allocated_count((void **)&game_face_textures);
+    assert(face_textures_limit > 0);
 
     return ret;
 }
