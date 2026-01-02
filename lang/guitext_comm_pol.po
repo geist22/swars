@@ -2555,7 +2555,7 @@ msgstr "Głośność dźwięku"
 #: guitext:421
 msgctxt "Audio settings area"
 msgid "Tension Music Volume"
-msgstr "Głośność muzyki napięcia"
+msgstr "Głośność rytmu napięcia"
 
 #. Limit written on a bar for selecting a numeric value, like volume.
 #: guitext:422
@@ -3197,7 +3197,7 @@ msgstr "Muzyka CD"
 #: guitext:530
 msgctxt "Audio settings option"
 msgid "Tension Music"
-msgstr "Muzyka Napięcia"
+msgstr "Rytm Napięcia"
 
 #. Extra audio additions allowed by capabilities of specific sound cards.
 #: guitext:531
