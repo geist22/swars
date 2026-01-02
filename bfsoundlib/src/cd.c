@@ -276,7 +276,7 @@ void ogg_list_music_tracks(void)
     }
 }
 
-void LogMusicTracksSummary(void)
+ushort CountMusicTracks(void)
 {
     ushort trkno, count, missing;
 
@@ -289,6 +289,7 @@ void LogMusicTracksSummary(void)
             missing = trkno;
     }
     SNDLOGSYNC("CDA list", "valid tracks: %d, first missing: %d", (int)count, (int)missing);
+    return count;
 }
 
 void PlayCDAudioTrack(ushort trkno)
@@ -434,42 +435,63 @@ void StopCD(void)
 
 void InitRedbook(void)
 {
+    const char *reason;
     EnsureAILStartup();
 
     if (cd_init()) {
         CDType = CDTYP_REAL;
         InitialCDVolume = GetCDVolume();
     } else {
-        SNDLOGFAIL("CDA init", "real CD Audio disabled");
-        CDAble = false;
-        CDType = CDTYP_NONE;
+        reason = "init fail";
+        goto fail;
     }
 
-    LogMusicTracksSummary();
+    if (CountMusicTracks() == 0) {
+        reason = "no tracks";
+        goto fail;
+    }
+    return;
+
+fail:
+    SNDLOGFAIL("CDA init", "real CD Audio disabled, reason: %s", reason);
+    CDAble = false;
+    CDType = CDTYP_NONE;
 }
 
 void InitMusicOGG(const char *nmusic_dir)
 {
+    const char *reason;
     EnsureAILStartup();
 
     strncpy(music_dir, nmusic_dir, sizeof(music_dir));
 
     if (!ogg_vorbis_stream_init(&sound_music_stream)) {
-        SNDLOGFAIL("CDA init", "OGG Streamed Audio disabled");
-        CDAble = false;
-        CDType = CDTYP_NONE;
-        return;
+        reason = "init fail";
+        goto fail;
     }
     CDType = CDTYP_OGG;
     InitialCDVolume = GetCDVolume();
     ogg_list_music_tracks();
 
+    if (CountMusicTracks() == 0) {
+        reason = "no tracks";
+        goto fail;
+    }
+
     CDPlayback_handle = AIL_register_timer(cbCDPlayback);
+    if (CDPlayback_handle == -1) {
+        reason = "timer fail";
+        goto fail;
+    }
     AIL_set_timer_period(CDPlayback_handle, 40000);
     AIL_start_timer(CDPlayback_handle);
     CDPlayTimerActive = true;
+    return;
 
-    LogMusicTracksSummary();
+fail:
+    SNDLOGFAIL("CDA init", "OGG Streamed Audio disabled, reason: %s", reason);
+    CDAble = false;
+    CDType = CDTYP_NONE;
 }
 
 void FreeMusicOGG(void)
