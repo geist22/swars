@@ -163,7 +163,7 @@ TbBool LbDirectoryExists(const char *dirname)
 {
     struct stat stbuf;
 
-    if ( access(dirname, 0) || stat(dirname, &stbuf) == -1 )
+    if (access(dirname, F_OK) || (stat(dirname, &stbuf) == -1))
         return false;
     return S_ISDIR(stbuf.st_mode);
 }
