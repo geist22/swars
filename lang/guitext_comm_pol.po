@@ -3029,25 +3029,25 @@ msgstr "IPX"
 #: guitext:500
 msgctxt "MP protocol"
 msgid "Serial COM1"
-msgstr "Łącze szeregowe COM1"
+msgstr "Kabel COM1"
 
 #. One of network protocols.
 #: guitext:501
 msgctxt "MP protocol"
 msgid "Serial COM2"
-msgstr "Łącze szeregowe COM2"
+msgstr "Kabel COM2"
 
 #. One of network protocols.
 #: guitext:502
 msgctxt "MP protocol"
 msgid "Serial COM3"
-msgstr "Łącze szeregowe COM3"
+msgstr "Kabel COM3"
 
 #. One of network protocols.
 #: guitext:503
 msgctxt "MP protocol"
 msgid "Serial COM4"
-msgstr "Łącze szeregowe COM4"
+msgstr "Kabel COM4"
 
 #. One of network protocols.
 #: guitext:504
