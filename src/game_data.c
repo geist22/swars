@@ -116,6 +116,14 @@ PathInfo game_dirs[] = {
   {NULL,		0},
 };
 
+void SetupBflibScreenshotsDir(void)
+{
+    PathInfo *pinfo;
+
+    pinfo = &game_dirs[DirPlace_Scrnshots];
+    LbSetImagesDirectory(pinfo->directory);
+}
+
 const char *
 GetDirectoryUser(void)
 {
@@ -250,6 +258,7 @@ void setup_file_names(void)
 #if LB_FILENAME_TRANSFORM
     lbFileNameTransform = SyndFileNameTransform;
 #endif
+    SetupBflibScreenshotsDir();
     // This fills the path variable; for user, it also creates the folder
     GetDirectoryHdd();
     GetDirectoryUser();
