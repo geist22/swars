@@ -1300,9 +1300,9 @@ void net_unkn_post_init_1(struct TbUnknCommSt *p_a1)
 
     p_a1->field_0 = 0;
     p_a1->field_1 = 0;
-    p_a1->WriteCb = 0;
-    p_a1->ReadCb = 0;
-    p_a1->ExchangeCb = 0;
+    p_a1->WriteCb = NULL;
+    p_a1->ReadCb = NULL;
+    p_a1->ExchangeCb = NULL;
     p_a1->field_2 = 0;
     p_a1->field_6 = 0;
     p_a1->field_110 = 0;
@@ -1404,9 +1404,37 @@ void net_unkn_change_state(struct TbUnknCommSt *p_a1)
     LOGSYNC("  WAITING_FOR_DATA = ", p_a1->field_6 ? "TRUE" : "FALSE");
 }
 
-void net_unkn_sub_335(struct TbUnknCommSt *p_a1, ubyte *a2, uint a3)
+void net_unkn_sub_335(struct TbUnknCommSt *p_ucs1, ubyte *p_buf, uint buf_len)
 {
-    assert(!"Not implemented");
+    char locstr[512];
+    uint i;
+
+    if (p_ucs1->WriteCb == NULL) {
+        return;
+    }
+
+    if (p_ucs1->field_1A7 || p_ucs1->field_2B7)
+    {
+        for (i = 0; i < buf_len; i++) {
+            sprintf(&locstr[3 * i], "%02X ", (int)p_buf[i]);
+        }
+    }
+
+    if (p_ucs1->field_1A7) {
+        locstr[3 * buf_len] = '\0';
+        LOGSYNC("TX DATA: %s", locstr);
+    }
+
+    if (p_ucs1->field_2B7)
+    {
+        locstr[3 * buf_len] = '\n';
+        locstr[3 * buf_len + 1] = '\r';
+        p_ucs1->WriteCb((ubyte *)locstr, 3 * buf_len + 2);
+    }
+    else
+    {
+        p_ucs1->WriteCb(p_buf, buf_len);
+    }
 }
 
 void net_unkn_sub_323(struct TbUnknCommSt *p_ucs1, ubyte *p_inpbuf, uint inpbuf_len)
