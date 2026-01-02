@@ -252,6 +252,7 @@ void ogg_list_music_tracks(void)
     ushort trkno;
 
     trkno = 0;
+    // first is data track, not digital audio
     is_da_track[trkno] = false;
     for (trkno++; trkno < CD_TRACKS_MAX_COUNT; trkno++) {
         char file_name[FILENAME_MAX];
@@ -273,6 +274,21 @@ void ogg_list_music_tracks(void)
     for (trkno++; trkno < CD_TRACKS_MAX_COUNT; trkno++) {
         is_da_track[trkno] = false;
     }
+}
+
+void LogMusicTracksSummary(void)
+{
+    ushort trkno, count, missing;
+
+    count = 0;
+    missing = 0;
+    for (trkno = 0; trkno < CD_TRACKS_MAX_COUNT; trkno++) {
+        if (is_da_track[trkno])
+            count++;
+        else if (missing <= 1)
+            missing = trkno;
+    }
+    SNDLOGSYNC("CDA list", "valid tracks: %d, first missing: %d", (int)count, (int)missing);
 }
 
 void PlayCDAudioTrack(ushort trkno)
@@ -421,13 +437,15 @@ void InitRedbook(void)
     EnsureAILStartup();
 
     if (cd_init()) {
-        InitialCDVolume = GetCDVolume();
         CDType = CDTYP_REAL;
+        InitialCDVolume = GetCDVolume();
     } else {
         SNDLOGFAIL("CDA init", "real CD Audio disabled");
         CDAble = false;
         CDType = CDTYP_NONE;
     }
+
+    LogMusicTracksSummary();
 }
 
 void InitMusicOGG(const char *nmusic_dir)
@@ -442,8 +460,8 @@ void InitMusicOGG(const char *nmusic_dir)
         CDType = CDTYP_NONE;
         return;
     }
-    InitialCDVolume = GetCDVolume();
     CDType = CDTYP_OGG;
+    InitialCDVolume = GetCDVolume();
     ogg_list_music_tracks();
 
     CDPlayback_handle = AIL_register_timer(cbCDPlayback);
@@ -451,6 +469,7 @@ void InitMusicOGG(const char *nmusic_dir)
     AIL_start_timer(CDPlayback_handle);
     CDPlayTimerActive = true;
 
+    LogMusicTracksSummary();
 }
 
 void FreeMusicOGG(void)
