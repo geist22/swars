@@ -3763,7 +3763,7 @@ msgstr "Byt stämning/vapen"
 #: guitext:802
 msgctxt "Controls"
 msgid "Spin View Left"
-msgstr "Snurra visning höger"
+msgstr "Snurra visning vänster"
 
 #. Key for rotating the view right.
 #: guitext:803

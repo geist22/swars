@@ -39,7 +39,7 @@ msgstr "Eliminera de Ostyrda"
 #: scanner.objective:2
 msgctxt "objective text shown on scanner"
 msgid "Return to HQ"
-msgstr "Tervänd till HK"
+msgstr "Återvänd till HK"
 
 #: scanner.objective:3
 msgctxt "objective text shown on scanner"
@@ -584,7 +584,7 @@ msgstr "Ladda upp vapendesign"
 #: scanner.objective:113
 msgctxt "objective text shown on scanner"
 msgid "Return"
-msgstr "Tervänd"
+msgstr "Återvänd"
 
 #: scanner.objective:114
 msgctxt "objective text shown on scanner"
@@ -604,7 +604,7 @@ msgstr "Eliminera styrkorna som kontrollerar flodport"
 #: scanner.objective:117
 msgctxt "objective text shown on scanner, uses across campaigns"
 msgid "Return to IML link"
-msgstr "Tervänd till IML-länk"
+msgstr "Återvänd till IML-länk"
 
 #: scanner.objective:118
 msgctxt "objective text shown on scanner, Church, mission The Dead Zone"
@@ -766,7 +766,7 @@ msgstr "Stjäl dr Schweizers arbete"
 #: scanner.objective:149
 msgctxt "objective text shown on scanner, Church, few missions"
 msgid "Return to us"
-msgstr "Tervänd till oss"
+msgstr "Återvänd till oss"
 
 #: scanner.objective:150
 msgctxt "objective text shown on scanner, Church"
