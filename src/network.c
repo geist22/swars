@@ -1404,14 +1404,116 @@ void net_unkn_change_state(struct TbUnknCommSt *p_a1)
     LOGSYNC("  WAITING_FOR_DATA = ", p_a1->field_6 ? "TRUE" : "FALSE");
 }
 
-void net_unkn_sub_323(struct TbUnknCommSt *p_a1, ubyte *a2, uint a3)
+void net_unkn_sub_335(struct TbUnknCommSt *p_a1, ubyte *a2, uint a3)
 {
     assert(!"Not implemented");
 }
 
-void net_unkn_sub_335(struct TbUnknCommSt *p_a1, ubyte *a2, uint a3)
+void net_unkn_sub_323(struct TbUnknCommSt *p_ucs1, ubyte *p_inpbuf, uint inpbuf_len)
 {
-    assert(!"Not implemented");
+    ubyte locdata[128];
+    ubyte lochead[4];
+    uint i, dtlen, pos;
+    ubyte cksum;
+    TbBool no_data;
+
+    if (p_inpbuf == NULL) {
+        return;
+    }
+    no_data = 1;
+    if ((p_ucs1->field_110 != 0) && (inpbuf_len == p_ucs1->field_8D))
+    {
+        for (i = 0; i < inpbuf_len; i++)
+        {
+            if (p_inpbuf[i] != p_ucs1->field_91[i])
+                no_data = 0;
+        }
+    }
+    else
+    {
+        no_data = 0;
+    }
+    if (p_ucs1->field_1AB != 0) {
+        no_data = 0;
+    }
+
+    if (no_data)
+    {
+        cksum = 0;
+        lochead[0] = 0xAD;
+        cksum ^= lochead[0];
+        lochead[2] = p_ucs1->field_0;
+        cksum ^= lochead[2];
+        lochead[1] = cksum & 0x7F;
+        net_unkn_sub_335(p_ucs1, lochead, 3);
+        for (i = 0; i < 3; i++)
+        {
+            p_ucs1->field_A[i] = lochead[i];
+        }
+        p_ucs1->field_89 = 1;
+        return;
+    }
+
+    p_ucs1->field_110 = 0;
+    pos = 0;
+    for (i = 0; i < inpbuf_len; i++)
+    {
+        ubyte c;
+
+        c = p_inpbuf[i] + 0x56;
+        switch (c)
+        {
+        case 0:
+            locdata[pos++] = 0xAE;
+            locdata[pos++] = 0;
+            break;
+        case 1:
+            locdata[pos++] = 0xAE;
+            locdata[pos++] = 1;
+            break;
+        case 2:
+            locdata[pos++] = 0xAE;
+            locdata[pos++] = 2;
+            break;
+        case 3:
+            locdata[pos++] = 0xAE;
+            locdata[pos++] = 3;
+            break;
+        case 4:
+            locdata[pos++] = 0xAE;
+            locdata[pos++] = 4;
+            break;
+        default:
+            locdata[pos++] = p_inpbuf[i];
+            break;
+        }
+    }
+    dtlen = pos;
+
+    cksum = 0;
+    lochead[0] = 0xAA;
+    cksum ^= lochead[0];
+    lochead[1] = dtlen;
+    cksum ^= lochead[1];
+    lochead[3] = p_ucs1->field_0;
+    cksum ^= lochead[3];
+    for (i = 0; i < dtlen; i++) {
+        cksum ^= locdata[i];
+    }
+    lochead[2] = cksum & 0x7F;
+
+    net_unkn_sub_335(p_ucs1, lochead, 4);
+    net_unkn_sub_335(p_ucs1, locdata, dtlen);
+
+    for (i = 0; i < 4; i++)
+        p_ucs1->field_A[i] = lochead[i];
+    for (i = 0; i < dtlen; i++)
+        p_ucs1->field_A[i + 4] = locdata[i];
+
+    p_ucs1->field_89 = 1;
+    p_ucs1->field_8D = inpbuf_len;
+    for (i = 0; i < inpbuf_len; i++)
+        p_ucs1->field_91[i] = p_inpbuf[i];
 }
 
 sbyte net_unkn_sub_324(struct TbUnknCommSt *p_a1, void *a2, intptr_t *params, int a4)

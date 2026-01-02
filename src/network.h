@@ -101,7 +101,7 @@ struct TbUnknCommSt {
   int field_6;
   ubyte field_A[127];
   int field_89;
-  int field_8D;
+  uint field_8D;
   ubyte field_91[127];
   int field_110;
   ubyte field_114[131];
