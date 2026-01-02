@@ -342,6 +342,9 @@ TbResult LbIffSave(const char *fname, const TbPixel *inp_buffer,
   ulong width, ulong height, const ubyte *pal, TbBool force_fname)
 {
     char full_fname[FILENAME_MAX];
+#if LB_FILENAME_TRANSFORM
+    char real_fname[FILENAME_MAX];
+#endif
     FILE *img_fh;
     TbResult ret;
 
@@ -350,7 +353,18 @@ TbResult LbIffSave(const char *fname, const TbPixel *inp_buffer,
     } else {
         LbPrepareImageFilename(full_fname, fname, "lbm");
     }
-    img_fh = fopen(full_fname, "wb");
+#if LB_FILENAME_TRANSFORM
+    if (lbFileNameTransform != NULL)
+    {
+        lbFileNameTransform(real_fname, full_fname);
+        fname = real_fname;
+    }
+    else
+#endif
+    {
+        fname = full_fname;
+    }
+    img_fh = fopen(fname, "wb");
     if (!img_fh) {
         LOGERR("%s: cannot open: %s", full_fname, strerror(errno));
         return 0;
