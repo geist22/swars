@@ -1008,8 +1008,13 @@ void write_buffer(struct TbSerialDev *p_serdev, const ubyte *buf, uint buflen)
         c = buf[i];
         write_char(p_serdev, c);
     }
-#else
+#elif defined(WIN32)
     // On Windows, WriteFile() should be used
+    //uint written;
+    //TbBool ret;
+    //ret = WriteFile(p_serdev->Handle, buf, buflen, &written, NULL);
+    assert(!"not implemented");
+#else
     // On Linux, write the device file with standard file ops
     assert(!"not implemented");
 #endif
@@ -1026,8 +1031,13 @@ uint read_buffer(struct TbSerialDev *p_serdev, const ubyte *buf, uint buflen, ui
             break;
     }
     return i;
+#elif defined(WIN32)
+    // On Windows, ReadFile() should be used
+    //uint received;
+    //TbBool ret;
+    //ret = ReadFile(p_serdev->Handle, buf, buflen, &received, NULL);
+    assert(!"not implemented");
 #else
-    // On Windows, WriteFile() should be used
     // On Linux, write the device file with standard file ops
     assert(!"not implemented");
 #endif
