@@ -247,7 +247,9 @@ void SyndFileNameTransform(char *out_fname, const char *inp_fname)
 
 void setup_file_names(void)
 {
+#if LB_FILENAME_TRANSFORM
     lbFileNameTransform = SyndFileNameTransform;
+#endif
     // This fills the path variable; for user, it also creates the folder
     GetDirectoryHdd();
     GetDirectoryUser();
