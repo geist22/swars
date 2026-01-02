@@ -26,6 +26,7 @@
 #include "app_text_cw.h"
 #include "app_text_sf.h"
 
+#include "display.h"
 #include "game_sprts.h"
 #include "hud_panel.h"
 #include "mydraw.h"
