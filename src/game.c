@@ -1097,59 +1097,83 @@ int load_people_text(ubyte *buf)
     return totlen;
 }
 
-void load_outro_sprites(void)
+TbResult load_outro_sprites(void)
 {
-    ubyte *data_buf;
+    PathInfo *pinfo;
+    ubyte *p_buf;
     ubyte *outtxt_ptr;
     ubyte *peptxt_ptr;
     int next_pos, next_len;
     int total_allocs;
+    TbResult tret, ret;
+    short max_detail;
+
+    max_detail = 0;//UNKN_sprites_scale / 2;
+    tret = Lb_OK;
+
+    pinfo = &game_dirs[DirPlace_Data];
 
     total_allocs = 3 * EXPECTED_FONT_DAT_TAB_SIZE_8 + 2 * EXPECTED_LANG_TXT_SIZE;
     next_pos = engine_mem_alloc_size - 64000 - total_allocs;
 
     assert(next_pos >= 0);
-    data_buf = engine_mem_alloc_ptr + next_pos;
+    p_buf = engine_mem_alloc_ptr + next_pos;
 
-    next_pos = 0;
-    med_font_data = &data_buf[next_pos];
+#if NEW_GFX_PACKAGE
+    ret = load_sprites_med_font(&p_buf, pinfo->directory, 7, max_detail);
+    if (tret == Lb_OK)
+        tret = ret;
+
+    ret = load_sprites_big_font(&p_buf, pinfo->directory, 6, max_detail + 1);
+    if (tret == Lb_OK)
+        tret = ret;
+
+    ret = load_sprites_med2_font(&p_buf, pinfo->directory, 12, max_detail);
+    if (tret == Lb_OK)
+        tret = ret;
+#else
+    med_font_data = p_buf;
     next_len = LbFileLoadAt("data/tit-font.dat", med_font_data);
-    next_pos += next_len;
-    med_font = (struct TbSprite *)&data_buf[next_pos];
+    p_buf += next_len;
+    med_font = (struct TbSprite *)p_buf;
     next_len = LbFileLoadAt("data/tit-font.tab", med_font);
-    next_pos += next_len;
-    med_font_end = (struct TbSprite *)&data_buf[next_pos];
+    p_buf += next_len;
+    med_font_end = (struct TbSprite *)p_buf;
 
-    big_font_data = &data_buf[next_pos];
+    big_font_data = p_buf;
     next_len = LbFileLoadAt("data/nam-font.dat", big_font_data);
-    next_pos += next_len;
-    big_font = (struct TbSprite *)&data_buf[next_pos];
+    p_buf += next_len;
+    big_font = (struct TbSprite *)p_buf;
     next_len = LbFileLoadAt("data/nam-font.tab", big_font);
-    next_pos += next_len;
-    big_font_end = (struct TbSprite *)&data_buf[next_pos];
+    p_buf += next_len;
+    big_font_end = (struct TbSprite *)p_buf;
 
-    med2_font_data = &data_buf[next_pos];
+    med2_font_data = p_buf;
     next_len = LbFileLoadAt("data/qot-font.dat", med2_font_data);
-    next_pos += next_len;
-    med2_font = (struct TbSprite *)&data_buf[next_pos];
+    p_buf += next_len;
+    med2_font = (struct TbSprite *)p_buf;
     next_len = LbFileLoadAt("data/qot-font.tab", med2_font);
-    next_pos += next_len;
-    med2_font_end = (struct TbSprite *)&data_buf[next_pos];
+    p_buf += next_len;
+    med2_font_end = (struct TbSprite *)p_buf;
+#endif
 
     setup_sprites_med_font();
     setup_sprites_med2_font();
     setup_sprites_big_font();
 
-
-    outtxt_ptr = &data_buf[next_pos];
+    outtxt_ptr = p_buf;
     next_len = load_outro_text(outtxt_ptr);
-    next_pos += next_len;
+    p_buf += next_len;
 
-    peptxt_ptr = &data_buf[next_pos];
+    peptxt_ptr = p_buf;
     next_len = load_people_text(peptxt_ptr);
-    next_pos += next_len;
+    p_buf += next_len;
 
-    assert(next_pos <= total_allocs);
+    assert((p_buf - ((ubyte *)engine_mem_alloc_ptr + next_pos)) <= total_allocs);
+    if (tret == Lb_FAIL) {
+        LOGERR("Some files were not loaded successfully");
+    }
+    return tret;
 }
 
 void fill_floor_textures(void)
