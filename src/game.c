@@ -1190,19 +1190,24 @@ void fill_netgame_agent_pos(int plyr, int group, int num_agents)
     }
 }
 
+/** Change flags of commands containing "until".
+ * This seem to just block execution of commands. Maybe it was
+ * used to one-time fix some specific levels?
+ * Remove pending.
+ */
 void unkn_f_pressed_func(void)
 {
     ThingIdx thing;
     short i;
 
-    thing = same_type_head[1];
+    thing = get_thing_same_type_head(TT_PERSON, -1);
     for (i = 0; thing != 0; i++)
     {
         struct Thing *p_thing;
         ushort cmd;
         struct Command *p_cmd_prev;
 
-        if (i >= max(STHINGS_LIMIT,THINGS_LIMIT)) {
+        if (i >= THINGS_LIMIT) {
             LOGERR("Infinite loop in same type things list");
             break;
         }
