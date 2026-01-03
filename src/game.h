@@ -220,7 +220,6 @@ extern ubyte byte_1C6D4A;
 extern ubyte byte_1C6DDC[5];
 extern ushort word_1C8446;
 extern ushort unkn3de_len;
-extern ubyte byte_19EC6F;
 
 extern ushort weapon_text_index[32];
 extern ushort cybmod_text_index[16];
