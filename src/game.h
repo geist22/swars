@@ -335,13 +335,6 @@ void game_update (void);
 int game_hacky_update(void);
 void game_quit (void);
 
-/** File name transform function, to be used only for DOS calls simulation.
- */
-void game_transform_path (const char *file_name, char *result);
-
-const char *game_get_data_path (void);
-const char *game_get_user_path (void);
-
 void read_conf_file(void);
 TbBool game_setup(void);
 void game_process(void);

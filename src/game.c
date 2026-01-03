@@ -6994,25 +6994,6 @@ void game_quit(void)
     exit(0);
 }
 
-void
-game_transform_path_full(const char *file_name, char *buffer, size_t size)
-{
-    /* skip adding main folder on absolute paths */
-    if (file_name[0] == '\\' || file_name[0] == '/'
-        || (strlen (file_name) >= 2 && file_name[1] == ':'))
-    {
-        snprintf(buffer, size, "%s", file_name);
-        return;
-    }
-
-    snprintf(buffer, size, "%s" FS_SEP_STR "%s", GetDirectoryHdd(), file_name);
-}
-
-void game_transform_path(const char *file_name, char *result)
-{
-    game_transform_path_full (file_name, result, FILENAME_MAX);
-}
-
 static void game_update_full(bool wait)
 {
     display_unlock();
