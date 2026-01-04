@@ -486,6 +486,10 @@ TbResult init_memory(MemSystem *mem_table)
         ret = Lb_FAIL;
     }
 
+    if (tmaps_extra_buf == NULL) {
+        LOGWARN("Texture maps not allocated; cannor reuse their extra memory");
+    }
+
     p = NULL;
     for (i = mem_table_len - 1; i >= 0; i--)
     {
@@ -500,20 +504,21 @@ TbResult init_memory(MemSystem *mem_table)
             else
               ret = Lb_FAIL;
 
-            if (ment->N * (ulong)ment->ESize >= tmaps_extra_len || mem_game_index_is_prim(i))
+            if (ment->N * (ulong)ment->ESize < tmaps_extra_len && !mem_game_index_is_prim(i))
             {
-                k = ment->N * ment->ESize;
-                k = (k + 4) & ~0x3;
-                totlen += k;
-                assert(totlen <= engine_mem_alloc_size);
-            }
-            else
-            {
+                // Reuse extra texture maps atlas memory
                 ment->PrivBuffer = tmaps_extra_buf;
                 k = ment->N * ment->ESize;
                 k = (k + 4) & ~0x3;
                 tmaps_extra_len -= k;
                 tmaps_extra_buf += k;
+            }
+            else
+            {
+                k = ment->N * ment->ESize;
+                k = (k + 4) & ~0x3;
+                totlen += k;
+                assert(totlen <= engine_mem_alloc_size);
             }
             *(ment->BufferPtr) = ment->PrivBuffer;
         }
