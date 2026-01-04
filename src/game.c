@@ -425,7 +425,7 @@ void load_prim_quad(void)
     prim_unknprop01 = 1000;
     read_primveh_obj(primvehobj_fname, 1);
     read_textwalk();
-    byte_19EC6F = 1;
+    engine_render_lights = 1;
     ingame.DisplayMode = DpM_PURPLEMNU;
     if (cmdln_param_bcg == 99)
         test_open(99);
@@ -1801,7 +1801,7 @@ void process_engine_unk3(void)
 
     if ((ingame.Flags & GamF_RenderScene) != 0)
     {
-        if ((gamep_scene_effect_type == ScEff_SPACE) && byte_19EC6F)
+        if ((gamep_scene_effect_type == ScEff_SPACE) && engine_render_lights)
             draw_background_stars();
         if (game_perspective == 6) {
             draw_background_stars();
@@ -6099,7 +6099,7 @@ void show_load_and_prep_mission(void)
         }
 
         ingame.MissionEndFade = 0;
-        byte_19EC6F = 1;
+        engine_render_lights = 1;
 
         debug_trace_place(10);
         if ( in_network_game )

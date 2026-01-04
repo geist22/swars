@@ -87,7 +87,7 @@ extern TbPixel deep_radar_line_col;
 extern ushort next_special_face;
 extern ushort next_special_face4;
 
-extern ubyte byte_19EC6F;
+extern ubyte engine_render_lights;
 
 /******************************************************************************/
 

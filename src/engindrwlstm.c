@@ -1510,7 +1510,7 @@ short draw_object(int x, int y, int z, struct SingleObject *point_object)
 
     starts_below_window = 0;
 
-    if ((game_perspective == 2) && byte_19EC6F)
+    if ((game_perspective == 2) && engine_render_lights)
         return 0;
 
     obj_x = point_object->MapX - engn_xc;

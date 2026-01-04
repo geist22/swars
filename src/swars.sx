@@ -3533,7 +3533,7 @@ GLOBAL_FUNC(ASM_draw_floor_tile1a)	/* 0x022C78 */
 		cmp    $0x15,%eax
 		jne    jump_22d78
 	jump_22cc2:
-		cmpb   $0x0,EXPORT_SYMBOL(byte_19EC6F)
+		cmpb   $0x0,EXPORT_SYMBOL(engine_render_lights)
 		jne    jump_22ce7
 		xor    %eax,%eax
 		mov    0x21(%ecx),%al
@@ -4350,7 +4350,7 @@ GLOBAL_FUNC(ASM_draw_floor_tile1b)	/* 0x0236E0 */
 		cmp    $0x15,%eax
 		jne    jump_237e0
 	jump_2372a:
-		cmpb   $0x0,EXPORT_SYMBOL(byte_19EC6F)
+		cmpb   $0x0,EXPORT_SYMBOL(engine_render_lights)
 		jne    jump_2374f
 		xor    %eax,%eax
 		mov    0x21(%ecx),%al
@@ -8218,7 +8218,7 @@ GLOBAL_FUNC(ASM_draw_object_face3_textrd)	/* 0x027638 */
 		mov    EXPORT_SYMBOL(dword_176D04),%edx
 		sar    $0x10,%eax
 		add    %eax,%edx
-		mov    EXPORT_SYMBOL(byte_19EC6F),%bl
+		mov    EXPORT_SYMBOL(engine_render_lights),%bl
 		mov    %edx,0x54(%esp)
 		test   %bl,%bl
 		jne    jump_27a5e
@@ -8861,7 +8861,7 @@ GLOBAL_FUNC(ASM_draw_object_face4d_textrd)	/* 0x027D78 */
 		mov    EXPORT_SYMBOL(dword_176D04),%edx
 		sar    $0x10,%eax
 		add    %eax,%edx
-		mov    EXPORT_SYMBOL(byte_19EC6F),%ah
+		mov    EXPORT_SYMBOL(engine_render_lights),%ah
 		mov    %edx,0x2c(%esp)
 		test   %ah,%ah
 		jne    jump_28319
@@ -10900,7 +10900,7 @@ GLOBAL_FUNC(ASM_draw_object_face3_textrd_dk)	/* 0x0299B4 */
 		lea    0x50(%esp),%eax
 		call   ac_calculate_enginepoint_shade_1
 		mov    %eax,0x60(%esp)
-		cmpb   $0x0,EXPORT_SYMBOL(byte_19EC6F)
+		cmpb   $0x0,EXPORT_SYMBOL(engine_render_lights)
 		jne    jump_29db7
 		mov    $0x200000,%eax
 		mov    %eax,0x38(%esp)
@@ -11345,7 +11345,7 @@ GLOBAL_FUNC(ASM_draw_object_face4d_textrd_dk)	/* 0x029E90 */
 		mov    0xa8(%esp),%edx
 		mov    %esp,%eax
 		call   ac_calculate_enginepoint_shade_2
-		mov    EXPORT_SYMBOL(byte_19EC6F),%bh
+		mov    EXPORT_SYMBOL(engine_render_lights),%bh
 		mov    %eax,0x10(%esp)
 		test   %bh,%bh
 		jne    jump_2a3fd
@@ -181877,7 +181877,7 @@ GLOBAL (tnext_sort_sprite)	/* 0x19EC6C */
 		.short  0x0
 GLOBAL (keyboard_mode_direct)	/* 0x19EC6E */
 		.byte	0x0
-GLOBAL (byte_19EC6F)	/* 0x19ec6f */
+GLOBAL (engine_render_lights)	/* 0x19ec6f */
 		.byte	0x0
 data_19ec70:
 		.byte	0x0

@@ -2,7 +2,7 @@
 // Syndicate Wars Fan Expansion, source port of the classic game from Bullfrog.
 /******************************************************************************/
 /** @file engindrwlstx_spr.c
- *     Drawlists execution for the 3D engine, sprite related items.
+ *     Drawlists execution for the 3D engine, sprite and 2D shapes related items.
  * @par Purpose:
  *     Implements functions for executing previously made drawlists,
  *     meaning the actual drawing based on primitives in the list.
@@ -23,6 +23,7 @@
 
 #include "bfbox.h"
 #include "bfgentab.h"
+#include "bfline.h"
 #include "bfsprite.h"
 #include "insspr.h"
 
@@ -55,6 +56,69 @@ extern struct TbSprite *unkn1_spr;
 extern struct TbSprite *m_sprites;
 extern struct TbSprite *m_sprites_end;
 /******************************************************************************/
+
+void draw_sort_line(struct SortLine *p_sline)
+{
+#if 0
+    asm volatile (
+      "call ASM_draw_sort_line\n"
+        : : "a" (p_sline));
+    return;
+#endif
+    ushort ftcor;
+    if ((p_sline->Flags & (0x01|0x02)) != 0)
+    {
+        int dist_x, dist_y;
+        int dtX, dtY;
+
+        dist_x = p_sline->X1 - p_sline->X2;
+        dist_y = p_sline->Y1 - p_sline->Y2;
+        if (dist_x < 0)
+            dist_x = -dist_x;
+        if (dist_y < 0)
+            dist_y = -dist_y;
+        if (dist_x <= dist_y) {
+          dtX = 1;
+          dtY = 0;
+        } else {
+          dtX = 0;
+          dtY = 1;
+        }
+
+        if ((p_sline->Flags & 0x02) != 0)
+            lbDisplay.DrawFlags = Lb_SPRITE_TRANSPAR4;
+        ftcor = 256 * p_sline->Shade + p_sline->Col;
+        LbDrawLine(p_sline->X1, p_sline->Y1,
+          p_sline->X2, p_sline->Y2,
+          pixmap.fade_table[ftcor]);
+
+        lbDisplay.DrawFlags = Lb_SPRITE_TRANSPAR4;
+        ftcor = 256 * 20 + p_sline->Col;
+        LbDrawLine(p_sline->X1 + dtX, p_sline->Y1 + dtY,
+          p_sline->X2 + dtX, p_sline->Y2 + dtY,
+          pixmap.fade_table[ftcor]);
+
+        ftcor = 256 * 20 + p_sline->Col;
+        LbDrawLine(p_sline->X1 - dtX, p_sline->Y1 - dtY,
+          p_sline->X2 - dtX, p_sline->Y2 - dtY,
+          pixmap.fade_table[ftcor]);
+        lbDisplay.DrawFlags = 0;
+    }
+    else
+    {
+        ftcor = 256 * p_sline->Shade + p_sline->Col;
+        LbDrawLine(p_sline->X1, p_sline->Y1,
+          p_sline->X2, p_sline->Y2,
+          pixmap.fade_table[ftcor]);
+    }
+}
+
+void draw_sort_line1a(ushort sln)
+{
+    struct SortLine *p_sline;
+    p_sline = &game_sort_lines[sln];
+    draw_sort_line(p_sline);
+}
 
 void draw_unkn1_scaled_alpha_sprite(ushort frm, int scr_x, int scr_y, ushort scale, ushort alpha)
 {

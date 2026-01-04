@@ -21,7 +21,6 @@
 
 #include "bfkeybd.h"
 #include "bfgentab.h"
-#include "bfline.h"
 #include "bfsprite.h"
 #include "insspr.h"
 #include <assert.h>
@@ -128,6 +127,7 @@ ubyte byte_15399C[] = {
 };
 /******************************************************************************/
 // from engindrwlstx_spr
+void draw_sort_line1a(ushort sln);
 void draw_sorted_sprite1b(ubyte *frv, ushort frm, short x, short y,
   ubyte bri, ubyte angle);
 void draw_sort_sprite1c(ushort sspr);
@@ -229,7 +229,7 @@ void draw_object_face3_textrd_dk(ushort face)
     struct SingleObjectFace3 *p_face;
 
     p_face = &game_object_faces[face];
-    vec_colour = 64;
+    vec_colour = 0x40;
     vec_mode = 4;
 
     if (p_face->Texture != 0)
@@ -312,7 +312,7 @@ void draw_object_face3_textrd_dk(ushort face)
     }
     point3.S = calculate_enginepoint_shade_1(&point3, p_face, 1);
 
-    if (!byte_19EC6F)
+    if (!engine_render_lights)
     {
       point1.S = 0x200000;
       point2.S = 0x200000;
@@ -585,7 +585,7 @@ void draw_floor_tile1a(ushort tl)
     vec_mode = p_floortl->Flags;
     if ((p_floortl->Flags == 5) || (p_floortl->Flags == 21))
     {
-        if (byte_19EC6F) {
+        if (engine_render_lights) {
             if (current_map == 11) // map011 Orbital Station
                 vec_mode = 6;
         } else {
@@ -667,7 +667,7 @@ void draw_floor_tile1b(ushort tl)
     vec_mode = p_floortl->Flags;
     if ((p_floortl->Flags == 5) || (p_floortl->Flags == 21))
     {
-        if (byte_19EC6F) {
+        if (engine_render_lights) {
             if (current_map == 11) // map011 Orbital Station
                 vec_mode = 6;
         } else {
@@ -735,62 +735,6 @@ void draw_floor_tile1b(ushort tl)
             vec_mode = 27;
         draw_trigpoly(&point4, &point3, &point1);
         dword_176D4C += 2;
-    }
-}
-
-void draw_sort_line(struct SortLine *p_sline)
-{
-#if 0
-    asm volatile (
-      "call ASM_draw_sort_line\n"
-        : : "a" (p_sline));
-    return;
-#endif
-    ushort ftcor;
-    if ((p_sline->Flags & (0x01|0x02)) != 0)
-    {
-        int dist_x, dist_y;
-        int dtX, dtY;
-
-        dist_x = p_sline->X1 - p_sline->X2;
-        dist_y = p_sline->Y1 - p_sline->Y2;
-        if (dist_x < 0)
-            dist_x = -dist_x;
-        if (dist_y < 0)
-            dist_y = -dist_y;
-        if (dist_x <= dist_y) {
-          dtX = 1;
-          dtY = 0;
-        } else {
-          dtX = 0;
-          dtY = 1;
-        }
-
-        if ((p_sline->Flags & 0x02) != 0)
-            lbDisplay.DrawFlags = Lb_SPRITE_TRANSPAR4;
-        ftcor = 256 * p_sline->Shade + p_sline->Col;
-        LbDrawLine(p_sline->X1, p_sline->Y1,
-          p_sline->X2, p_sline->Y2,
-          pixmap.fade_table[ftcor]);
-
-        lbDisplay.DrawFlags = Lb_SPRITE_TRANSPAR4;
-        ftcor = 256 * 20 + p_sline->Col;
-        LbDrawLine(p_sline->X1 + dtX, p_sline->Y1 + dtY,
-          p_sline->X2 + dtX, p_sline->Y2 + dtY,
-          pixmap.fade_table[ftcor]);
-
-        ftcor = 256 * 20 + p_sline->Col;
-        LbDrawLine(p_sline->X1 - dtX, p_sline->Y1 - dtY,
-          p_sline->X2 - dtX, p_sline->Y2 - dtY,
-          pixmap.fade_table[ftcor]);
-        lbDisplay.DrawFlags = 0;
-    }
-    else
-    {
-        ftcor = 256 * p_sline->Shade + p_sline->Col;
-        LbDrawLine(p_sline->X1, p_sline->Y1,
-          p_sline->X2, p_sline->Y2,
-          pixmap.fade_table[ftcor]);
     }
 }
 
@@ -1086,13 +1030,6 @@ void draw_object_face4_pole(ushort face4)
     draw_trigpoly(&point4, &point1, &point3);
 }
 
-void draw_sort_line1a(ushort sln)
-{
-    struct SortLine *p_sline;
-    p_sline = &game_sort_lines[sln];
-    draw_sort_line(p_sline);
-}
-
 /**
  * Draw triangular face with textured surface.
  *
@@ -1219,7 +1156,7 @@ void draw_object_face3_textrd(ushort face)
         point3.Y = p_scrpoint->Y + dword_176D04;
     }
 
-    if (!byte_19EC6F)
+    if (!engine_render_lights)
     {
         point1.S = 0x200000;
         point2.S = 0x200000;
@@ -1415,7 +1352,7 @@ void draw_object_face4d_textrd(ushort face4)
         point4.Y = p_scrpoint->Y + dword_176D04;
     }
 
-    if (!byte_19EC6F)
+    if (!engine_render_lights)
     {
         point1.S = 0x200000;
         point2.S = 0x200000;
