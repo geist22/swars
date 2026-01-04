@@ -482,7 +482,8 @@ void snprint_person_state(char *buf, ulong buflen, struct Thing *p_thing)
     if (p_thing->State == PerSt_GOTO_POINT)
     {
         if (nparams) { sprintf(s, ", "); s += strlen(s); }
-        sprintf(s, "Coord(%d,%d,%d)", (int)p_thing->U.UPerson.GotoX, 0, (int)p_thing->U.UPerson.GotoX);
+        sprintf(s, "Coord(%d,%d,%d)", (int)p_thing->U.UPerson.GotoX,
+          0, (int)p_thing->U.UPerson.GotoZ);
         s += strlen(s);
         nparams++;
     }
