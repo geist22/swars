@@ -21,6 +21,7 @@
 
 #include <assert.h>
 
+#include "bfbox.h"
 #include "bfgentab.h"
 #include "bfsprite.h"
 #include "insspr.h"
@@ -420,6 +421,49 @@ void draw_fire_flame(ushort flm)
         draw_sorted_sprite1a(p_flame->frame, p_scrpoint->X + dword_176D00,
           p_scrpoint->Y + dword_176D04, 0x20);
     }
+}
+
+/**
+ * Draw a bar showing some kind of level parameter, usually health.
+ *
+ * @param sspr Index of SortSprite instance which stores the draw parameters.
+ */
+void draw_sort_sprite_level_bar(short sspr, ushort w, ushort h, short lvl, ushort max_lvl, TbPixel lvl_col, TbPixel bar_col)
+{
+    struct SortSprite *p_sspr;
+    ushort range_w, range_h, bar_w, bar_h;
+    short level_x;
+
+    p_sspr = &game_sort_sprites[sspr];
+
+    if (max_lvl == 0)
+        max_lvl = 1;
+    if (lvl < 0)
+        lvl = 0;
+    else if (lvl > max_lvl)
+        lvl = max_lvl + 1;
+
+    bar_w = ((w) * overall_scale) >> 8;
+    bar_h = ((h) * overall_scale) >> 8;
+
+    range_w = ((w * 15 / 16) * overall_scale) >> 8;
+    range_h = ((h * 12 / 16) * overall_scale) >> 8;
+
+    // The bar looks better if marins on opposite sides are the same,
+    // that is both dimensions are odd or both are even
+    if ((bar_w & 1) != 0)
+        range_w |= 1;
+    else
+        range_w &= ~1;
+    if ((bar_h & 1) != 0)
+        range_h |= 1;
+    else
+        range_h &= ~1;
+
+    LbDrawBox(p_sspr->X - bar_w / 2, p_sspr->Y, bar_w, bar_h, bar_col);
+
+    level_x = range_w * lvl / max_lvl;
+    LbDrawBox(p_sspr->X - bar_w / 2, p_sspr->Y + (bar_h - range_h) / 2, level_x, range_h, lvl_col);
 }
 
 void draw_sort_sprite_number(ushort sspr)

@@ -19,7 +19,6 @@
 /******************************************************************************/
 #include "engindrwlstx.h"
 
-#include "bfbox.h"
 #include "bfkeybd.h"
 #include "bfgentab.h"
 #include "bfline.h"
@@ -133,6 +132,7 @@ void draw_sorted_sprite1b(ubyte *frv, ushort frm, short x, short y,
   ubyte bri, ubyte angle);
 void draw_sort_sprite1c(ushort sspr);
 void draw_phwoar(ushort ph);
+void draw_sort_sprite_level_bar(short sspr, ushort w, ushort h, short lvl, ushort max_lvl, TbPixel lvl_col, TbPixel bar_col);
 void draw_sort_sprite_number(ushort sspr);
 void draw_fire_flame(ushort flm);
 // from engindrwlstx_fac
@@ -1507,37 +1507,20 @@ void draw_sort_sprite_veh_health_bar(short sspr)
 #endif
     struct SortSprite *p_sspr;
     struct Thing *p_thing;
-    ushort max_health;
-    short health;
-    ushort range_x;
-    short level_x;
-    ushort h;
+    TbPixel lvl_col, bar_col;
 
     p_sspr = &game_sort_sprites[sspr];
     p_thing = p_sspr->PThing;
 
-    max_health = p_thing->U.UVehicle.MaxHealth;
-    health = p_thing->Health;
-    if (max_health == 0)
-        max_health = 1;
-    if (health < 0)
-        health = 0;
-    else if (health > max_health)
-        health = max_health + 1;
-
-    range_x = (40 * overall_scale) >> 8;
-    if (ingame.PanelPermutation == -3)
-        h = 42;
-    else
-        h = 19;
-    LbDrawBox(p_sspr->X - (range_x >> 1), p_sspr->Y, range_x + 4, 6, h);
-
-    level_x = range_x * health / max_health;
-    if (ingame.PanelPermutation == -3)
-        h = 33;
-    else
-        h = 15;
-    LbDrawBox(p_sspr->X - (range_x >> 1) + 2, p_sspr->Y + 1, level_x, 4, h);
+    if (ingame.PanelPermutation == -3) {
+        lvl_col = 33;
+        bar_col = 42;
+    } else {
+        lvl_col = 15;
+        bar_col = 19;
+    }
+    draw_sort_sprite_level_bar(sspr, 44, 5, p_thing->Health,
+      p_thing->U.UVehicle.MaxHealth, lvl_col, bar_col);
 }
 
 void draw_object_face4_deep_rdr(ushort face4)
