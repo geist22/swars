@@ -2192,8 +2192,8 @@ msgid ""
 "the New Epoch and have averted the Cataclysm. UTOPIA will be rebuilt. Congratulations on your "
 "promotion, Chief Executive."
 msgstr ""
-"Odniósłeś zwycięstwo nad Dziewięciorgiem. Kościół Nowej Epoki został całkowicie rozbity, a "
-"groźba Kataklizmu zażegnana. UTOPIA zostanie odbudowana. Gratulacje z okazji awansu, Główny "
+"Odniosłeś zwycięstwo nad Dziewięciorgiem. Kościół Nowej Epoki został całkowicie rozbity, a "
+"groźba Kataklizmu zażegnana. UTOPIA zostanie odbudowana. Gratulacje z okazji awansu, "
 "Dyrektorze Naczelny."
 
 #: weapons.UZI.description
