@@ -500,7 +500,7 @@ TbResult init_memory(MemSystem *mem_table)
             else
               ret = Lb_FAIL;
 
-            if (ment->N * (ulong)ment->ESize >= dword_1810D5 || mem_game_index_is_prim(i))
+            if (ment->N * (ulong)ment->ESize >= tmaps_extra_len || mem_game_index_is_prim(i))
             {
                 k = ment->N * ment->ESize;
                 k = (k + 4) & ~0x3;
@@ -509,11 +509,11 @@ TbResult init_memory(MemSystem *mem_table)
             }
             else
             {
-                ment->PrivBuffer = dword_1810D1;
+                ment->PrivBuffer = tmaps_extra_buf;
                 k = ment->N * ment->ESize;
                 k = (k + 4) & ~0x3;
-                dword_1810D5 -= k;
-                dword_1810D1 += k;
+                tmaps_extra_len -= k;
+                tmaps_extra_buf += k;
             }
             *(ment->BufferPtr) = ment->PrivBuffer;
         }

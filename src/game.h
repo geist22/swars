@@ -336,7 +336,6 @@ TbBool game_setup(void);
 void game_process(void);
 void game_reset(void);
 void host_reset(void);
-void free_texturemaps(void);
 void init_variables(void);
 void init_agents(void);
 void srm_reset_research(void);

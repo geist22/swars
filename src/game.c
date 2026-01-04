@@ -398,6 +398,7 @@ void load_texturemaps(void)
             exit_game = 1;
             return;
         }
+        ingame.LastTmap = tmap_count - 1;
     }
     reload_texturemaps();
 }

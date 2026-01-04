@@ -22,9 +22,13 @@
 #include "bfmemory.h"
 #include "bfmemut.h"
 
-#include "game_options.h"
 #include "swlog.h"
 /******************************************************************************/
+ubyte *vec_tmap[VEC_TMAP_LIMIT] = {0};
+
+ubyte *tmaps_alloc_start = NULL;
+ubyte *tmaps_extra_buf = NULL;
+ulong tmaps_extra_len = 0;
 
 /******************************************************************************/
 
@@ -42,18 +46,20 @@ TbResult alloc_texturemaps(uint tmap_count)
     {
         return Lb_FAIL;
     }
-    ingame__Tmaps = p_buf;
-    dword_1810D1 = p_buf;
-    p_buf += VEC_TMAP_WIDTH * VEC_TMAP_HEIGHT;
+    tmaps_alloc_start = p_buf;
+    tmaps_extra_buf = p_buf;
     p_buf = (ubyte *)(((uintptr_t)p_buf + 0xffff) & ~0xffff);
-    dword_1810D5 = p_buf - dword_1810D1;
+    tmaps_extra_len = p_buf - tmaps_extra_buf;
     for (i = 0; i < tmap_count; i++)
     {
         vec_tmap[i] = p_buf;
         p_buf += VEC_TMAP_WIDTH * VEC_TMAP_HEIGHT;
     }
-    ingame.LastTmap = tmap_count - 1;
     return Lb_SUCCESS;
 }
 
+void free_texturemaps(void)
+{
+    LbMemoryFree(tmaps_alloc_start);
+}
 /******************************************************************************/

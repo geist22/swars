@@ -62,6 +62,9 @@
 .global EXPORT_SYMBOL(people_frames);	/* 0x153D5C */
 .global EXPORT_SYMBOL(follow_dist);	/* 0x153398 */
 
+.global EXPORT_SYMBOL(tmaps_extra_buf);	/* 0x1810D1 */
+.global EXPORT_SYMBOL(tmaps_extra_len);	/* 0x1810D5 */
+
 .global EXPORT_SYMBOL(pop1_sprites);	/* 0x19CBDC */
 .global EXPORT_SYMBOL(pointer_sprites);	/* 0x1A5840 */
 .global EXPORT_SYMBOL(small_font);	/* 0x1A5848 */
@@ -18047,13 +18050,13 @@ GLOBAL_FUNC (ASM_load_texturemaps)
 		call   ac_LbMemoryAlloc
 		test   %eax,%eax
 		je     jump_41a17
-		mov    %eax,EXPORT_SYMBOL(ingame__Tmaps)
-		mov    %eax,EXPORT_SYMBOL(dword_1810D1)
+		mov    %eax,EXPORT_SYMBOL(tmaps_alloc_start)
+		mov    %eax,EXPORT_SYMBOL(tmaps_extra_buf)
 		lea    0x10000(%eax),%ecx
 		xor    %cx,%cx
 		mov    %ecx,%edx
 		sub    %eax,%edx
-		mov    %edx,EXPORT_SYMBOL(dword_1810D5)
+		mov    %edx,EXPORT_SYMBOL(tmaps_extra_len)
 		test   %ecx,%ecx
 		je     jump_41a64
 		xor    %esi,%esi
@@ -18072,7 +18075,7 @@ GLOBAL_FUNC (ASM_load_texturemaps)
 		mov    %esp,%eax
 		inc    %esi
 		call   ac_LbFileLoadAt
-		mov    %ecx,data_1aa274(%edi)
+		mov    %ecx,EXPORT_SYMBOL(vec_tmap)-4(%edi)
 		add    $0x10000,%ecx
 		cmp    %ebx,%esi
 		jb     jump_419dd
@@ -18122,9 +18125,9 @@ GLOBAL_FUNC (ASM_load_texturemaps)
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC (free_texturemaps)
+GLOBAL_FUNC (ASM_free_texturemaps)
 /*----------------------------------------------------------------*/
-		mov    EXPORT_SYMBOL(ingame__Tmaps),%eax
+		mov    EXPORT_SYMBOL(tmaps_alloc_start),%eax
 		jmp    ac_LbMemoryFree
 
 
@@ -181551,11 +181554,8 @@ GLOBAL (player_unknCC9)	/* 0x180CC9 */
 
 GLOBAL (player_unkn0C9)	/* 0x1810C9 */
 		.fill   0x8
+		.align	4
 
-GLOBAL (dword_1810D1)	/* 0x1810D1 */
-		.long	0x0
-GLOBAL (dword_1810D5)	/* 0x1810D5 */
-		.fill   0x5
 GLOBAL (user_sel_brightness)	/* 0x1810DA */
 		.short  0x0
 		.fill   0x8
@@ -182354,34 +182354,7 @@ GLOBAL (unkn_changing_color_counter1)	/* 0x1AA26C */
 		.long	0x0
 GLOBAL (dword_1AA270)	/* 0x1AA270 */
 		.long	0x0
-data_1aa274:
-		.long	0x0
-GLOBAL (vec_tmap)	/* 0x1AA278 */
-		.long	0x0
-		.long	0x0
-		.long	0x0
-		.long	0x0
-		.long	0x0	/* 0x1AA288 vec_tmap[4] */
-		.long	0x0	/* 0x1AA28C vec_tmap[5] */
-		.fill   0x30
-data_1aa2c0:
-		.fill   0x38
-GLOBAL (ingame__Tmaps)	/* 0x1AA2F8 */
-		.fill   0x28
-GLOBAL (ASM_old_next_object)	/* 0x1AA320 */
-		.short  0x0
-GLOBAL (ASM_old_next_object_face)
-		.short  0x0
-		.short  0x0
-GLOBAL (ASM_old_next_object_point)
-		.short  0x0
-GLOBAL (ASM_old_next_normal)
-		.short  0x0
-GLOBAL (ASM_old_next_face_texture)
-		.short  0x0
-		.short  0x0
-data_1aa32e:
-		.short  0x0
+
 GLOBAL (data_1aa330)	/* 0x1aa330 */
 		.short  0x0
 GLOBAL (data_1aa332)	/* 0x1aa332 */
