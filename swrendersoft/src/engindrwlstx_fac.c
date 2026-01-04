@@ -1082,7 +1082,7 @@ void draw_object_face4d_textrd_dk(ushort face4)
     }
     point4.S = calculate_enginepoint_shade_2(&point4, p_face4, 3);
 
-    if (engine_render_lights == 0)
+    if (!engine_render_lights)
     {
         point1.S = 0x200000;
         point2.S = 0x200000;

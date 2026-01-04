@@ -154428,7 +154428,7 @@ GLOBAL_FUNC(ASM_process_nuclear_bomb)	/* 0x0C67EC */
 		mov    %ebx,%eax
 		xor    %ebx,%ebx
 		call   ac_delete_snode
-		mov    %ebx,EXPORT_SYMBOL(dword_19F4F8)
+		mov    %ebx,EXPORT_SYMBOL(nuclear_overexposure)
 	jump_c6aad:
 		mov    %ebp,%esp
 		pop    %ebp
@@ -154637,7 +154637,7 @@ GLOBAL_FUNC(ASM_process_canister)	/* 0x0C6AB8 */
 		mov    %ebp,%eax
 		xor    %esi,%esi
 		call   ac_delete_snode
-		mov    %esi,EXPORT_SYMBOL(dword_19F4F8)
+		mov    %esi,EXPORT_SYMBOL(nuclear_overexposure)
 	jump_c6d3f:
 		add    $0x10,%esp
 		pop    %ebp
@@ -181952,7 +181952,7 @@ data_19f496:
 		.short  0x0
 data_19f498:
 		.fill   0x60
-GLOBAL (dword_19F4F8)	/* 0x19F4F8 */
+GLOBAL (nuclear_overexposure)	/* 0x19F4F8 */
 		.long	0x0
 GLOBAL (engn_nuclear_shade_timer)	/* 0x19F4FC */
 		.long	0x0
