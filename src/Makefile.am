@@ -29,6 +29,8 @@ syndwarsfx_SOURCES = \
 	../swrendersoft/include/enginpeff.h \
 	../swrendersoft/src/enginpritxtr.c \
 	../swrendersoft/include/enginpritxtr.h \
+	../swrendersoft/src/engintxtrmap.c \
+	../swrendersoft/include/engintxtrmap.h \
 	../swrendersoft/src/enginprops.c \
 	../swrendersoft/include/enginprops.h \
 	../swrendersoft/src/enginsngtxtr.c \

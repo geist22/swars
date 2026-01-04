@@ -184,9 +184,6 @@ extern struct Animation animations[2];
 
 extern ubyte *scratch_buf1;
 
-extern void *dword_1810D1;
-extern ulong dword_1810D5;
-
 extern ushort game_level_unique_id;
 extern ubyte game_level_unkn1[40];
 extern ubyte game_level_unkn2[40];

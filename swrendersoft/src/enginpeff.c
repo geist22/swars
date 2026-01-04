@@ -28,6 +28,7 @@
 #include "enginbckt.h"
 #include "enginprops.h"
 #include "engintrns.h"
+#include "engintxtrmap.h"
 #include "scanner.h"
 #include "swlog.h"
 /******************************************************************************/

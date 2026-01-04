@@ -36,6 +36,7 @@
 #include "enginprops.h"
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"
+#include "engintxtrmap.h"
 #include "bigmap.h"
 #include "game_options.h"
 #include "game.h"

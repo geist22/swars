@@ -33,6 +33,7 @@
 #include "enginlights.h"
 #include "enginsngtxtr.h"
 #include "engintrns.h"
+#include "engintxtrmap.h"
 #include "enginzoom.h"
 #include "game.h"
 #include "game_options.h"

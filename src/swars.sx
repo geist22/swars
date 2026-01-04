@@ -18047,7 +18047,7 @@ GLOBAL_FUNC (ASM_load_texturemaps)
 		call   ac_LbMemoryAlloc
 		test   %eax,%eax
 		je     jump_41a17
-		mov    %eax,ingame__Tmaps
+		mov    %eax,EXPORT_SYMBOL(ingame__Tmaps)
 		mov    %eax,EXPORT_SYMBOL(dword_1810D1)
 		lea    0x10000(%eax),%ecx
 		xor    %cx,%cx
@@ -18124,7 +18124,7 @@ GLOBAL_FUNC (ASM_load_texturemaps)
 /*----------------------------------------------------------------*/
 GLOBAL_FUNC (free_texturemaps)
 /*----------------------------------------------------------------*/
-		mov    ingame__Tmaps,%eax
+		mov    EXPORT_SYMBOL(ingame__Tmaps),%eax
 		jmp    ac_LbMemoryFree
 
 
@@ -182366,7 +182366,7 @@ GLOBAL (vec_tmap)	/* 0x1AA278 */
 		.fill   0x30
 data_1aa2c0:
 		.fill   0x38
-ingame__Tmaps:	/* 0x1AA2F8 */
+GLOBAL (ingame__Tmaps)	/* 0x1AA2F8 */
 		.fill   0x28
 GLOBAL (ASM_old_next_object)	/* 0x1AA320 */
 		.short  0x0

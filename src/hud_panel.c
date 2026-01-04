@@ -32,6 +32,7 @@
 #include "bfutility.h"
 #include "ssampply.h"
 
+#include "engintxtrmap.h"
 #include "render_gpoly.h"
 
 #include "app_sprite.h"

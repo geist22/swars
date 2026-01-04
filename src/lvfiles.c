@@ -40,6 +40,7 @@
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"
 #include "enginsngobjs.h"
+#include "engintxtrmap.h"
 #include "frame_sprani.h"
 #include "game.h"
 #include "game_data.h"

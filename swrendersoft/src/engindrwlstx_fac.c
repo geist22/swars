@@ -31,6 +31,7 @@
 #include "enginsngtxtr.h"
 #include "enginshrapn.h"
 #include "engintrns.h"
+#include "engintxtrmap.h"
 #include "render_gpoly.h"
 #include "swlog.h"
 /******************************************************************************/

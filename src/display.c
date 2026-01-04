@@ -34,6 +34,8 @@
 #include "bfutility.h"
 #include "poly.h"
 
+#include "engintxtrmap.h"
+
 #include "game_options.h"
 #include "game_sprts.h"
 #include "mouse.h"

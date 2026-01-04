@@ -41,6 +41,7 @@
 #include "bfscd.h"
 
 #include "enginprops.h"
+#include "engintxtrmap.h"
 
 #include "linksmk.h"
 #include "bat.h"
@@ -356,10 +357,49 @@ void game_handle_sdl_events(void)
     }
 }
 
+int existing_texturemaps(void)
+{
+    char locstr[DISKPATH_SIZE];
+    int i;
+
+    for (i = 0; ; i++)
+    {
+        sprintf(locstr, "data/tex%02d.dat", i);
+        if (!LbFileExists(locstr))
+          break;
+    }
+    return i;
+}
+
+int reload_texturemaps(void)
+{
+    char locstr[DISKPATH_SIZE];
+    int i;
+
+    for (i = 0; vec_tmap[i] != NULL; i++)
+    {
+        sprintf(locstr, "data/tex%02d.dat", i);
+        LbFileLoadAt(locstr, vec_tmap[i]);
+    }
+    return i;
+}
+
 void load_texturemaps(void)
 {
+#if 0
     asm volatile ("call ASM_load_texturemaps\n"
         :  :  : "eax" );
+#endif
+    if (vec_tmap[0] == NULL)
+    {
+        int tmap_count;
+        tmap_count = existing_texturemaps();
+        if (!alloc_texturemaps(tmap_count)) {
+            exit_game = 1;
+            return;
+        }
+    }
+    reload_texturemaps();
 }
 
 void test_open(int num)

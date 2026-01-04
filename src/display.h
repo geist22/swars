@@ -91,9 +91,6 @@ extern ushort text_window_y1;
 extern ushort text_window_x2;
 extern ushort text_window_y2;
 
-// TODO move engine texture atlas to separate file
-extern ubyte *vec_tmap[18];
-
 /******************************************************************************/
 
 void display_set_full_screen(bool full_screen);

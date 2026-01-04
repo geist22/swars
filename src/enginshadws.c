@@ -30,6 +30,7 @@
 #include "engindrwlstx.h"
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"
+#include "engintxtrmap.h"
 #include "enginprops.h"
 #include "frame_sprani.h"
 #include "game.h"
