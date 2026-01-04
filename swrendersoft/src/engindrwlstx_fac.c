@@ -856,14 +856,11 @@ void draw_object_face3g_textrd(ushort face)
 
     if (p_face->Texture != 0)
     {
-        if (p_face->GFlags != 0)
-        {
-            if ((p_face->GFlags & FGFlg_Unkn40) != 0) {
-                uint frame;
-                frame = render_anim_turn + p_face->Object;
-                if ((frame & 0x1F) > 0x10)
-                    vec_mode = 5;
-            }
+        if ((p_face->GFlags & FGFlg_Unkn40) != 0) {
+            uint frame;
+            frame = render_anim_turn + p_face->Object;
+            if ((frame & 0x1F) > 0x10)
+                vec_mode = 5;
         }
         set_face_texture_uv(p_face->Texture, &point1, &point3, &point2, p_face->GFlags);
     }
@@ -997,7 +994,7 @@ void draw_object_face4d_textrd_dk(ushort face4)
     }
     else
     {
-        ushort shade;
+        uint shade;
 
         shade = p_face4->Shade0 << 7;
         shade += cummulate_shade_from_quick_lights(p_face4->Light0);
@@ -1022,7 +1019,7 @@ void draw_object_face4d_textrd_dk(ushort face4)
     }
     else
     {
-        ushort shade;
+        uint shade;
 
         shade = p_face4->Shade2 << 7;
         shade += cummulate_shade_from_quick_lights(p_face4->Light2);
@@ -1047,7 +1044,7 @@ void draw_object_face4d_textrd_dk(ushort face4)
     }
     else
     {
-        ushort shade;
+        uint shade;
 
         shade = p_face4->Shade1 << 7;
         shade += cummulate_shade_from_quick_lights(p_face4->Light1);
@@ -1072,7 +1069,7 @@ void draw_object_face4d_textrd_dk(ushort face4)
     }
     else
     {
-        ushort shade;
+        uint shade;
 
         shade = p_face4->Shade3 << 7;
         shade += cummulate_shade_from_quick_lights(p_face4->Light3);

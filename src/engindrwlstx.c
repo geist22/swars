@@ -25,6 +25,7 @@
 #include "insspr.h"
 #include <assert.h>
 
+#include "enginprops.h"
 #include "render_gpoly.h"
 
 #include "bigmap.h"
@@ -223,8 +224,8 @@ void draw_object_face3_textrd_dk(ushort face)
         : : "a" (face));
     return;
 #endif
-    struct PolyPoint point2;
     struct PolyPoint point1;
+    struct PolyPoint point2;
     struct PolyPoint point3;
     struct SingleObjectFace3 *p_face;
 
@@ -277,7 +278,7 @@ void draw_object_face3_textrd_dk(ushort face)
     }
     else
     {
-        ushort shade;
+        uint shade;
 
         shade = p_face->Shade2 << 7;
         shade += cummulate_shade_from_quick_lights(p_face->Light2);
@@ -302,7 +303,7 @@ void draw_object_face3_textrd_dk(ushort face)
     }
     else
     {
-        ushort shade;
+        uint shade;
 
         shade = p_face->Shade1 << 7;
         shade += cummulate_shade_from_quick_lights(p_face->Light1);
@@ -314,9 +315,9 @@ void draw_object_face3_textrd_dk(ushort face)
 
     if (!engine_render_lights)
     {
-      point1.S = 0x200000;
-      point2.S = 0x200000;
-      point3.S = 0x200000;
+        point1.S = 0x200000;
+        point2.S = 0x200000;
+        point3.S = 0x200000;
     }
     dword_176D4C++;
 
@@ -1054,14 +1055,11 @@ void draw_object_face3_textrd(ushort face)
 
     if (p_face->Texture != 0)
     {
-        if (p_face->GFlags != 0)
-        {
-            if ((p_face->GFlags & FGFlg_Unkn40) != 0) {
-                uint frame;
-                frame = gameturn + p_face->Object;
-                if ((frame & 0x1FF) > 0x100 && !byte_153014[frame & 0x3F])
-                    vec_mode = 5;
-            }
+        if ((p_face->GFlags & FGFlg_Unkn40) != 0) {
+            uint frame;
+            frame = render_anim_turn + p_face->Object;
+            if ((frame & 0x1FF) > 0x100 && !byte_153014[frame & 0x3F])
+                vec_mode = 5;
         }
         set_face_texture_uv(p_face->Texture, &point1, &point3, &point2, p_face->GFlags);
     }
@@ -1081,7 +1079,7 @@ void draw_object_face3_textrd(ushort face)
     }
     else
     {
-        ushort shade;
+        uint shade;
 
         shade = p_face->Shade0 << 7;
         shade += cummulate_shade_from_quick_lights(p_face->Light0);
@@ -1112,7 +1110,7 @@ void draw_object_face3_textrd(ushort face)
         }
         else
         {
-            ushort shade;
+            uint shade;
 
             shade = p_face->Shade2 << 7;
             shade += cummulate_shade_from_quick_lights(p_face->Light2);
@@ -1136,7 +1134,7 @@ void draw_object_face3_textrd(ushort face)
         }
         else
         {
-            ushort shade;
+            uint shade;
 
             shade = p_face->Shade1 << 7;
             shade += cummulate_shade_from_quick_lights(p_face->Light1);
@@ -1231,14 +1229,11 @@ void draw_object_face4d_textrd(ushort face4)
     vec_mode = p_face4->Flags;
     if (p_face4->Texture != 0)
     {
-        if (p_face4->GFlags != 0)
-        {
-            if ((p_face4->GFlags & FGFlg_Unkn40) != 0) {
-                uint frame;
-                frame = gameturn + p_face4->Object;
-                if ((frame & 0x1FF) > 0x100 && !byte_153014[frame & 0x3F])
-                    vec_mode = 5;
-            }
+        if ((p_face4->GFlags & FGFlg_Unkn40) != 0) {
+            uint frame;
+            frame = render_anim_turn + p_face4->Object;
+            if ((frame & 0x1FF) > 0x100 && !byte_153014[frame & 0x3F])
+                vec_mode = 5;
         }
         if ((p_face4->GFlags & FGFlg_Unkn20) != 0) {
             set_floor_texture_uv(p_face4->Texture, &point1, &point3, &point4, &point2, p_face4->GFlags);
@@ -1649,14 +1644,14 @@ void number_player(struct Thing *p_person, ubyte n)
         p_locplayer = &players[local_player_no];
         if (!p_locplayer->DoubleMode)
         {
-            if ((p_person->ThingOffset != (ThingIdx)p_locplayer->DirectControl[0]) || ((gameturn & 4) != 0))
+            if ((p_person->ThingOffset != (ThingIdx)p_locplayer->DirectControl[0]) || ((render_anim_turn & 4) != 0))
             {
                 frm = frame[frm].Next;
             }
             else
             {
                 ushort i;
-                for (i = 0; i <= (gameturn & 3); i++)
+                for (i = 0; i <= (render_anim_turn & 3); i++)
                     frm = frame[frm].Next;
             }
         }
