@@ -562,22 +562,11 @@ void draw_object_face4g_textrd(ushort face4)
 
     if (p_face4->Texture != 0)
     {
-        struct SingleFloorTexture *p_sftex;
-
-        p_sftex = &game_textures[p_face4->Texture];
         if ((p_face4->GFlags & FGFlg_Unkn20) != 0) {
-            point4.U = p_sftex->TMapX3 << 16;
-            point4.V = p_sftex->TMapY3 << 16;
-            point2.U = p_sftex->TMapX4 << 16;
-            point2.V = p_sftex->TMapY4 << 16;
+            set_floor_texture_uv(p_face4->Texture, &point1, &point3, &point4, &point2, p_face4->GFlags);
         } else {
-            point4.U = p_sftex->TMapX4 << 16;
-            point4.V = p_sftex->TMapY4 << 16;
-            point2.U = p_sftex->TMapX3 << 16;
-            point2.V = p_sftex->TMapY3 << 16;
+            set_floor_texture_uv(p_face4->Texture, &point1, &point3, &point2, &point4, p_face4->GFlags);
         }
-        point3.U = p_sftex->TMapX2 << 16;
-        point3.V = p_sftex->TMapY2 << 16;
     }
     dword_176D4C++;
 
