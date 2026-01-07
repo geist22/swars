@@ -21,8 +21,8 @@ msgstr ""
 "Project-Id-Version: GUI text for SyndWarsFX\n"
 "Report-Msgid-Bugs-To: https://github.com/swfans/syndwarsfx/issues\n"
 "POT-Creation-Date: 2025-12-13 19:42+0100\n"
-"PO-Revision-Date: 2025-12-15 22:57+0100\n"
-"Last-Translator: Mefistotelis <mefistotelis@gmail.com>\n"
+"PO-Revision-Date: 2026-01-07 22:00+0100\n"
+"Last-Translator: Agent Chunk <kobaltsextio@discord>\n"
 "Language-Team: Syndicate Wars Fans <github.com/swfans>\n"
 "Language: sv_SE\n"
 "MIME-Version: 1.0\n"
@@ -113,7 +113,7 @@ msgstr "Sprängladdning"
 #: guitext:14
 msgctxt "Weapon name - Eurocorp"
 msgid "Napalm Mine"
-msgstr ""
+msgstr "Napalmmina"
 
 #. Weapon name visible in Equip and Research menus, Debriafings, and within Missions.
 #: guitext:15
@@ -293,7 +293,7 @@ msgstr "Sprängladdning"
 #: guitext:44
 msgctxt "Weapon name - Church of N.E."
 msgid "Napalm Mine"
-msgstr ""
+msgstr "Napalmmina"
 
 #. Weapon name visible in Equip and Research menus, Debriafings, and within Missions.
 #: guitext:45
@@ -3125,7 +3125,7 @@ msgstr "Djupradar"
 #: guitext:516
 msgctxt "MP screen settings"
 msgid "Random Weapons"
-msgstr "Svammel"
+msgstr "Slumpvisa Vapen"
 
 #. Text above volume bar.
 #: guitext:517
