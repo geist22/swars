@@ -28,10 +28,16 @@ extern "C" {
 
 #pragma pack(1)
 
+enum MyFontFlags {
+    MyFF_NONE,
+    MyFF_UPPERCASE,
+};
+
 struct TbSprite;
 
 #pragma pack()
 /******************************************************************************/
+extern ushort my_font_flags;
 
 u32 my_str_len(const char *t);
 int font_word_length(const char *text);

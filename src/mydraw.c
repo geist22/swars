@@ -31,6 +31,8 @@
 /******************************************************************************/
 extern ubyte text_colours[15];
 
+ushort my_font_flags = MyFF_NONE;
+
 ubyte my_char_to_upper(ubyte c)
 {
 #if 0
@@ -65,9 +67,15 @@ int font_word_length(const char *text)
     return len;
 }
 
+// TODO remove when all fonts have lowe case
 TbBool my_font_has_lowcase_chars(const struct TbSprite *p_font)
 {
+#if defined(NEW_GFX_PACKAGE)
+    return (p_font == small_med_font) && (language_3str[0] == 'e') ||
+      (p_font == small_font);
+#else
     return (p_font == small_med_font) && (language_3str[0] == 'e');
+#endif
 }
 
 static int my_font_to_yshift(const struct TbSprite *p_font, char chr)
@@ -135,7 +143,7 @@ ubyte my_char_height(uchar c)
 
 ubyte my_char_width(uchar c)
 {
-    if (!my_font_has_lowcase_chars(lbFontPtr)) {
+    if ((my_font_flags & MyFF_UPPERCASE) != 0) {
         c = my_char_to_upper(c);
     }
     return LbTextCharWidth(c);
@@ -153,6 +161,12 @@ u32 my_string_width(const char *text)
     const char *p_chr;
     u32 str_w;
     ubyte c;
+
+    // TODO allow to control the font flags by caller functions
+    if (my_font_has_lowcase_chars(lbFontPtr) && (lbFontPtr != small_font))
+        my_font_flags &= ~MyFF_UPPERCASE;
+    else
+        my_font_flags |= MyFF_UPPERCASE;
 
     str_w = 0;
     for (p_chr = text; *p_chr != '\0'; p_chr++)
@@ -221,7 +235,7 @@ static short my_draw_one_char(short x, short y, char c)
     short dy;
 
     uc = (ubyte)c;
-    if (!my_font_has_lowcase_chars(lbFontPtr)) {
+    if ((my_font_flags & MyFF_UPPERCASE) != 0) {
         uc = fontchrtoupper(c);
     }
     dy = my_font_to_yshift(lbFontPtr, uc);
@@ -329,12 +343,18 @@ ushort my_draw_text(short x, short y, const char *text, ushort startline)
     wndw_width = text_window_x2 - scr_x;
     ck_beg = 0;
 
+    // TODO allow to control the font flags by caller functions
+    if (my_font_has_lowcase_chars(lbFontPtr) && (lbFontPtr != small_font))
+        my_font_flags &= ~MyFF_UPPERCASE;
+    else
+        my_font_flags |= MyFF_UPPERCASE;
+
     while ( 1 )
     {
         uch = text[ck_end++];
         if (uch == '\0')
             break;
-        if (!my_font_has_lowcase_chars(lbFontPtr)) {
+        if ((my_font_flags & MyFF_UPPERCASE) != 0) {
             uch = fontchrtoupper(uch);
         }
 
