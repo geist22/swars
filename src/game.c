@@ -976,11 +976,11 @@ void play_intro(void)
     }
 }
 
-char func_cc638(const char *text, const char *fname)
+char func_cc638(const char *text1, const char *text2)
 {
     char ret;
     asm volatile ("call ASM_func_cc638\n"
-        : "=r" (ret) : "a" (text), "d" (fname));
+        : "=r" (ret) : "a" (text1), "d" (text2));
     return ret;
 }
 
@@ -1003,6 +1003,7 @@ int load_outro_text(ubyte *buf)
     }
     buf[totlen] = '\0';
     s = (char *)buf;
+    // The font can handle lower case letters, upper case just looks better
     for (i = 0; i < totlen; i++) {
         s[i] = my_char_to_upper(s[i]);
     }
@@ -1160,7 +1161,7 @@ TbResult load_outro_sprites(void)
     assert(next_pos >= 0);
     p_buf = engine_mem_alloc_ptr + next_pos;
 
-#if NEW_GFX_PACKAGE
+#if defined(NEW_GFX_PACKAGE)
     ret = load_sprites_med_font(&p_buf, pinfo->directory, 7, max_detail);
     if (tret == Lb_OK)
         tret = ret;
