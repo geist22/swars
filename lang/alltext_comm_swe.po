@@ -21,7 +21,7 @@ msgstr ""
 "Project-Id-Version: Menu text for SyndWarsFX\n"
 "Report-Msgid-Bugs-To: https://github.com/swfans/syndwarsfx/issues\n"
 "POT-Creation-Date: 2023-09-05 11:43+0200\n"
-"PO-Revision-Date: 2026-01-07 22:00+0100\n"
+"PO-Revision-Date: 2026-01-08 17:00+0100\n"
 "Last-Translator: Agent Chunk <kobaltsextio@discord>\n"
 "Language-Team: Syndicate Wars Fans <github.com/swfans>\n"
 "Language: sv_SE\n"
@@ -1462,7 +1462,7 @@ msgstr "Destillering"
 #: mapscreen.city26:6 mapscreen.city27:6 mapscreen.city33:6 mapscreen.city35:6
 msgctxt "map screen location - toxicity"
 msgid "Radioactive Fallout"
-msgstr "Radioktivt nedfall"
+msgstr "Radioaktivt nedfall"
 
 #: mapscreen.city27:1
 msgctxt "map screen location - name"
@@ -1793,7 +1793,7 @@ msgstr "Vädermanipulation"
 #: mapscreen.city44:6
 msgctxt "map screen location - toxicity"
 msgid "High Radioactive, Light Industrial"
-msgstr "Kemiskt avfall"
+msgstr "Högradioaktivt avfall, lätt industri"
 
 #: mapscreen.city45:1
 msgctxt "map screen location - name"
