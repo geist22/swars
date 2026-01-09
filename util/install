@@ -258,11 +258,6 @@ copy_data()
     install_file "data/${fn}" || return 1
   done
 
-  for fn in w-icons; do
-    install_file "data/${fn}.dat" || return 1
-    install_file "data/${fn}.tab" || return 1
-  done
-
   for fn in 00 01 02 03 04 05; do
     install_file "data/mapout${fn}.dat" || return 1
     install_file "data/tex${fn}.dat" || return 1
@@ -277,11 +272,6 @@ copy_data()
   for fn in s z; do
     install_file "data/outro-${fn}.smk" || return 1
     install_file "data/outro-${fn}.raw" || return 1
-  done
-
-  for fn in tit nam qot; do
-    install_file "data/${fn}-font.dat" || return 1
-    install_file "data/${fn}-font.tab" || return 1
   done
 
   for fn in pal s-proj; do
@@ -413,6 +403,9 @@ check_language()
       ;;
     ita)
       LANG_NAME="Italian"
+      ;;
+    pol)
+      LANG_NAME="Polish"
       ;;
     spa)
       LANG_NAME="Spanish"
