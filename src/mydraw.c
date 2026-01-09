@@ -70,12 +70,8 @@ int font_word_length(const char *text)
 // TODO remove when all fonts have lowe case
 TbBool my_font_has_lowcase_chars(const struct TbSprite *p_font)
 {
-#if defined(NEW_GFX_PACKAGE)
     return
       (p_font == small_med_font) || (p_font == small_font);
-#else
-    return (p_font == small_med_font) && (language_3str[0] == 'e');
-#endif
 }
 
 static int my_font_to_yshift(const struct TbSprite *p_font, char chr)
@@ -86,10 +82,6 @@ static int my_font_to_yshift(const struct TbSprite *p_font, char chr)
     }
     else if (p_font == small_med_font)
     {
-#if !defined(NEW_GFX_PACKAGE)
-        if ((ubyte)chr >= (ubyte)'a' && (ubyte)chr <= (ubyte)'z')
-            return 0;
-#endif
         return 2;
     }
     else if (p_font == med_font || p_font == med2_font)

@@ -1161,7 +1161,6 @@ TbResult load_outro_sprites(void)
     assert(next_pos >= 0);
     p_buf = engine_mem_alloc_ptr + next_pos;
 
-#if defined(NEW_GFX_PACKAGE)
     ret = load_sprites_med_font(&p_buf, pinfo->directory, 7, max_detail);
     if (tret == Lb_OK)
         tret = ret;
@@ -1173,31 +1172,6 @@ TbResult load_outro_sprites(void)
     ret = load_sprites_med2_font(&p_buf, pinfo->directory, 12, max_detail);
     if (tret == Lb_OK)
         tret = ret;
-#else
-    med_font_data = p_buf;
-    next_len = LbFileLoadAt("data/tit-font.dat", med_font_data);
-    p_buf += next_len;
-    med_font = (struct TbSprite *)p_buf;
-    next_len = LbFileLoadAt("data/tit-font.tab", med_font);
-    p_buf += next_len;
-    med_font_end = (struct TbSprite *)p_buf;
-
-    big_font_data = p_buf;
-    next_len = LbFileLoadAt("data/nam-font.dat", big_font_data);
-    p_buf += next_len;
-    big_font = (struct TbSprite *)p_buf;
-    next_len = LbFileLoadAt("data/nam-font.tab", big_font);
-    p_buf += next_len;
-    big_font_end = (struct TbSprite *)p_buf;
-
-    med2_font_data = p_buf;
-    next_len = LbFileLoadAt("data/qot-font.dat", med2_font_data);
-    p_buf += next_len;
-    med2_font = (struct TbSprite *)p_buf;
-    next_len = LbFileLoadAt("data/qot-font.tab", med2_font);
-    p_buf += next_len;
-    med2_font_end = (struct TbSprite *)p_buf;
-#endif
 
     setup_sprites_med_font();
     setup_sprites_med2_font();
