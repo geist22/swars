@@ -114,7 +114,8 @@ TbResult load_sprites_fe_icons(ubyte **pp_buf,
 void setup_sprites_fe_icons(void);
 void reset_sprites_fe_icons(void);
 
-TbResult load_sprites_wepicons(ubyte **pp_buf, const char *dir);
+TbResult load_sprites_wepicons(ubyte **pp_buf,
+  const char *dir, short styleno, short max_detail);
 void setup_sprites_wepicons(void);
 void reset_sprites_wepicons(void);
 

@@ -1181,7 +1181,7 @@ TbResult load_all_sprites_purple_mode(void)
 
     pinfo = &game_dirs[DirPlace_Data];
 
-    ret = load_sprites_wepicons(&p_buf, pinfo->directory);
+    ret = load_sprites_wepicons(&p_buf, pinfo->directory, 0, max_detail + 3);
     if (tret == Lb_OK)
         tret = ret;
 

@@ -1271,7 +1271,7 @@ void show_weapon_slot(short scr_x, short scr_y, WeaponType wtype)
 
     lbDisplay.DrawColour = 174;
     lbDisplay.DrawFlags = 0x8000 | Lb_TEXT_ONE_COLOR;
-    draw_sprite_purple_list(scr_x, scr_y, &wepicons_sprites[wtype - 1 + 1]);
+    draw_sprite_purple_list(scr_x, scr_y, &wepicons_sprites[wtype + 1]);
     lbDisplay.DrawFlags &= ~0x8000;
 
     fp = weapon_fourpack_index(wtype);

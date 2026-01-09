@@ -210,37 +210,28 @@ void reset_sprites_fe_icons(void)
     LbSpriteReset(fe_icons_sprites, fe_icons_sprites_end, fe_icons_sprites_data);
 }
 
-TbResult load_sprites_wepicons(ubyte **pp_buf, const char *dir)
+TbResult load_sprites_wepicons(ubyte **pp_buf,
+  const char *dir, short styleno, short max_detail)
 {
-    char locstr[DISKPATH_SIZE];
     ubyte *p_buf;
-    long len;
+    ushort min_sprites;
     TbResult ret;
 
+    min_sprites = 34;
     p_buf = *pp_buf;
-    ret = Lb_OK;
-
-    wepicons_sprites_data = p_buf;
-    //TODO replace with "wepicon0-3.dat"
-    sprintf(locstr, "%s/w-icons.dat", dir);
-    len = LbFileLoadAt(locstr, p_buf);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 0;
-    }
-    p_buf += len;
     wepicons_sprites = (struct TbSprite *)p_buf;
-    sprintf(locstr, "%s/w-icons.tab", dir);
-    len = LbFileLoadAt(locstr, p_buf);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 32 * sizeof(struct TbSprite);
-        LbMemorySet(p_buf, '\0', len);
-    }
-    p_buf += len;
+    p_buf += min_sprites * sizeof(struct TbSprite);
     wepicons_sprites_end = (struct TbSprite *)p_buf;
+    wepicons_sprites_data = p_buf;
+    p_buf += min_sprites * 4096 * (max_detail + 1) * (max_detail + 1);
 
-    *pp_buf = p_buf;
+    ret = load_any_sprites_up_to(dir, "wepicon", min_sprites,
+      wepicons_sprites, wepicons_sprites_end,
+      wepicons_sprites_data, &p_buf, NULL, styleno, max_detail);
+
+    if (ret != Lb_FAIL)
+        *pp_buf = p_buf;
+
     return ret;
 }
 
