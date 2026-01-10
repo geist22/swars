@@ -38,14 +38,20 @@ as american release, were tested and will definitely work; other version were
 not fully tested. Only releases for PC can be used. Releases from popular
 digital distribution platforms all include one of the tested images.
 
-The CD version which you use narrows the range of available languages.
+The CD version which you use narrows the range of languages available during
+installation.
 
 * Multi-lingual CD contains `eng` `fre` `ita` `spa` `swe`,
 * German release is required to use `ger`,
 * Japaneses "SW Premium" release contains `eng` `fre` `jap`, but asian fonts
   are not supported by the port.
 
-The steps you need to take vary depending on your operating system.
+After installing, you can change the language manually by editing `config.ini`.
+Some fanmade translations can be actually only enabled this way. However,
+several media files which are not packaged with **SyndWarsFX** will stay
+at the language version chosen during installation, so it still matters.
+
+The steps you need to take for installation vary depending on your operating system.
 
 ### Installing on GNU or UNIX
 
