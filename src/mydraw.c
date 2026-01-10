@@ -67,11 +67,9 @@ int font_word_length(const char *text)
     return len;
 }
 
-// TODO remove when all fonts have lowe case
-TbBool my_font_has_lowcase_chars(const struct TbSprite *p_font)
+TbBool my_font_prefer_upper_case(const struct TbSprite *p_font)
 {
-    return
-      (p_font == small_med_font) || (p_font == small_font);
+    return (p_font == small_font);
 }
 
 static int my_font_to_yshift(const struct TbSprite *p_font, char chr)
@@ -156,11 +154,10 @@ u32 my_string_width(const char *text)
     u32 str_w;
     ubyte c;
 
-    // TODO allow to control the font flags by caller functions
-    if (my_font_has_lowcase_chars(lbFontPtr) && (lbFontPtr != small_font))
-        my_font_flags &= ~MyFF_UPPERCASE;
-    else
+    if (my_font_prefer_upper_case(lbFontPtr))
         my_font_flags |= MyFF_UPPERCASE;
+    else
+        my_font_flags &= ~MyFF_UPPERCASE;
 
     str_w = 0;
     for (p_chr = text; *p_chr != '\0'; p_chr++)
@@ -337,11 +334,10 @@ ushort my_draw_text(short x, short y, const char *text, ushort startline)
     wndw_width = text_window_x2 - scr_x;
     ck_beg = 0;
 
-    // TODO allow to control the font flags by caller functions
-    if (my_font_has_lowcase_chars(lbFontPtr) && (lbFontPtr != small_font))
-        my_font_flags &= ~MyFF_UPPERCASE;
-    else
+    if (my_font_prefer_upper_case(lbFontPtr))
         my_font_flags |= MyFF_UPPERCASE;
+    else
+        my_font_flags &= ~MyFF_UPPERCASE;
 
     while ( 1 )
     {
