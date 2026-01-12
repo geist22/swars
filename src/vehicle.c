@@ -282,6 +282,10 @@ void veh_add(struct Thing *p_vehicle, short frame)
     {
     case 18:
         mgun = get_new_thing();
+        if (mgun <= 0) {
+            LOGERR("No thing slots for mounted gun");
+            break;
+        }
         p_vehicle->U.UVehicle.SubThing = mgun;
         p_vehicle->SubType = SubTT_VEH_TANK;
 
@@ -311,6 +315,10 @@ void veh_add(struct Thing *p_vehicle, short frame)
         break;
     case 26:
         mgun = get_new_thing();
+        if (mgun <= 0) {
+            LOGERR("No thing slots for mounted gun");
+            break;
+        }
         p_vehicle->U.UVehicle.SubThing = mgun;
         p_vehicle->SubType = SubTT_VEH_TANK;
 
@@ -340,6 +348,10 @@ void veh_add(struct Thing *p_vehicle, short frame)
         break;
     case 29:
         mgun = get_new_thing();
+        if (mgun <= 0) {
+            LOGERR("No thing slots for mounted gun");
+            break;
+        }
         p_vehicle->U.UVehicle.SubThing = mgun;
         p_vehicle->SubType = SubTT_VEH_TANK;
 

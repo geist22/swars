@@ -214,6 +214,9 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
             short angle;
 
             new_thing = get_new_thing();
+            if (new_thing <= 0) {
+                LOGERR("No thing slots for level content");
+            }
             p_thing = &things[new_thing];
             memcpy(&loc_thing, p_thing, sizeof(struct Thing));
             if (fmtver >= 13) {

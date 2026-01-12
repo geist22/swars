@@ -36,6 +36,7 @@
 #include "game.h"
 #include "game_data.h"
 #include "game_speed.h"
+#include "matrix.h"
 #include "network.h"
 #include "thing.h"
 #include "player.h"
@@ -1643,15 +1644,16 @@ void init_air_strike(struct Thing *p_owner)
     asm volatile ("call ASM_init_air_strike\n"
         : : "a" (p_owner));
 #endif
-    ThingIdx new_thing;
+    ThingIdx shottng;
     struct Thing *p_thing;
     ubyte grp;
 
-    new_thing = get_new_thing();
-    if (new_thing == 0) {
+    shottng = get_new_thing();
+    if (shottng == 0) {
+        LOGERR("No thing slots for a shot");
         return;
     }
-    p_thing = &things[new_thing];
+    p_thing = &things[shottng];
     p_thing->Type = TT_AIR_STRIKE;
     p_thing->X = p_owner->X;
     p_thing->Z = p_owner->Z;
@@ -1694,12 +1696,111 @@ void init_grenade(struct Thing *p_owner, ushort gtype)
         : : "a" (p_owner), "d" (gtype));
 }
 
+#define SHOT_ROCKED_SPEED 256
+
 void init_v_rocket(struct Thing *p_owner)
 {
-    LOGSYNC("Shot fired by %s offs=%d", thing_type_name(p_owner->Type, p_owner->SubType),
-      (int)p_owner->ThingOffset);
+#if 0
     asm volatile ("call ASM_init_v_rocket\n"
         : : "a" (p_owner));
+#else
+    ThingIdx shottng;
+    struct Thing *p_shot;
+    struct Thing *p_veh;
+    struct Thing *p_target;
+    struct M33 *p_mat;
+    s32 ppos_beg_x, ppos_beg_z, ppos_beg_y;
+    s32 pos_dt_x, pos_dt_z, pos_dt_y;
+    s32 dist;
+
+    LOGSYNC("Shot fired by %s offs=%d", thing_type_name(p_owner->Type, p_owner->SubType),
+      (int)p_owner->ThingOffset);
+
+    shottng = get_new_thing();
+    if (shottng == 0) {
+        LOGERR("No thing slots for a shot");
+        return;
+    }
+
+    p_shot = &things[shottng];
+    p_veh = &things[p_owner->U.UPerson.Vehicle];
+    {
+        struct Thing *p_mgun;
+
+        p_mgun = &things[p_veh->U.UVehicle.OnFace]; //TODO Very suspicious
+        p_mat = &local_mats[p_mgun->U.UObject.MatrixIndex];
+        LOGDBG("Shot from vehicle %s offs=%d, mgun %s offs=%d",
+          thing_type_name(p_veh->Type, p_veh->SubType), (int)p_veh->ThingOffset,
+          thing_type_name(p_mgun->Type, p_mgun->SubType), (int)p_mgun->ThingOffset);
+
+        ppos_beg_x = p_owner->X - 16 * p_mat->R[0][2];
+        ppos_beg_z = p_owner->Z - 16 * p_mat->R[2][2];
+        ppos_beg_y = p_owner->Y + MAPCOORD_TO_PRCCOORD(70,0);
+    }
+    if ((PRCCOORD_TO_MAPCOORD(ppos_beg_x) >= MAP_COORD_WIDTH) ||
+      (PRCCOORD_TO_MAPCOORD(ppos_beg_z) >= MAP_COORD_HEIGHT))
+    {
+        remove_thing(shottng);
+        LOGERR("Start position beyond map area");
+        return;
+    }
+
+    p_shot->PTarget = NULL;
+    p_shot->U.UEffect.Angle = p_owner->U.UPerson.Angle;
+
+    p_target = p_veh->PTarget;
+
+    if ((p_owner->Flag & 0x20000000) != 0)
+    {
+        p_owner->Flag &= ~0x20000000;
+        p_shot->U.UEffect.GotoX = p_veh->U.UVehicle.TargetDX;
+        p_shot->U.UEffect.GotoY = p_veh->U.UVehicle.TargetDY;
+        p_shot->U.UEffect.GotoZ = p_veh->U.UVehicle.TargetDZ;
+        p_shot->Flag |= 0x20000000;
+    }
+    else if (p_target != NULL)
+    {
+        p_shot->PTarget = p_target;
+        p_shot->U.UEffect.GotoX = PRCCOORD_TO_MAPCOORD(p_target->X);
+        p_shot->U.UEffect.GotoY = PRCCOORD_TO_MAPCOORD(p_target->Y);
+        p_shot->U.UEffect.GotoZ = PRCCOORD_TO_MAPCOORD(p_target->Z);
+    }
+    else
+    {
+        LOGERR("No direction for shot");
+        p_shot->U.UEffect.GotoX = MAP_COORD_WIDTH / 2;
+        p_shot->U.UEffect.GotoY = PRCCOORD_TO_MAPCOORD(p_owner->Y);
+        p_shot->U.UEffect.GotoZ = MAP_COORD_HEIGHT / 2;
+    }
+    pos_dt_x = p_shot->U.UEffect.GotoX - PRCCOORD_TO_MAPCOORD(ppos_beg_x);
+    pos_dt_y = p_shot->U.UEffect.GotoY - PRCCOORD_TO_MAPCOORD(ppos_beg_y);
+    pos_dt_z = p_shot->U.UEffect.GotoZ - PRCCOORD_TO_MAPCOORD(ppos_beg_z);
+
+    dist = LbSqrL(pos_dt_z * pos_dt_z + pos_dt_x * pos_dt_x);
+    if (dist == 0)
+        dist = 1;
+    p_shot->VX = (SHOT_ROCKED_SPEED * pos_dt_x) / dist;
+    p_shot->VY = (SHOT_ROCKED_SPEED * pos_dt_y) / dist;
+    p_shot->VZ = (SHOT_ROCKED_SPEED * pos_dt_z) / dist;
+    p_shot->X = ppos_beg_x;
+    p_shot->Y = ppos_beg_y;
+    p_shot->Z = ppos_beg_z;
+
+    p_shot->StartTimer1 = 20;
+    p_shot->Timer1 = 30;
+    p_shot->Speed = 600;
+    p_shot->Frame = 0;
+    p_shot->StartFrame = 0;
+    p_shot->U.UEffect.Object = 0;
+    p_shot->Parent = 0;
+    p_shot->Owner = p_owner->ThingOffset;
+    p_shot->Flag |= 0x0004;
+    p_shot->Type = TT_ROCKET;
+    p_shot->Radius = 50;
+    add_node_thing(p_shot->ThingOffset);
+
+    play_dist_sample(p_shot, 24, 0x7Fu, 0x40u, 100, 0, 3);
+#endif
 }
 
 void init_mech_rocket(struct Thing *p_owner, struct Thing *p_mech, int x, int y, int z)
