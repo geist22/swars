@@ -1696,6 +1696,8 @@ void init_grenade(struct Thing *p_owner, ushort gtype)
 
 void init_v_rocket(struct Thing *p_owner)
 {
+    LOGSYNC("Shot fired by %s offs=%d", thing_type_name(p_owner->Type, p_owner->SubType),
+      (int)p_owner->ThingOffset);
     asm volatile ("call ASM_init_v_rocket\n"
         : : "a" (p_owner));
 }
