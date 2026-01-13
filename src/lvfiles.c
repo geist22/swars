@@ -324,8 +324,10 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
                 game_objects[next_object - 1].ThingNo = k;
                 VNAV_unkn_func_207(p_thing);
                 {
-                    k = p_thing->U.UVehicle.MatrixIndex;
-                    angle = LbArcTanAngle(local_mats[k].R[0][2], local_mats[k].R[2][2]);
+                    struct M33 *p_mat;
+
+                    p_mat = &local_mats[p_thing->U.UVehicle.MatrixIndex];
+                    angle = LbArcTanAngle(p_mat->R[0][2], p_mat->R[2][2]);
                     p_thing->U.UVehicle.AngleY = (angle + LbFPMath_PI) & LbFPMath_AngleMask;
                 }
 
@@ -336,9 +338,11 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
                     if (p_thing->U.UVehicle.SubThing != 0)
                     {
                         struct Thing *p_mgun;
+                        struct M33 *p_mat;
+
                         p_mgun = &things[p_thing->U.UVehicle.SubThing];
-                        k = p_mgun->U.UVehicle.MatrixIndex;
-                        angle = LbArcTanAngle(local_mats[k].R[0][2], local_mats[k].R[2][2]);
+                        p_mat = &local_mats[p_mgun->U.UVehicle.MatrixIndex];
+                        angle = LbArcTanAngle(p_mat->R[0][2], p_mat->R[2][2]);
                         p_mgun->U.UVehicle.AngleY = (angle + LbFPMath_PI) & LbFPMath_AngleMask;
                     }
                 }

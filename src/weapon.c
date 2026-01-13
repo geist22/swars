@@ -1708,7 +1708,6 @@ void init_v_rocket(struct Thing *p_owner)
     struct Thing *p_shot;
     struct Thing *p_veh;
     struct Thing *p_target;
-    struct M33 *p_mat;
     s32 ppos_beg_x, ppos_beg_z, ppos_beg_y;
     s32 pos_dt_x, pos_dt_z, pos_dt_y;
     s32 dist;
@@ -1726,6 +1725,7 @@ void init_v_rocket(struct Thing *p_owner)
     p_veh = &things[p_owner->U.UPerson.Vehicle];
     {
         struct Thing *p_mgun;
+        struct M33 *p_mat;
 
         p_mgun = &things[p_veh->U.UVehicle.OnFace]; //TODO Very suspicious
         p_mat = &local_mats[p_mgun->U.UObject.MatrixIndex];
@@ -2245,6 +2245,31 @@ ThingIdx get_vehicle_passenger_in_player_control(struct Thing *p_vehicle)
     return 0;
 }
 
+ubyte vehicle_with_person_shoot_at_target(struct Thing *p_owner)
+{
+    struct Thing *p_veh;
+    struct Thing *p_mgun;
+    ubyte turn;
+
+    if (p_owner->U.UPerson.WeaponTurn != 0) {
+        return 0;
+    }
+
+    p_veh = &things[p_owner->U.UPerson.Vehicle];
+
+    if (p_veh->U.UVehicle.SubThing == 0) {
+        return 0;
+    }
+
+    p_mgun = &things[p_veh->U.UVehicle.SubThing];
+
+    turn = p_mgun->U.UMGun.ShotTurn;
+    init_v_rocket(p_owner);
+    p_mgun->U.UMGun.ShotTurn = (turn == 0);
+    p_owner->U.UPerson.WeaponTurn = 20;
+    return 0;
+}
+
 void process_vehicle_weapon(struct Thing *p_vehicle, struct Thing *p_person)
 {
 #if 0
@@ -2310,13 +2335,12 @@ void process_vehicle_weapon(struct Thing *p_vehicle, struct Thing *p_person)
         }
     }
 
-    if (((p_person->Flag & 0x800) != 0) && (p_person->U.UPerson.WeaponTurn == 0)
+    if (((p_person->Flag & 0x800) != 0)
       && (p_vehicle->OldTarget < 24)
       && ((p_vehicle->PTarget != NULL && p_person->PTarget != NULL)
       || (p_vehicle->Flag & TngF_Unkn20000000) != 0))
     {
-        init_v_rocket(p_person);
-        p_person->U.UPerson.WeaponTurn = 20;
+        vehicle_with_person_shoot_at_target(p_person);
     }
 #endif
 }
