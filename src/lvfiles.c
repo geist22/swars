@@ -306,10 +306,11 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
                 if (fmtver <= 8)
                     p_thing->Y >>= 3;
 
+                assert(sizeof(struct M33) == 36);
                 k = next_local_mat++;
-                LbFileRead(lev_fh, &local_mats[k], 36);
+                LbFileRead(lev_fh, &local_mats[k], sizeof(struct M33));
 
-                p_thing->U.UVehicle.MatrixIndex = next_local_mat - 1;
+                p_thing->U.UVehicle.MatrixIndex = k;
                 byte_1C83D1 = 0;
 
                 n = next_normal;
@@ -340,6 +341,7 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
                         struct Thing *p_mgun;
                         struct M33 *p_mat;
 
+                        // Mounted Gun matrix was created during veh_add()
                         p_mgun = &things[p_thing->U.UVehicle.SubThing];
                         p_mat = &local_mats[p_mgun->U.UVehicle.MatrixIndex];
                         angle = LbArcTanAngle(p_mat->R[0][2], p_mat->R[2][2]);
@@ -549,8 +551,9 @@ void save_level_pc_handle(TbFileHandle lev_fh)
             LbFileWrite(lev_fh, p_thing, sizeof(struct Thing));
             if (p_thing->Type == TT_VEHICLE)
             {
+                assert(sizeof(struct M33) == 36);
                 k = p_thing->U.UVehicle.MatrixIndex;
-                LbFileWrite(lev_fh, &local_mats[k], 36);
+                LbFileWrite(lev_fh, &local_mats[k], sizeof(struct M33));
 
             }
             // Per thing code end
