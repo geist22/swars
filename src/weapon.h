@@ -54,6 +54,10 @@ extern "C" {
  */
 #define WEP_AIRSTRIKE_DELAY_GTURNS 20
 
+/** Speed at which rockets move, in map coords.
+ */
+#define SHOT_ROCKED_SPEED 256
+
 enum WeaponType
 {
   WEP_NULL = 0x0,

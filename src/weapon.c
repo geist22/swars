@@ -1696,8 +1696,6 @@ void init_grenade(struct Thing *p_owner, ushort gtype)
         : : "a" (p_owner), "d" (gtype));
 }
 
-#define SHOT_ROCKED_SPEED 256
-
 void init_v_rocket(struct Thing *p_owner)
 {
 #if 0
@@ -1725,17 +1723,23 @@ void init_v_rocket(struct Thing *p_owner)
     p_veh = &things[p_owner->U.UPerson.Vehicle];
     {
         struct Thing *p_mgun;
-        struct M33 *p_mat;
+        short angle;
 
-        p_mgun = &things[p_veh->U.UVehicle.OnFace]; //TODO Very suspicious
-        p_mat = &local_mats[p_mgun->U.UObject.MatrixIndex];
+        p_mgun = &things[p_veh->U.UVehicle.SubThing];
         LOGDBG("Shot from vehicle %s offs=%d, mgun %s offs=%d",
           thing_type_name(p_veh->Type, p_veh->SubType), (int)p_veh->ThingOffset,
           thing_type_name(p_mgun->Type, p_mgun->SubType), (int)p_mgun->ThingOffset);
 
-        ppos_beg_x = p_owner->X - 16 * p_mat->R[0][2];
-        ppos_beg_z = p_owner->Z - 16 * p_mat->R[2][2];
-        ppos_beg_y = p_owner->Y + MAPCOORD_TO_PRCCOORD(70,0);
+        if (p_mgun->U.UMGun.ShotTurn != 0) // which rocket pack to shoot from
+            angle = p_mgun->U.UMGun.AngleY + 7 * LbFPMath_PI / 16;
+        else
+            angle = p_mgun->U.UMGun.AngleY - 7 * LbFPMath_PI / 16;
+        angle = (angle + 2 * LbFPMath_PI) & LbFPMath_AngleMask;
+
+        // the mounted gun position is relative; use trigonometry to switch rocket packs
+        ppos_beg_x = p_veh->X + p_mgun->X - 3 * lbSinTable[angle] / 2;
+        ppos_beg_z = p_veh->Z + p_mgun->Z - 3 * lbSinTable[angle + LbFPMath_PI/2] / 2;
+        ppos_beg_y = p_veh->Y + p_mgun->Y + (140 << 5);
     }
     if ((PRCCOORD_TO_MAPCOORD(ppos_beg_x) >= MAP_COORD_WIDTH) ||
       (PRCCOORD_TO_MAPCOORD(ppos_beg_z) >= MAP_COORD_HEIGHT))
