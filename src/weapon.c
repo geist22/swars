@@ -84,6 +84,10 @@ struct WeaponDef weapon_defs[] = {
     { 0,    0,  0, 16,   4,  5, 0, 0, WEPDFLG_None,          72, 5,  3000,    10,  8},
 };
 
+/** Tank rocket weapon settings.
+ */
+ushort weapon_tank_rocket_ReFireDelay = 20;
+
 ubyte weapon_tech_level[33] = {
   0, 1, 1, 3, 3, 5, 6, 2, 4, 3, 3, 2, 4, 4, 255, 5, 7, 8, 1, 255, 9, 6, 6, 255, 8, 7, 5, 2, 6, 7, 5, 255, 255,
 };
@@ -2270,7 +2274,7 @@ ubyte vehicle_with_person_shoot_at_target(struct Thing *p_owner)
     turn = p_mgun->U.UMGun.ShotTurn;
     init_v_rocket(p_owner);
     p_mgun->U.UMGun.ShotTurn = (turn == 0);
-    p_owner->U.UPerson.WeaponTurn = 20;
+    p_owner->U.UPerson.WeaponTurn = weapon_tank_rocket_ReFireDelay;
     return 0;
 }
 
