@@ -1754,9 +1754,9 @@ void init_v_rocket(struct Thing *p_owner)
 
     p_target = p_veh->PTarget;
 
-    if ((p_owner->Flag & 0x20000000) != 0)
+    if ((p_owner->Flag & TngF_Unkn20000000) != 0)
     {
-        p_owner->Flag &= ~0x20000000;
+        p_owner->Flag &= ~TngF_Unkn20000000;
         p_shot->U.UEffect.GotoX = p_veh->U.UVehicle.TargetDX;
         p_shot->U.UEffect.GotoY = p_veh->U.UVehicle.TargetDY;
         p_shot->U.UEffect.GotoZ = p_veh->U.UVehicle.TargetDZ;
@@ -2339,7 +2339,7 @@ void process_vehicle_weapon(struct Thing *p_vehicle, struct Thing *p_person)
         }
     }
 
-    if (((p_person->Flag & 0x800) != 0)
+    if (((p_person->Flag & TngF_Unkn0800) != 0)
       && (p_vehicle->OldTarget < 24)
       && ((p_vehicle->PTarget != NULL && p_person->PTarget != NULL)
       || (p_vehicle->Flag & TngF_Unkn20000000) != 0))
@@ -2420,9 +2420,9 @@ void process_mech_weapon(struct Thing *p_vehicle, struct Thing *p_person)
     if ((p_person->Flag & TngF_PlayerAgent) == 0)
         p_person->Flag |= TngF_Unkn0800;
 
-    if (((p_person->Flag & 0x0800) != 0) && ((p_vehicle->U.UVehicle.TNode & 0x0004) != 0)
+    if (((p_person->Flag & TngF_Unkn0800) != 0) && ((p_vehicle->U.UVehicle.TNode & 0x0004) != 0)
       && (p_person->U.UPerson.WeaponTurn == 0)
-      && ((p_vehicle->PTarget != NULL && p_person->PTarget != NULL) || (p_vehicle->Flag & 0x20000000) != 0))
+      && ((p_vehicle->PTarget != NULL && p_person->PTarget != NULL) || (p_vehicle->Flag & TngF_Unkn20000000) != 0))
     {
         p_person->U.UVehicle.WeaponTurn = 10;
         if (p_vehicle->OldTarget < 24)
