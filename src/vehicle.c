@@ -313,7 +313,7 @@ void veh_add(struct Thing *p_vehicle, short frame)
         p_snobj = &game_objects[obj];
         p_snobj->ThingNo = p_mgun - things;
         break;
-    case 26:
+    case 26: // Replaced tank (object slots reused for mech)
         mgun = get_new_thing();
         if (mgun <= 0) {
             LOGERR("No thing slots for mounted gun");
