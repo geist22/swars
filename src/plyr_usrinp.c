@@ -327,7 +327,7 @@ ubyte input_user_control_agent(ushort plyr, short dmuser)
     if ((p_player->UserInput[dmuser].Bits & SpUIn_DoTrigger) != 0)
     {
         p_dcthing = &things[dcthing];
-        if ((p_dcthing->Flag & TngF_InVehicle) != 0)
+        if ((p_dcthing->Flag & TngF_InVehicle) == 0)
         {
             p_player->UserInput[dmuser].Bits &= ~SpUIn_DoTrigger;
             loc_build_packet(p_pckt, PAct_ENTER_VEHICLE, dcthing,
