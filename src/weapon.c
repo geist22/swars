@@ -1775,10 +1775,11 @@ void init_v_rocket(struct Thing *p_owner)
     }
     else
     {
-        LOGERR("No direction for shot");
-        p_shot->U.UEffect.GotoX = MAP_COORD_WIDTH / 2;
-        p_shot->U.UEffect.GotoY = PRCCOORD_TO_MAPCOORD(p_owner->Y);
-        p_shot->U.UEffect.GotoZ = MAP_COORD_HEIGHT / 2;
+        // The function should be only called if the vehicle has a target set,
+        // so this should be safe
+        p_shot->U.UEffect.GotoX = p_veh->U.UVehicle.TargetDX;
+        p_shot->U.UEffect.GotoY = p_veh->U.UVehicle.TargetDY;
+        p_shot->U.UEffect.GotoZ = p_veh->U.UVehicle.TargetDZ;
     }
     pos_dt_x = p_shot->U.UEffect.GotoX - PRCCOORD_TO_MAPCOORD(ppos_beg_x);
     pos_dt_y = p_shot->U.UEffect.GotoY - PRCCOORD_TO_MAPCOORD(ppos_beg_y);
