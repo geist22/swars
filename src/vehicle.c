@@ -280,7 +280,7 @@ void veh_add(struct Thing *p_vehicle, short frame)
 
     switch (frame)
     {
-    case 18:
+    case VehOM_MBTANK:
         mgun = get_new_thing();
         if (mgun <= 0) {
             LOGERR("No thing slots for mounted gun");
@@ -308,7 +308,7 @@ void veh_add(struct Thing *p_vehicle, short frame)
         p_mgun->Z = 0;
         obj = next_object - 1;
         unkn_object_shift_03(obj);
-        p_mgun->Type = TT_UNKN33;
+        p_mgun->Type = TT_VEH_TURRET;
         p_mgun->U.UMGun.Object = obj;
         p_snobj = &game_objects[obj];
         p_snobj->ThingNo = p_mgun - things;
@@ -341,12 +341,12 @@ void veh_add(struct Thing *p_vehicle, short frame)
         p_mgun->Z = 0;
         obj = next_object - 1;
         unkn_object_shift_03(obj);
-        p_mgun->Type = TT_UNKN33;
+        p_mgun->Type = TT_VEH_TURRET;
         p_mgun->U.UMGun.Object = obj;
         p_snobj = &game_objects[obj];
         p_snobj->ThingNo = p_mgun - things;
         break;
-    case 29:
+    case VehOM_CLAWTANK:
         mgun = get_new_thing();
         if (mgun <= 0) {
             LOGERR("No thing slots for mounted gun");
@@ -365,16 +365,16 @@ void veh_add(struct Thing *p_vehicle, short frame)
         p_mgun->StartFrame = frame;
 
         byte_1C83D1 = 0;
-        coord_x = (p_vehicle->X >> 8);
-        coord_y = (p_vehicle->Y >> 8);
-        coord_z = (p_vehicle->Z >> 8);
+        coord_x = PRCCOORD_TO_MAPCOORD(p_vehicle->X);
+        coord_y = PRCCOORD_TO_MAPCOORD(p_vehicle->Y);
+        coord_z = PRCCOORD_TO_MAPCOORD(p_vehicle->Z);
         copy_prim_obj_to_game_object(coord_x, coord_z, -30 - prim_unknprop01, coord_y + 20);
         p_mgun->X = 0;
         p_mgun->Y = 0x1E00;
         p_mgun->Z = 0;
         obj = next_object - 1;
         unkn_object_shift_03(obj);
-        p_mgun->Type = TT_UNKN33;
+        p_mgun->Type = TT_VEH_TURRET;
         p_mgun->U.UMGun.Object = obj;
         p_snobj = &game_objects[obj];
         p_snobj->ThingNo = p_mgun - things;

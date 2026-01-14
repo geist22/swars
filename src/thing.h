@@ -69,7 +69,7 @@ enum ThingType {
     SmTT_TIME_POD = 0x1E,
     TT_AIR_STRIKE = 0x1F,
     SmTT_CANISTER = 0x20,
-    TT_UNKN33 = 0x21,
+    TT_VEH_TURRET = 0x21,
     TT_UNKN34 = 0x22,
     TT_UNKN35 = 0x23,
     SmTT_STASIS_POD = 0x24,
