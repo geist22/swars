@@ -50,8 +50,6 @@ extern struct ScreenButton world_info_ACCEPT_button;
 extern struct ScreenButton world_info_CANCEL_button;
 extern struct ScreenBox world_landmap_box;
 
-extern struct TbSprite *fe_icons_sprites;
-
 extern short word_155110[6];
 extern ubyte byte_15511C;// = 1;
 extern short word_155744[6];

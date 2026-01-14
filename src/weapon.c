@@ -1743,10 +1743,20 @@ void init_v_rocket(struct Thing *p_owner)
         // the mounted gun position is relative; use trigonometry to switch rocket packs
         prc_beg_x = p_veh->X + p_mgun->X - 3 * lbSinTable[angle] / 2;
         prc_beg_z = p_veh->Z + p_mgun->Z - 3 * lbSinTable[angle + LbFPMath_PI/2] / 2;
-        if ((p_mgun->U.UMGun.ShotTurn & 2) != 0) // upper or lower rocket within pack
-            prc_beg_y = p_veh->Y + p_mgun->Y + (50 << 5);
+        if (p_mgun->StartFrame == VehOM_MBTANK)
+        {
+             // MBT has 6-rocket pack; but simplify to 2 - select upper or lower rocket within pack
+            if ((p_mgun->U.UMGun.ShotTurn & 2) != 0)
+                prc_beg_y = p_veh->Y + p_mgun->Y + (50 << 5);
+            else
+                prc_beg_y = p_veh->Y + p_mgun->Y + (200 << 5);
+        }
         else
-            prc_beg_y = p_veh->Y + p_mgun->Y + (200 << 5);
+        {
+            // Claw tank (and others) do not have multiple rockets in a pack
+            prc_beg_y = p_veh->Y + p_mgun->Y + (170 << 5);
+        }
+
     }
     if ((PRCCOORD_TO_MAPCOORD(prc_beg_x) >= MAP_COORD_WIDTH) ||
       (PRCCOORD_TO_MAPCOORD(prc_beg_z) >= MAP_COORD_HEIGHT))

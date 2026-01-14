@@ -73,7 +73,6 @@ extern ubyte equip_agents_panel_draw_state;
 extern ubyte equip_agent_name_draw_state;
 
 extern ubyte mo_from_agent;
-extern struct TbSprite *fe_icons_sprites;
 
 extern char unkn41_text[];
 extern char equip_cost_text[20];

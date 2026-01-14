@@ -825,6 +825,17 @@ void things_debug_hud(void)
               (uint)p_track_thing->U.UVehicle.PissedOffWithWaiting,
               (int)p_track_thing->U.UVehicle.WeaponTurn,
               my_paths[p_track_thing->U.UVehicle.PathIndex].Flag - p_track_thing->PathOffset);
+            if (p_track_thing->SubType == SubTT_VEH_TANK) {
+                struct Thing *p_mgun;
+                p_mgun = &things[p_track_thing->U.UVehicle.SubThing];
+                sprintf(locstr+strlen(locstr), " MGun %d F %08x SF %d F %d ang %d sht %d",
+                  (int)p_track_thing->U.UVehicle.SubThing,
+                  (uint)p_mgun->Flag,
+                  (int)p_mgun->StartFrame,
+                  (int)p_mgun->Frame,
+                  (int)p_mgun->U.UMGun.AngleY,
+                  (int)p_mgun->U.UMGun.ShotTurn);
+            }
             break;
         case TT_PERSON:
             sprintf(locstr, "F2 %08x F3 %x cw %d wc %x WE %d wti %d wt %d PC %d",

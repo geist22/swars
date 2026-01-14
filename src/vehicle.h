@@ -65,6 +65,12 @@ enum SubTypeVehicle {
   SubTT_VEH_UNKN60 = 0x3C,
 };
 
+enum VehicleObjectModel {
+  VehOM_NONE = 0,
+  VehOM_MBTANK = 0x12,
+  VehOM_CLAWTANK = 0x1D,
+};
+
 enum VehicleState {
   VehSt_NONE = 0x0,
   VehSt_UNKN_1 = 0x1,

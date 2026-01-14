@@ -78,7 +78,6 @@ extern ubyte byte_155174; // = 166;
 extern ubyte byte_155175[];
 extern ubyte byte_155180; // = 109;
 extern ubyte byte_155181[];
-extern struct TbSprite *fe_icons_sprites;
 extern int unkn_rate; // = 19200;
 extern int serial_speeds[8];
 extern char net_baudrate_text[8];

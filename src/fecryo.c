@@ -80,8 +80,6 @@ extern struct ScreenButton equip_offer_buy_button;
 extern struct ScreenButton equip_all_agents_button;
 extern struct ScreenShape equip_agent_select_shapes[5];
 
-extern struct TbSprite *fe_icons_sprites;
-
 ubyte ac_do_cryo_offer_cancel(ubyte click);
 ubyte ac_show_cryo_agent_list(struct ScreenTextBox *box);
 ubyte ac_show_cryo_cybmod_list_box(struct ScreenTextBox *box);

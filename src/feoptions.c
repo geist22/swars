@@ -51,8 +51,6 @@ extern short word_1C4866[3];
 
 extern short textpos[10];
 
-extern struct TbSprite *fe_icons_sprites;
-
 struct ScreenShape audio_volume_sliders[9];
 ubyte audio_volume_sliders_draw_state[3] = {0};
 
