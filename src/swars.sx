@@ -106866,7 +106866,7 @@ GLOBAL_FUNC(ASM_show_login_name)	/* 0x08D300 */
 		push   %esi
 		push   %edi
 		mov    %eax,%esi
-		mov    med2_font,%eax
+		mov    EXPORT_SYMBOL(med2_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    0x6(%esi),%ax
 		xor    %ecx,%ecx
@@ -106890,7 +106890,7 @@ GLOBAL_FUNC(ASM_show_login_name)	/* 0x08D300 */
 		testb  $0x80,0xb(%esi)
 		jne    jump_8d3fa
 		mov    $0x2,%edx
-		mov    med_font,%eax
+		mov    EXPORT_SYMBOL(med_font),%eax
 		mov    EXPORT_SYMBOL(gui_strings)+0x718,%ebx
 		xor    %ecx,%ecx
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
@@ -106923,7 +106923,7 @@ GLOBAL_FUNC(ASM_show_login_name)	/* 0x08D300 */
 		add    $0x6,%ebx
 		call   ac_copy_box_purple_list
 		mov    0xb(%esi),%dl
-		mov    med2_font,%eax
+		mov    EXPORT_SYMBOL(med2_font),%eax
 		or     $0x80,%dl
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    %dl,0xb(%esi)
@@ -107405,7 +107405,7 @@ GLOBAL_FUNC(ASM_show_net_comms_box)	/* 0x08E7EC */
 		testb  $0x10,0xb(%eax)
 		jne    jump_8e94d
 		mov    $0x100,%edx
-		mov    med2_font,%eax
+		mov    EXPORT_SYMBOL(med2_font),%eax
 		mov    EXPORT_SYMBOL(gui_strings)+0x624,%ebx
 		xor    %ecx,%ecx
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
@@ -107430,7 +107430,7 @@ GLOBAL_FUNC(ASM_show_net_comms_box)	/* 0x08E7EC */
 		add    $0x4,%eax
 		mov    0x44(%esp),%esi
 		call   ac_draw_box_purple_list
-		mov    small_med_font,%eax
+		mov    EXPORT_SYMBOL(small_med_font),%eax
 		xor    %ecx,%ecx
 		xor    %ebx,%ebx
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
@@ -107470,7 +107470,7 @@ GLOBAL_FUNC(ASM_show_net_comms_box)	/* 0x08E7EC */
 		call   ac_reset_buffered_keys
 		jmp    jump_8e965
 	jump_8e94d:
-		mov    small_med_font,%eax
+		mov    EXPORT_SYMBOL(small_med_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		call   ac_my_char_height
@@ -107861,7 +107861,7 @@ GLOBAL_FUNC(ASM_show_net_protocol_box)	/* 0x08EDE0 */
 		add    $0x4,%eax
 		and    $0xffff,%eax
 		call   ac_my_set_text_window
-		mov    small_med_font,%eax
+		mov    EXPORT_SYMBOL(small_med_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		call   ac_my_char_height
@@ -107871,7 +107871,7 @@ GLOBAL_FUNC(ASM_show_net_protocol_box)	/* 0x08EDE0 */
 		mov    login_control__State,%al
 		cmp    $0x5,%eax
 		je     jump_8f519
-		mov    med2_font,%eax
+		mov    EXPORT_SYMBOL(med2_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		call   ac_my_char_height
@@ -108938,7 +108938,7 @@ GLOBAL_FUNC(ASM_show_net_faction_box)	/* 0x08FBD8 */
 		call   ac_my_set_text_window
 		testb  $0x10,0xb(%esi)
 		jne    jump_8fd19
-		mov    med2_font,%eax
+		mov    EXPORT_SYMBOL(med2_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		mov    $0x100,%edx
@@ -108953,7 +108953,7 @@ GLOBAL_FUNC(ASM_show_net_faction_box)	/* 0x08FBD8 */
 		xor    %ah,%ah
 		mov    0x4(%esp),%al
 		mov    %eax,%edi
-		mov    small_med_font,%eax
+		mov    EXPORT_SYMBOL(small_med_font),%eax
 		mov    $0x4,%ebx
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
@@ -109011,7 +109011,7 @@ GLOBAL_FUNC(ASM_show_net_faction_box)	/* 0x08FBD8 */
 		mov    %edi,(%esp)
 		jmp    jump_8fd5d
 	jump_8fd19:
-		mov    small_med_font,%eax
+		mov    EXPORT_SYMBOL(small_med_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		call   ac_my_char_height
@@ -109176,7 +109176,7 @@ GLOBAL_FUNC(ASM_show_net_team_box)	/* 0x08FED4 */
 		call   ac_my_set_text_window
 		testb  $0x10,0xb(%esi)
 		jne    jump_9001e
-		mov    med2_font,%eax
+		mov    EXPORT_SYMBOL(med2_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		mov    $0x100,%edx
@@ -109191,7 +109191,7 @@ GLOBAL_FUNC(ASM_show_net_team_box)	/* 0x08FED4 */
 		xor    %ah,%ah
 		mov    0x8(%esp),%al
 		mov    %eax,%edi
-		mov    small_med_font,%eax
+		mov    EXPORT_SYMBOL(small_med_font),%eax
 		mov    $0x4,%ebx
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
@@ -109251,7 +109251,7 @@ GLOBAL_FUNC(ASM_show_net_team_box)	/* 0x08FED4 */
 		mov    $0x4,%ebp
 		jmp    jump_90066
 	jump_9001e:
-		mov    small_med_font,%eax
+		mov    EXPORT_SYMBOL(small_med_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		call   ac_my_char_height
@@ -109417,7 +109417,7 @@ GLOBAL_FUNC(ASM_show_net_groups_box)	/* 0x0901E0 */
 		add    $0x2,%eax
 		and    $0xffff,%eax
 		call   ac_my_set_text_window
-		mov    med2_font,%eax
+		mov    EXPORT_SYMBOL(med2_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		mov    $0x100,%edx
@@ -109433,7 +109433,7 @@ GLOBAL_FUNC(ASM_show_net_groups_box)	/* 0x0901E0 */
 		mov    %bx,EXPORT_SYMBOL(lbDisplay)+96 # lbDisplay__DrawFlags
 		mov    $0x4,%ecx
 		xor    %dh,%dh
-		mov    small_med_font,%eax
+		mov    EXPORT_SYMBOL(small_med_font),%eax
 		mov    0x44(%esp),%dl
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
@@ -109476,7 +109476,7 @@ GLOBAL_FUNC(ASM_show_net_groups_box)	/* 0x0901E0 */
 		orb    $0x10,0xb(%esi)
 		jmp    jump_90320
 	jump_90308:
-		mov    small_med_font,%eax
+		mov    EXPORT_SYMBOL(small_med_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		call   ac_my_char_height
@@ -109825,7 +109825,7 @@ GLOBAL_FUNC(ASM_show_net_users_box)	/* 0x0906E4 */
 		call   ac_my_set_text_window
 		testb  $0x10,0xb(%ebp)
 		jne    jump_9089e
-		mov    med2_font,%eax
+		mov    EXPORT_SYMBOL(med2_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		mov    $0x100,%edx
@@ -109843,7 +109843,7 @@ GLOBAL_FUNC(ASM_show_net_users_box)	/* 0x0906E4 */
 		mov    0x34(%esp),%al
 		add    $0x8,%eax
 		mov    %eax,0x28(%esp)
-		mov    small_med_font,%eax
+		mov    EXPORT_SYMBOL(small_med_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		mov    $0x4,%ecx
@@ -109925,7 +109925,7 @@ GLOBAL_FUNC(ASM_show_net_users_box)	/* 0x0906E4 */
 		orb    $0x10,0xb(%ebp)
 		jmp    jump_908b6
 	jump_9089e:
-		mov    small_med_font,%eax
+		mov    EXPORT_SYMBOL(small_med_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		call   ac_my_char_height
@@ -110429,7 +110429,7 @@ GLOBAL_FUNC(ASM_show_unkn21_box)	/* 0x0930DC */
 		add    $0x4,%eax
 		and    $0xffff,%eax
 		call   ac_my_set_text_window
-		mov    med_font,%eax
+		mov    EXPORT_SYMBOL(med_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    0x40(%esp),%eax
 		xor    %edx,%edx
@@ -110519,7 +110519,7 @@ GLOBAL_FUNC(ASM_show_unkn21_box)	/* 0x0930DC */
 		add    $0x4,%eax
 		and    $0xffff,%eax
 		call   ac_my_set_text_window
-		mov    small_med_font,%eax
+		mov    EXPORT_SYMBOL(small_med_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 	jump_933cb:
 		mov    $0x41,%eax
@@ -110910,7 +110910,7 @@ GLOBAL_FUNC(ASM_show_unkn21_box)	/* 0x0930DC */
 		add    $0x4,%eax
 		and    $0xffff,%eax
 		call   ac_my_set_text_window
-		mov    med_font,%eax
+		mov    EXPORT_SYMBOL(med_font),%eax
 		mov    EXPORT_SYMBOL(research_on_weapons),%bl
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		test   %bl,%bl
@@ -111122,7 +111122,7 @@ GLOBAL_FUNC(ASM_show_unkn21_box)	/* 0x0930DC */
 		xor    %ecx,%ecx
 		mov    %edi,text_buf_pos
 		call   ac_draw_text_purple_list2
-		mov    med_font,%eax
+		mov    EXPORT_SYMBOL(med_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		test   %eax,%eax
 		je     jump_93b9b
@@ -111227,7 +111227,7 @@ GLOBAL_FUNC(ASM_show_unkn21_box)	/* 0x0930DC */
 		add    %ecx,%eax
 		xor    %ecx,%ecx
 		call   ac_draw_text_purple_list2
-		mov    med_font,%eax
+		mov    EXPORT_SYMBOL(med_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		xor    %eax,%eax
 		mov    EXPORT_SYMBOL(lbDisplay)+100,%ax # lbDisplay.ScreenMode
@@ -111466,7 +111466,7 @@ GLOBAL_FUNC(ASM_show_audio_tracks_box)	/* 0x094844 */
 		cmp    $0x3,%edx
 		jl     jump_94886
 	jump_948aa:
-		mov    med_font,%eax
+		mov    EXPORT_SYMBOL(med_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    0x6(%esi),%ax
 		xor    %ecx,%ecx
@@ -111561,7 +111561,7 @@ GLOBAL_FUNC(ASM_show_netgame_unkn1)	/* 0x094990 */
 		add    $0x4,%eax
 		and    $0xffff,%eax
 		call   ac_my_set_text_window
-		mov    med_font,%eax
+		mov    EXPORT_SYMBOL(med_font),%eax
 		mov    $0x14,%edx
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
@@ -112087,7 +112087,7 @@ GLOBAL_FUNC(ASM_show_menu_storage_slots_box)	/* 0x094F08 */
 		add    $0x4,%eax
 		and    $0xffff,%eax
 		call   ac_my_set_text_window
-		mov    med_font,%eax
+		mov    EXPORT_SYMBOL(med_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    0x8(%esp),%eax
 		xor    %edx,%edx
@@ -112943,7 +112943,7 @@ GLOBAL_FUNC(ASM_show_cryo_agent_list)	/* 0x098278 */
 		add    $0x4,%eax
 		and    $0xffff,%eax
 		call   ac_my_set_text_window
-		mov    med_font,%eax
+		mov    EXPORT_SYMBOL(med_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    0x8(%esp),%eax
 		xor    %edx,%edx
@@ -113002,7 +113002,7 @@ GLOBAL_FUNC(ASM_show_cryo_agent_list)	/* 0x098278 */
 		mov    $0x3,%edi
 		call   ac_my_set_text_window
 		mov    $0x57,%bl
-		mov    med_font,%eax
+		mov    EXPORT_SYMBOL(med_font),%eax
 		mov    %di,0x18(%esp)
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    %bl,EXPORT_SYMBOL(lbDisplay)+113 # lbDisplay.DrawColour
@@ -113646,7 +113646,7 @@ GLOBAL_FUNC(ASM_show_cryo_cybmod_list_box)	/* 0x098F1C */
 		call   ac_my_set_text_window
 		movw   $0x100,EXPORT_SYMBOL(lbDisplay)+96 # lbDisplay__DrawFlags
 		mov    $0x94,%edx
-		mov    small_med_font,%eax
+		mov    EXPORT_SYMBOL(small_med_font),%eax
 		mov    EXPORT_SYMBOL(gui_strings)+0x6C0,%ebx
 		xor    %ecx,%ecx
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
@@ -113775,7 +113775,7 @@ GLOBAL_FUNC(ASM_show_cryo_cybmod_list_box)	/* 0x098F1C */
 		add    $0x4,%eax
 		and    $0xffff,%eax
 		call   ac_my_set_text_window
-		mov    small_med_font,%eax
+		mov    EXPORT_SYMBOL(small_med_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 	jump_991c1:
 		mov    $0x41,%eax
@@ -114194,7 +114194,7 @@ GLOBAL_FUNC(ASM_show_cryo_cybmod_list_box)	/* 0x098F1C */
 		ret
 	jump_996f8:
 		movw   $0x100,EXPORT_SYMBOL(lbDisplay)+96 # lbDisplay__DrawFlags
-		mov    small_med_font,%eax
+		mov    EXPORT_SYMBOL(small_med_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    -0xc(%ebp),%eax
 		mov    0x6(%eax),%ax
@@ -114537,7 +114537,7 @@ GLOBAL_FUNC(ASM_show_brief_netscan_box)	/* 0x099AC8 */
 		add    $0x4,%eax
 		and    $0xffff,%eax
 		call   ac_my_set_text_window
-		mov    small_med_font,%eax
+		mov    EXPORT_SYMBOL(small_med_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		call   ac_my_char_height
@@ -114896,7 +114896,7 @@ GLOBAL_FUNC(ASM_show_controls_joystick_box)	/* 0x09BBE4 */
 		push   %ebp
 		sub    $0x58,%esp
 		mov    %eax,0x4c(%esp)
-		mov    small_med_font,%eax
+		mov    EXPORT_SYMBOL(small_med_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    0x4c(%esp),%eax
 		mov    0x6(%eax),%ax
@@ -114925,7 +114925,7 @@ GLOBAL_FUNC(ASM_show_controls_joystick_box)	/* 0x09BBE4 */
 		mov    0x4c(%esp),%eax
 		testb  $0x80,0xb(%eax)
 		jne    jump_9bdbe
-		mov    med_font,%eax
+		mov    EXPORT_SYMBOL(med_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    EXPORT_SYMBOL(lbDisplay)+96,%dx # lbDisplay__DrawFlags
 		or     $0x1,%dh
@@ -114940,7 +114940,7 @@ GLOBAL_FUNC(ASM_show_controls_joystick_box)	/* 0x09BBE4 */
 		mov    %bx,EXPORT_SYMBOL(lbDisplay)+96 # lbDisplay__DrawFlags
 		mov    $0x6,%edx
 		movzbl 0x50(%esp),%ebp
-		mov    small_med_font,%eax
+		mov    EXPORT_SYMBOL(small_med_font),%eax
 		mov    EXPORT_SYMBOL(gui_strings)+0x72C,%ebx
 		xor    %ecx,%ecx
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
@@ -115020,7 +115020,7 @@ GLOBAL_FUNC(ASM_show_controls_joystick_box)	/* 0x09BBE4 */
 		add    $0x4,%eax
 		call   ac_copy_box_purple_list
 		mov    0xb(%esi),%dh
-		mov    small_med_font,%eax
+		mov    EXPORT_SYMBOL(small_med_font),%eax
 		or     $0x80,%dh
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
@@ -116008,13 +116008,13 @@ GLOBAL_FUNC(ASM_show_mission_screen)	/* 0x09D628 */
 		mov    EXPORT_SYMBOL(small_font),%edx
 		cmp    %edx,%eax
 		jne    jump_9d74b
-		mov    small_med_font,%eax
+		mov    EXPORT_SYMBOL(small_med_font),%eax
 		mov    %eax,EXPORT_SYMBOL(brief_mission_text_box)+0x1C
 		jmp    jump_9d765
 	jump_9d74b:
-		cmp    small_med_font,%eax
+		cmp    EXPORT_SYMBOL(small_med_font),%eax
 		jne    jump_9d75f
-		mov    med_font,%eax
+		mov    EXPORT_SYMBOL(med_font),%eax
 		mov    %eax,EXPORT_SYMBOL(brief_mission_text_box)+0x1C
 		jmp    jump_9d765
 	jump_9d75f:
@@ -117251,7 +117251,7 @@ func_a0b0c:
 		and    $0x7f,%ah
 		mov    %ax,EXPORT_SYMBOL(lbDisplay)+96 # lbDisplay__DrawFlags
 	jump_a0c45:
-		mov    small2_font,%eax
+		mov    EXPORT_SYMBOL(small2_font),%eax
 		mov    $0x57,%dl
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    %dl,EXPORT_SYMBOL(lbDisplay)+113 # lbDisplay.DrawColour
@@ -117279,7 +117279,7 @@ func_a0b0c:
 		mov    EXPORT_SYMBOL(misc_text)+0x10,%ebx
 		xor    %ecx,%ecx
 		call   ac_draw_text_purple_list2
-		mov    med2_font,%eax
+		mov    EXPORT_SYMBOL(med2_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		xor    %eax,%eax
 		mov    EXPORT_SYMBOL(brief_store)+0(%ebp),%al # brief_store[].RefNum
@@ -117327,7 +117327,7 @@ func_a0b0c:
 		repnz scas %es:(%edi),%al
 		not    %ecx
 		dec    %ecx
-		mov    small2_font,%eax
+		mov    EXPORT_SYMBOL(small2_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		xor    %eax,%eax
 		mov    EXPORT_SYMBOL(brief_store)+2(%ebp),%al # brief_store[].RecvMonth
@@ -117539,7 +117539,7 @@ GLOBAL_FUNC(ASM_my_string_width)	/* 0x0A350C */
 		mov    (%ecx),%al
 		cmp    $0x1f,%eax
 		jle    jump_a3595
-		cmp    small_med_font,%edi
+		cmp    EXPORT_SYMBOL(small_med_font),%edi
 		jne    jump_a3543
 		cmpb   $0x65,language_3str
 		je     jump_a357c
@@ -117794,7 +117794,7 @@ GLOBAL_FUNC(ASM_my_count_lines)	/* 0x0A36FC */
 		test   %ebx,%ebx
 		je     jump_a38df
 		mov    EXPORT_SYMBOL(lbFontPtr),%ebx
-		cmp    small_med_font,%ebx
+		cmp    EXPORT_SYMBOL(small_med_font),%ebx
 		jne    jump_a3773
 		cmpb   $0x65,language_3str
 		je     jump_a37b1
@@ -117983,7 +117983,7 @@ GLOBAL_FUNC(ASM_draw_unkn20_subfunc_01)	/* 0x0A38F0 */
 		test   %eax,%eax
 		je     jump_a3a5c
 		mov    EXPORT_SYMBOL(lbFontPtr),%eax
-		cmp    small_med_font,%eax
+		cmp    EXPORT_SYMBOL(small_med_font),%eax
 		jne    jump_a3950
 		cmpb   $0x65,language_3str
 		je     jump_a3989
@@ -118045,13 +118045,13 @@ GLOBAL_FUNC(ASM_draw_unkn20_subfunc_01)	/* 0x0A38F0 */
 		add    %eax,%ebx
 		cmp    %edx,%eax
 		je     jump_a39e7
-		cmp    small2_font,%eax
+		cmp    EXPORT_SYMBOL(small2_font),%eax
 		jne    jump_a39eb
 	jump_a39e7:
 		mov    $0x1,%al
 		jmp    jump_a3a25
 	jump_a39eb:
-		mov    small_med_font,%edx
+		mov    EXPORT_SYMBOL(small_med_font),%edx
 		cmp    %edx,%eax
 		jne    jump_a3a03
 		cmp    $0x61,%cl
@@ -118061,15 +118061,15 @@ GLOBAL_FUNC(ASM_draw_unkn20_subfunc_01)	/* 0x0A38F0 */
 		xor    %dl,%al
 		jmp    jump_a3a25
 	jump_a3a03:
-		cmp    med_font,%eax
+		cmp    EXPORT_SYMBOL(med_font),%eax
 		je     jump_a3a13
-		cmp    med2_font,%eax
+		cmp    EXPORT_SYMBOL(med2_font),%eax
 		jne    jump_a3a17
 	jump_a3a13:
 		mov    $0x2,%al
 		jmp    jump_a3a25
 	jump_a3a17:
-		cmp    big_font,%eax
+		cmp    EXPORT_SYMBOL(big_font),%eax
 		jne    jump_a3a23
 		mov    $0x4,%al
 		jmp    jump_a3a25
@@ -118149,7 +118149,7 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		test   %edx,%edx
 		je     jump_a4aa5
 		mov    EXPORT_SYMBOL(lbFontPtr),%edx
-		cmp    small_med_font,%edx
+		cmp    EXPORT_SYMBOL(small_med_font),%edx
 		jne    jump_a3afb
 		cmpb   $0x65,language_3str
 		je     jump_a3b3b
@@ -118311,13 +118311,13 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		add    %eax,%ebx
 		cmp    %edx,%eax
 		je     jump_a3cea
-		cmp    small2_font,%eax
+		cmp    EXPORT_SYMBOL(small2_font),%eax
 		jne    jump_a3cee
 	jump_a3cea:
 		mov    $0x1,%al
 		jmp    jump_a3d2c
 	jump_a3cee:
-		mov    small_med_font,%edx
+		mov    EXPORT_SYMBOL(small_med_font),%edx
 		cmp    %edx,%eax
 		jne    jump_a3d0a
 		mov    0x3c(%esp),%ah
@@ -118328,15 +118328,15 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		xor    %dl,%al
 		jmp    jump_a3d2c
 	jump_a3d0a:
-		cmp    med_font,%eax
+		cmp    EXPORT_SYMBOL(med_font),%eax
 		je     jump_a3d1a
-		cmp    med2_font,%eax
+		cmp    EXPORT_SYMBOL(med2_font),%eax
 		jne    jump_a3d1e
 	jump_a3d1a:
 		mov    $0x2,%al
 		jmp    jump_a3d2c
 	jump_a3d1e:
-		cmp    big_font,%eax
+		cmp    EXPORT_SYMBOL(big_font),%eax
 		jne    jump_a3d2a
 		mov    $0x4,%al
 		jmp    jump_a3d2c
@@ -118360,13 +118360,13 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		add    %eax,%ebx
 		cmp    %ecx,%eax
 		je     jump_a3d6c
-		cmp    small2_font,%eax
+		cmp    EXPORT_SYMBOL(small2_font),%eax
 		jne    jump_a3d70
 	jump_a3d6c:
 		mov    $0x1,%al
 		jmp    jump_a3dae
 	jump_a3d70:
-		mov    small_med_font,%ecx
+		mov    EXPORT_SYMBOL(small_med_font),%ecx
 		cmp    %ecx,%eax
 		jne    jump_a3d8c
 		mov    0x3c(%esp),%ch
@@ -118377,15 +118377,15 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		xor    %cl,%al
 		jmp    jump_a3dae
 	jump_a3d8c:
-		cmp    med_font,%eax
+		cmp    EXPORT_SYMBOL(med_font),%eax
 		je     jump_a3d9c
-		cmp    med2_font,%eax
+		cmp    EXPORT_SYMBOL(med2_font),%eax
 		jne    jump_a3da0
 	jump_a3d9c:
 		mov    $0x2,%al
 		jmp    jump_a3dae
 	jump_a3da0:
-		cmp    big_font,%eax
+		cmp    EXPORT_SYMBOL(big_font),%eax
 		jne    jump_a3dac
 		mov    $0x4,%al
 		jmp    jump_a3dae
@@ -118455,7 +118455,7 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		cmp    $0x1f,%eax
 		jle    jump_a3dee
 		mov    EXPORT_SYMBOL(lbFontPtr),%eax
-		cmp    small_med_font,%eax
+		cmp    EXPORT_SYMBOL(small_med_font),%eax
 		jne    jump_a3e82
 		cmpb   $0x65,language_3str
 		je     jump_a3cb0
@@ -118758,7 +118758,7 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		mov    EXPORT_SYMBOL(lbDisplay)+113,%cl # lbDisplay.DrawColour
 		cmp    %edx,%eax
 		je     jump_a41e0
-		cmp    small2_font,%eax
+		cmp    EXPORT_SYMBOL(small2_font),%eax
 		jne    jump_a445b
 	jump_a41e0:
 		mov    $0x1,%al
@@ -118815,13 +118815,13 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		add    %eax,%ebx
 		cmp    %edx,%eax
 		je     jump_a4298
-		cmp    small2_font,%eax
+		cmp    EXPORT_SYMBOL(small2_font),%eax
 		jne    jump_a429c
 	jump_a4298:
 		mov    $0x1,%al
 		jmp    jump_a42d4
 	jump_a429c:
-		cmp    small_med_font,%eax
+		cmp    EXPORT_SYMBOL(small_med_font),%eax
 		jne    jump_a42b2
 		mov    0x34(%esp),%al
 		cmp    $0x61,%al
@@ -118830,15 +118830,15 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		jg     jump_a42c2
 		jmp    jump_a42d2
 	jump_a42b2:
-		cmp    med_font,%eax
+		cmp    EXPORT_SYMBOL(med_font),%eax
 		je     jump_a42c2
-		cmp    med2_font,%eax
+		cmp    EXPORT_SYMBOL(med2_font),%eax
 		jne    jump_a42c6
 	jump_a42c2:
 		mov    $0x2,%al
 		jmp    jump_a42d4
 	jump_a42c6:
-		cmp    big_font,%eax
+		cmp    EXPORT_SYMBOL(big_font),%eax
 		jne    jump_a42d2
 		mov    $0x4,%al
 		jmp    jump_a42d4
@@ -118862,13 +118862,13 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		add    %eax,%ebx
 		cmp    %ecx,%eax
 		je     jump_a4314
-		cmp    small2_font,%eax
+		cmp    EXPORT_SYMBOL(small2_font),%eax
 		jne    jump_a4318
 	jump_a4314:
 		mov    $0x1,%al
 		jmp    jump_a4352
 	jump_a4318:
-		cmp    small_med_font,%eax
+		cmp    EXPORT_SYMBOL(small_med_font),%eax
 		jne    jump_a4330
 		mov    0x34(%esp),%cl
 		cmp    $0x61,%cl
@@ -118877,15 +118877,15 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		jg     jump_a4340
 		jmp    jump_a4350
 	jump_a4330:
-		cmp    med_font,%eax
+		cmp    EXPORT_SYMBOL(med_font),%eax
 		je     jump_a4340
-		cmp    med2_font,%eax
+		cmp    EXPORT_SYMBOL(med2_font),%eax
 		jne    jump_a4344
 	jump_a4340:
 		mov    $0x2,%al
 		jmp    jump_a4352
 	jump_a4344:
-		cmp    big_font,%eax
+		cmp    EXPORT_SYMBOL(big_font),%eax
 		jne    jump_a4350
 		mov    $0x4,%al
 		jmp    jump_a4352
@@ -118955,7 +118955,7 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		cmp    $0x1f,%eax
 		jle    jump_a4392
 		mov    EXPORT_SYMBOL(lbFontPtr),%eax
-		cmp    small_med_font,%eax
+		cmp    EXPORT_SYMBOL(small_med_font),%eax
 		jne    jump_a4425
 		cmpb   $0x65,language_3str
 		je     jump_a425e
@@ -118976,20 +118976,20 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		mov    data_15521d(%eax),%bl
 		jmp    jump_a425a
 	jump_a445b:
-		cmp    small_med_font,%eax
+		cmp    EXPORT_SYMBOL(small_med_font),%eax
 		jne    jump_a4467
 		mov    $0x2,%al
 		jmp    jump_a4489
 	jump_a4467:
-		cmp    med_font,%eax
+		cmp    EXPORT_SYMBOL(med_font),%eax
 		je     jump_a4477
-		cmp    med2_font,%eax
+		cmp    EXPORT_SYMBOL(med2_font),%eax
 		jne    jump_a447b
 	jump_a4477:
 		mov    $0x2,%al
 		jmp    jump_a4489
 	jump_a447b:
-		cmp    big_font,%eax
+		cmp    EXPORT_SYMBOL(big_font),%eax
 		jne    jump_a4487
 		mov    $0x4,%al
 		jmp    jump_a4489
@@ -119011,26 +119011,26 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		lea    0x54(%eax),%ebx
 		cmp    %edx,%eax
 		je     jump_a44bf
-		cmp    small2_font,%eax
+		cmp    EXPORT_SYMBOL(small2_font),%eax
 		jne    jump_a44c3
 	jump_a44bf:
 		mov    $0x1,%al
 		jmp    jump_a44f1
 	jump_a44c3:
-		cmp    small_med_font,%eax
+		cmp    EXPORT_SYMBOL(small_med_font),%eax
 		jne    jump_a44cf
 		mov    $0x2,%al
 		jmp    jump_a44f1
 	jump_a44cf:
-		cmp    med_font,%eax
+		cmp    EXPORT_SYMBOL(med_font),%eax
 		je     jump_a44df
-		cmp    med2_font,%eax
+		cmp    EXPORT_SYMBOL(med2_font),%eax
 		jne    jump_a44e3
 	jump_a44df:
 		mov    $0x2,%al
 		jmp    jump_a44f1
 	jump_a44e3:
-		cmp    big_font,%eax
+		cmp    EXPORT_SYMBOL(big_font),%eax
 		jne    jump_a44ef
 		mov    $0x4,%al
 		jmp    jump_a44f1
@@ -119234,13 +119234,13 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		add    %eax,%ebx
 		cmp    %edx,%eax
 		je     jump_a475c
-		cmp    small2_font,%eax
+		cmp    EXPORT_SYMBOL(small2_font),%eax
 		jne    jump_a4760
 	jump_a475c:
 		mov    $0x1,%al
 		jmp    jump_a479e
 	jump_a4760:
-		mov    small_med_font,%edx
+		mov    EXPORT_SYMBOL(small_med_font),%edx
 		cmp    %edx,%eax
 		jne    jump_a477c
 		mov    0x38(%esp),%ah
@@ -119251,15 +119251,15 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		xor    %dl,%al
 		jmp    jump_a479e
 	jump_a477c:
-		cmp    med_font,%eax
+		cmp    EXPORT_SYMBOL(med_font),%eax
 		je     jump_a478c
-		cmp    med2_font,%eax
+		cmp    EXPORT_SYMBOL(med2_font),%eax
 		jne    jump_a4790
 	jump_a478c:
 		mov    $0x2,%al
 		jmp    jump_a479e
 	jump_a4790:
-		cmp    big_font,%eax
+		cmp    EXPORT_SYMBOL(big_font),%eax
 		jne    jump_a479c
 		mov    $0x4,%al
 		jmp    jump_a479e
@@ -119283,13 +119283,13 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		add    %eax,%ebx
 		cmp    %ecx,%eax
 		je     jump_a47de
-		cmp    small2_font,%eax
+		cmp    EXPORT_SYMBOL(small2_font),%eax
 		jne    jump_a47e2
 	jump_a47de:
 		mov    $0x1,%al
 		jmp    jump_a4820
 	jump_a47e2:
-		mov    small_med_font,%ecx
+		mov    EXPORT_SYMBOL(small_med_font),%ecx
 		cmp    %ecx,%eax
 		jne    jump_a47fe
 		mov    0x38(%esp),%ch
@@ -119300,15 +119300,15 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		xor    %cl,%al
 		jmp    jump_a4820
 	jump_a47fe:
-		cmp    med_font,%eax
+		cmp    EXPORT_SYMBOL(med_font),%eax
 		je     jump_a480e
-		cmp    med2_font,%eax
+		cmp    EXPORT_SYMBOL(med2_font),%eax
 		jne    jump_a4812
 	jump_a480e:
 		mov    $0x2,%al
 		jmp    jump_a4820
 	jump_a4812:
-		cmp    big_font,%eax
+		cmp    EXPORT_SYMBOL(big_font),%eax
 		jne    jump_a481e
 		mov    $0x4,%al
 		jmp    jump_a4820
@@ -119379,7 +119379,7 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		cmp    $0x1f,%eax
 		jle    jump_a4860
 		mov    EXPORT_SYMBOL(lbFontPtr),%eax
-		cmp    small_med_font,%eax
+		cmp    EXPORT_SYMBOL(small_med_font),%eax
 		jne    jump_a48f7
 		cmpb   $0x65,language_3str
 		je     jump_a4722
@@ -119617,13 +119617,13 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		add    %eax,%ebx
 		cmp    %edx,%eax
 		je     jump_a4bd5
-		cmp    small2_font,%eax
+		cmp    EXPORT_SYMBOL(small2_font),%eax
 		jne    jump_a4bd9
 	jump_a4bd5:
 		mov    $0x1,%al
 		jmp    jump_a4c17
 	jump_a4bd9:
-		mov    small_med_font,%edx
+		mov    EXPORT_SYMBOL(small_med_font),%edx
 		cmp    %edx,%eax
 		jne    jump_a4bf5
 		mov    0x30(%esp),%dh
@@ -119634,15 +119634,15 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		xor    %dl,%al
 		jmp    jump_a4c17
 	jump_a4bf5:
-		cmp    med_font,%eax
+		cmp    EXPORT_SYMBOL(med_font),%eax
 		je     jump_a4c05
-		cmp    med2_font,%eax
+		cmp    EXPORT_SYMBOL(med2_font),%eax
 		jne    jump_a4c09
 	jump_a4c05:
 		mov    $0x2,%al
 		jmp    jump_a4c17
 	jump_a4c09:
-		cmp    big_font,%eax
+		cmp    EXPORT_SYMBOL(big_font),%eax
 		jne    jump_a4c15
 		mov    $0x4,%al
 		jmp    jump_a4c17
@@ -119668,13 +119668,13 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		add    %eax,%ebx
 		cmp    %ecx,%eax
 		je     jump_a4c58
-		cmp    small2_font,%eax
+		cmp    EXPORT_SYMBOL(small2_font),%eax
 		jne    jump_a4c5c
 	jump_a4c58:
 		mov    $0x1,%al
 		jmp    jump_a4c9a
 	jump_a4c5c:
-		mov    small_med_font,%ecx
+		mov    EXPORT_SYMBOL(small_med_font),%ecx
 		cmp    %ecx,%eax
 		jne    jump_a4c78
 		mov    0x30(%esp),%ah
@@ -119685,15 +119685,15 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		xor    %cl,%al
 		jmp    jump_a4c9a
 	jump_a4c78:
-		cmp    med_font,%eax
+		cmp    EXPORT_SYMBOL(med_font),%eax
 		je     jump_a4c88
-		cmp    med2_font,%eax
+		cmp    EXPORT_SYMBOL(med2_font),%eax
 		jne    jump_a4c8c
 	jump_a4c88:
 		mov    $0x2,%al
 		jmp    jump_a4c9a
 	jump_a4c8c:
-		cmp    big_font,%eax
+		cmp    EXPORT_SYMBOL(big_font),%eax
 		jne    jump_a4c98
 		mov    $0x4,%al
 		jmp    jump_a4c9a
@@ -119772,7 +119772,7 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		cmp    $0x1f,%eax
 		jle    jump_a4cdb
 		mov    EXPORT_SYMBOL(lbFontPtr),%eax
-		cmp    small_med_font,%eax
+		cmp    EXPORT_SYMBOL(small_med_font),%eax
 		jne    jump_a4d7e
 		cmpb   $0x65,language_3str
 		je     jump_a4b9b
@@ -161569,7 +161569,7 @@ GLOBAL_FUNC(ASM_func_cc0d4)	/* 0xcc0d4 */
 		push   %edi
 		push   %ebp
 		sub    $0x2c,%esp
-		mov    med2_font,%esi
+		mov    EXPORT_SYMBOL(med2_font),%esi
 		mov    %eax,0x8(%esp)
 		mov    $0x1,%edx
 		mov    $0x6,%ebp
@@ -161584,11 +161584,11 @@ GLOBAL_FUNC(ASM_func_cc0d4)	/* 0xcc0d4 */
 		xor    %eax,%eax
 		mov    (%edi),%al
 		imul   $0x6,%eax,%edx
-		mov    med_font,%eax
+		mov    EXPORT_SYMBOL(med_font),%eax
 		add    %edx,%eax
 		mov    %ebp,0x10(%esp)
 		sub    $0xba,%eax
-		mov    %esi,med2_font
+		mov    %esi,EXPORT_SYMBOL(med2_font)
 		mov    %eax,0x28(%esp)
 		mov    $0x6,%eax
 		mov    outro_unkn02,%edx
@@ -161616,7 +161616,7 @@ GLOBAL_FUNC(ASM_func_cc0d4)	/* 0xcc0d4 */
 		sar    $0xd,%edx
 		add    %edx,%eax
 	jump_cc187:
-		mov    %esi,med2_font
+		mov    %esi,EXPORT_SYMBOL(med2_font)
 		test   %eax,%eax
 		jge    jump_cc193
 		xor    %eax,%eax
@@ -161629,7 +161629,7 @@ GLOBAL_FUNC(ASM_func_cc0d4)	/* 0xcc0d4 */
 		add    $EXPORT_SYMBOL(pixmap),%ecx # pixmap.fade_table[?]
 		call   ac_LbSpriteDrawRemap
 	jump_cc1b0:
-		mov    med2_font,%esi
+		mov    EXPORT_SYMBOL(med2_font),%esi
 		mov    0x28(%esp),%edx
 		xor    %eax,%eax
 		inc    %edi
@@ -161716,7 +161716,7 @@ GLOBAL_FUNC(ASM_func_cc0d4)	/* 0xcc0d4 */
 		mov    %edi,0x20(%esp)
 		mov    %eax,%ebx
 		mov    data_1ddb68,%eax
-		mov    %esi,med2_font
+		mov    %esi,EXPORT_SYMBOL(med2_font)
 		cmp    %ecx,%eax
 		jg     jump_cc32d
 		inc    %eax
@@ -161739,7 +161739,7 @@ GLOBAL_FUNC(ASM_func_cc0d4)	/* 0xcc0d4 */
 		sar    $0xd,%edx
 		add    %edx,%eax
 	jump_cc306:
-		mov    %esi,med2_font
+		mov    %esi,EXPORT_SYMBOL(med2_font)
 		test   %eax,%eax
 		jge    jump_cc312
 		xor    %eax,%eax
@@ -161755,7 +161755,7 @@ GLOBAL_FUNC(ASM_func_cc0d4)	/* 0xcc0d4 */
 		mov    0x28(%esp),%edx
 		xor    %eax,%eax
 		mov    0x4(%edx),%al
-		mov    med2_font,%esi
+		mov    EXPORT_SYMBOL(med2_font),%esi
 		add    %eax,%edi
 	jump_cc33e:
 		mov    0x24(%esp),%ebp
@@ -161782,7 +161782,7 @@ GLOBAL_FUNC(ASM_func_cc0d4)	/* 0xcc0d4 */
 		mov    $0x1,%ebx
 		mov    outro_unkn02,%ecx
 		shl    $0x3,%eax
-		mov    %esi,med2_font
+		mov    %esi,EXPORT_SYMBOL(med2_font)
 		mov    %ebx,data_1ddb6c
 		add    %eax,%edx
 		mov    data_1ddb68,%eax
@@ -161816,7 +161816,7 @@ GLOBAL_FUNC(ASM_func_cc0d4)	/* 0xcc0d4 */
 		sar    $0x10,%edx
 		call   ac_play_sample_using_heap
 	jump_cc403:
-		mov    med2_font,%esi
+		mov    EXPORT_SYMBOL(med2_font),%esi
 	jump_cc409:
 		mov    (%edi),%dh
 		test   %dh,%dh
@@ -161824,14 +161824,14 @@ GLOBAL_FUNC(ASM_func_cc0d4)	/* 0xcc0d4 */
 		xor    %eax,%eax
 		mov    %dh,%al
 		imul   $0x6,%eax,%eax
-		mov    big_font,%edx
+		mov    EXPORT_SYMBOL(big_font),%edx
 		add    %edx,%eax
 		mov    outro_unkn02,%ecx
 		sub    $0xba,%eax
 		mov    %ebp,0x1c(%esp)
 		mov    %eax,0x28(%esp)
 		mov    0x14(%esp),%eax
-		mov    %esi,med2_font
+		mov    %esi,EXPORT_SYMBOL(med2_font)
 		mov    %eax,0x18(%esp)
 		mov    data_1ddb68,%eax
 		mov    0x28(%esp),%ebx
@@ -161857,7 +161857,7 @@ GLOBAL_FUNC(ASM_func_cc0d4)	/* 0xcc0d4 */
 		sar    $0xd,%edx
 		add    %edx,%eax
 	jump_cc492:
-		mov    %esi,med2_font
+		mov    %esi,EXPORT_SYMBOL(med2_font)
 		test   %eax,%eax
 		jge    jump_cc49e
 		xor    %eax,%eax
@@ -161874,13 +161874,13 @@ GLOBAL_FUNC(ASM_func_cc0d4)	/* 0xcc0d4 */
 	jump_cc4be:
 		mov    0x28(%esp),%edx
 		xor    %eax,%eax
-		mov    med2_font,%esi
+		mov    EXPORT_SYMBOL(med2_font),%esi
 		mov    0x4(%edx),%al
 		inc    %edi
 		add    %eax,%ebp
 		jmp    jump_cc409
 	jump_cc4d5:
-		mov    %esi,med2_font
+		mov    %esi,EXPORT_SYMBOL(med2_font)
 		add    $0x2c,%esp
 		pop    %ebp
 		pop    %edi
@@ -161905,7 +161905,7 @@ func_cc59c:
 		xor    %ecx,%ecx
 		mov    data_1ddb78(%esi),%cl
 		imul   $0x6,%ecx,%ecx
-		mov    med2_font,%ebx
+		mov    EXPORT_SYMBOL(med2_font),%ebx
 	jump_cc5b6:
 		add    %ecx,%ebx
 		sub    $0xba,%ebx
@@ -161930,7 +161930,7 @@ func_cc59c:
 		xor    %ebx,%ebx
 		mov    data_1ddb78(%esi),%bl
 		imul   $0x6,%ebx,%ebx
-		mov    big_font,%ecx
+		mov    EXPORT_SYMBOL(big_font),%ecx
 		jmp    jump_cc5b6
 	jump_cc612:
 		call   ac_swap_wscreen
@@ -161987,7 +161987,7 @@ GLOBAL_FUNC (ASM_func_cc638)	/* 0xcc638 */
 		mov    $0x1,%dh
 		mov    $0xe,%esi
 		mov    %dh,data_1ddbce
-		mov    big_font,%edx
+		mov    EXPORT_SYMBOL(big_font),%edx
 		mov    $0x3f,%cl
 		add    %edx,%eax
 		mov    %ebx,data_1ddbc4
@@ -162026,7 +162026,7 @@ GLOBAL_FUNC (ASM_func_cc638)	/* 0xcc638 */
 		jne    jump_cc671
 	jump_cc709:
 		mov    $0xc,%ebx
-		mov    big_font,%eax
+		mov    EXPORT_SYMBOL(big_font),%eax
 		mov    (%esp),%ebp
 		mov    %ebx,0x4(%esp)
 		mov    0x119(%eax),%al
@@ -162071,7 +162071,7 @@ GLOBAL_FUNC (ASM_func_cc638)	/* 0xcc638 */
 		xor    %ebx,%ebx
 		mov    (%eax),%bl
 		imul   $0x6,%ebx,%ebx
-		mov    med2_font,%ecx
+		mov    EXPORT_SYMBOL(med2_font),%ecx
 		mov    -0xb6(%ecx,%ebx,1),%bl
 		and    $0xff,%ebx
 		mov    0x1(%eax),%ch
@@ -162110,7 +162110,7 @@ GLOBAL_FUNC (ASM_func_cc638)	/* 0xcc638 */
 		imul   $0x6,%eax,%eax
 		mov    $0x2,%cl
 		mov    %dl,data_1ddbcc
-		mov    med2_font,%edx
+		mov    EXPORT_SYMBOL(med2_font),%edx
 		mov    %cl,data_1ddbce
 		add    %edx,%eax
 		mov    $0x3f,%ch
@@ -163247,7 +163247,7 @@ GLOBAL_FUNC(ASM_my_char_height)	/* 0x0CE7C8 */
 		mov    EXPORT_SYMBOL(lbFontPtr),%edx
 		cmp    EXPORT_SYMBOL(small_font),%edx
 		je     jump_ce7e2
-		cmp    small2_font,%edx
+		cmp    EXPORT_SYMBOL(small2_font),%edx
 		jne    jump_ce80b
 	jump_ce7e2:
 		test   %edx,%edx
@@ -163267,7 +163267,7 @@ GLOBAL_FUNC(ASM_my_char_height)	/* 0x0CE7C8 */
 		dec    %eax
 		jmp    jump_ce92f
 	jump_ce80b:
-		mov    small_med_font,%edi
+		mov    EXPORT_SYMBOL(small_med_font),%edi
 		cmp    %edi,%edx
 		jne    jump_ce884
 		cmp    $0x61,%al
@@ -163318,9 +163318,9 @@ GLOBAL_FUNC(ASM_my_char_height)	/* 0x0CE7C8 */
 		pop    %ebx
 		ret
 	jump_ce884:
-		cmp    med_font,%edx
+		cmp    EXPORT_SYMBOL(med_font),%edx
 		je     jump_ce894
-		cmp    med2_font,%edx
+		cmp    EXPORT_SYMBOL(med2_font),%edx
 		jne    jump_ce8c6
 	jump_ce894:
 		test   %edx,%edx
@@ -163344,7 +163344,7 @@ GLOBAL_FUNC(ASM_my_char_height)	/* 0x0CE7C8 */
 		pop    %ebx
 		ret
 	jump_ce8c6:
-		mov    big_font,%esi
+		mov    EXPORT_SYMBOL(big_font),%esi
 		cmp    %esi,%edx
 		jne    jump_ce902
 		test   %esi,%esi
@@ -164142,7 +164142,7 @@ GLOBAL_FUNC(ASM_show_alert_box)	/* 0x0D0090 */
 		push   %edx
 		testb  $0x1,data_1dc77a
 		je     jump_d0153
-		mov    small_med_font,%eax
+		mov    EXPORT_SYMBOL(small_med_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    data_1dc776,%ax
 		xor    %ecx,%ecx
@@ -164190,7 +164190,7 @@ GLOBAL_FUNC(ASM_show_alert_box)	/* 0x0D0090 */
 		and    $0xff,%eax
 		cmp    $0x3,%eax
 		jne    jump_d01f3
-		mov    small_med_font,%eax
+		mov    EXPORT_SYMBOL(small_med_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    data_1dc776,%ax
 		xor    %ecx,%ecx
@@ -165521,7 +165521,7 @@ GLOBAL_FUNC(ASM_show_title_box)	/* 0x0D29A4 */
 		jmp    jump_d2a79
 	jump_d29db:
 		mov    0x1c(%esi),%eax
-		mov    med2_font,%ebx
+		mov    EXPORT_SYMBOL(med2_font),%ebx
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		cmp    %ebx,%eax
 		sete   %al
@@ -165662,7 +165662,7 @@ GLOBAL_FUNC(ASM_show_world_city_info_box)	/* 0x0D2A84 */
 		movb   $0xfe,0x9(%eax)
 	jump_d2b68:
 		orb    $0x1,EXPORT_SYMBOL(lbDisplay)+97 # lbDisplay.DrawFlags >> 8
-		mov    small_med_font,%eax
+		mov    EXPORT_SYMBOL(small_med_font),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 		mov    $0x41,%eax
 		call   ac_my_char_height
@@ -165754,7 +165754,7 @@ GLOBAL_FUNC(ASM_show_world_city_info_box)	/* 0x0D2A84 */
 		je     jump_d2caa
 		cmp    $0x73,%dl
 		jne    jump_d2cb4
-		cmpb   $0x77,data_177101
+		cmpb   $0x77,EXPORT_SYMBOL(language_3str)+1
 		jne    jump_d2cb4
 	jump_d2caa:
 		xor    %eax,%eax
@@ -181389,9 +181389,7 @@ save_hashtbl_verify_code:	/* 0x1770FC */
 data_1770ff:
 		.byte	0x0
 GLOBAL (language_3str)	/* 0x177100 */
-		.byte	0x0
-data_177101:
-		.ascii  "\x00\x00\x00"
+		.fill   0x4
 GLOBAL (packet_rec_fh)
 		.long	0x0
 GLOBAL (smack_malloc_used_tot)	/* 0x177108 */
@@ -182056,42 +182054,12 @@ GLOBAL (word_1A5834)
 GLOBAL (word_1A5836)
 		.short  0x0
 
-GLOBAL (small2_font)	/* 0x1A5850 */
-		.long	0x0
-GLOBAL (small2_font_end)	/* 0x1A5854 */
-		.long	0x0
-GLOBAL (small_med_font)	/* 0x1A5858 */
-		.long	0x0
-GLOBAL (small_med_font_end)	/* 0x1A585C */
-		.long	0x0
-GLOBAL (med_font)	/* 0x1A5860 */
-		.long	0x0
-GLOBAL (med_font_end)	/* 0x1A5864 */
-		.long	0x0
-GLOBAL (med2_font)	/* 0x1A5868 */
-		.long	0x0
-GLOBAL (med2_font_end)	/* 0x1A586C */
-		.long	0x0
-GLOBAL (big_font)	/* 0x1A5870 */
-		.long	0x0
-GLOBAL (big_font_end)	/* 0x1A5874 */
-		.long	0x0
 GLOBAL (display_palette)	/* 0x1A5878 */
 		.fill   0x8
 
 GLOBAL (gui_strings)	/* 0x1A5888 */
 		.fill   8000
 
-GLOBAL (small2_font_data)	/* 0x1A62C4 */
-		.long	0x0
-GLOBAL (small_med_font_data)	/* 0x1A62C8 */
-		.long	0x0
-GLOBAL (med_font_data)	/* 0x1A62CC */
-		.long	0x0
-GLOBAL (med2_font_data)	/* 0x1A62D0 */
-		.long	0x0
-GLOBAL (big_font_data)	/* 0x1A62D4 */
-		.long	0x0
 GLOBAL (turns_delta)	/* 0x1A62D8 */
 		.long	0x0
 GLOBAL (gameturn)	/* 0x1A62DC */

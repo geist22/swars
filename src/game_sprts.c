@@ -48,6 +48,26 @@ struct TbSprite *small_font_end;
 ubyte *small_font_data;
 ubyte *small_font_data_end;
 
+struct TbSprite *small2_font;
+struct TbSprite *small2_font_end;
+ubyte *small2_font_data;
+
+struct TbSprite *small_med_font;
+struct TbSprite *small_med_font_end;
+ubyte *small_med_font_data;
+
+struct TbSprite *med_font;
+struct TbSprite *med_font_end;
+ubyte *med_font_data;
+
+struct TbSprite *med2_font;
+struct TbSprite *med2_font_end;
+ubyte *med2_font_data;
+
+struct TbSprite *big_font;
+struct TbSprite *big_font_end;
+ubyte *big_font_data;
+
 /******************************************************************************/
 
 /** Load sprites of given style and detail, to a preallocated area of specific size.

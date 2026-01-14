@@ -34,6 +34,14 @@ extern struct TbSprite *pointer_sprites_end;
 extern ubyte *pointer_data;
 extern ubyte *pointer_data_end;
 
+/** In-game panel sprites.
+ */
+extern struct TbSprite *pop1_sprites;
+extern struct TbSprite *pop1_sprites_end;
+extern ubyte *pop1_data;
+extern ubyte *pop1_data_end;
+extern short pop1_sprites_scale;
+
 extern struct TbSprite *small_font;
 extern struct TbSprite *small_font_end;
 extern ubyte *small_font_data;
@@ -77,14 +85,6 @@ extern ubyte *fe_mouseptr_sprites_data;
 extern struct TbSprite *fepanel_sprites;
 extern struct TbSprite *fepanel_sprites_end;
 extern ubyte *fepanel_sprites_data;
-
-/** In-game panel sprites.
- */
-extern struct TbSprite *pop1_sprites;
-extern struct TbSprite *pop1_sprites_end;
-extern ubyte *pop1_data;
-extern ubyte *pop1_data_end;
-extern short pop1_sprites_scale;
 
 extern struct TbSprite *m_sprites;
 extern struct TbSprite *m_sprites_end;
