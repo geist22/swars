@@ -1087,7 +1087,7 @@ void init_laser(struct Thing *p_owner, ushort start_age)
 #endif
     struct Thing *p_shot;
     struct WeaponDef *wdef;
-    int prc_x, prc_y, prc_z;
+    int prc_beg_x, prc_beg_y, prc_beg_z;
     MapCoord cor_x, cor_y, cor_z;
     u32 rhit;
     int damage;
@@ -1102,22 +1102,22 @@ void init_laser(struct Thing *p_owner, ushort start_age)
     p_shot = &things[shottng];
     if ((p_owner->Flag2 & TgF2_ExistsOffMap) != 0)
     {
-        prc_x = p_owner->X;
-        prc_y = p_owner->Y + 5120;
-        prc_z = p_owner->Z;
+        prc_beg_x = p_owner->X;
+        prc_beg_y = p_owner->Y + 5120;
+        prc_beg_z = p_owner->Z;
     }
     else
     {
         ubyte angle;
         angle = p_owner->U.UObject.Angle;
-        prc_x = p_owner->X + (angle_direction[angle].DiX << 7);
-        prc_y = p_owner->Y + 5120;
-        prc_z = p_owner->Z + (angle_direction[angle].DiY << 7);
+        prc_beg_x = p_owner->X + (angle_direction[angle].DiX << 7);
+        prc_beg_y = p_owner->Y + 5120;
+        prc_beg_z = p_owner->Z + (angle_direction[angle].DiY << 7);
     }
 
     p_shot->U.UObject.Angle = p_owner->U.UObject.Angle;
-    if ((PRCCOORD_TO_MAPCOORD(prc_x) < 0) || (PRCCOORD_TO_MAPCOORD(prc_x) >= MAP_COORD_WIDTH) ||
-      (PRCCOORD_TO_MAPCOORD(prc_z) < 0) || (PRCCOORD_TO_MAPCOORD(prc_z) >= MAP_COORD_HEIGHT)) {
+    if ((PRCCOORD_TO_MAPCOORD(prc_beg_x) < 0) || (PRCCOORD_TO_MAPCOORD(prc_beg_x) >= MAP_COORD_WIDTH) ||
+      (PRCCOORD_TO_MAPCOORD(prc_beg_z) < 0) || (PRCCOORD_TO_MAPCOORD(prc_beg_z) >= MAP_COORD_HEIGHT)) {
         remove_thing(shottng);
         return;
     }
@@ -1148,9 +1148,9 @@ void init_laser(struct Thing *p_owner, ushort start_age)
         ubyte angle;
         range = wdef->RangeBlocks;
         angle = p_owner->U.UObject.Angle;
-        p_shot->VX = PRCCOORD_TO_MAPCOORD(prc_x) + ((range * angle_direction[angle].DiX) >> 16);
-        p_shot->VY = PRCCOORD_TO_MAPCOORD(prc_y);
-        p_shot->VZ = PRCCOORD_TO_MAPCOORD(prc_z) + ((range * angle_direction[angle].DiY) >> 16);
+        p_shot->VX = PRCCOORD_TO_MAPCOORD(prc_beg_x) + ((range * angle_direction[angle].DiX) >> 16);
+        p_shot->VY = PRCCOORD_TO_MAPCOORD(prc_beg_y);
+        p_shot->VZ = PRCCOORD_TO_MAPCOORD(prc_beg_z) + ((range * angle_direction[angle].DiY) >> 16);
     }
     else
     {
@@ -1158,15 +1158,15 @@ void init_laser(struct Thing *p_owner, ushort start_age)
         return;
     }
 
-    p_shot->X = prc_x;
-    p_shot->Y = prc_y;
-    p_shot->Z = prc_z;
+    p_shot->X = prc_beg_x;
+    p_shot->Y = prc_beg_y;
+    p_shot->Z = prc_beg_z;
     p_shot->Radius = 50;
     p_shot->Owner = p_owner->ThingOffset;
 
-    cor_x = PRCCOORD_TO_MAPCOORD(prc_x);
-    cor_y = PRCCOORD_TO_MAPCOORD(prc_y);
-    cor_z = PRCCOORD_TO_MAPCOORD(prc_z);
+    cor_x = PRCCOORD_TO_MAPCOORD(prc_beg_x);
+    cor_y = PRCCOORD_TO_MAPCOORD(prc_beg_y);
+    cor_z = PRCCOORD_TO_MAPCOORD(prc_beg_z);
     rhit = laser_hit_at(cor_x, cor_y, cor_z, &p_shot->VX, &p_shot->VY, &p_shot->VZ, p_shot);
 
     if (start_age > 15)
@@ -1243,7 +1243,7 @@ void init_mgun_laser(struct Thing *p_owner, ushort start_age)
 #endif
     struct Thing *p_shot;
     struct WeaponDef *wdef;
-    int prc_x, prc_y, prc_z;
+    int prc_beg_x, prc_beg_y, prc_beg_z;
     MapCoord cor_x, cor_y, cor_z;
     short tgtng_x, tgtng_y, tgtng_z;
     u32 rhit;
@@ -1266,9 +1266,9 @@ void init_mgun_laser(struct Thing *p_owner, ushort start_age)
     else
         angle = p_owner->U.UMGun.AngleY - 48;
     angle = (angle + 2 * LbFPMath_PI) & LbFPMath_AngleMask;
-    prc_x = p_owner->X + 3 * lbSinTable[angle] / 2;
-    prc_z = p_owner->Z - 3 * lbSinTable[angle + LbFPMath_PI/2] / 2;
-    prc_y = p_owner->Y;
+    prc_beg_x = p_owner->X + 3 * lbSinTable[angle] / 2;
+    prc_beg_z = p_owner->Z - 3 * lbSinTable[angle + LbFPMath_PI/2] / 2;
+    prc_beg_y = p_owner->Y;
 
     wdef = &weapon_defs[WEP_LASER];
     wdmgtyp = DMG_LASER;
@@ -1276,18 +1276,18 @@ void init_mgun_laser(struct Thing *p_owner, ushort start_age)
     get_thing_position_mapcoords(&tgtng_x, &tgtng_y, &tgtng_z, p_owner->PTarget->ThingOffset);
 
     p_shot->U.UEffect.Angle = p_owner->U.UMGun.AngleY;
-    p_shot->X = prc_x;
-    p_shot->Y = prc_y;
-    p_shot->Z = prc_z;
+    p_shot->X = prc_beg_x;
+    p_shot->Y = prc_beg_y;
+    p_shot->Z = prc_beg_z;
     p_shot->VX = tgtng_x;
     p_shot->VY = (tgtng_y >> 3) + 10;
     p_shot->VZ = tgtng_z;
     p_shot->Radius = 50;
     p_shot->Owner = p_owner->ThingOffset;
 
-    cor_x = PRCCOORD_TO_MAPCOORD(prc_x);
-    cor_y = PRCCOORD_TO_MAPCOORD(prc_y);
-    cor_z = PRCCOORD_TO_MAPCOORD(prc_z);
+    cor_x = PRCCOORD_TO_MAPCOORD(prc_beg_x);
+    cor_y = PRCCOORD_TO_MAPCOORD(prc_beg_y);
+    cor_z = PRCCOORD_TO_MAPCOORD(prc_beg_z);
 
     rhit = laser_hit_at(cor_x, cor_y, cor_z, &p_shot->VX, &p_shot->VY, &p_shot->VZ, p_shot);
 
@@ -1456,7 +1456,7 @@ void init_laser_elec(struct Thing *p_owner, ushort start_age)
 #endif
     struct Thing *p_shot;
     struct WeaponDef *wdef;
-    int prc_x, prc_y, prc_z;
+    int prc_beg_x, prc_beg_y, prc_beg_z;
     MapCoord cor_x, cor_y, cor_z;
     u32 rhit;
     int damage;
@@ -1472,22 +1472,22 @@ void init_laser_elec(struct Thing *p_owner, ushort start_age)
     p_shot = &things[shottng];
     if ((p_owner->Flag2 & TgF2_ExistsOffMap) != 0)
     {
-        prc_x = p_owner->X;
-        prc_y = p_owner->Y + 5120;
-        prc_z = p_owner->Z;
+        prc_beg_x = p_owner->X;
+        prc_beg_y = p_owner->Y + 5120;
+        prc_beg_z = p_owner->Z;
     }
     else
     {
         ubyte angle;
         angle = p_owner->U.UObject.Angle;
-        prc_x = p_owner->X + (angle_direction[angle].DiX << 7);
-        prc_y = p_owner->Y + 5120;
-        prc_z = p_owner->Z + (angle_direction[angle].DiY << 7);
+        prc_beg_x = p_owner->X + (angle_direction[angle].DiX << 7);
+        prc_beg_y = p_owner->Y + 5120;
+        prc_beg_z = p_owner->Z + (angle_direction[angle].DiY << 7);
     }
 
     p_shot->U.UObject.Angle = p_owner->U.UObject.Angle;
-    if ((PRCCOORD_TO_MAPCOORD(prc_x) < 0) || (PRCCOORD_TO_MAPCOORD(prc_x) >= MAP_COORD_WIDTH) ||
-      (PRCCOORD_TO_MAPCOORD(prc_z) < 0) || (PRCCOORD_TO_MAPCOORD(prc_z) >= MAP_COORD_HEIGHT)) {
+    if ((PRCCOORD_TO_MAPCOORD(prc_beg_x) < 0) || (PRCCOORD_TO_MAPCOORD(prc_beg_x) >= MAP_COORD_WIDTH) ||
+      (PRCCOORD_TO_MAPCOORD(prc_beg_z) < 0) || (PRCCOORD_TO_MAPCOORD(prc_beg_z) >= MAP_COORD_HEIGHT)) {
         remove_thing(shottng);
         return;
     }
@@ -1520,9 +1520,9 @@ void init_laser_elec(struct Thing *p_owner, ushort start_age)
         ubyte angle;
         range = wdef->RangeBlocks;
         angle = p_owner->U.UObject.Angle;
-        p_shot->VX = PRCCOORD_TO_MAPCOORD(prc_x) + ((range * angle_direction[angle].DiX) >> 16);
-        p_shot->VY = PRCCOORD_TO_MAPCOORD(prc_y);
-        p_shot->VZ = PRCCOORD_TO_MAPCOORD(prc_z) + ((range * angle_direction[angle].DiY) >> 16);
+        p_shot->VX = PRCCOORD_TO_MAPCOORD(prc_beg_x) + ((range * angle_direction[angle].DiX) >> 16);
+        p_shot->VY = PRCCOORD_TO_MAPCOORD(prc_beg_y);
+        p_shot->VZ = PRCCOORD_TO_MAPCOORD(prc_beg_z) + ((range * angle_direction[angle].DiY) >> 16);
     }
     else
     {
@@ -1530,15 +1530,15 @@ void init_laser_elec(struct Thing *p_owner, ushort start_age)
         return;
     }
 
-    p_shot->X = prc_x;
-    p_shot->Y = prc_y;
-    p_shot->Z = prc_z;
+    p_shot->X = prc_beg_x;
+    p_shot->Y = prc_beg_y;
+    p_shot->Z = prc_beg_z;
     p_shot->Radius = 50;
     p_shot->Owner = p_owner->ThingOffset;
 
-    cor_x = PRCCOORD_TO_MAPCOORD(prc_x);
-    cor_y = PRCCOORD_TO_MAPCOORD(prc_y);
-    cor_z = PRCCOORD_TO_MAPCOORD(prc_z);
+    cor_x = PRCCOORD_TO_MAPCOORD(prc_beg_x);
+    cor_y = PRCCOORD_TO_MAPCOORD(prc_beg_y);
+    cor_z = PRCCOORD_TO_MAPCOORD(prc_beg_z);
     rhit = laser_hit_at(cor_x, cor_y, cor_z, &p_shot->VX, &p_shot->VY, &p_shot->VZ, p_shot);
 
     if (start_age > 15)
@@ -1710,9 +1710,9 @@ void init_v_rocket(struct Thing *p_owner)
     struct Thing *p_shot;
     struct Thing *p_veh;
     struct Thing *p_target;
-    s32 ppos_beg_x, ppos_beg_z, ppos_beg_y;
-    s32 pos_dt_x, pos_dt_z, pos_dt_y;
-    s32 dist;
+    int prc_beg_x, prc_beg_z, prc_beg_y;
+    int pos_dt_x, pos_dt_z, pos_dt_y;
+    int dist;
 
     LOGSYNC("Shot fired by %s offs=%d", thing_type_name(p_owner->Type, p_owner->SubType),
       (int)p_owner->ThingOffset);
@@ -1734,19 +1734,22 @@ void init_v_rocket(struct Thing *p_owner)
           thing_type_name(p_veh->Type, p_veh->SubType), (int)p_veh->ThingOffset,
           thing_type_name(p_mgun->Type, p_mgun->SubType), (int)p_mgun->ThingOffset);
 
-        if (p_mgun->U.UMGun.ShotTurn != 0) // which rocket pack to shoot from
+        if ((p_mgun->U.UMGun.ShotTurn & 1) != 0) // which rocket pack to shoot from
             angle = p_mgun->U.UMGun.AngleY + 7 * LbFPMath_PI / 16;
         else
             angle = p_mgun->U.UMGun.AngleY - 7 * LbFPMath_PI / 16;
         angle = (angle + 2 * LbFPMath_PI) & LbFPMath_AngleMask;
 
         // the mounted gun position is relative; use trigonometry to switch rocket packs
-        ppos_beg_x = p_veh->X + p_mgun->X - 3 * lbSinTable[angle] / 2;
-        ppos_beg_z = p_veh->Z + p_mgun->Z - 3 * lbSinTable[angle + LbFPMath_PI/2] / 2;
-        ppos_beg_y = p_veh->Y + p_mgun->Y + (140 << 5);
+        prc_beg_x = p_veh->X + p_mgun->X - 3 * lbSinTable[angle] / 2;
+        prc_beg_z = p_veh->Z + p_mgun->Z - 3 * lbSinTable[angle + LbFPMath_PI/2] / 2;
+        if ((p_mgun->U.UMGun.ShotTurn & 2) != 0) // upper or lower rocket within pack
+            prc_beg_y = p_veh->Y + p_mgun->Y + (50 << 5);
+        else
+            prc_beg_y = p_veh->Y + p_mgun->Y + (200 << 5);
     }
-    if ((PRCCOORD_TO_MAPCOORD(ppos_beg_x) >= MAP_COORD_WIDTH) ||
-      (PRCCOORD_TO_MAPCOORD(ppos_beg_z) >= MAP_COORD_HEIGHT))
+    if ((PRCCOORD_TO_MAPCOORD(prc_beg_x) >= MAP_COORD_WIDTH) ||
+      (PRCCOORD_TO_MAPCOORD(prc_beg_z) >= MAP_COORD_HEIGHT))
     {
         remove_thing(shottng);
         LOGERR("Start position beyond map area");
@@ -1781,9 +1784,9 @@ void init_v_rocket(struct Thing *p_owner)
         p_shot->U.UEffect.GotoY = p_veh->U.UVehicle.TargetDY;
         p_shot->U.UEffect.GotoZ = p_veh->U.UVehicle.TargetDZ;
     }
-    pos_dt_x = p_shot->U.UEffect.GotoX - PRCCOORD_TO_MAPCOORD(ppos_beg_x);
-    pos_dt_y = p_shot->U.UEffect.GotoY - PRCCOORD_TO_MAPCOORD(ppos_beg_y);
-    pos_dt_z = p_shot->U.UEffect.GotoZ - PRCCOORD_TO_MAPCOORD(ppos_beg_z);
+    pos_dt_x = p_shot->U.UEffect.GotoX - PRCCOORD_TO_MAPCOORD(prc_beg_x);
+    pos_dt_y = p_shot->U.UEffect.GotoY - PRCCOORD_TO_MAPCOORD(prc_beg_y);
+    pos_dt_z = p_shot->U.UEffect.GotoZ - PRCCOORD_TO_MAPCOORD(prc_beg_z);
 
     dist = LbSqrL(pos_dt_z * pos_dt_z + pos_dt_x * pos_dt_x);
     if (dist == 0)
@@ -1791,9 +1794,9 @@ void init_v_rocket(struct Thing *p_owner)
     p_shot->VX = (SHOT_ROCKED_SPEED * pos_dt_x) / dist;
     p_shot->VY = (SHOT_ROCKED_SPEED * pos_dt_y) / dist;
     p_shot->VZ = (SHOT_ROCKED_SPEED * pos_dt_z) / dist;
-    p_shot->X = ppos_beg_x;
-    p_shot->Y = ppos_beg_y;
-    p_shot->Z = ppos_beg_z;
+    p_shot->X = prc_beg_x;
+    p_shot->Y = prc_beg_y;
+    p_shot->Z = prc_beg_z;
 
     p_shot->StartTimer1 = 20;
     p_shot->Timer1 = 30;
@@ -2274,7 +2277,7 @@ ubyte vehicle_with_person_shoot_at_target(struct Thing *p_owner)
 
     turn = p_mgun->U.UMGun.ShotTurn;
     init_v_rocket(p_owner);
-    p_mgun->U.UMGun.ShotTurn = (turn == 0);
+    p_mgun->U.UMGun.ShotTurn = (turn + 1) & 0x03;
     p_owner->U.UPerson.WeaponTurn = weapon_tank_rocket_ReFireDelay;
     return 0;
 }
