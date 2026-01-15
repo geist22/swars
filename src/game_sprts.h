@@ -88,8 +88,8 @@ extern ubyte *fepanel_sprites_data;
 
 extern struct TbSprite *m_sprites;
 extern struct TbSprite *m_sprites_end;
-extern ubyte *m_spr_data;
-extern ubyte *m_spr_data_end;
+extern ubyte *m_sprites_data;
+extern ubyte *m_sprites_data_end;
 
 extern ubyte *dword_1C6DE4;
 extern ubyte *dword_1C6DE8;

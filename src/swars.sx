@@ -1120,7 +1120,7 @@ GLOBAL_FUNC(ASM_draw_sorted_sprite1a)	/* 0x0122FC */
 		jbe    jump_1246a
 	jump_123cf:
 		xor    %ebx,%ebx
-		mov    m_sprites,%ecx
+		mov    EXPORT_SYMBOL(m_sprites),%ecx
 		mov    (%esi),%bx
 		add    %ecx,%ebx
 		cmp    %ecx,%ebx
@@ -2037,7 +2037,7 @@ GLOBAL_FUNC(ASM_number_player)	/* 0x01C2CC */
 		jbe    jump_1c77f
 	jump_1c71c:
 		xor    %ebx,%ebx
-		mov    m_sprites,%ebp
+		mov    EXPORT_SYMBOL(m_sprites),%ebp
 		mov    (%ecx),%bx
 		add    %ebp,%ebx
 		cmp    %ebp,%ebx
@@ -17192,7 +17192,7 @@ ASM_debug_check_unkn_sprite_size:	/* 0x03DF58 */
 		mov    EXPORT_SYMBOL(sprite_over_16x16),%edx
 		test   %edx,%edx
 		jne    jump_3df8c
-		mov    m_sprites,%eax
+		mov    EXPORT_SYMBOL(m_sprites),%eax
 		mov    0x1b28(%eax),%dl
 		cmp    $0x10,%edx
 		jg     jump_3df82
@@ -19419,7 +19419,7 @@ GLOBAL_FUNC(ASM_element_unkn_func_05)	/* 0x042D58 */
 		cmp    mele_ani_end,%eax
 		ja     jump_42dac
 		xor    %edx,%edx
-		mov    m_sprites,%ebx
+		mov    EXPORT_SYMBOL(m_sprites),%ebx
 		mov    (%eax),%dx
 		add    %ebx,%edx
 		cmp    %ebx,%edx
@@ -60072,7 +60072,7 @@ calc_bul_offsets:	/* 0x060FD4 */
 		push   %ebp
 		sub    $0x8,%esp
 		mov    melement_ani,%ecx
-		mov    m_sprites,%esi
+		mov    EXPORT_SYMBOL(m_sprites),%esi
 		mov    nstart_ani_end,%eax
 		sub    nstart_ani,%eax
 		shr    %eax
@@ -60149,7 +60149,7 @@ calc_bul_offsets:	/* 0x060FD4 */
 		ja     jump_61014
 		jmp    jump_61060
 	jump_610dd:
-		mov    %esi,m_sprites
+		mov    %esi,EXPORT_SYMBOL(m_sprites)
 		mov    %ecx,melement_ani
 		add    $0x8,%esp
 		pop    %ebp
@@ -74912,7 +74912,7 @@ func_70a88:
 		jbe    jump_70bc5
 	jump_70b34:
 		xor    %ebx,%ebx
-		mov    m_sprites,%ebp
+		mov    EXPORT_SYMBOL(m_sprites),%ebp
 		mov    (%esi),%bx
 		add    %ebp,%ebx
 		cmp    %ebp,%ebx
@@ -116753,7 +116753,7 @@ func_a0291:
 		add    %eax,%esi
 		mov    %esi,0x3c(%esp)
 	jump_a057d:
-		cmpb   $0x0,new_mail
+		cmpb   $0x0,EXPORT_SYMBOL(new_mail)
 		je     jump_a0937
 		xor    %eax,%eax
 		mov    EXPORT_SYMBOL(game_system_screen),%al
@@ -116848,7 +116848,7 @@ func_a0291:
 		and    $0xffff,%eax
 		cmp    $0x1,%eax
 		jne    jump_a0716
-		mov    next_brief,%ax
+		mov    EXPORT_SYMBOL(next_brief),%ax
 		sub    $0x5,%eax
 		mov    %ax,EXPORT_SYMBOL(word_1C6F40)
 		mov    EXPORT_SYMBOL(word_1C6F3E),%eax
@@ -116858,8 +116858,8 @@ func_a0291:
 		xor    %edi,%edi
 		mov    %di,EXPORT_SYMBOL(word_1C6F40)
 	jump_a06fc:
-		mov    next_brief,%ax
-		mov    %ax,open_brief
+		mov    EXPORT_SYMBOL(next_brief),%ax
+		mov    %ax,EXPORT_SYMBOL(open_brief)
 		movb   $0x7,change_screen
 		mov    EXPORT_SYMBOL(gui_strings)+0x5D0,%eax
 		jmp    jump_a075d
@@ -116867,7 +116867,7 @@ func_a0291:
 		mov    EXPORT_SYMBOL(next_email),%ax
 		sub    $0x4,%eax
 		mov    %ax,EXPORT_SYMBOL(word_1C6F3E)
-		mov    next_brief,%eax
+		mov    EXPORT_SYMBOL(next_brief),%eax
 		sar    $0x10,%eax
 		test   %eax,%eax
 		jge    jump_a073a
@@ -116875,13 +116875,13 @@ func_a0291:
 		mov    %cx,EXPORT_SYMBOL(word_1C6F3E)
 	jump_a073a:
 		mov    EXPORT_SYMBOL(next_email),%ax
-		mov    %ax,open_brief
+		mov    %ax,EXPORT_SYMBOL(open_brief)
 		mov    %eax,%esi
 		mov    $0x7,%al
 		neg    %esi
 		mov    %al,change_screen
 		mov    EXPORT_SYMBOL(gui_strings)+0x5D4,%eax
-		mov    %si,open_brief
+		mov    %si,EXPORT_SYMBOL(open_brief)
 	jump_a075d:
 		mov    %eax,EXPORT_SYMBOL(heading_box)+0x18
 		push   $0x2
@@ -116892,7 +116892,7 @@ func_a0291:
 		mov    $0x6f,%edx
 		xor    %eax,%eax
 		call   ac_play_sample_using_heap
-		mov    new_mail,%dl
+		mov    EXPORT_SYMBOL(new_mail),%dl
 		test   %dl,%dl
 		je     jump_a07c0
 		push   $0x3
@@ -117056,7 +117056,7 @@ func_a0908:
 	jump_a0976:
 		xor    %eax,%eax
 		mov    0x34(%esp),%ecx
-		mov    next_brief,%ax
+		mov    EXPORT_SYMBOL(next_brief),%ax
 		cmp    %ecx,%eax
 		jle    jump_93f23
 		mov    EXPORT_SYMBOL(word_1C6F3E),%eax
@@ -117218,7 +117218,7 @@ func_a0b0c:
 		mov    $0x6f,%edx
 		inc    %eax
 		push   $0x64
-		mov    %ax,open_brief
+		mov    %ax,EXPORT_SYMBOL(open_brief)
 		xor    %eax,%eax
 		call   ac_play_sample_using_heap
 	jump_a0bc4:
@@ -133777,7 +133777,7 @@ GLOBAL_FUNC(ASM_flashy_draw_purple_shape)	/* 0x0B2ACC */
 		lea    0x0(,%edx,4),%eax
 		mov    %cx,EXPORT_SYMBOL(lbDisplay)+96 # lbDisplay__DrawFlags
 		sub    %edx,%eax
-		mov    fe_mouseptr_sprites,%ecx
+		mov    EXPORT_SYMBOL(fe_mouseptr_sprites),%ecx
 		add    %eax,%eax
 		mov    0x8(%esp),%edx
 		add    %eax,%ecx
@@ -134087,7 +134087,7 @@ GLOBAL_FUNC(ASM_flashy_draw_purple_shape)	/* 0x0B2ACC */
 		mov    0x48(%esp),%dl
 		lea    0x0(,%edx,4),%eax
 		sub    %edx,%eax
-		mov    fe_mouseptr_sprites,%edx
+		mov    EXPORT_SYMBOL(fe_mouseptr_sprites),%edx
 		add    %eax,%eax
 		add    %eax,%edx
 		mov    %edx,0x14(%esp)
@@ -134296,7 +134296,7 @@ GLOBAL_FUNC(ASM_flashy_draw_purple_shape)	/* 0x0B2ACC */
 		mov    0x48(%esp),%dl
 		lea    0x0(,%edx,4),%eax
 		sub    %edx,%eax
-		mov    fe_mouseptr_sprites,%edx
+		mov    EXPORT_SYMBOL(fe_mouseptr_sprites),%edx
 		add    %eax,%eax
 		add    %eax,%edx
 		mov    0x10(%esp),%ebx
@@ -134571,7 +134571,7 @@ GLOBAL_FUNC(ASM_flashy_draw_purple_box)	/* 0x0B3458 */
 		lea    0x0(,%edx,4),%eax
 		sub    %edx,%eax
 		lea    (%eax,%eax,1),%edx
-		mov    fe_mouseptr_sprites,%eax
+		mov    EXPORT_SYMBOL(fe_mouseptr_sprites),%eax
 		add    %edx,%eax
 		mov    %eax,0x20(%esp)
 		mov    0x24(%esp),%eax
@@ -134773,7 +134773,7 @@ GLOBAL_FUNC(ASM_flashy_draw_purple_box)	/* 0x0B3458 */
 		mov    0x4c(%esp),%dl
 		lea    0x0(,%edx,4),%eax
 		sub    %edx,%eax
-		mov    fe_mouseptr_sprites,%ecx
+		mov    EXPORT_SYMBOL(fe_mouseptr_sprites),%ecx
 		add    %eax,%eax
 		xor    %edx,%edx
 		add    %eax,%ecx
@@ -134968,7 +134968,7 @@ GLOBAL_FUNC(ASM_flashy_draw_purple_box)	/* 0x0B3458 */
 		lea    0x0(,%edx,4),%eax
 		sub    %edx,%eax
 		lea    (%eax,%eax,1),%edx
-		mov    fe_mouseptr_sprites,%eax
+		mov    EXPORT_SYMBOL(fe_mouseptr_sprites),%eax
 		add    %edx,%eax
 		mov    %eax,0x10(%esp)
 		xor    %eax,%eax
@@ -136172,7 +136172,7 @@ GLOBAL_FUNC(ASM_flashy_draw_purple_text_box)	/* 0x0B3DA4 */
 		xor    %eax,%eax
 		mov    0x4(%esi),%bx
 		mov    (%esi),%ax
-		mov    fe_mouseptr_sprites,%ecx
+		mov    EXPORT_SYMBOL(fe_mouseptr_sprites),%ecx
 		add    %ebx,%eax
 		mov    %edx,0x4(%esp)
 		sub    $0xd,%eax
@@ -136263,7 +136263,7 @@ GLOBAL_FUNC(ASM_flashy_draw_purple_text_box)	/* 0x0B3DA4 */
 		xor    %edx,%edx
 		sar    $0x10,%eax
 		mov    0x2(%esi),%dx
-		mov    fe_mouseptr_sprites,%edi
+		mov    EXPORT_SYMBOL(fe_mouseptr_sprites),%edi
 		add    %edx,%eax
 		mov    0x10(%esi),%edx
 		add    $0x9,%eax
@@ -136466,7 +136466,7 @@ GLOBAL_FUNC(ASM_flashy_draw_purple_text_box)	/* 0x0B3DA4 */
 		add    $0x12,%eax
 		sar    $0x10,%edx
 		lea    (%eax,%edx,1),%edi
-		mov    fe_mouseptr_sprites,%ecx
+		mov    EXPORT_SYMBOL(fe_mouseptr_sprites),%ecx
 		xor    %eax,%eax
 		xor    %edx,%edx
 		mov    0x4(%esi),%ax
@@ -136566,7 +136566,7 @@ GLOBAL_FUNC(ASM_flashy_draw_purple_text_box)	/* 0x0B3DA4 */
 		xor    %eax,%eax
 		mov    (%esi),%bx
 		mov    0x4(%esi),%ax
-		mov    fe_mouseptr_sprites,%ecx
+		mov    EXPORT_SYMBOL(fe_mouseptr_sprites),%ecx
 		add    %ebx,%eax
 		mov    %edx,0x10(%esp)
 		sub    $0xd,%eax
@@ -136837,7 +136837,7 @@ GLOBAL_FUNC(ASM_flashy_draw_purple_text_box)	/* 0x0B3DA4 */
 		mov    0x5c(%esp),%dl
 		lea    0x0(,%edx,4),%eax
 		sub    %edx,%eax
-		mov    fe_mouseptr_sprites,%edx
+		mov    EXPORT_SYMBOL(fe_mouseptr_sprites),%edx
 		add    %eax,%eax
 		lea    -0x1(%edi),%ecx
 		add    %eax,%edx
@@ -137041,7 +137041,7 @@ GLOBAL_FUNC(ASM_flashy_draw_purple_text_box)	/* 0x0B3DA4 */
 		mov    0x5c(%esp),%dl
 		lea    0x0(,%edx,4),%eax
 		sub    %edx,%eax
-		mov    fe_mouseptr_sprites,%ebp
+		mov    EXPORT_SYMBOL(fe_mouseptr_sprites),%ebp
 		add    %eax,%eax
 		mov    0x36(%esp),%edx
 		add    %eax,%ebp
@@ -137231,7 +137231,7 @@ GLOBAL_FUNC(ASM_flashy_draw_purple_text_box)	/* 0x0B3DA4 */
 		mov    0x5c(%esp),%dl
 		lea    0x0(,%edx,4),%eax
 		sub    %edx,%eax
-		mov    fe_mouseptr_sprites,%ecx
+		mov    EXPORT_SYMBOL(fe_mouseptr_sprites),%ecx
 		add    %eax,%eax
 		add    %eax,%ecx
 		xor    %eax,%eax
@@ -138218,7 +138218,7 @@ GLOBAL_FUNC(ASM_flashy_draw_purple_button)	/* 0x0B59EC */
 		lea    0x0(,%edx,4),%eax
 		sub    %edx,%eax
 		lea    (%eax,%eax,1),%edx
-		mov    fe_mouseptr_sprites,%eax
+		mov    EXPORT_SYMBOL(fe_mouseptr_sprites),%eax
 		add    %edx,%eax
 		mov    (%esp),%edx
 		mov    %eax,0xc(%esp)
@@ -138460,7 +138460,7 @@ GLOBAL_FUNC(ASM_flashy_draw_purple_button)	/* 0x0B59EC */
 		lea    0x0(,%edx,4),%eax
 		sub    %edx,%eax
 		lea    (%eax,%eax,1),%edx
-		mov    fe_mouseptr_sprites,%eax
+		mov    EXPORT_SYMBOL(fe_mouseptr_sprites),%eax
 		add    %edx,%eax
 		mov    %eax,0x1c(%esp)
 		xor    %edx,%edx
@@ -138741,7 +138741,7 @@ GLOBAL_FUNC(ASM_flashy_draw_purple_button)	/* 0x0B59EC */
 		xor    %edx,%edx
 		mov    0x58(%esp),%dl
 		lea    0x0(,%edx,4),%eax
-		mov    fe_mouseptr_sprites,%ecx
+		mov    EXPORT_SYMBOL(fe_mouseptr_sprites),%ecx
 		sub    %edx,%eax
 		mov    0x36(%esp),%edx
 		add    %eax,%eax
@@ -139033,7 +139033,7 @@ GLOBAL_FUNC(ASM_flashy_draw_purple_info_box)	/* 0x0B6BEC */
 		lea    0x0(,%edx,4),%eax
 		dec    %edi
 		sub    %edx,%eax
-		mov    fe_mouseptr_sprites,%ecx
+		mov    EXPORT_SYMBOL(fe_mouseptr_sprites),%ecx
 		add    %eax,%eax
 		xor    %ebx,%ebx
 		add    %eax,%ecx
@@ -139238,7 +139238,7 @@ GLOBAL_FUNC(ASM_flashy_draw_purple_info_box)	/* 0x0B6BEC */
 		mov    0x4c(%esp),%dl
 		lea    0x0(,%edx,4),%eax
 		sub    %edx,%eax
-		mov    fe_mouseptr_sprites,%ecx
+		mov    EXPORT_SYMBOL(fe_mouseptr_sprites),%ecx
 		add    %eax,%eax
 		xor    %edx,%edx
 		add    %eax,%ecx
@@ -139437,7 +139437,7 @@ GLOBAL_FUNC(ASM_flashy_draw_purple_info_box)	/* 0x0B6BEC */
 		lea    0x0(,%edx,4),%eax
 		sub    %edx,%eax
 		lea    (%eax,%eax,1),%edx
-		mov    fe_mouseptr_sprites,%eax
+		mov    EXPORT_SYMBOL(fe_mouseptr_sprites),%eax
 		add    %edx,%eax
 		mov    %eax,0x20(%esp)
 		xor    %eax,%eax
@@ -165150,13 +165150,13 @@ GLOBAL_FUNC(ASM_init_variables)	/* 0x0D0B9C */
 		jne    jump_d0c1a
 		mov    $0x2,%bl
 		mov    $0x4a,%cl
-		mov    %dh,new_mail
+		mov    %dh,EXPORT_SYMBOL(new_mail)
 		xor    %esi,%esi
 		xor    %edi,%edi
 		xor    %eax,%eax
 		mov    %bl,data_1c6df2
 		mov    %cl,data_1c6df4
-		mov    %si,next_brief
+		mov    %si,EXPORT_SYMBOL(next_brief)
 		mov    %di,EXPORT_SYMBOL(word_1C6F3E)
 		mov    %ax,EXPORT_SYMBOL(word_1C6F40)
 		mov    %si,EXPORT_SYMBOL(word_1C6F48)
@@ -165172,12 +165172,12 @@ GLOBAL_FUNC(ASM_init_variables)	/* 0x0D0B9C */
 		xor    %cl,%cl
 		mov    EXPORT_SYMBOL(starting_cash_amounts)+0x10,%eax
 		mov    %cx,EXPORT_SYMBOL(next_email)
-		mov    %cx,next_ref
+		mov    %cx,EXPORT_SYMBOL(next_ref)
 		mov    %eax,login_control__Money
 		xor    %eax,%eax
 		xor    %ebx,%ebx
 		mov    login_control__State,%al
-		mov    %bx,open_brief
+		mov    %bx,EXPORT_SYMBOL(open_brief)
 		cmp    $0x6,%eax
 		jne    jump_d0ccf
 		mov    $0xc350,%ebx
@@ -165277,20 +165277,20 @@ GLOBAL_FUNC(ASM_activate_queued_mail)	/* 0x0D23B4 */
 		push   %esi
 		push   %edi
 		sub    $0x4,%esp
-		mov    new_mail,%cl
+		mov    EXPORT_SYMBOL(new_mail),%cl
 		testb  $0x1,EXPORT_SYMBOL(newmail_store)+4 # newmail_store[].Flag
 		je     jump_d2490
 		xor    %ebx,%ebx
-		mov    next_brief,%bx
+		mov    EXPORT_SYMBOL(next_brief),%bx
 		lea    0x0(,%ebx,4),%eax
 		add    %ebx,%eax
 		mov    data_1c6df2,%bl
 		mov    %bl,EXPORT_SYMBOL(brief_store)+1(%eax) # brief_store[].RecvDay
 		mov    data_1c6df3,%bl
-		mov    next_ref,%dx
+		mov    EXPORT_SYMBOL(next_ref),%dx
 		mov    %bl,EXPORT_SYMBOL(brief_store)+2(%eax) # brief_store[].RecvMonth
 		mov    data_1c6df4,%bl
-		mov    next_brief,%di
+		mov    EXPORT_SYMBOL(next_brief),%di
 		mov    %bl,EXPORT_SYMBOL(brief_store)+3(%eax) # brief_store[].RecvYear
 		mov    EXPORT_SYMBOL(newmail_store)+3,%bl # newmail_store[].Mission
 		inc    %edi
@@ -165300,16 +165300,16 @@ GLOBAL_FUNC(ASM_activate_queued_mail)	/* 0x0D23B4 */
 		mov    %di,%bx
 		inc    %edx
 		lea    0x0(,%ebx,4),%eax
-		mov    %dx,next_ref
+		mov    %dx,EXPORT_SYMBOL(next_ref)
 		add    %ebx,%eax
 		xor    %edx,%edx
 		shl    $0x3,%eax
 		mov    $0x28,%ebx
 		add    $mission_status,%eax
-		mov    %di,next_brief
+		mov    %di,EXPORT_SYMBOL(next_brief)
 		call   ac_memset
 		xor    %ebx,%ebx
-		mov    next_brief,%bx
+		mov    EXPORT_SYMBOL(next_brief),%bx
 		lea    0x0(,%ebx,4),%eax
 		add    %ebx,%eax
 		xor    %edx,%edx
@@ -165317,14 +165317,14 @@ GLOBAL_FUNC(ASM_activate_queued_mail)	/* 0x0D23B4 */
 		mov    %edx,data_199834(,%eax,8)
 		movl   $0x1,(%esp)
 		mov    $0x1,%edx
-		mov    new_mail,%cl
+		mov    EXPORT_SYMBOL(new_mail),%cl
 		jmp    jump_d251e
 	jump_d2490:
 		xor    %ebx,%ebx
 		mov    EXPORT_SYMBOL(next_email),%bx
 		lea    0x0(,%ebx,4),%eax
 		add    %ebx,%eax
-		mov    next_ref,%dx
+		mov    EXPORT_SYMBOL(next_ref),%dx
 		mov    EXPORT_SYMBOL(newmail_store)+0,%bl # newmail_store[].RecvDay
 		mov    %dl,EXPORT_SYMBOL(email_store)+0(%eax) # email_store[].RefNum
 		mov    EXPORT_SYMBOL(next_email),%si
@@ -165339,10 +165339,10 @@ GLOBAL_FUNC(ASM_activate_queued_mail)	/* 0x0D23B4 */
 		inc    %edx
 		mov    %bl,EXPORT_SYMBOL(email_store)+4(%eax) # email_store[].Mission
 		xor    %ebx,%ebx
-		mov    %dx,next_ref
+		mov    %dx,EXPORT_SYMBOL(next_ref)
 		mov    %ebx,(%esp)
 		mov    $0x1,%edx
-		mov    new_mail,%cl
+		mov    EXPORT_SYMBOL(new_mail),%cl
 		jmp    jump_d251e
 	jump_d2508:
 		lea    (%eax,%eax,4),%ebx
@@ -165362,7 +165362,7 @@ GLOBAL_FUNC(ASM_activate_queued_mail)	/* 0x0D23B4 */
 		jl     jump_d2508
 		dec    %cl
 		mov    (%esp),%eax
-		mov    %cl,new_mail
+		mov    %cl,EXPORT_SYMBOL(new_mail)
 		add    $0x4,%esp
 		pop    %edi
 		pop    %esi
@@ -165385,7 +165385,7 @@ GLOBAL_FUNC(ASM_delete_mail)	/* 0x0D2540 */
 		inc    %edx
 		cmp    $0x1,%ebx
 		jne    jump_d25ac
-		mov    next_brief,%cx
+		mov    EXPORT_SYMBOL(next_brief),%cx
 		mov    %edx,%eax
 		cmp    %cx,%dx
 		jae    jump_d25a0
@@ -165397,20 +165397,20 @@ GLOBAL_FUNC(ASM_delete_mail)	/* 0x0D2540 */
 		imul   $0x28,%edx,%edx
 		lea    (%ebx,%ebx,4),%esi
 		imul   $0x28,%ebx,%ebx
-		lea    brief_store(%esi),%edi
-		lea    brief_store(%ecx),%esi
+		lea    EXPORT_SYMBOL(brief_store)(%esi),%edi
+		lea    EXPORT_SYMBOL(brief_store)(%ecx),%esi
 		movsl  %ds:(%esi),%es:(%edi)
 		movsb  %ds:(%esi),%es:(%edi)
 		mov    $0xa,%ecx
 		lea    mission_status(%edx),%esi
 		lea    mission_status(%ebx),%edi
 		inc    %eax
-		mov    next_brief,%dx
+		mov    EXPORT_SYMBOL(next_brief),%dx
 		rep movsl %ds:(%esi),%es:(%edi)
 		cmp    %dx,%ax
 		jb     jump_d255e
 	jump_d25a0:
-		decw   next_brief
+		decw   EXPORT_SYMBOL(next_brief)
 		pop    %edi
 		pop    %esi
 		pop    %ecx
@@ -166436,7 +166436,7 @@ GLOBAL_FUNC(ASM_accept_mission)	/* 0x0D33B8 */
 		mov    $0x3,%ah
 		mov    $0x1,%dl
 		mov    %ah,change_screen
-		mov    open_brief,%ax
+		mov    EXPORT_SYMBOL(open_brief),%ax
 		mov    %dl,EXPORT_SYMBOL(map_from_mission)
 		mov    %ax,EXPORT_SYMBOL(old_mission_brief)
 	jump_d33e1:
@@ -181800,44 +181800,7 @@ GLOBAL (word_19CB58)	/* 0x19CB58 */
 		.fill   0x84
 
 		.long	0x0
-GLOBAL (fe_icons_sprites)	/* 0x19CBE8 */
-		.long	0x0
-GLOBAL (fe_icons_sprites_end)	/* 0x19CBEC */
-		.long	0x0
-GLOBAL (fe_icons_sprites_data)	/* 0x19CBF0 */
-		.long	0x0
-GLOBAL (fe_mouseptr_sprites)	/* 0x19CBF4 */
-		.long	0x0
-GLOBAL (fe_mouseptr_sprites_end)	/* 0x19CBF8 */
-		.long	0x0
-GLOBAL (fe_mouseptr_sprites_data)	/* 0x19CBFC */
-		.long	0x0
-GLOBAL (wepicons_sprites)	/* 0x19CC00 */
-		.long	0x0
-GLOBAL (wepicons_sprites_end)	/* 0x19CC04 */
-		.long	0x0
-GLOBAL (wepicons_sprites_data)	/* 0x19CC08 */
-		.fill   0x14
-GLOBAL (fepanel_sprites)	/* 0x19CC1C */
-		.long	0x0
-GLOBAL (fepanel_sprites_end)	/* 0x19CC20 */
-		.long	0x0
-GLOBAL (fepanel_sprites_data)	/* 0x19CC24 */
-		.fill   0x8
-/* unsigned long m_spr_data[]
- */
-GLOBAL (m_spr_data)
-		.long	0x0
-GLOBAL (m_spr_data_end)
-		.long	0x0
-/* TbSprite *m_sprites[]
- */
-GLOBAL (m_sprites)	/* 0x19CC34 */
-		.long	0x0
-/* TbSprite *m_sprites_end[]
- */
-GLOBAL (m_sprites_end)
-		.long	0x0
+
 GLOBAL (frame)
 		.long	0x0
 GLOBAL (frame_end)
@@ -183295,28 +183258,12 @@ GLOBAL (word_1C6E08)	/* 0x1C6E08 */
 		.short  0x0
 GLOBAL (word_1C6E0A)	/* 0x1C6E0A */
 		.short  0x0
-GLOBAL (email_store)	/* 0x1C6E0C */
-		.fill   0x64
-GLOBAL (brief_store)	/* 0x1C6E70 */
-		.fill   0x34
-GLOBAL (newmail_store)	/* 0x1C6EA4 */
-		.fill   0x94
-GLOBAL (new_mail)	/* 0x1C6F38 */
-		.short  0x0
-GLOBAL (next_email)	/* 0x1C6F3A */
-		.short  0x0
-GLOBAL (next_brief)	/* 0x1C6F3C */
-		.short  0x0
+
 GLOBAL (word_1C6F3E)	/* 0x1C6F3E */
 		.short  0x0
 GLOBAL (word_1C6F40)	/* 0x1C6F40 */
 		.short  0x0
-GLOBAL (old_mission_brief)	/* 0x1C6F42 */
-		.short  0x0
-GLOBAL (open_brief)	/* 0x1C6F44 */
-		.short  0x0
-GLOBAL (next_ref)	/* 0x1C6F46 */
-		.short  0x0
+
 GLOBAL (word_1C6F48)	/* 0x1C6F48 */
 		.short  0x0
 GLOBAL (edit_flag)	/* 0x1C6F4A */

@@ -68,6 +68,26 @@ struct TbSprite *big_font;
 struct TbSprite *big_font_end;
 ubyte *big_font_data;
 
+struct TbSprite *fe_icons_sprites;
+struct TbSprite *fe_icons_sprites_end;
+ubyte *fe_icons_sprites_data;
+
+struct TbSprite *wepicons_sprites;
+struct TbSprite *wepicons_sprites_end;
+ubyte *wepicons_sprites_data;
+
+struct TbSprite *fe_mouseptr_sprites;
+struct TbSprite *fe_mouseptr_sprites_end;
+ubyte *fe_mouseptr_sprites_data;
+
+struct TbSprite *fepanel_sprites;
+struct TbSprite *fepanel_sprites_end;
+ubyte *fepanel_sprites_data;
+
+struct TbSprite *m_sprites;
+struct TbSprite *m_sprites_end;
+ubyte *m_sprites_data;
+ubyte *m_sprites_data_end;
 /******************************************************************************/
 
 /** Load sprites of given style and detail, to a preallocated area of specific size.
@@ -500,13 +520,13 @@ TbResult load_multicolor_sprites(const char *dir)
     ret = Lb_OK;
 
     sprintf(locstr, "%s/mspr-%d.dat", dir, ingame.TrenchcoatPreference);
-    len = LbFileLoadAt(locstr, m_spr_data);
+    len = LbFileLoadAt(locstr, m_sprites_data);
     if (len == -1) {
         ret = Lb_FAIL;
         len = 0;
     }
     // additional 512 bytes are always reserved by LbDataLoad()
-    assert(m_spr_data_end + 512 >= m_spr_data + len);
+    assert(m_sprites_data_end + 512 >= m_sprites_data + len);
     sprintf(locstr, "%s/mspr-%d.tab", dir, ingame.TrenchcoatPreference);
     len = LbFileLoadAt(locstr, m_sprites);
     if (len == -1) {
@@ -521,12 +541,12 @@ TbResult load_multicolor_sprites(const char *dir)
 
 void setup_multicolor_sprites(void)
 {
-    LbSpriteSetup(m_sprites, m_sprites_end, m_spr_data);
+    LbSpriteSetup(m_sprites, m_sprites_end, m_sprites_data);
 }
 
 void reset_multicolor_sprites(void)
 {
-    LbSpriteReset(m_sprites, m_sprites_end, m_spr_data);
+    LbSpriteReset(m_sprites, m_sprites_end, m_sprites_data);
 }
 
 void debug_multicolor_sprite(int idx)

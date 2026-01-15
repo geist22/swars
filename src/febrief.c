@@ -46,6 +46,11 @@
 #include "wrcities.h"
 #include "swlog.h"
 /******************************************************************************/
+
+short next_brief = 0;
+short old_mission_brief = 0;
+short open_brief = 0;
+
 extern struct ScreenButton brief_NETSCAN_button;
 extern struct ScreenInfoBox brief_NETSCAN_COST_box;
 extern struct ScreenTextBox brief_netscan_box;
@@ -70,6 +75,8 @@ extern long dword_1C47E0;
 extern ubyte byte_1C47E4;
 extern short word_1C47E6;
 extern short word_1C47E8;
+
+/******************************************************************************/
 
 ubyte ac_brief_do_netscan_enhance(ubyte click);
 ubyte ac_show_brief_netscan_box(struct ScreenTextBox *box);
