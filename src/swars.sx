@@ -382,7 +382,7 @@ GLOBAL_FUNC(ASM_place_default_player)	/* 0x0101F0 */
 		and    $0xffff,%eax
 		mov    0x57(%ebx),%dl
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		mov    %ax,0x24(%ebx)
 		jmp    jump_10690
@@ -408,7 +408,7 @@ GLOBAL_FUNC(ASM_place_default_player)	/* 0x0101F0 */
 		xor    %eax,%eax
 		mov    0x57(%ebx),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		mov    %ax,0x24(%ebx)
 		jmp    jump_10690
@@ -435,7 +435,7 @@ GLOBAL_FUNC(ASM_place_default_player)	/* 0x0101F0 */
 		mov    0x57(%ebx),%al
 		add    %edx,%eax
 		lea    0x0(,%eax,2),%edx
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    (%edx,%eax,1),%ax
 		mov    %ax,0x24(%ebx)
 		jmp    jump_10690
@@ -463,7 +463,7 @@ GLOBAL_FUNC(ASM_place_default_player)	/* 0x0101F0 */
 		mov    0x57(%ebx),%al
 		add    %edx,%eax
 		lea    0x0(,%eax,2),%edx
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x24(%ebx),%cx
 		sub    (%edx,%eax,1),%cx
 		xor    %edx,%edx
@@ -1096,15 +1096,15 @@ GLOBAL_FUNC(ASM_draw_sorted_sprite1a)	/* 0x0122FC */
 	jump_12376:
 		and    $0xffff,%eax
 		lea    0x0(,%eax,8),%edx
-		mov    frame,%eax
+		mov    EXPORT_SYMBOL(frame),%eax
 		add    %edx,%eax
 		xor    %edx,%edx
 		mov    (%eax),%dx
 		lea    0x0(,%edx,4),%eax
 		add    %edx,%eax
-		mov    melement_ani,%esi
+		mov    EXPORT_SYMBOL(melement_ani),%esi
 		add    %eax,%eax
-		mov    melement_ani,%edx
+		mov    EXPORT_SYMBOL(melement_ani),%edx
 		add    %eax,%esi
 		cmp    %edx,%esi
 		ja     jump_123cf
@@ -1113,8 +1113,8 @@ GLOBAL_FUNC(ASM_draw_sorted_sprite1a)	/* 0x0122FC */
 		xor    %eax,%eax
 		mov    0x8(%esi),%ax
 		imul   $0xa,%eax,%eax
-		mov    melement_ani,%esi
-		mov    melement_ani,%ebx
+		mov    EXPORT_SYMBOL(melement_ani),%esi
+		mov    EXPORT_SYMBOL(melement_ani),%ebx
 		add    %eax,%esi
 		cmp    %ebx,%esi
 		jbe    jump_1246a
@@ -1706,7 +1706,7 @@ GLOBAL_FUNC(ASM_number_player)	/* 0x01C2CC */
 		mov    0x2c(%esp),%al
 		add    %edx,%eax
 		xor    %edx,%edx
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    EXPORT_SYMBOL(local_player_no),%dl
 		mov    (%ebx,%eax,2),%bx
 		lea    0x0(,%edx,8),%eax
@@ -1733,7 +1733,7 @@ GLOBAL_FUNC(ASM_number_player)	/* 0x01C2CC */
 	jump_1c36b:
 		xor    %edx,%edx
 		mov    %bx,%dx
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		inc    %eax
 		mov    0x6(%ebx,%edx,8),%bx
 	jump_1c37c:
@@ -1744,7 +1744,7 @@ GLOBAL_FUNC(ASM_number_player)	/* 0x01C2CC */
 		jmp    jump_1c397
 	jump_1c387:
 		xor    %eax,%eax
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		mov    %bx,%ax
 		mov    0x6(%edx,%eax,8),%bx
 	jump_1c397:
@@ -2012,16 +2012,16 @@ GLOBAL_FUNC(ASM_number_player)	/* 0x01C2CC */
 	jump_1c6ca:
 		xor    %eax,%eax
 		mov    %bx,%ax
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		shl    $0x3,%eax
 		add    %edx,%eax
 		xor    %edx,%edx
 		mov    (%eax),%dx
 		lea    0x0(,%edx,4),%eax
 		add    %edx,%eax
-		mov    melement_ani,%ecx
+		mov    EXPORT_SYMBOL(melement_ani),%ecx
 		add    %eax,%eax
-		mov    melement_ani,%ebx
+		mov    EXPORT_SYMBOL(melement_ani),%ebx
 		add    %eax,%ecx
 		cmp    %ebx,%ecx
 		ja     jump_1c71c
@@ -2030,8 +2030,8 @@ GLOBAL_FUNC(ASM_number_player)	/* 0x01C2CC */
 		xor    %eax,%eax
 		mov    0x8(%ecx),%ax
 		imul   $0xa,%eax,%eax
-		mov    melement_ani,%ecx
-		mov    melement_ani,%edi
+		mov    EXPORT_SYMBOL(melement_ani),%ecx
+		mov    EXPORT_SYMBOL(melement_ani),%edi
 		add    %eax,%ecx
 		cmp    %edi,%ecx
 		jbe    jump_1c77f
@@ -2731,7 +2731,7 @@ GLOBAL_FUNC(ASM_show_goto_point)	/* 0x020938 */
 		mov    %ah,0x8(%esp)
 		test   %al,%al
 		je     jump_2096a
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		xor    %esi,%esi
 		mov    0x73c(%eax),%ax
 		mov    %si,data_176cb6
@@ -2751,7 +2751,7 @@ GLOBAL_FUNC(ASM_show_goto_point)	/* 0x020938 */
 		mov    %bx,data_176cb4
 	jump_20998:
 		xor    %eax,%eax
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		mov    data_176cb4,%ax
 		mov    0x6(%edx,%eax,8),%ax
 		movzbl EXPORT_SYMBOL(local_player_no),%esi
@@ -3014,7 +3014,7 @@ GLOBAL_FUNC(ASM_draw_hud)	/* 0x020C80 */
 		call   ac_show_goto_point
 		cmpl   $0x0,EXPORT_SYMBOL(target_old_frameno)
 		jne    jump_20cfd
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x7ae(%eax),%ax
 		and    $0xffff,%eax
 		mov    %eax,EXPORT_SYMBOL(target_old_frameno)
@@ -3370,7 +3370,7 @@ func_210c3:
 		mov    %esi,%eax
 		call   ac_draw_hud_shield_bar
 		mov    EXPORT_SYMBOL(target_old_frameno),%eax
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		mov    0x6(%edx,%eax,8),%ax
 		and    $0xffff,%eax
 		mov    %eax,EXPORT_SYMBOL(target_old_frameno)
@@ -6341,7 +6341,7 @@ GLOBAL_FUNC(ASM_check_mouse_overlap)	/* 0x250A0 */
 		add    %ebx,%edx
 		xor    %ebx,%ebx
 		mov    0x6(%esi),%bx
-		mov    frame,%ecx
+		mov    EXPORT_SYMBOL(frame),%ecx
 		shl    $0x3,%ebx
 		add    %ebx,%ecx
 		xor    %ebx,%ebx
@@ -6520,7 +6520,7 @@ GLOBAL_FUNC(ASM_check_mouse_over_unkn2)
 		mov    0x6(%eax),%ax
 		add    %ebx,%esi
 		and    $0xffff,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		shl    $0x3,%eax
 		add    %eax,%ebx
 		xor    %eax,%eax
@@ -6677,7 +6677,7 @@ GLOBAL_FUNC(ASM_check_mouse_overlap_corpse)	/* 0x25428 */
 		sar    $0x8,%eax
 		shl    $0x3,%ecx
 		add    %edi,%eax
-		mov    frame,%edi
+		mov    EXPORT_SYMBOL(frame),%edi
 		add    %edi,%ecx
 		movzbl 0x2(%ecx),%edi
 		imul   %ebx,%edi
@@ -6862,7 +6862,7 @@ GLOBAL_FUNC(ASM_check_mouse_overlap_item)	/* 0x25624 */
 		xor    %eax,%eax
 		add    %ecx,%ebx
 		mov    0x6(%esi),%ax
-		mov    frame,%ecx
+		mov    EXPORT_SYMBOL(frame),%ecx
 		shl    $0x3,%eax
 		add    %edi,%edx
 		add    %ecx,%eax
@@ -7157,7 +7157,7 @@ GLOBAL_FUNC(ASM_draw_person_shadow)	/* 0x026CD0 */
 		mov    0x26(%edx),%bx
 		mov    0x57(%edx),%al
 		add    %ebx,%eax
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		add    %eax,%eax
 		add    %eax,%ebx
 		mov    0x2(%ebx),%di
@@ -7472,7 +7472,7 @@ GLOBAL_FUNC(ASM_draw_sort_sprite1b)	/* 0x027070 */
 		shl    $0x4,%eax
 		mov    (%edx,%eax,1),%ebx
 		movswl (%edx,%eax,1),%edx
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		sar    $0x10,%ebx
 		mov    0x854(%eax),%ax
 		mov    $0x20,%ecx
@@ -19383,7 +19383,7 @@ GLOBAL_FUNC(ASM_element_unkn_func_05)	/* 0x042D58 */
 		push   %edi
 		push   %ebp
 		sub    $0x8,%esp
-		mov    melement_ani,%esi
+		mov    EXPORT_SYMBOL(melement_ani),%esi
 		mov    %edx,%edi
 		mov    %ebx,%ebp
 		movw   $0x7d00,(%ecx)
@@ -19395,7 +19395,7 @@ GLOBAL_FUNC(ASM_element_unkn_func_05)	/* 0x042D58 */
 		mov    %dx,(%ebx)
 		xor    %edx,%edx
 		mov    %ax,%dx
-		mov    frame,%eax
+		mov    EXPORT_SYMBOL(frame),%eax
 		shl    $0x3,%edx
 		add    %edx,%eax
 		xor    %edx,%edx
@@ -19416,7 +19416,7 @@ GLOBAL_FUNC(ASM_element_unkn_func_05)	/* 0x042D58 */
 		jbe    jump_42e61
 	jump_42dc2:
 		jb     jump_42dac
-		cmp    mele_ani_end,%eax
+		cmp    EXPORT_SYMBOL(mele_ani_end),%eax
 		ja     jump_42dac
 		xor    %edx,%edx
 		mov    EXPORT_SYMBOL(m_sprites),%ebx
@@ -19473,7 +19473,7 @@ GLOBAL_FUNC(ASM_element_unkn_func_05)	/* 0x042D58 */
 		mov    %dx,(%ecx)
 		jmp    jump_42dac
 	jump_42e61:
-		mov    %esi,melement_ani
+		mov    %esi,EXPORT_SYMBOL(melement_ani)
 		add    $0x8,%esp
 		pop    %ebp
 		pop    %edi
@@ -19544,7 +19544,7 @@ GLOBAL_FUNC (ASM_generate_shadows_for_multicolor_sprites)	/* 0x042E70 */
 		xor    %edx,%edx
 		mov    EXPORT_SYMBOL(word_154F4C)(%ebx),%dx
 		add    %eax,%edx
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		xor    %edi,%edi
 		mov    (%eax,%edx,2),%si
 		jmp    jump_42fba
@@ -19561,7 +19561,7 @@ GLOBAL_FUNC (ASM_generate_shadows_for_multicolor_sprites)	/* 0x042E70 */
 		xor    %eax,%eax
 		mov    %si,%ax
 		lea    0x0(,%eax,8),%edx
-		mov    frame,%eax
+		mov    EXPORT_SYMBOL(frame),%eax
 		mov    0x6(%edx,%eax,1),%si
 		xor    %edx,%edx
 		mov    %si,%dx
@@ -25259,7 +25259,7 @@ GLOBAL_FUNC(ASM_check_weapon)	/* 0x047530 */
 		xor    %eax,%eax
 		mov    0x57(%ebx),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		xor    %edx,%edx
 		mov    0x8(%ebx),%dl
@@ -25323,7 +25323,7 @@ GLOBAL_FUNC(ASM_set_person_animmode_walk)	/* 0x0475E0 */
 		xor    %eax,%eax
 		mov    0x57(%ebx),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		movw   $0x30,0x28(%ebx)
 		movw   $0x30,0x2a(%ebx)
@@ -25387,7 +25387,7 @@ GLOBAL_FUNC(ASM_set_person_animmode_run)	/* 0x0476A0 */
 		xor    %eax,%eax
 		mov    0x57(%edx),%al
 		add    %ebx,%eax
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    (%ebx,%eax,2),%ax
 		mov    %ax,0x24(%edx)
 	jump_47742:
@@ -25492,7 +25492,7 @@ change_player_angle:	/* 0x0477E4 */
 		and    $0xffff,%eax
 		mov    %cl,%dl
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		mov    %ax,0x24(%ebx)
 	jump_47839:
@@ -26524,7 +26524,7 @@ GLOBAL_FUNC(ASM_set_person_dead)	/* 0x0480DC */
 		and    $0xffff,%eax
 		mov    0x57(%esi),%dl
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		xor    %edx,%edx
 		mov    0x8(%esi),%dl
@@ -26658,13 +26658,13 @@ GLOBAL_FUNC(ASM_set_person_dead)	/* 0x0480DC */
 		jne    jump_4855e
 	jump_485a8:
 		xor    %eax,%eax
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		mov    0x24(%esi),%ax
 		mov    0x6(%edx,%eax,8),%ax
 	jump_485b9:
 		xor    %edx,%edx
 		mov    %ax,%dx
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		shl    $0x3,%edx
 		add    %ebx,%edx
 		testb  $0x1,0x5(%edx)
@@ -26727,7 +26727,7 @@ GLOBAL_FUNC(ASM_init_recoil)	/* 0x048600 */
 		xor    %eax,%eax
 		mov    0x57(%esi),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		xor    %edx,%edx
 		mov    0x8(%esi),%dl
@@ -26824,7 +26824,7 @@ GLOBAL_FUNC(ASM_init_recoil)	/* 0x048600 */
 		and    $0xffff,%eax
 		mov    0x57(%esi),%dl
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		xor    %edx,%edx
 		mov    0x8(%esi),%dl
@@ -26984,7 +26984,7 @@ GLOBAL_FUNC(ASM_person_hit_by_bullet)	/* 0x048868 */
 		mov    0x57(%esi),%al
 		add    %edx,%eax
 		lea    0x0(,%eax,2),%edx
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    (%edx,%eax,1),%ax
 		xor    %edx,%edx
 		mov    0x8(%esi),%dl
@@ -27016,7 +27016,7 @@ GLOBAL_FUNC(ASM_person_hit_by_bullet)	/* 0x048868 */
 		jne    jump_48a0f
 	jump_489ec:
 		xor    %eax,%eax
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		mov    0x24(%esi),%ax
 		mov    0x6(%edx,%eax,8),%ax
 		mov    %ax,0x24(%esi)
@@ -27035,7 +27035,7 @@ GLOBAL_FUNC(ASM_person_hit_by_bullet)	/* 0x048868 */
 		movb   $0x0,0x78(%esi)
 		mov    $0x7f,%ebx
 		movb   $0x0,0x77(%esi)
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		movb   $0xc,0x6c(%esi)
 		push   $0x0
 		mov    $0x39,%edx
@@ -27098,7 +27098,7 @@ GLOBAL_FUNC(ASM_person_hit_by_bullet)	/* 0x048868 */
 		movw   $0x42d,0x26(%esi)
 		or     $0x2,%bh
 		mov    %bh,0xc(%esi)
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x38(%esi),%edx
 		mov    0x85a(%eax),%ax
 		sar    $0x10,%edx
@@ -29991,7 +29991,7 @@ GLOBAL_FUNC(ASM_person_move)	/* 0x04AC18 */
 		xor    %eax,%eax
 		mov    0x57(%esi),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		mov    %ax,0x24(%esi)
 	jump_4ad0a:
@@ -30094,7 +30094,7 @@ GLOBAL_FUNC(ASM_person_move)	/* 0x04AC18 */
 		xor    %eax,%eax
 		mov    0x57(%esi),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		movw   $0x30,0x28(%esi)
 		movw   $0x30,0x2a(%esi)
@@ -31378,7 +31378,7 @@ GLOBAL_FUNC(ASM_process_wander)	/* 0x04BB8C */
 		xor    %eax,%eax
 		mov    0x57(%edi),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		mov    %ax,0x24(%edi)
 	jump_4bc84:
@@ -31441,7 +31441,7 @@ GLOBAL_FUNC(ASM_process_wander)	/* 0x04BB8C */
 		xor    %eax,%eax
 		mov    0x57(%edi),%al
 		add    %eax,%edx
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    (%eax,%edx,2),%ax
 		mov    %ax,0x24(%edi)
 		call   ac_LbRandomAnyShort
@@ -31472,7 +31472,7 @@ GLOBAL_FUNC(ASM_process_wander)	/* 0x04BB8C */
 		mov    0x2a(%edi),%ax
 		mov    %ax,0x28(%edi)
 		xor    %eax,%eax
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		mov    0x24(%edi),%ax
 		mov    0x6(%edx,%eax,8),%ax
 		mov    %ax,0x24(%edi)
@@ -31674,7 +31674,7 @@ GLOBAL_FUNC(ASM_process_wander)	/* 0x04BB8C */
 		mov    0x26(%edi),%dx
 		add    %edx,%eax
 		lea    0x0(,%eax,2),%edx
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x2(%edx,%eax,1),%ax
 		mov    %ax,0x24(%edi)
 	jump_4bfe1:
@@ -31814,7 +31814,7 @@ func_4c0eb:
 		mov    0x26(%esi),%dx
 		mov    0x57(%esi),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    0x2(%edx,%eax,2),%ax
 		mov    %ax,0x24(%esi)
 		add    $0x4,%esp
@@ -31861,7 +31861,7 @@ GLOBAL_FUNC(ASM_process_avoid_group)	/* 0x04C134 */
 		mov    0x26(%edx),%bx
 		mov    0x57(%edx),%al
 		add    %ebx,%eax
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    0x2(%ebx,%eax,2),%ax
 		mov    %ax,0x24(%edx)
 	jump_4c1a0:
@@ -31876,7 +31876,7 @@ GLOBAL_FUNC(ASM_process_avoid_group)	/* 0x04C134 */
 		mov    0x2a(%edx),%ax
 		mov    %ax,0x28(%edx)
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x24(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		mov    %ax,0x24(%edx)
@@ -31933,7 +31933,7 @@ GLOBAL_FUNC(ASM_get_weapon_out)	/* 0x04C210 */
 		mov    0x57(%ebx),%al
 		add    %edx,%eax
 		lea    0x0(,%eax,2),%edx
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    (%edx,%eax,1),%ax
 		mov    0x24(%ebx),%dx
 		sub    %eax,%edx
@@ -31958,7 +31958,7 @@ GLOBAL_FUNC(ASM_get_weapon_out)	/* 0x04C210 */
 		xor    %eax,%eax
 		mov    0x57(%ebx),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		xor    %edx,%edx
 		mov    0x24(%ebx),%cx
@@ -34143,7 +34143,7 @@ GLOBAL_FUNC(ASM_person_goto_point_rel)	/* 0x04D9B8 */
 		xor    %eax,%eax
 		mov    0x57(%ebx),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		mov    %ax,0x24(%ebx)
 	jump_4da48:
@@ -34174,7 +34174,7 @@ GLOBAL_FUNC(ASM_person_goto_point_rel)	/* 0x04D9B8 */
 		mov    EXPORT_SYMBOL(people_frames)(%edx,%eax,2),%ax
 		and    $0xffff,%eax
 		add    %ecx,%eax
-		mov    nstart_ani,%ecx
+		mov    EXPORT_SYMBOL(nstart_ani),%ecx
 		mov    0x24(%ebx),%dx
 		mov    (%ecx,%eax,2),%ax
 		sub    %eax,%edx
@@ -34228,7 +34228,7 @@ GLOBAL_FUNC(ASM_person_goto_point_rel)	/* 0x04D9B8 */
 		mov    0x2a(%ebx),%ax
 		mov    %ax,0x28(%ebx)
 		xor    %eax,%eax
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		mov    0x24(%ebx),%ax
 		mov    0x6(%edx,%eax,8),%ax
 		mov    %ax,0x24(%ebx)
@@ -34625,7 +34625,7 @@ do_person_gotothingindex:	/* 0x04DC14 */
 		mov    EXPORT_SYMBOL(people_frames)(%edx,%ebx,4),%dx
 		and    $0xffff,%edx
 		add    %ecx,%edx
-		mov    nstart_ani,%ecx
+		mov    EXPORT_SYMBOL(nstart_ani),%ecx
 		mov    0x24(%esi),%di
 		sub    (%ecx,%edx,2),%di
 		xor    %edx,%edx
@@ -34722,7 +34722,7 @@ do_person_gotothingindex:	/* 0x04DC14 */
 		mov    0x2a(%esi),%ax
 		mov    %ax,0x28(%esi)
 		xor    %eax,%eax
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		mov    0x24(%esi),%ax
 		mov    0x6(%edx,%eax,8),%ax
 		mov    %ax,0x24(%esi)
@@ -34794,7 +34794,7 @@ GLOBAL_FUNC(ASM_person_goto_point)	/* 0x04E178 */
 		xor    %eax,%eax
 		mov    0x57(%esi),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		mov    %ax,0x24(%esi)
 	jump_4e21a:
@@ -35049,7 +35049,7 @@ GLOBAL_FUNC(ASM_person_goto_point)	/* 0x04E178 */
 		and    $0xffff,%eax
 		add    %eax,%edx
 		lea    0x0(,%edx,2),%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    0x24(%esi),%bx
 		sub    (%edx,%eax,1),%bx
 		xor    %eax,%eax
@@ -35178,7 +35178,7 @@ GLOBAL_FUNC(ASM_person_goto_point)	/* 0x04E178 */
 		mov    0x2a(%esi),%ax
 		mov    %ax,0x28(%esi)
 		xor    %eax,%eax
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		mov    0x24(%esi),%ax
 		mov    0x6(%edx,%eax,8),%ax
 		mov    %ax,0x24(%esi)
@@ -35243,7 +35243,7 @@ GLOBAL_FUNC(ASM_person_wait)	/* 0x04E698 */
 		xor    %eax,%eax
 		mov    0x57(%ecx),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		movw   $0x30,0x28(%ecx)
 		movw   $0x30,0x2a(%ecx)
@@ -35292,7 +35292,7 @@ GLOBAL_FUNC(ASM_person_wait)	/* 0x04E698 */
 		xor    %eax,%eax
 		mov    0x57(%ecx),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		mov    %ax,0x24(%ecx)
 	jump_4e7cb:
@@ -35321,7 +35321,7 @@ GLOBAL_FUNC(ASM_person_wait)	/* 0x04E698 */
 		mov    0x2a(%ecx),%ax
 		mov    %ax,0x28(%ecx)
 		xor    %eax,%eax
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		mov    0x24(%ecx),%ax
 		mov    0x6(%edx,%eax,8),%ax
 		mov    %ax,0x24(%ecx)
@@ -35357,7 +35357,7 @@ GLOBAL_FUNC(ASM_person_wait)	/* 0x04E698 */
 		testb  $0x80,0xb(%ecx)
 		je     jump_4e88d
 		xor    %eax,%eax
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		mov    0x24(%ecx),%ax
 		mov    0x6(%edx,%eax,8),%ax
 		mov    %ax,0x24(%ecx)
@@ -35387,7 +35387,7 @@ GLOBAL_FUNC(ASM_person_dieing)	/* 0x04E894 */
 		xor    %eax,%eax
 		mov    0x24(%edx),%ax
 		lea    0x0(,%eax,8),%ebx
-		mov    frame,%eax
+		mov    EXPORT_SYMBOL(frame),%eax
 		xor    %ecx,%ecx
 		mov    0x6(%ebx,%eax,1),%bx
 		mov    %bx,%cx
@@ -35451,7 +35451,7 @@ GLOBAL_FUNC(ASM_person_dieing)	/* 0x04E894 */
 		mov    0x57(%edx),%al
 		add    %ebx,%eax
 		lea    0x0(,%eax,2),%ebx
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    (%ebx,%eax,1),%ax
 		movb   $0x1,0x77(%edx)
 		movb   $0x0,0x78(%edx)
@@ -35493,7 +35493,7 @@ GLOBAL_FUNC(ASM_person_dead)	/* 0x04EA2C */
 		mov    0x2a(%edi),%ax
 		mov    0x24(%edi),%bx
 		mov    %ax,0x28(%edi)
-		mov    frame,%eax
+		mov    EXPORT_SYMBOL(frame),%eax
 		xor    %ecx,%ecx
 		mov    0x6(%eax,%ebx,8),%bx
 		mov    %bx,%cx
@@ -35562,7 +35562,7 @@ GLOBAL_FUNC(ASM_person_pickup)	/* 0x04EB0C */
 		mov    0x2a(%esi),%ax
 		mov    %ax,0x28(%esi)
 		xor    %eax,%eax
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		mov    0x24(%esi),%ax
 		mov    0x68(%esi),%bx
 		mov    0x6(%edx,%eax,8),%ax
@@ -35630,7 +35630,7 @@ GLOBAL_FUNC(ASM_person_pickup)	/* 0x04EB0C */
 		movw   $0x32,0x68(%esi)
 	jump_4ec14:
 		xor    %eax,%eax
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		mov    0x24(%esi),%ax
 		testb  $0x1,0x5(%edx,%eax,8)
 		je     jump_4ed5a
@@ -35653,7 +35653,7 @@ GLOBAL_FUNC(ASM_person_pickup)	/* 0x04EB0C */
 		xor    %eax,%eax
 		mov    0x57(%esi),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		mov    %ax,0x24(%esi)
 		xor    %eax,%eax
@@ -35809,7 +35809,7 @@ func_4ee00:
 		xor    %eax,%eax
 		mov    0x57(%ebx),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		xor    %edx,%edx
 		mov    0x8(%ebx),%dl
@@ -37883,7 +37883,7 @@ GLOBAL_FUNC(ASM_person_drop_item)	/* 0x0502F8 */
 		mov    0x2a(%esi),%ax
 		mov    %ax,0x28(%esi)
 		xor    %eax,%eax
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		mov    0x24(%esi),%ax
 		mov    0x68(%esi),%cx
 		mov    0x6(%edx,%eax,8),%ax
@@ -37999,7 +37999,7 @@ GLOBAL_FUNC(ASM_person_drop_item)	/* 0x0502F8 */
 		movb   $0x0,0x99(%esi)
 	jump_504af:
 		xor    %eax,%eax
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		mov    0x24(%esi),%ax
 		testb  $0x1,0x5(%edx,%eax,8)
 		je     jump_505a9
@@ -38051,7 +38051,7 @@ GLOBAL_FUNC(ASM_person_drop_item)	/* 0x0502F8 */
 		and    $0xffff,%edx
 		mov    0x57(%esi),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		xor    %edx,%edx
 		mov    0x8(%esi),%dl
@@ -38098,7 +38098,7 @@ GLOBAL_FUNC(ASM_person_init_drop)	/* 0x0505B0 */
 		xor    %edx,%edx
 		mov    0x57(%eax),%dl
 		add    %ebx,%edx
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    (%ebx,%edx,2),%dx
 		xor    %ebx,%ebx
 		mov    0x8(%eax),%bl
@@ -38159,7 +38159,7 @@ GLOBAL_FUNC(ASM_person_init_drop_special)	/* 0x050634 */
 		xor    %edx,%edx
 		mov    0x57(%eax),%dl
 		add    %ebx,%edx
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    (%ebx,%edx,2),%dx
 		xor    %ebx,%ebx
 		mov    0x8(%eax),%bl
@@ -38330,7 +38330,7 @@ GLOBAL_FUNC(ASM_person_goto_person_nav)	/* 0x050898 */
 		mov    0x57(%ebx),%al
 		xor    %ecx,%ecx
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    0x8(%ebx),%cl
 		mov    (%edx,%eax,2),%ax
 		lea    0x0(,%ecx,4),%edx
@@ -38390,7 +38390,7 @@ GLOBAL_FUNC(ASM_person_goto_person_nav)	/* 0x050898 */
 		and    $0xffff,%edx
 		mov    0x57(%ebx),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		mov    %ax,0x24(%ebx)
 	jump_50ac7:
@@ -40569,7 +40569,7 @@ GLOBAL_FUNC(ASM_process_weapon)	/* 0x05247C */
 		xor    %eax,%eax
 		mov    0x57(%esi),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		movw   $0x30,0x28(%esi)
 		mov    0x46(%esi),%ch
@@ -40654,7 +40654,7 @@ GLOBAL_FUNC(ASM_process_weapon)	/* 0x05247C */
 		xor    %eax,%eax
 		mov    %bl,%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		mov    %ax,0x24(%esi)
 	jump_52705:
@@ -40915,7 +40915,7 @@ GLOBAL_FUNC(ASM_process_weapon)	/* 0x05247C */
 		xor    %eax,%eax
 		mov    0x57(%esi),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		xor    %edx,%edx
 		mov    0x8(%esi),%dl
@@ -41205,7 +41205,7 @@ func_52d3d:  /* case 3 */
 		xor    %eax,%eax
 		mov    0x57(%esi),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		xor    %edx,%edx
 		mov    0x8(%esi),%dl
@@ -41270,7 +41270,7 @@ func_52d3d:  /* case 3 */
 		and    $0xffff,%eax
 		mov    0x57(%esi),%dl
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		xor    %edx,%edx
 		mov    0x8(%esi),%dl
@@ -42279,7 +42279,7 @@ GLOBAL_FUNC(ASM_person_recoil)	/* 0x053AA0 */
 		xor    %eax,%eax
 		mov    0x57(%edx),%al
 		add    %ebx,%eax
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    (%ebx,%eax,2),%ax
 		xor    %ebx,%ebx
 		mov    0x8(%edx),%bl
@@ -42316,7 +42316,7 @@ GLOBAL_FUNC(ASM_person_recoil)	/* 0x053AA0 */
 		xor    %eax,%eax
 		mov    0x57(%edx),%al
 		add    %ebx,%eax
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    (%ebx,%eax,2),%ax
 		xor    %ebx,%ebx
 		mov    0x8(%edx),%bl
@@ -42361,7 +42361,7 @@ GLOBAL_FUNC(ASM_person_recoil)	/* 0x053AA0 */
 		mov    0x57(%edx),%bl
 		add    %ebx,%eax
 		lea    0x0(,%eax,2),%ebx
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    (%ebx,%eax,1),%ax
 		xor    %ebx,%ebx
 		mov    0x8(%edx),%bl
@@ -42633,7 +42633,7 @@ GLOBAL_FUNC(ASM_person_burning)	/* 0x053D8C */
 		mov    0x2a(%esi),%ax
 		mov    %ax,0x28(%esi)
 		xor    %eax,%eax
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		mov    0x24(%esi),%ax
 		mov    0x6(%edx,%eax,8),%ax
 		mov    %ax,0x24(%esi)
@@ -42667,7 +42667,7 @@ GLOBAL_FUNC(ASM_person_burning)	/* 0x053D8C */
 		mov    0x57(%esi),%dl
 		mov    0x26(%esi),%ax
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    0x2(%edx,%eax,2),%ax
 		mov    %ax,0x24(%esi)
 	jump_53f4a:
@@ -42719,7 +42719,7 @@ GLOBAL_FUNC(ASM_person_run_away)	/* 0x053F54 */
 		mov    0x57(%esi),%al
 		mov    0x26(%esi),%dx
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    0x2(%edx,%eax,2),%ax
 		mov    %ax,0x24(%esi)
 	jump_53fd5:
@@ -42762,7 +42762,7 @@ GLOBAL_FUNC(ASM_person_run_away)	/* 0x053F54 */
 		mov    0x2a(%esi),%ax
 		mov    %ax,0x28(%esi)
 		xor    %eax,%eax
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		mov    0x24(%esi),%ax
 		mov    0x6(%edx,%eax,8),%ax
 		mov    %ax,0x24(%esi)
@@ -43567,7 +43567,7 @@ copy_owner_with_weapon:	/* 0x0548AC */
 		mov    0x57(%ebx),%al
 		add    %edx,%eax
 		lea    0x0(,%eax,2),%edx
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x24(%ebx),%di
 		sub    (%edx,%eax,1),%di
 		xor    %edx,%edx
@@ -43591,7 +43591,7 @@ copy_owner_with_weapon:	/* 0x0548AC */
 		xor    %eax,%eax
 		mov    0x57(%ebx),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		add    %ax,0x24(%ebx)
 		xor    %edx,%edx
@@ -43634,7 +43634,7 @@ copy_owner_with_weapon:	/* 0x0548AC */
 		mov    EXPORT_SYMBOL(people_frames)(%eax),%dx
 		xor    %eax,%eax
 		mov    0x57(%ebx),%al
-		mov    nstart_ani,%ecx
+		mov    EXPORT_SYMBOL(nstart_ani),%ecx
 		add    %edx,%eax
 		mov    (%ecx,%eax,2),%ax
 		sub    %ax,0x24(%ebx)
@@ -43773,7 +43773,7 @@ GLOBAL_FUNC(ASM_process_protect_person)	/* 0x054B54 */
 		xor    %eax,%eax
 		mov    0x57(%esi),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		movw   $0x30,0x28(%esi)
 		mov    0x46(%esi),%bl
@@ -44295,7 +44295,7 @@ GLOBAL_FUNC(ASM_process_protect_person)	/* 0x054B54 */
 		mov    %bl,%al
 		add    %edx,%eax
 		lea    0x0(,%eax,2),%edx
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    (%edx,%eax,1),%ax
 		mov    %ax,0x24(%esi)
 	jump_5528c:
@@ -44417,7 +44417,7 @@ GLOBAL_FUNC(ASM_person_being_persuaded)	/* 0x0553DC */
 		xor    %edx,%edx
 		mov    0x24(%eax),%dx
 		lea    0x0(,%edx,8),%ebx
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		mov    0x6(%edx,%ebx,1),%bx
 		mov    %bx,0x24(%eax)
 		xor    %ebx,%ebx
@@ -44445,7 +44445,7 @@ GLOBAL_FUNC(ASM_person_being_persuaded)	/* 0x0553DC */
 		and    $0xffff,%edx
 		mov    0x57(%eax),%bl
 		add    %ebx,%edx
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    (%ebx,%edx,2),%dx
 		xor    %ebx,%ebx
 		mov    0x8(%eax),%bl
@@ -44735,7 +44735,7 @@ GLOBAL_FUNC(ASM_process_persuaded)	/* 0x0554B8 */
 		mov    0x57(%esi),%dl
 		add    %edx,%eax
 		lea    0x0(,%eax,2),%edx
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    (%edx,%eax,1),%ax
 		mov    %ax,0x24(%esi)
 	jump_557cf:
@@ -45374,7 +45374,7 @@ GLOBAL_FUNC(ASM_process_knocked_out)	/* 0x055DD8 */
 		test   %edx,%edx
 		jge    jump_55e2d
 		xor    %ebx,%ebx
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		mov    0x24(%eax),%bx
 		mov    0x6(%edx,%ebx,8),%bx
 		and    $0xffff,%ebx
@@ -45415,7 +45415,7 @@ GLOBAL_FUNC(ASM_process_knocked_out)	/* 0x055DD8 */
 		xor    %edx,%edx
 		mov    0x57(%eax),%dl
 		add    %ebx,%edx
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    (%ebx,%edx,2),%dx
 		xor    %ebx,%ebx
 		mov    0x8(%eax),%bl
@@ -47160,7 +47160,7 @@ GLOBAL_FUNC (ASM_process_things)	/* 0x572F8 */
 		cmp    $0x210,%eax
 		jne    jump_5741d
 	jump_57436:
-		mov    frame,%ecx
+		mov    EXPORT_SYMBOL(frame),%ecx
 		xor    %eax,%eax
 		jmp    jump_57458
 	jump_57440:
@@ -47586,7 +47586,7 @@ GLOBAL_FUNC (ASM_process_things)	/* 0x572F8 */
 		sar    $0x10,%eax
 		test   %eax,%eax
 		jne    jump_57d27
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    0x26(%edx),%ax
 		mov    (%ebx,%eax,2),%ax
 		movw   $0xd,0xa(%edx)
@@ -47610,7 +47610,7 @@ GLOBAL_FUNC (ASM_process_things)	/* 0x572F8 */
 		mov    %esi,%edx
 		test   %eax,%eax
 		jne    jump_57d27
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    0x26(%esi),%ax
 		mov    (%ebx,%eax,2),%ax
 		mov    %ax,0x24(%esi)
@@ -48106,7 +48106,7 @@ GLOBAL_FUNC(ASM_thing_goto_point_rel)	/* 0x057E18 */
 		mov    0x57(%esi),%al
 	jump_58040:
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		mov    %ax,0x24(%esi)
 	jump_58050:
@@ -48347,7 +48347,7 @@ GLOBAL_FUNC(ASM_thing_goto_point)	/* 0x05811C */
 		and    $0xffff,%eax
 		mov    0x57(%esi),%dl
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		mov    %ax,0x24(%esi)
 		pop    %edi
@@ -48390,7 +48390,7 @@ GLOBAL_FUNC(ASM_thing_goto_point)	/* 0x05811C */
 		xor    %eax,%eax
 		mov    0x57(%esi),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		mov    %ax,0x24(%esi)
 		pop    %edi
@@ -48607,7 +48607,7 @@ GLOBAL_FUNC(ASM_thing_goto_point_on_face)	/* 0x05841C */
 		xor    %eax,%eax
 		mov    0x57(%esi),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		mov    %ax,0x24(%esi)
 		add    $0xc,%esp
@@ -48652,7 +48652,7 @@ GLOBAL_FUNC(ASM_thing_goto_point_on_face)	/* 0x05841C */
 		xor    %eax,%eax
 		mov    0x57(%esi),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		mov    %ax,0x24(%esi)
 		add    $0xc,%esp
@@ -48839,7 +48839,7 @@ GLOBAL_FUNC(ASM_thing_shoot_at_point)	/* 0x058770 */
 		xor    %eax,%eax
 		mov    %bl,%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		mov    %ax,0x24(%esi)
 	jump_588d6:
@@ -49428,7 +49428,7 @@ GLOBAL_FUNC(ASM_thing_shoot_at_thing)	/* 0x058D20 */
 		mov    0x57(%esi),%dl
 		add    %edx,%eax
 		lea    0x0(,%eax,2),%edx
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    (%edx,%eax,1),%ax
 		mov    %ax,0x24(%esi)
 	jump_58f98:
@@ -51329,7 +51329,7 @@ GLOBAL_FUNC(ASM_person_go_sleep)	/* 0x05A2C0 */
 		xor    %edx,%edx
 		mov    0x57(%eax),%dl
 		add    %edx,%ebx
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%ebx,2),%dx
 		xor    %ebx,%ebx
 		mov    0x8(%eax),%bl
@@ -51788,7 +51788,7 @@ GLOBAL_FUNC(ASM_thing_select_specific_weapon)	/* 0x05A73C */
 		mov    EXPORT_SYMBOL(people_frames)(%eax),%dx
 		xor    %eax,%eax
 		mov    0x57(%esi),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		add    %edx,%eax
 		mov    0x24(%esi),%cx
 		xor    %edx,%edx
@@ -51843,7 +51843,7 @@ GLOBAL_FUNC(ASM_thing_select_specific_weapon)	/* 0x05A73C */
 		mov    0x57(%esi),%al
 		add    %edx,%eax
 		lea    0x0(,%eax,2),%edx
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    (%edx,%eax,1),%ax
 		mov    0x24(%esi),%dx
 		sub    %eax,%edx
@@ -51868,7 +51868,7 @@ GLOBAL_FUNC(ASM_thing_select_specific_weapon)	/* 0x05A73C */
 		xor    %eax,%eax
 		mov    0x57(%esi),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		xor    %edx,%edx
 		mov    0x24(%esi),%bx
@@ -51998,7 +51998,7 @@ GLOBAL_FUNC(ASM_person_hit_by_car)	/* 0x05AA3C */
 		and    $0xffff,%edx
 		mov    0x57(%esi),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		xor    %edx,%edx
 		mov    0x8(%esi),%dl
@@ -53140,7 +53140,7 @@ GLOBAL_FUNC(ASM_do_shockwave)	/* 0x05B598 */
 		movw   $0xd,0xa(%esi)
 		or     $0x2,%ah
 		mov    %ah,0xc(%esi)
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		movw   $0x42d,0x26(%esi)
 		mov    0x85a(%eax),%ax
 		mov    %ax,0x24(%esi)
@@ -60071,10 +60071,10 @@ calc_bul_offsets:	/* 0x060FD4 */
 		push   %edi
 		push   %ebp
 		sub    $0x8,%esp
-		mov    melement_ani,%ecx
+		mov    EXPORT_SYMBOL(melement_ani),%ecx
 		mov    EXPORT_SYMBOL(m_sprites),%esi
-		mov    nstart_ani_end,%eax
-		sub    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani_end),%eax
+		sub    EXPORT_SYMBOL(nstart_ani),%eax
 		shr    %eax
 		mov    $0x1,%edi
 		mov    %eax,0x4(%esp)
@@ -60135,9 +60135,9 @@ calc_bul_offsets:	/* 0x060FD4 */
 		jge    jump_610dd
 		cmp    $0x7d0,%eax
 		jge    jump_610dd
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%dx
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		movb   $0x0,EXPORT_SYMBOL(bul_starts)(,%eax,2)
 		and    $0xffff,%edx
 		movb   $0x0,data_19ab15(,%eax,2)
@@ -60150,7 +60150,7 @@ calc_bul_offsets:	/* 0x060FD4 */
 		jmp    jump_61060
 	jump_610dd:
 		mov    %esi,EXPORT_SYMBOL(m_sprites)
-		mov    %ecx,melement_ani
+		mov    %ecx,EXPORT_SYMBOL(melement_ani)
 		add    $0x8,%esp
 		pop    %ebp
 		pop    %edi
@@ -62151,7 +62151,7 @@ GLOBAL_FUNC(ASM_add_static)	/* 0x0631BC */
 		mov    %ebx,0x20(%eax)
 		xor    %ebx,%ebx
 		mov    %esi,0x18(%eax)
-		mov    nstart_ani,%esi
+		mov    EXPORT_SYMBOL(nstart_ani),%esi
 		mov    %cx,%bx
 		mov    %ebp,0x1c(%eax)
 		mov    (%esi,%ebx,2),%bx
@@ -62356,7 +62356,7 @@ GLOBAL_FUNC(ASM_create_scale_effect)	/* 0x06338C */
 		mov    %esi,0x18(%edx)
 		lea    0x0(,%ebx,2),%esi
 		shl    $0x8,%ebp
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %ebp,0x1c(%edx)
 		mov    (%esi,%ebx,1),%bx
 		dec    %ecx
@@ -67473,7 +67473,7 @@ func_67796:
 		movb   $0x4,0x8(%eax)
 		call   ac_play_dist_ssample
 	jump_677d7:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		movw   $0x422,0x26(%esi)
 		mov    0x844(%eax),%ax
 		mov    %ax,0x24(%esi)
@@ -74888,16 +74888,16 @@ func_70a88:
 		mov    %eax,(%edx)
 		xor    %eax,%eax
 		mov    %cx,%ax
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		shl    $0x3,%eax
 		add    %edx,%eax
 		xor    %edx,%edx
 		mov    (%eax),%dx
 		lea    0x0(,%edx,4),%eax
 		add    %edx,%eax
-		mov    melement_ani,%esi
+		mov    EXPORT_SYMBOL(melement_ani),%esi
 		add    %eax,%eax
-		mov    melement_ani,%edx
+		mov    EXPORT_SYMBOL(melement_ani),%edx
 		add    %eax,%esi
 		cmp    %edx,%esi
 		ja     jump_70b34
@@ -74906,7 +74906,7 @@ func_70a88:
 		mov    0x8(%esi),%si
 		and    $0xffff,%esi
 		imul   $0xa,%esi,%esi
-		mov    melement_ani,%ebx
+		mov    EXPORT_SYMBOL(melement_ani),%ebx
 		add    %ebx,%esi
 		cmp    %ebx,%esi
 		jbe    jump_70bc5
@@ -76514,7 +76514,7 @@ GLOBAL_FUNC(ASM_init_level)	/* 0x074CDC */
 		jne    jump_74dce
 		movb   $0x1,EXPORT_SYMBOL(ingame)+0x995 # ingame.InNetGame_UNSURE
 	jump_74dce:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x7b0(%eax),%ax
 		mov    %ax,EXPORT_SYMBOL(shield_frm)
 		xor    %eax,%eax
@@ -76522,7 +76522,7 @@ GLOBAL_FUNC(ASM_init_level)	/* 0x074CDC */
 		mov    EXPORT_SYMBOL(shield_frm),%ax
 		mov    %dx,EXPORT_SYMBOL(word_1531DA)
 		lea    0x0(,%eax,8),%edx
-		mov    frame,%eax
+		mov    EXPORT_SYMBOL(frame),%eax
 		mov    0x6(%edx,%eax,1),%dx
 		and    $0xffff,%edx
 		mov    0x6(%eax,%edx,8),%dx
@@ -76892,7 +76892,7 @@ GLOBAL_FUNC(ASM_init_level)	/* 0x074CDC */
 		mov    0x57(%ebx),%al
 		add    %edx,%eax
 		lea    0x0(,%eax,2),%edx
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x24(%ebx),%cx
 		mov    (%edx,%eax,1),%dx
 		sub    %edx,%ecx
@@ -76940,7 +76940,7 @@ GLOBAL_FUNC(ASM_init_level)	/* 0x074CDC */
 		mov    0x57(%ebx),%al
 		add    %edx,%eax
 		lea    0x0(,%eax,2),%edx
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x24(%ebx),%cx
 		sub    (%edx,%eax,1),%cx
 		xor    %edx,%edx
@@ -77237,7 +77237,7 @@ func_756e4:
 		mov    0x57(%eax),%dl
 		xor    %ecx,%ecx
 		add    %ebx,%edx
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    0x99(%eax),%cl
 		mov    (%ebx,%edx,2),%dx
 		dec    %ecx
@@ -77344,7 +77344,7 @@ func_75879:
 /*----------------------------------------------------------------*/
 func_758ba:
 /*----------------------------------------------------------------*/
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x7d8(%eax),%ax
 		movw   $0x3eb,0x26(%edx)
 		mov    %ax,0x24(%edx)
@@ -77354,7 +77354,7 @@ func_758ba:
 /*----------------------------------------------------------------*/
 func_758d2:
 /*----------------------------------------------------------------*/
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x840(%eax),%ax
 		movw   $0x41f,0x26(%edx)
 		mov    %ax,0x24(%edx)
@@ -77364,7 +77364,7 @@ func_758d2:
 /*----------------------------------------------------------------*/
 func_758ea:
 /*----------------------------------------------------------------*/
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x880(%eax),%ax
 		movw   $0x43f,0x26(%edx)
 		mov    %ax,0x24(%edx)
@@ -77374,7 +77374,7 @@ func_758ea:
 /*----------------------------------------------------------------*/
 func_75902:
 /*----------------------------------------------------------------*/
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x882(%eax),%ax
 		movw   $0x440,0x26(%edx)
 		mov    %ax,0x24(%edx)
@@ -77397,7 +77397,7 @@ func_75902:
 		mov    %esi,0x18(%edx)
 		xor    %eax,%eax
 		mov    %edi,0x20(%edx)
-		mov    nstart_ani,%esi
+		mov    EXPORT_SYMBOL(nstart_ani),%esi
 		mov    %cx,%ax
 		mov    %ebp,0x1c(%edx)
 		mov    (%esi,%eax,2),%ax
@@ -77606,7 +77606,7 @@ func_75b47:
 		xor    %eax,%eax
 		mov    0x57(%ebx),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		mov    %ax,0x24(%ebx)
 		mov    %ebx,%eax
@@ -131845,7 +131845,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		je     jump_b17e8
 		jmp    jump_b1ad0
 	jump_b1238:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -131859,7 +131859,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b1265:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -131873,7 +131873,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b1292:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -131887,7 +131887,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b12bf:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -131901,7 +131901,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b12ec:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -131918,7 +131918,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b1321:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -131932,7 +131932,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b134e:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -131946,7 +131946,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b137b:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -131963,7 +131963,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b13b0:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -131977,7 +131977,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b13dd:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -131991,7 +131991,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b140a:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132005,7 +132005,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b1437:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132019,7 +132019,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b1464:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132033,7 +132033,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b1491:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132047,7 +132047,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b14be:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132061,7 +132061,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b14eb:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132075,7 +132075,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b1518:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132089,7 +132089,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b1545:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132103,7 +132103,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b1572:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x712(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132117,7 +132117,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b159f:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x718(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132131,7 +132131,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b15cc:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x718(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132145,7 +132145,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b15f9:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x718(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132159,7 +132159,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b1626:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x718(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132173,7 +132173,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b1653:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x718(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132187,7 +132187,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b1680:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x718(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132201,7 +132201,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b16ad:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x73a(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132215,7 +132215,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b16da:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x73a(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132229,7 +132229,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b1707:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132243,7 +132243,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b1734:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132257,7 +132257,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b1761:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132271,7 +132271,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b178e:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132285,7 +132285,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b17bb:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132299,7 +132299,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		pop    %edx
 		ret
 	jump_b17e8:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132378,7 +132378,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		cmp    $0x67,%ah
 		jb     jump_b192c
 		jbe    jump_b15cc
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x718(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132399,7 +132399,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		cmp    $0x62,%ah
 		jbe    jump_b1545
 	jump_b1943:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132434,7 +132434,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		cmp    $0x58,%ah
 		jbe    jump_b1491
 	jump_b19b9:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132454,7 +132454,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		cmp    $0x55,%ah
 		jb     jump_b1464
 		jbe    jump_b1437
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132484,7 +132484,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		jb     jump_b1a92
 		jbe    jump_b137b
 	jump_b1a65:
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -132532,7 +132532,7 @@ fillin_phwoar_type_info:	/* 0x0B11D8 */
 		cmp    $0x31,%ah
 		jb     jump_b1ad0
 		jbe    jump_b1238
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x708(%eax),%ax
 		mov    %ax,0x14(%edx)
 		call   ac_LbRandomAnyShort
@@ -147618,7 +147618,7 @@ init_shoot_recoil:	/* 0x0C19F0 */
 		mov    0x57(%esi),%al
 		add    %edx,%eax
 		lea    0x0(,%eax,2),%edx
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    (%edx,%eax,1),%ax
 		xor    %edx,%edx
 		mov    0x8(%esi),%dl
@@ -149431,7 +149431,7 @@ GLOBAL_FUNC(ASM_init_c_iff)	/* 0x0C2E8C */
 		idiv   %edi
 		movw   $0x1e,0x28(%ebx)
 		mov    %ax,0x3c(%ebx)
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    %ebp,0x18(%ebx)
 		mov    0x810(%eax),%ax
 		movw   $0x408,0x26(%ebx)
@@ -149645,7 +149645,7 @@ GLOBAL_FUNC(ASM_init_flamer)	/* 0x0C303C */
 		sub    $0x4,%eax
 		mov    0x24(%edx),%bx
 		add    %eax,%ecx
-		mov    frame,%eax
+		mov    EXPORT_SYMBOL(frame),%eax
 		mov    %cx,0x28(%edx)
 		mov    0x6(%eax,%ebx,8),%bx
 		mov    %bx,0x24(%edx)
@@ -150648,7 +150648,7 @@ GLOBAL_FUNC(ASM_process_tasered_person)	/* 0x0C3E40 */
 		mov    0x57(%eax),%bl
 		add    %ebx,%edx
 		lea    0x0(,%edx,2),%ebx
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%ebx,1),%dx
 		xor    %ebx,%ebx
 		mov    0x8(%eax),%bl
@@ -150680,7 +150680,7 @@ GLOBAL_FUNC(ASM_process_tasered_person)	/* 0x0C3E40 */
 		and    $0xffff,%edx
 		mov    0x57(%eax),%bl
 		add    %ebx,%edx
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    (%ebx,%edx,2),%dx
 		xor    %ebx,%ebx
 		mov    0x8(%eax),%bl
@@ -150707,7 +150707,7 @@ GLOBAL_FUNC(ASM_process_tasered_person)	/* 0x0C3E40 */
 		xor    %edx,%edx
 		mov    0x57(%eax),%dl
 		add    %ebx,%edx
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    (%ebx,%edx,2),%dx
 		xor    %ebx,%ebx
 		mov    0x8(%eax),%bl
@@ -151961,7 +151961,7 @@ GLOBAL_FUNC(ASM_init_air_strike)	/* 0x0C4E2C */
 		sar    $0x1f,%edx
 		idiv   %ebx
 		mov    %ax,0x3c(%esi)
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		movw   $0x190,0x28(%esi)
 		mov    0x7d8(%eax),%ax
 		movw   $0x3ec,0x26(%esi)
@@ -152194,7 +152194,7 @@ GLOBAL_FUNC(ASM_init_fire_weapon)	/* 0x0C509C */
 		xor    %eax,%eax
 		mov    0x57(%esi),%al
 		add    %edx,%eax
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    (%edx,%eax,2),%ax
 		mov    %ax,0x24(%esi)
 	jump_c5181:
@@ -154472,7 +154472,7 @@ GLOBAL_FUNC(ASM_process_canister)	/* 0x0C6AB8 */
 	jump_c6b05:
 		mov    0xc(%eax),%bl
 		or     $0x20,%bl
-		mov    nstart_ani,%esi
+		mov    EXPORT_SYMBOL(nstart_ani),%esi
 		mov    %bl,0xc(%eax)
 		mov    0x718(%esi),%si
 		and    $0xffff,%esi
@@ -154483,7 +154483,7 @@ GLOBAL_FUNC(ASM_process_canister)	/* 0x0C6AB8 */
 		jmp    jump_c6bac
 	jump_c6b37:
 		xor    %ebx,%ebx
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		mov    0x24(%eax),%bx
 		mov    0x6(%edx,%ebx,8),%bx
 		and    $0xffff,%ebx
@@ -154755,7 +154755,7 @@ process_special_drift_smoke:	/* 0x0C6E5C */
 		xor    %eax,%eax
 		mov    0x24(%esi),%ax
 		lea    0x0(,%eax,8),%edx
-		mov    frame,%eax
+		mov    EXPORT_SYMBOL(frame),%eax
 		mov    0x6(%edx,%eax,1),%ax
 		mov    %ax,0x24(%esi)
 		mov    0x2a(%esi),%eax
@@ -154977,7 +154977,7 @@ napalm_person:	/* 0x0C6FB0 */
 		mov    0x57(%esi),%al
 		add    %edx,%eax
 		lea    0x0(,%eax,2),%edx
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    (%edx,%eax,1),%ax
 		xor    %edx,%edx
 		mov    0x8(%esi),%dl
@@ -155052,7 +155052,7 @@ process_drift_smoke:	/* 0x0C71CC */
 		testb  $0x1,gameturn
 		je     jump_c7203
 		xor    %eax,%eax
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		mov    0x24(%esi),%ax
 		mov    0x6(%edx,%eax,8),%ax
 		mov    %ax,0x24(%esi)
@@ -155464,7 +155464,7 @@ process_napalm_flame:	/* 0x0C7678 */
 		test   $0x1,%al
 		je     jump_c76ad
 		xor    %eax,%eax
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		mov    0x24(%esi),%ax
 		mov    0x6(%edx,%eax,8),%ax
 		mov    %ax,0x24(%esi)
@@ -155812,7 +155812,7 @@ process_flame1:	/* 0x0C7A80 */
 		test   $0x1,%al
 		je     jump_c7aae
 		xor    %eax,%eax
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		mov    0x24(%esi),%ax
 		mov    0x6(%edx,%eax,8),%ax
 		mov    %ax,0x24(%esi)
@@ -156077,7 +156077,7 @@ process_splash:	/* 0x0C7D44 */
 		xor    %eax,%eax
 		mov    0x24(%esi),%ax
 		lea    0x0(,%eax,8),%edx
-		mov    frame,%eax
+		mov    EXPORT_SYMBOL(frame),%eax
 		mov    0x6(%edx,%eax,1),%dx
 		and    $0xffff,%edx
 		testb  $0x1,0x5(%eax,%edx,8)
@@ -156129,7 +156129,7 @@ GLOBAL_FUNC(ASM_process_scale_effect)	/* 0x0C7E1C */
 		sar    $0x10,%eax
 		cmp    $0x4,%eax
 		jne    jump_c7e6d
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x8a0(%eax),%ax
 		mov    %ax,0x24(%ebx)
 	jump_c7e6d:
@@ -156157,7 +156157,7 @@ GLOBAL_FUNC(ASM_process_scale_effect)	/* 0x0C7E1C */
 		ret
 	jump_c7e9a:
 		xor    %eax,%eax
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		mov    0x24(%ebx),%ax
 		mov    0x6(%edx,%eax,8),%ax
 		and    $0xffff,%eax
@@ -156830,7 +156830,7 @@ GLOBAL_FUNC(ASM_init_grenade)	/* 0x0C84D0 */
 		movw   $0x3e7,0x2a(%ebx)
 		movw   $0x3e7,0x28(%ebx)
 		mov    %ax,0x3c(%ebx)
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		movw   $0x190,0x38(%ebx)
 		mov    0x858(%eax),%ax
 		movw   $0x42c,0x26(%ebx)
@@ -159973,7 +159973,7 @@ func_ca88e:
 		xor    %eax,%eax
 		mov    0x14(%ebx),%ax
 		lea    0x0(,%eax,8),%edx
-		mov    frame,%eax
+		mov    EXPORT_SYMBOL(frame),%eax
 		mov    0x6(%edx,%eax,1),%ax
 		mov    %ax,0x14(%ebx)
 		jmp    jump_caa22
@@ -169914,7 +169914,7 @@ func_d67a1:
 		mov    0x3c4(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0x5a0(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    (%ebx,%ecx,2),%ax
 	jump_d6900:
@@ -169923,7 +169923,7 @@ func_d67a1:
 		test   $0x3,%al
 		je     jump_d6920
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_d6900
@@ -170028,7 +170028,7 @@ func_d67a1:
 		mov    0x5e0(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0x414(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    (%ebx,%ecx,2),%ax
 	jump_d6ac2:
@@ -170037,7 +170037,7 @@ func_d67a1:
 		test   $0x3,%al
 		je     jump_d6ae2
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_d6ac2
@@ -170146,7 +170146,7 @@ func_d67a1:
 		mov    0x450(%esp),%al
 		mov    %al,0x6(%edx)
 		mov    0x68(%esp),%eax
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		add    %eax,%eax
 		add    %ebx,%eax
 		mov    (%eax),%ax
@@ -170156,7 +170156,7 @@ func_d67a1:
 		test   $0x3,%al
 		je     jump_d6cb2
 		xor    %ebx,%ebx
-		mov    frame,%eax
+		mov    EXPORT_SYMBOL(frame),%eax
 		mov    0x8(%edx),%bx
 		mov    0x6(%eax,%ebx,8),%ax
 		jmp    jump_d6c93
@@ -170257,7 +170257,7 @@ func_d67a1:
 		mov    0x3d8(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0x398(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    (%ebx,%ecx,2),%ax
 	jump_d6e5a:
@@ -170266,7 +170266,7 @@ func_d67a1:
 		test   $0x3,%al
 		je     jump_d6e7a
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_d6e5a
@@ -170369,7 +170369,7 @@ func_d67a1:
 		mov    0x3dc(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0x4c0(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    (%ebx,%ecx,2),%ax
 	jump_d7034:
@@ -170378,7 +170378,7 @@ func_d67a1:
 		test   $0x3,%al
 		je     jump_d7054
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_d7034
@@ -170481,7 +170481,7 @@ func_d67a1:
 		mov    0x338(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0x634(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    (%ebx,%ecx,2),%ax
 	jump_d720d:
@@ -170490,7 +170490,7 @@ func_d67a1:
 		test   $0x3,%al
 		je     jump_d722d
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_d720d
@@ -170594,7 +170594,7 @@ func_d67a1:
 		mov    0x534(%esp),%al
 		mov    0xf4(%esp),%ebx
 		mov    %al,0x6(%edx)
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    (%eax,%ebx,2),%ax
 	jump_d73df:
 		mov    %ax,0x8(%edx)
@@ -170602,7 +170602,7 @@ func_d67a1:
 		test   $0x3,%al
 		je     jump_d73ff
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_d73df
@@ -170704,7 +170704,7 @@ func_d67a1:
 		mov    0x2cc(%esp),%al
 		mov    0x108(%esp),%ebx
 		mov    %al,0x6(%edx)
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    %cx,0xe(%edx)
 		mov    (%eax,%ebx,2),%ax
 	jump_d75a5:
@@ -170713,7 +170713,7 @@ func_d67a1:
 		test   $0x3,%al
 		je     jump_d75c5
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_d75a5
@@ -170815,7 +170815,7 @@ func_d67a1:
 		mov    0x5c4(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0x600(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    0x118(%esp),%eax
 		mov    %cx,0xa(%edx)
@@ -170826,7 +170826,7 @@ func_d67a1:
 		test   $0x3,%al
 		je     jump_d77a0
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_d7780
@@ -170934,7 +170934,7 @@ func_d67a1:
 		mov    0x43c(%esp),%al
 		mov    %al,0x6(%edx)
 		mov    0x128(%esp),%eax
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		add    %eax,%eax
 		add    %ebx,%eax
 		mov    (%eax),%ax
@@ -170946,7 +170946,7 @@ func_d67a1:
 		xor    %eax,%eax
 		mov    0x8(%edx),%ax
 		lea    0x0(,%eax,8),%ebx
-		mov    frame,%eax
+		mov    EXPORT_SYMBOL(frame),%eax
 		mov    0x6(%ebx,%eax,1),%ax
 		jmp    jump_d7973
 	jump_d7999:
@@ -171051,7 +171051,7 @@ func_d67a1:
 		mov    0x30c(%esp),%al
 		mov    %al,0x6(%edx)
 		mov    0x13c(%esp),%eax
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		add    %eax,%eax
 		add    %ebx,%eax
 		mov    (%eax),%ax
@@ -171063,7 +171063,7 @@ func_d67a1:
 		xor    %eax,%eax
 		mov    0x8(%edx),%ax
 		lea    0x0(,%eax,8),%ebx
-		mov    frame,%eax
+		mov    EXPORT_SYMBOL(frame),%eax
 		mov    0x6(%ebx,%eax,1),%ax
 		jmp    jump_d7b5e
 	jump_d7b84:
@@ -171164,7 +171164,7 @@ func_d67a1:
 		mov    %al,0x5(%edx)
 		mov    0x5a8(%esp),%al
 		mov    %al,0x6(%edx)
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    (%eax,%ecx,2),%ax
 	jump_d7d2e:
 		mov    %ax,0x8(%edx)
@@ -171172,7 +171172,7 @@ func_d67a1:
 		test   $0x3,%al
 		je     jump_d7d4e
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_d7d2e
@@ -171279,7 +171279,7 @@ func_d67a1:
 		mov    0x41c(%esp),%al
 		mov    %al,0x6(%edx)
 		mov    0x178(%esp),%eax
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		add    %eax,%eax
 		add    %ebx,%eax
 		mov    (%eax),%ax
@@ -171291,7 +171291,7 @@ func_d67a1:
 		xor    %eax,%eax
 		mov    0x8(%edx),%ax
 		lea    0x0(,%eax,8),%ebx
-		mov    frame,%eax
+		mov    EXPORT_SYMBOL(frame),%eax
 		mov    0x6(%ebx,%eax,1),%ax
 		jmp    jump_d7f1b
 	jump_d7f41:
@@ -171396,7 +171396,7 @@ func_d67a1:
 		mov    0x51c(%esp),%al
 		mov    %al,0x6(%edx)
 		mov    0x198(%esp),%eax
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		add    %eax,%eax
 		add    %ebx,%eax
 		mov    (%eax),%ax
@@ -171408,7 +171408,7 @@ func_d67a1:
 		xor    %eax,%eax
 		mov    0x8(%edx),%ax
 		lea    0x0(,%eax,8),%ebx
-		mov    frame,%eax
+		mov    EXPORT_SYMBOL(frame),%eax
 		mov    0x6(%ebx,%eax,1),%ax
 		jmp    jump_d8108
 	jump_d812e:
@@ -171509,7 +171509,7 @@ func_d67a1:
 		mov    0x638(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0x39c(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    (%ebx,%ecx,2),%ax
 	jump_d82cb:
@@ -171518,7 +171518,7 @@ func_d67a1:
 		test   $0x3,%al
 		je     jump_d82eb
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_d82cb
@@ -171629,7 +171629,7 @@ func_d67a1:
 		add    %eax,%eax
 		mov    %eax,0x1ec(%esp)
 		mov    0x1ec(%esp),%ebx
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		add    %ebx,%eax
 		mov    (%eax),%ax
 	jump_d84b8:
@@ -171640,7 +171640,7 @@ func_d67a1:
 		xor    %eax,%eax
 		mov    0x8(%edx),%ax
 		lea    0x0(,%eax,8),%ebx
-		mov    frame,%eax
+		mov    EXPORT_SYMBOL(frame),%eax
 		mov    0x6(%ebx,%eax,1),%ax
 		jmp    jump_d84b8
 	jump_d84de:
@@ -171738,7 +171738,7 @@ func_d67a1:
 		mov    0x42c(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0x344(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    (%ebx,%ecx,2),%ax
 	jump_d8678:
@@ -171747,7 +171747,7 @@ func_d67a1:
 		test   $0x3,%al
 		je     jump_d8698
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_d8678
@@ -171861,7 +171861,7 @@ func_d67a1:
 		add    %eax,%eax
 		mov    %eax,0x1ec(%esp)
 		mov    0x1ec(%esp),%ebx
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		add    %ebx,%eax
 		mov    (%eax),%ax
 	jump_d887b:
@@ -171872,7 +171872,7 @@ func_d67a1:
 		xor    %eax,%eax
 		mov    0x8(%edx),%ax
 		lea    0x0(,%eax,8),%ebx
-		mov    frame,%eax
+		mov    EXPORT_SYMBOL(frame),%eax
 		mov    0x6(%ebx,%eax,1),%ax
 		jmp    jump_d887b
 	jump_d88a1:
@@ -171975,7 +171975,7 @@ func_d67a1:
 		mov    0x494(%esp),%al
 		mov    0x1bc(%esp),%ebx
 		mov    %al,0x6(%edx)
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    %cx,0xe(%edx)
 		mov    (%eax,%ebx,2),%ax
 	jump_d8a53:
@@ -171984,7 +171984,7 @@ func_d67a1:
 		test   $0x3,%al
 		je     jump_d8a73
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_d8a53
@@ -172082,7 +172082,7 @@ func_d67a1:
 		mov    %al,0x5(%edx)
 		mov    0x314(%esp),%al
 		mov    %al,0x6(%edx)
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    %si,0xa(%edx)
 		mov    (%eax,%ecx,2),%ax
 	jump_d8c08:
@@ -172091,7 +172091,7 @@ func_d67a1:
 		test   $0x3,%al
 		je     jump_d8c28
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_d8c08
@@ -172200,7 +172200,7 @@ func_d8c79:
 		mov    0x34c(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0x350(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    (%ebx,%ecx,2),%ax
 	jump_d8db7:
@@ -172209,7 +172209,7 @@ func_d8c79:
 		test   $0x3,%al
 		je     jump_d8dd7
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_d8db7
@@ -172312,7 +172312,7 @@ func_d8e17:
 		mov    0x550(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0x654(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    0x1ac(%esp),%eax
 		mov    %cx,0xa(%edx)
@@ -172323,7 +172323,7 @@ func_d8e17:
 		test   $0x3,%al
 		je     jump_d8f98
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_d8f78
@@ -172422,7 +172422,7 @@ func_d8fe1:
 		mov    0x594(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0x598(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    0x1f8(%esp),%eax
 		mov    %cx,0xc(%edx)
@@ -172433,7 +172433,7 @@ func_d8fe1:
 		test   $0x3,%al
 		je     jump_d913f
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_d911f
@@ -172761,7 +172761,7 @@ func_d917f:
 		mov    0x660(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0x604(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    (%ebx,%ecx,2),%ax
 	jump_d957e:
@@ -172770,7 +172770,7 @@ func_d917f:
 		test   $0x3,%al
 		je     jump_d959e
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_d957e
@@ -172878,7 +172878,7 @@ func_d917f:
 		mov    0x560(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0x62c(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    (%ebx,%ecx,2),%ax
 	jump_d975b:
@@ -172887,7 +172887,7 @@ func_d917f:
 		test   $0x3,%al
 		je     jump_d977b
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_d975b
@@ -172994,7 +172994,7 @@ func_d917f:
 		mov    0x4b0(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0x674(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    0x164(%esp),%eax
 		mov    %cx,0xa(%edx)
@@ -173005,7 +173005,7 @@ func_d917f:
 		test   $0x3,%al
 		je     jump_d995a
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_d993a
@@ -173110,7 +173110,7 @@ func_d917f:
 		mov    0x500(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0x334(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    0x18c(%esp),%eax
 		mov    %cx,0xe(%edx)
@@ -173121,7 +173121,7 @@ func_d917f:
 		test   $0x3,%al
 		je     jump_d9b35
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_d9b15
@@ -173225,7 +173225,7 @@ func_d917f:
 		mov    0x33c(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0x610(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    (%ebx,%ecx,2),%ax
 	jump_d9cdc:
@@ -173234,7 +173234,7 @@ func_d917f:
 		test   $0x3,%al
 		je     jump_d9cfc
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_d9cdc
@@ -173339,7 +173339,7 @@ func_d917f:
 		mov    0x3b0(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0x3b4(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    (%ebx,%ecx,2),%ax
 	jump_d9eaa:
@@ -173348,7 +173348,7 @@ func_d917f:
 		test   $0x3,%al
 		je     jump_d9eca
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_d9eaa
@@ -173453,7 +173453,7 @@ func_d917f:
 		mov    0x5d0(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0x3f8(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    0x1d0(%esp),%eax
 		mov    %cx,0xa(%edx)
@@ -173464,7 +173464,7 @@ func_d917f:
 		test   $0x3,%al
 		je     jump_da09c
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_da07c
@@ -173572,7 +173572,7 @@ func_d917f:
 		mov    0x444(%esp),%al
 		mov    %al,0x6(%edx)
 		lea    0x0(,%ebx,2),%eax
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		add    %ebx,%eax
 		mov    (%eax),%ax
 	jump_da250:
@@ -173583,7 +173583,7 @@ func_d917f:
 		xor    %eax,%eax
 		mov    0x8(%edx),%ax
 		lea    0x0(,%eax,8),%ebx
-		mov    frame,%eax
+		mov    EXPORT_SYMBOL(frame),%eax
 		mov    0x6(%ebx,%eax,1),%ax
 		jmp    jump_da250
 	jump_da276:
@@ -173684,7 +173684,7 @@ func_d917f:
 		mov    0x474(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0x380(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    (%ebx,%ecx,2),%ax
 	jump_da41a:
@@ -173693,7 +173693,7 @@ func_d917f:
 		test   $0x3,%al
 		je     jump_da43a
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_da41a
@@ -173800,7 +173800,7 @@ func_d917f:
 		mov    0x4a4(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0x628(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    0xb4(%esp),%eax
 		mov    (%ebx,%eax,2),%ax
@@ -173810,7 +173810,7 @@ func_d917f:
 		test   $0x3,%al
 		je     jump_da624
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_da604
@@ -173912,7 +173912,7 @@ func_d917f:
 		mov    0x324(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0x4f8(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    (%ebx,%ecx,2),%ax
 	jump_da7d8:
@@ -173921,7 +173921,7 @@ func_d917f:
 		test   $0x3,%al
 		je     jump_da7f8
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_da7d8
@@ -174020,7 +174020,7 @@ func_d917f:
 		mov    0x36c(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0x3e0(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    (%ebx,%esi,2),%ax
 	jump_da98f:
@@ -174029,7 +174029,7 @@ func_d917f:
 		test   $0x3,%al
 		je     jump_da9af
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_da98f
@@ -174318,7 +174318,7 @@ func_dacdf:
 		test   %eax,%eax
 		jg     jump_dad62
 		xor    %eax,%eax
-		mov    frame,%edx
+		mov    EXPORT_SYMBOL(frame),%edx
 		mov    0x8(%ecx),%ax
 		movb   $0x64,0x3(%ecx)
 		mov    0x6(%edx,%eax,8),%ax
@@ -174418,7 +174418,7 @@ func_dad8c:
 		mov    0x1c8(%esp),%al
 		mov    %al,0x5(%esi)
 		mov    0x1cc(%esp),%al
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    %al,0x6(%esi)
 		mov    (%edx,%ebp,2),%ax
 	jump_daebc:
@@ -174429,7 +174429,7 @@ func_dad8c:
 		xor    %eax,%eax
 		mov    0x8(%esi),%ax
 		lea    0x0(,%eax,8),%edx
-		mov    frame,%eax
+		mov    EXPORT_SYMBOL(frame),%eax
 		mov    0x6(%edx,%eax,1),%ax
 		jmp    jump_daebc
 	jump_daee2:
@@ -174521,7 +174521,7 @@ func_dad8c:
 		mov    0x1fc(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0x200(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    (%ebx,%ebp,2),%ax
 	jump_db051:
@@ -174530,7 +174530,7 @@ func_dad8c:
 		test   $0x3,%al
 		je     jump_db071
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_db051
@@ -174626,7 +174626,7 @@ func_dad8c:
 		mov    0x238(%esp),%al
 		mov    0x4c(%esp),%ebx
 		mov    %al,0x5(%edx)
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    (%eax,%ebx,2),%ax
 	jump_db1e0:
 		mov    %ax,0x8(%edx)
@@ -174636,7 +174636,7 @@ func_dad8c:
 		xor    %eax,%eax
 		mov    0x8(%edx),%ax
 		lea    0x0(,%eax,8),%ebx
-		mov    frame,%eax
+		mov    EXPORT_SYMBOL(frame),%eax
 		mov    0x6(%ebx,%eax,1),%ax
 		jmp    jump_db1e0
 	jump_db206:
@@ -174754,7 +174754,7 @@ func_db265:
 		mov    0x13c(%esp),%al
 		mov    %al,0x5(%esi)
 		mov    0x140(%esp),%al
-		mov    nstart_ani,%edx
+		mov    EXPORT_SYMBOL(nstart_ani),%edx
 		mov    %al,0x6(%esi)
 		mov    (%edx,%ebp,2),%ax
 	jump_db3bd:
@@ -174765,7 +174765,7 @@ func_db265:
 		xor    %eax,%eax
 		mov    0x8(%esi),%ax
 		lea    0x0(,%eax,8),%edx
-		mov    frame,%eax
+		mov    EXPORT_SYMBOL(frame),%eax
 		mov    0x6(%edx,%eax,1),%ax
 		jmp    jump_db3bd
 	jump_db3e3:
@@ -174879,7 +174879,7 @@ func_db444:
 		mov    0xf4(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0xdc(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    (%ebx,%ebp,2),%ax
 	jump_db593:
@@ -174888,7 +174888,7 @@ func_db444:
 		test   $0x3,%al
 		je     jump_db5b3
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_db593
@@ -175002,7 +175002,7 @@ func_db60d:
 		mov    0x188(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0x18c(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    (%ebx,%ebp,2),%ax
 	jump_db762:
@@ -175011,7 +175011,7 @@ func_db60d:
 		test   $0x3,%al
 		je     jump_db782
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_db762
@@ -175127,7 +175127,7 @@ func_db7e3:
 		mov    0x1a0(%esp),%al
 		mov    %al,0x4(%edx)
 		mov    0x1a4(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x5(%edx)
 		mov    (%ebx,%ebp,2),%ax
 	jump_db93f:
@@ -175136,7 +175136,7 @@ func_db7e3:
 		test   $0x3,%al
 		je     jump_db95f
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_db93f
@@ -175246,7 +175246,7 @@ func_db9b9:
 		mov    0x1e4(%esp),%al
 		mov    0x80(%esp),%ebx
 		mov    %al,0x6(%edx)
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    %di,0xc(%edx)
 		mov    (%eax,%ebx,2),%ax
 	jump_dbafc:
@@ -175255,7 +175255,7 @@ func_db9b9:
 		test   $0x3,%al
 		je     jump_dbb1c
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_dbafc
@@ -175366,7 +175366,7 @@ func_dbb7c:
 		mov    0x220(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0x224(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    (%ebx,%ebp,2),%ax
 	jump_dbcbd:
@@ -175375,7 +175375,7 @@ func_dbb7c:
 		test   $0x3,%al
 		je     jump_dbcdd
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_dbcbd
@@ -175498,7 +175498,7 @@ func_dbb7c:
 		mov    0x194(%esp),%al
 		mov    %al,(%edx)
 		mov    0x130(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x4(%edx)
 		mov    0x88(%esp),%eax
 		mov    (%ebx,%eax,2),%ax
@@ -175508,7 +175508,7 @@ func_dbb7c:
 		test   $0x3,%al
 		je     jump_dbede
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_dbebe
@@ -175558,7 +175558,7 @@ func_dbb7c:
 		mov    0x14c(%esp),%al
 		mov    %al,(%edx)
 		mov    0x178(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x5(%edx)
 		mov    (%ebx,%ebp,2),%ax
 	jump_dbfa7:
@@ -175567,7 +175567,7 @@ func_dbb7c:
 		test   $0x3,%al
 		je     jump_dbfc7
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_dbfa7
@@ -175740,7 +175740,7 @@ func_dc131:
 		mov    %al,(%edx)
 		mov    0xfc(%esp),%al
 		mov    %al,0x4(%edx)
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    %bh,0x6(%edx)
 		mov    (%eax,%ebp,2),%ax
 	jump_dc257:
@@ -175749,7 +175749,7 @@ func_dc131:
 		test   $0x3,%al
 		je     jump_dc277
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_dc257
@@ -175861,7 +175861,7 @@ func_dc2d7:
 		mov    0x124(%esp),%al
 		mov    %al,0x5(%edx)
 		mov    0x128(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x6(%edx)
 		mov    (%ebx,%ebp,2),%ax
 	jump_dc412:
@@ -175872,7 +175872,7 @@ func_dc2d7:
 		xor    %eax,%eax
 		mov    0x8(%edx),%ax
 		lea    0x0(,%eax,8),%ebx
-		mov    frame,%eax
+		mov    EXPORT_SYMBOL(frame),%eax
 		mov    0x6(%ebx,%eax,1),%ax
 		jmp    jump_dc412
 	jump_dc438:
@@ -175981,7 +175981,7 @@ func_dc498:
 		mov    0x1b0(%esp),%al
 		mov    %al,(%edx)
 		mov    0x1bc(%esp),%al
-		mov    nstart_ani,%ebx
+		mov    EXPORT_SYMBOL(nstart_ani),%ebx
 		mov    %al,0x4(%edx)
 		mov    (%ebx,%ebp,2),%ax
 	jump_dc5c5:
@@ -175990,7 +175990,7 @@ func_dc498:
 		test   $0x3,%al
 		je     jump_dc5e5
 		xor    %eax,%eax
-		mov    frame,%ebx
+		mov    EXPORT_SYMBOL(frame),%ebx
 		mov    0x8(%edx),%ax
 		mov    0x6(%ebx,%eax,8),%ax
 		jmp    jump_dc5c5
@@ -177052,7 +177052,7 @@ func_e06d8:
 /*----------------------------------------------------------------*/
 func_e0a0e:
 /*----------------------------------------------------------------*/
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x846(%eax),%ax
 		movw   $0x422,0x26(%edx)
 		mov    %ax,0x24(%edx)
@@ -177067,7 +177067,7 @@ func_e0a0e:
 /*----------------------------------------------------------------*/
 func_e0a2c:
 /*----------------------------------------------------------------*/
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x7d8(%eax),%ax
 		movw   $0x3eb,0x26(%edx)
 		mov    %ax,0x24(%edx)
@@ -177082,7 +177082,7 @@ func_e0a2c:
 /*----------------------------------------------------------------*/
 func_e0a4a:
 /*----------------------------------------------------------------*/
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x840(%eax),%ax
 		movw   $0x41f,0x26(%edx)
 		mov    %ax,0x24(%edx)
@@ -177097,7 +177097,7 @@ func_e0a4a:
 /*----------------------------------------------------------------*/
 func_e0a68:
 /*----------------------------------------------------------------*/
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x880(%eax),%ax
 		movw   $0x43f,0x26(%edx)
 		mov    %ax,0x24(%edx)
@@ -177112,7 +177112,7 @@ func_e0a68:
 /*----------------------------------------------------------------*/
 func_e0a86:
 /*----------------------------------------------------------------*/
-		mov    nstart_ani,%eax
+		mov    EXPORT_SYMBOL(nstart_ani),%eax
 		mov    0x882(%eax),%ax
 		movw   $0x440,0x26(%edx)
 		mov    %ax,0x24(%edx)
@@ -181082,18 +181082,6 @@ ascD_48:	/* 0x15D9B2 */
 		.string "%d"
 ascSD_8:	/* 0x15D9B5 */
 		.string "%s %d"
-ascSD_9:	/* 0x15D9BB */
-		.string "%s %d"
-ascAltS:	/* 0x15D9C1 */
-		.string "ALT+%s"
-ascS_17:	/* 0x15D9C8 */
-		.string "%s"
-ascFooD:	/* 0x15D9CB */
-		.string "FOO %d"
-asc___:	/* 0x15D9D2 */
-		.string "..."
-asc____0:	/* 0x15D9D6 */
-		.string "..."
 
 ascD_50:	/* 0x15DA1B */
 		.string "%d"
@@ -181801,19 +181789,6 @@ GLOBAL (word_19CB58)	/* 0x19CB58 */
 
 		.long	0x0
 
-GLOBAL (frame)
-		.long	0x0
-GLOBAL (frame_end)
-		.long	0x0
-		.fill   0x8
-GLOBAL (melement_ani)	/* 0x19CC4C */
-		.long	0x0
-GLOBAL (mele_ani_end)
-		.long	0x0
-GLOBAL (nstart_ani)		/* 0x19CC54 */
-		.long	0x0
-GLOBAL (nstart_ani_end)	/* 0x19CC58 */
-		.long	0x0
 GLOBAL (colour_grey1)	/* 0x19CC5C */
 		.byte	0x0
 GLOBAL (colour_grey2)	/* 0x19CC5D */

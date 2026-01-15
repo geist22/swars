@@ -27,6 +27,14 @@
 /******************************************************************************/
 struct Frame *frame2;
 
+struct Frame *frame = NULL;
+struct Frame *frame_end = NULL;
+
+struct Element *melement_ani = NULL;
+struct Element *mele_ani_end = NULL;
+
+ushort *nstart_ani = NULL;
+ushort *nstart_ani_end = NULL;
 
 /******************************************************************************/
 
