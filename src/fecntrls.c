@@ -43,10 +43,10 @@
 #include "swlog.h"
 /******************************************************************************/
 struct ScreenBox controls_joystick_box = {0};
-struct ScreenTextBox controls_list_box;
-extern struct ScreenButton controls_defaults_button;
-extern struct ScreenButton controls_save_button;
-extern struct ScreenButton controls_calibrate_button;
+struct ScreenTextBox controls_list_box = {0};
+struct ScreenButton controls_defaults_button = {0};
+struct ScreenButton controls_save_button = {0};
+struct ScreenButton controls_calibrate_button = {0};
 
 extern ubyte byte_1C4970;
 extern ubyte controls_hlight_gkey;

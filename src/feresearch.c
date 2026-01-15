@@ -42,12 +42,12 @@
 #include "swlog.h"
 #include "util.h"
 /******************************************************************************/
-extern struct ScreenTextBox research_unkn21_box;
-extern struct ScreenButton research_submit_button;
-extern struct ScreenButton unkn12_WEAPONS_MODS_button;
-extern struct ScreenTextBox research_progress_button;
-extern struct ScreenBox research_graph_box;
-extern struct ScreenButton research_list_buttons[2];
+struct ScreenTextBox research_unkn21_box = {0};
+struct ScreenButton research_submit_button = {0};
+struct ScreenButton unkn12_WEAPONS_MODS_button = {0};
+struct ScreenTextBox research_progress_button = {0};
+struct ScreenBox research_graph_box = {0};
+struct ScreenButton research_list_buttons[2] = {0};
 
 extern ubyte research_completed;// = 0;
 extern ubyte research_on_weapons;// = true;
@@ -55,6 +55,8 @@ extern ubyte research_unkn_var_01;
 extern sbyte research_selected_wep; // = -1;
 extern sbyte research_selected_mod; // = -1;
 extern ubyte byte_1551E4[5];
+
+/******************************************************************************/
 
 ubyte ac_do_research_submit(ubyte click);
 ubyte ac_do_research_suspend(ubyte click);

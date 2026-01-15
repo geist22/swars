@@ -28,6 +28,7 @@
 #include "guiboxes.h"
 #include "guitext.h"
 #include "display.h"
+#include "game_options.h"
 #include "game_save.h"
 #include "game_sprts.h"
 #include "game.h"
@@ -49,6 +50,15 @@ ubyte ac_do_storage_NEW_MORTAL(ubyte click);
 ubyte ac_load_game_slot(ubyte click);
 ubyte ac_save_game_slot(ubyte click);
 ubyte ac_show_menu_storage_slots_box(struct ScreenTextBox *p_box);
+
+int autosave_game(void)
+{
+    // only autosave mortal games
+    if ((ingame.Flags & GamF_MortalGame) == 0)
+        return 1;
+
+    return save_game_write(0, save_active_desc);
+}
 
 ubyte show_menu_storage_slots_box(struct ScreenTextBox *p_box)
 {
@@ -122,7 +132,7 @@ ubyte show_menu_storage_slots_box(struct ScreenTextBox *p_box)
     ln_height = 22;
     slot = save_slot_base;
     entry_height = ln_height + 4;
-    while (slot < (save_slot_base + 8) && scr_y + ln_height < p_box->ScrollWindowHeight + 23)
+    while (slot < (save_slot_base + SAVE_SLOTS_VISIBLE_COUNT) && scr_y + ln_height < p_box->ScrollWindowHeight + 23)
     {
         const char *text;
         char *slot_str;

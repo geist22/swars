@@ -69,10 +69,10 @@
 struct ScreenButton sysmnu_buttons[SYSMNU_BUTTONS_COUNT] = {0};
 extern char options_title_text[];
 
-extern struct ScreenButton main_quit_button;
-extern struct ScreenButton main_login_button;
-extern struct ScreenButton main_map_editor_button;
-extern struct ScreenButton main_load_button;
+struct ScreenButton main_quit_button = {0};
+struct ScreenButton main_login_button = {0};
+struct ScreenButton main_map_editor_button = {0};
+struct ScreenButton main_load_button = {0};
 
 extern struct ScreenBox alert_box;
 extern struct ScreenButton alert_OK_button;
@@ -632,8 +632,7 @@ void show_sysmenu_screen(void)
                 sysmnu_buttons[5].Y += 150;
             }
             game_system_screen = SySc_NONE;
-            if ((ingame.Flags & GamF_MortalGame) != 0)
-                save_game_write(0, save_active_desc);
+            autosave_game();
             break;
         }
         edit_flag = 0;

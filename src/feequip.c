@@ -54,13 +54,13 @@
 #include "sound.h"
 #include "swlog.h"
 /******************************************************************************/
-extern struct ScreenTextBox equip_name_box;
-extern struct ScreenBox weapon_slots;
-extern struct ScreenTextBox equip_list_head_box;
-extern struct ScreenTextBox equip_list_box;
-extern struct ScreenTextBox equip_display_box;
-extern struct ScreenButton equip_offer_buy_button;
-extern struct ScreenInfoBox equip_cost_box;
+struct ScreenTextBox equip_name_box = {0};
+struct ScreenBox weapon_slots = {0};
+struct ScreenTextBox equip_list_head_box = {0};
+struct ScreenTextBox equip_list_box = {0};
+struct ScreenTextBox equip_display_box = {0};
+struct ScreenButton equip_offer_buy_button = {0};
+struct ScreenInfoBox equip_cost_box = {0};
 extern struct ScreenButton equip_all_agents_button;
 extern struct ScreenShape equip_agent_select_shapes[5];
 
@@ -100,6 +100,8 @@ short agent_name_shape_points_x[] = {
 short agent_name_shape_points_y[] = {
       0,   0,  17,  17,   0,
 };
+
+/******************************************************************************/
 
 ubyte ac_display_weapon_info(struct ScreenTextBox *box);
 ubyte ac_show_weapon_name(struct ScreenTextBox *box);

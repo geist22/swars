@@ -54,22 +54,22 @@
 #include "util.h"
 /******************************************************************************/
 
-extern struct ScreenButton net_INITIATE_button;
-extern struct ScreenButton net_groups_LOGON_button;
-extern struct ScreenButton unkn8_EJECT_button;
-extern struct ScreenButton net_protocol_select_button;
-extern struct ScreenButton net_unkn40_button;
-extern struct ScreenButton net_SET2_button;
-extern struct ScreenButton net_SET_button;
-extern struct ScreenBox net_groups_box;
-extern struct ScreenBox net_users_box;
-extern struct ScreenBox net_faction_box;
-extern struct ScreenBox net_team_box;
-extern struct ScreenBox net_benefits_box;
-extern struct ScreenBox net_comms_box;
-extern struct ScreenBox net_grpaint;
-extern struct ScreenBox net_protocol_box;
-extern struct ScreenButton net_protocol_option_button;
+struct ScreenButton net_INITIATE_button = {0};
+struct ScreenButton net_groups_LOGON_button = {0};
+struct ScreenButton unkn8_EJECT_button = {0};
+struct ScreenButton net_protocol_select_button = {0};
+struct ScreenButton net_unkn40_button = {0};
+struct ScreenButton net_SET2_button = {0};
+struct ScreenButton net_SET_button = {0};
+struct ScreenBox net_groups_box = {0};
+struct ScreenBox net_users_box = {0};
+struct ScreenBox net_faction_box = {0};
+struct ScreenBox net_team_box = {0};
+struct ScreenBox net_benefits_box = {0};
+struct ScreenBox net_comms_box = {0};
+struct ScreenBox net_grpaint = {0};
+struct ScreenBox net_protocol_box = {0};
+struct ScreenButton net_protocol_option_button = {0};
 
 extern char net_unkn40_text[];
 extern char net_baudrate_text[8];

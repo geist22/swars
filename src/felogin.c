@@ -43,10 +43,10 @@
 #include "util.h"
 #include "swlog.h"
 /******************************************************************************/
-extern struct ScreenBox login_campaigns_box;
-extern struct ScreenBox login_name_box;
-extern struct ScreenButton login_continue_button;
-extern struct ScreenButton login_abort_button;
+struct ScreenBox login_campaigns_box = {0};
+struct ScreenBox login_name_box = {0};
+struct ScreenButton login_continue_button = {0};
+struct ScreenButton login_abort_button = {0};
 
 ubyte ac_do_abort_2(ubyte click);
 ubyte ac_do_login_2(ubyte click);

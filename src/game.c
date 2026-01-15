@@ -4759,7 +4759,7 @@ ubyte do_storage_NEW_MORTAL(ubyte click)
 
     campaign_new_game_prepare();
 
-    if (save_game_write(0, save_active_desc)) {
+    if (autosave_game()) {
         alert_box_text_fmt("%s", gui_strings[566]);
     }
 
@@ -5995,9 +5995,7 @@ void show_menu_screen_st2(void)
             struct MissionStatus *p_mistat;
             p_mistat = &mission_status[open_brief];
             forward_research_progress_after_mission(p_mistat->CityDays);
-            if ((ingame.Flags & GamF_MortalGame) != 0) {
-                save_game_write(0, save_active_desc);
-            }
+            autosave_game();
             screentype = SCRT_DEBRIEF;
             set_heading_box_text(gui_strings[374]);
             redraw_screen_flag = 1;

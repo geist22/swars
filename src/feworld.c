@@ -45,10 +45,10 @@
 #include "wrcities.h"
 #include "swlog.h"
 /******************************************************************************/
-extern struct ScreenTextBox world_city_info_box;
-extern struct ScreenButton world_info_ACCEPT_button;
-extern struct ScreenButton world_info_CANCEL_button;
-extern struct ScreenBox world_landmap_box;
+struct ScreenTextBox world_city_info_box = {0};
+struct ScreenButton world_info_ACCEPT_button = {0};
+struct ScreenButton world_info_CANCEL_button = {0};
+struct ScreenBox world_landmap_box = {0};
 
 extern short word_155110[6];
 extern ubyte byte_15511C;// = 1;

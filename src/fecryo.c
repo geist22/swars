@@ -53,10 +53,10 @@
 #include "sound.h"
 #include "swlog.h"
 /******************************************************************************/
-extern struct ScreenBox cryo_blokey_box;
-extern struct ScreenTextBox cryo_agent_list_box;
-extern struct ScreenTextBox cryo_cybmod_list_box;
-extern struct ScreenButton cryo_offer_cancel_button;
+struct ScreenBox cryo_blokey_box = {0};
+struct ScreenTextBox cryo_agent_list_box = {0};
+struct ScreenTextBox cryo_cybmod_list_box = {0};
+struct ScreenButton cryo_offer_cancel_button = {0};
 
 extern char cybmod_name_text[];
 
@@ -77,8 +77,8 @@ extern struct ScreenTextBox equip_name_box;
 extern struct ScreenTextBox equip_list_box;
 extern struct ScreenInfoBox equip_cost_box;
 extern struct ScreenButton equip_offer_buy_button;
-extern struct ScreenButton equip_all_agents_button;
-extern struct ScreenShape equip_agent_select_shapes[5];
+struct ScreenButton equip_all_agents_button = {0};
+struct ScreenShape equip_agent_select_shapes[5] = {0};
 
 ubyte ac_do_cryo_offer_cancel(ubyte click);
 ubyte ac_show_cryo_agent_list(struct ScreenTextBox *box);
@@ -95,6 +95,8 @@ struct ScreenRect equip_blokey_rect[] = {
     { 0,  0, 139, 197},
     { 0,  0, 139, 295},
 };
+
+/******************************************************************************/
 
 /** Determines if buy or sell should be available in the cryo mod offer.
  *

@@ -48,6 +48,9 @@ ubyte *save_game_buffer = NULL;
 extern ubyte save_crypto_tables_state[3];
 extern ubyte save_crypto_data_state[3];
 
+char save_slot_names[SAVE_SLOTS_VISIBLE_COUNT][25] = {0};
+char save_active_desc[25];
+
 /******************************************************************************/
 
 void save_crypto_make_hashtable(ubyte simple_salt)
@@ -576,12 +579,13 @@ void load_save_slot_names(void)
     char locstr[DISKPATH_SIZE];
     int i;
 
-    for (i = 0; i < 9; i++)
+    for (i = 0; i < SAVE_SLOTS_VISIBLE_COUNT + 1; i++)
     {
         TbFileHandle fh;
         int slot;
 
-        if (i == 8)
+        // the last slot is for mortal game
+        if (i == SAVE_SLOTS_VISIBLE_COUNT)
             slot = 0;
         else
             slot = save_slot_base + i + 1;

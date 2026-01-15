@@ -51,15 +51,15 @@ short next_brief = 0;
 short old_mission_brief = 0;
 short open_brief = 0;
 
-extern struct ScreenButton brief_NETSCAN_button;
-extern struct ScreenInfoBox brief_NETSCAN_COST_box;
-extern struct ScreenTextBox brief_netscan_box;
+struct ScreenTextBox brief_mission_text_box = {0};
+struct ScreenButton unkn1_ACCEPT_button = {0};
+struct ScreenButton unkn1_CANCEL_button = {0};
 
-extern struct ScreenTextBox brief_mission_text_box;
-extern struct ScreenButton unkn1_ACCEPT_button;
-extern struct ScreenButton unkn1_CANCEL_button;
+struct ScreenButton brief_NETSCAN_button = {0};
+struct ScreenInfoBox brief_NETSCAN_COST_box = {0};
+struct ScreenTextBox brief_netscan_box = {0};
 
-extern struct ScreenBox brief_graphical_box;
+struct ScreenBox brief_graphical_box = {0};
 
 extern sbyte selected_netscan_objective;// = -1;
 extern char unkn39_text[];

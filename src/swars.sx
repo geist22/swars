@@ -107660,7 +107660,7 @@ GLOBAL_FUNC(ASM_do_net_protocol_select)	/* 0x08EB50 */
 		call   ac_LbNetworkReset
 		mov    %dh,EXPORT_SYMBOL(net_service_started)
 	jump_8eb6e:
-		mov    net_protocol_select_button,%ax
+		mov    EXPORT_SYMBOL(net_protocol_select_button),%ax
 		mov    EXPORT_SYMBOL(net_protocol_select_button)+0x04,%bx
 		sub    $0xc,%eax
 		add    %eax,%ebx
@@ -107677,8 +107677,8 @@ GLOBAL_FUNC(ASM_do_net_protocol_select)	/* 0x08EB50 */
 		test   %cl,%cl
 		je     jump_8ec11
 		mov    $0x1,%ch
-		mov    %ax,net_protocol_select_button
-		mov    %bx,net_unkn40_button
+		mov    %ax,EXPORT_SYMBOL(net_protocol_select_button)
+		mov    %bx,EXPORT_SYMBOL(net_unkn40_button)
 		mov    %ch,EXPORT_SYMBOL(byte_1C4A6F)
 		jmp    jump_8ec11
 	jump_8ebd1:
@@ -107690,11 +107690,11 @@ GLOBAL_FUNC(ASM_do_net_protocol_select)	/* 0x08EB50 */
 		je     jump_8ec11
 		xor    %dh,%ah
 		mov    %ah,EXPORT_SYMBOL(byte_1C4A6F)
-		mov    net_protocol_select_button,%ax
+		mov    EXPORT_SYMBOL(net_protocol_select_button),%ax
 		mov    $0x5,%edi
 		add    $0xc,%eax
 		mov    %di,nsvc__I__Type
-		mov    %ax,net_protocol_select_button
+		mov    %ax,EXPORT_SYMBOL(net_protocol_select_button)
 	jump_8ec11:
 		mov    nsvc__I__Type,%ax
 		cmp    $0x1,%ax
@@ -107728,18 +107728,18 @@ GLOBAL_FUNC(ASM_do_net_protocol_select)	/* 0x08EB50 */
 		mov    %si,nsvc__I__Type
 		test   %bl,%bl
 		je     jump_8ec11
-		mov    net_protocol_select_button,%di
+		mov    EXPORT_SYMBOL(net_protocol_select_button),%di
 		xor    %bh,%bh
 		add    $0xc,%edi
 		mov    %bh,EXPORT_SYMBOL(byte_1C4A6F)
-		mov    %di,net_protocol_select_button
+		mov    %di,EXPORT_SYMBOL(net_protocol_select_button)
 		jmp    jump_8ec11
 	jump_8ec8f:
 		je     jump_8ec11
 		mov    $0x1,%dh
 		mov    $0x2,%ecx
-		mov    %ax,net_protocol_select_button
-		mov    %bx,net_unkn40_button
+		mov    %ax,EXPORT_SYMBOL(net_protocol_select_button)
+		mov    %bx,EXPORT_SYMBOL(net_unkn40_button)
 		mov    %dh,EXPORT_SYMBOL(byte_1C4A6F)
 		mov    %cx,nsvc__I__Type
 		jmp    jump_8ec11
@@ -108072,7 +108072,7 @@ GLOBAL_FUNC(ASM_show_net_protocol_box)	/* 0x08EDE0 */
 		mov    $0x2,%ebx
 		mov    %eax,EXPORT_SYMBOL(net_protocol_select_button)+0x08
 		mov    %bx,nsvc__I__Type
-		mov    $net_protocol_select_button,%eax
+		mov    $EXPORT_SYMBOL(net_protocol_select_button),%eax
 		call   *EXPORT_SYMBOL(net_protocol_select_button)+0x10
 		xor    %al,%al
 		add    $0x18,%esp
@@ -108086,7 +108086,7 @@ GLOBAL_FUNC(ASM_show_net_protocol_box)	/* 0x08EDE0 */
 	jump_8f155:
 		cmpb   $0x0,EXPORT_SYMBOL(byte_1C4A6F)
 		je     jump_8f4f7
-		mov    $net_unkn40_button,%eax
+		mov    $EXPORT_SYMBOL(net_unkn40_button),%eax
 		call   *EXPORT_SYMBOL(net_unkn40_button)+0x10
 		and    $0xff,%eax
 		cmp    $0x3,%eax
@@ -108094,7 +108094,7 @@ GLOBAL_FUNC(ASM_show_net_protocol_box)	/* 0x08EDE0 */
 		push   $0xae
 		xor    %eax,%eax
 		xor    %esi,%esi
-		mov    net_unkn40_button,%ax
+		mov    EXPORT_SYMBOL(net_unkn40_button),%ax
 		mov    EXPORT_SYMBOL(net_unkn40_button)+0x02,%si
 		lea    0x3(%eax),%edx
 		add    $0x3,%esi
@@ -108335,7 +108335,7 @@ GLOBAL_FUNC(ASM_show_net_protocol_box)	/* 0x08EDE0 */
 		je     jump_8f502
 		xor    %dl,%dl
 		mov    %dl,EXPORT_SYMBOL(byte_1C4806)
-		mov    $net_protocol_select_button,%eax
+		mov    $EXPORT_SYMBOL(net_protocol_select_button),%eax
 		call   *EXPORT_SYMBOL(net_protocol_select_button)+0x10
 		xor    %al,%al
 		add    $0x18,%esp
@@ -108348,15 +108348,15 @@ GLOBAL_FUNC(ASM_show_net_protocol_box)	/* 0x08EDE0 */
 		ret
 	jump_8f4e8:
 		xor    %dh,%dh
-		mov    $net_protocol_option_button,%eax
+		mov    $EXPORT_SYMBOL(net_protocol_option_button),%eax
 		mov    %dh,EXPORT_SYMBOL(byte_1C4806)
 		jmp    jump_8f4fc
 	jump_8f4f7:
-		mov    $net_protocol_option_button,%eax
+		mov    $EXPORT_SYMBOL(net_protocol_option_button),%eax
 	jump_8f4fc:
 		call   *EXPORT_SYMBOL(net_protocol_option_button)+0x10
 	jump_8f502:
-		mov    $net_protocol_select_button,%eax
+		mov    $EXPORT_SYMBOL(net_protocol_select_button),%eax
 		call   *EXPORT_SYMBOL(net_protocol_select_button)+0x10
 		xor    %al,%al
 		add    $0x18,%esp
@@ -109577,13 +109577,13 @@ GLOBAL_FUNC(ASM_show_net_groups_box)	/* 0x0901E0 */
 		call   ac_net_local_player_hosts_the_game
 		test   %al,%al
 		je     jump_90467
-		mov    $net_INITIATE_button,%eax
+		mov    $EXPORT_SYMBOL(net_INITIATE_button),%eax
 		call   *EXPORT_SYMBOL(net_INITIATE_button)+0x10
 		mov    EXPORT_SYMBOL(selected_city_id),%eax
 		sar    $0x18,%eax
 		cmp    $0xffffffff,%eax
 		je     jump_90467
-		mov    $unkn8_EJECT_button,%eax
+		mov    $EXPORT_SYMBOL(unkn8_EJECT_button),%eax
 		call   *EXPORT_SYMBOL(unkn8_EJECT_button)+0x10
 	jump_90467:
 		mov    unkn_city_no,%eax
@@ -109595,7 +109595,7 @@ GLOBAL_FUNC(ASM_show_net_groups_box)	/* 0x0901E0 */
 		cmp    $0x5,%eax
 		jne    jump_9048b
 	jump_90480:
-		mov    $net_groups_LOGON_button,%eax
+		mov    $EXPORT_SYMBOL(net_groups_LOGON_button),%eax
 		call   *EXPORT_SYMBOL(net_groups_LOGON_button)+0x10
 	jump_9048b:
 		xor    %al,%al
@@ -111394,7 +111394,7 @@ GLOBAL_FUNC(ASM_show_unkn21_box)	/* 0x0930DC */
 		mov    $0x13b,%edx
 		call   ac_draw_text_purple_list2
 		xor    %ecx,%ecx
-		mov    $research_list_buttons,%edx
+		mov    $EXPORT_SYMBOL(research_list_buttons),%edx
 		mov    %ecx,0x44(%esp)
 	jump_93f03:
 		mov    0x44(%esp),%ecx
@@ -112494,7 +112494,7 @@ GLOBAL_FUNC(ASM_show_menu_storage_slots_box)	/* 0x094F08 */
 	jump_95631:
 		mov    $0x4,%edi
 		mov    %di,EXPORT_SYMBOL(lbDisplay)+96 # lbDisplay__DrawFlags
-		cmpb   $0x0,save_active_desc
+		cmpb   $0x0,EXPORT_SYMBOL(save_active_desc)
 		je     jump_958bc
 		mov    0xc(%esp),%eax
 		mov    0x10(%esp),%edx
@@ -112689,7 +112689,7 @@ GLOBAL_FUNC(ASM_show_menu_storage_slots_box)	/* 0x094F08 */
 	jump_9589c:
 		mov    0xe(%esp),%edx
 		mov    0x16(%esp),%eax
-		mov    $save_active_desc,%ebx
+		mov    $EXPORT_SYMBOL(save_active_desc),%ebx
 		xor    %ecx,%ecx
 		sar    $0x10,%edx
 		sar    $0x10,%eax
@@ -114449,11 +114449,11 @@ GLOBAL_FUNC(ASM_show_cryo_cybmod_list_box)	/* 0x098F1C */
 		mov    0x1c(%edx),%eax
 		mov    %eax,EXPORT_SYMBOL(lbFontPtr)
 	jump_99a62:
-		mov    $equip_offer_buy_button,%eax
+		mov    $EXPORT_SYMBOL(equip_offer_buy_button),%eax
 		call   *EXPORT_SYMBOL(equip_offer_buy_button)+0x10
-		mov    $cryo_offer_cancel_button,%eax
+		mov    $EXPORT_SYMBOL(cryo_offer_cancel_button),%eax
 		call   *EXPORT_SYMBOL(cryo_offer_cancel_button)+0x10
-		mov    $equip_cost_box,%eax
+		mov    $EXPORT_SYMBOL(equip_cost_box),%eax
 		call   *EXPORT_SYMBOL(equip_cost_box)+0x18
 		mov    data_155162,%eax
 		sar    $0x18,%eax
@@ -114757,10 +114757,10 @@ GLOBAL_FUNC(ASM_show_brief_netscan_box)	/* 0x099AC8 */
 		mov    EXPORT_SYMBOL(netscan_objectives_count),%al
 		cmp    %eax,%edx
 		jge    jump_99e78
-		mov    $brief_NETSCAN_button,%eax
+		mov    $EXPORT_SYMBOL(brief_NETSCAN_button),%eax
 		call   *EXPORT_SYMBOL(brief_NETSCAN_button)+0x10
 	jump_99e78:
-		mov    $brief_NETSCAN_COST_box,%eax
+		mov    $EXPORT_SYMBOL(brief_NETSCAN_COST_box),%eax
 		call   *EXPORT_SYMBOL(brief_NETSCAN_COST_box)+0x18
 	jump_99e83:
 		xor    %al,%al
@@ -114851,21 +114851,21 @@ GLOBAL_FUNC(ASM_show_netgame_unkn_case1)	/* 0x09BA5C */
 	jump_9bb61:
 		movb   $0x1,EXPORT_SYMBOL(net_autostart_done)
 	jump_9bb68:
-		mov    $net_protocol_box,%eax
+		mov    $EXPORT_SYMBOL(net_protocol_box),%eax
 		call   *EXPORT_SYMBOL(net_protocol_box)+0x0C
-		mov    $net_groups_box,%eax
+		mov    $EXPORT_SYMBOL(net_groups_box),%eax
 		call   *EXPORT_SYMBOL(net_groups_box)+0x0C
-		mov    $net_users_box,%eax
+		mov    $EXPORT_SYMBOL(net_users_box),%eax
 		call   *EXPORT_SYMBOL(net_users_box)+0x0C
-		mov    $net_faction_box,%eax
+		mov    $EXPORT_SYMBOL(net_faction_box),%eax
 		call   *EXPORT_SYMBOL(net_faction_box)+0x0C
-		mov    $net_team_box,%eax
+		mov    $EXPORT_SYMBOL(net_team_box),%eax
 		call   *EXPORT_SYMBOL(net_team_box)+0x0C
-		mov    $net_benefits_box,%eax
+		mov    $EXPORT_SYMBOL(net_benefits_box),%eax
 		call   *EXPORT_SYMBOL(net_benefits_box)+0x0C
-		mov    $net_comms_box,%eax
+		mov    $EXPORT_SYMBOL(net_comms_box),%eax
 		call   *EXPORT_SYMBOL(net_comms_box)+0x0C
-		mov    $net_grpaint,%eax
+		mov    $EXPORT_SYMBOL(net_grpaint),%eax
 		call   *EXPORT_SYMBOL(net_grpaint)+0x0C
 		xor    %eax,%eax
 		mov    login_control__State,%al
@@ -115669,7 +115669,7 @@ GLOBAL_FUNC(ASM_show_controls_joystick_box)	/* 0x09BBE4 */
 		mov    EXPORT_SYMBOL(lbDisplay)+96,%cx # lbDisplay__DrawFlags
 		and    $0x7f,%ch
 		mov    %cx,EXPORT_SYMBOL(lbDisplay)+96 # lbDisplay__DrawFlags
-		mov    $controls_calibrate_button,%eax
+		mov    $EXPORT_SYMBOL(controls_calibrate_button),%eax
 		call   *EXPORT_SYMBOL(controls_calibrate_button)+0x10
 		xor    %al,%al
 		add    $0x58,%esp
@@ -115921,15 +115921,15 @@ GLOBAL_FUNC(ASM_show_debrief_screen)	/* 0x09D584 */
 		call   *EXPORT_SYMBOL(heading_box)+0x20
 		test   %al,%al
 		je     jump_9d623
-		mov    $debrief_mission_box,%eax
+		mov    $EXPORT_SYMBOL(debrief_mission_box),%eax
 		call   *EXPORT_SYMBOL(debrief_mission_box)+0x0C
 		test   %al,%al
 		je     jump_9d623
-		mov    $debrief_people_box,%eax
+		mov    $EXPORT_SYMBOL(debrief_people_box),%eax
 		call   *EXPORT_SYMBOL(debrief_people_box)+0x0C
 		test   %al,%al
 		je     jump_9d623
-		mov    $world_city_info_box,%eax
+		mov    $EXPORT_SYMBOL(world_city_info_box),%eax
 		call   *EXPORT_SYMBOL(world_city_info_box)+0x20
 	jump_9d623:
 		pop    %ecx
@@ -115980,7 +115980,7 @@ GLOBAL_FUNC(ASM_show_mission_screen)	/* 0x09D628 */
 		call   *EXPORT_SYMBOL(heading_box)+0x20
 		test   %al,%al
 		je     jump_9d79e
-		mov    $brief_mission_text_box,%eax
+		mov    $EXPORT_SYMBOL(brief_mission_text_box),%eax
 		call   *EXPORT_SYMBOL(brief_mission_text_box)+0x20
 		test   %al,%al
 		je     jump_9d79e
@@ -115990,9 +115990,9 @@ GLOBAL_FUNC(ASM_show_mission_screen)	/* 0x09D628 */
 		add    EXPORT_SYMBOL(brief_mission_text_box)+6,%ax
 		mov    EXPORT_SYMBOL(brief_mission_text_box)+4,%si
 		movswl %ax,%ecx
-		mov    brief_mission_text_box,%ax
+		mov    EXPORT_SYMBOL(brief_mission_text_box),%ax
 		add    %esi,%eax
-		mov    brief_mission_text_box,%ebx
+		mov    EXPORT_SYMBOL(brief_mission_text_box),%ebx
 		movswl %ax,%edx
 		mov    EXPORT_SYMBOL(brief_netscan_box)+0x42,%eax
 		sar    $0x10,%ebx
@@ -116028,11 +116028,11 @@ GLOBAL_FUNC(ASM_show_mission_screen)	/* 0x09D628 */
 		mov    %al,EXPORT_SYMBOL(brief_mission_text_box)+0x40
 		mov    %ch,EXPORT_SYMBOL(brief_mission_text_box)+0x3C
 	jump_9d784:
-		mov    $brief_graphical_box,%eax
+		mov    $EXPORT_SYMBOL(brief_graphical_box),%eax
 		call   *EXPORT_SYMBOL(brief_graphical_box)+0x0C
 		test   %al,%al
 		je     jump_9d79e
-		mov    $brief_netscan_box,%eax
+		mov    $EXPORT_SYMBOL(brief_netscan_box),%eax
 		call   *EXPORT_SYMBOL(brief_netscan_box)+0x20
 	jump_9d79e:
 		pop    %edi
@@ -116126,15 +116126,15 @@ GLOBAL_FUNC(ASM_show_research_screen)	/* 0x09DEB8 */
 		call   *EXPORT_SYMBOL(heading_box)+0x20
 		test   %al,%al
 		je     jump_9dfeb
-		mov    $research_progress_button,%eax
+		mov    $EXPORT_SYMBOL(research_progress_button),%eax
 		call   *EXPORT_SYMBOL(research_progress_button)+0x20
 		test   %al,%al
 		je     jump_9dfeb
-		mov    $research_graph_box,%eax
+		mov    $EXPORT_SYMBOL(research_graph_box),%eax
 		call   *EXPORT_SYMBOL(research_graph_box)+0x0C
 		test   %al,%al
 		je     jump_9dfeb
-		mov    $research_unkn21_box,%eax
+		mov    $EXPORT_SYMBOL(research_unkn21_box),%eax
 		call   *EXPORT_SYMBOL(research_unkn21_box)+0x20
 	jump_9dfeb:
 		testb  $0x4,EXPORT_SYMBOL(ingame)+0x99b # ingame.UserFlags
@@ -135115,7 +135115,7 @@ GLOBAL_FUNC(ASM_flashy_draw_purple_text_box)	/* 0x0B3DA4 */
 		mov    0x30(%esi),%ebx
 		test   %ebx,%ebx
 		jne    jump_b3dfb
-		cmp    $brief_netscan_box,%esi
+		cmp    $EXPORT_SYMBOL(brief_netscan_box),%esi
 		jne    jump_b3e2a
 	jump_b3dfb:
 		mov    0x10(%esi),%dx
@@ -165786,9 +165786,9 @@ GLOBAL_FUNC(ASM_show_world_city_info_box)	/* 0x0D2A84 */
 		mov    screentype,%al
 		cmp    $0x3,%eax
 		jne    jump_d2d1e
-		mov    $world_info_ACCEPT_button,%eax
+		mov    $EXPORT_SYMBOL(world_info_ACCEPT_button),%eax
 		call   *EXPORT_SYMBOL(world_info_ACCEPT_button)+0x10
-		mov    $world_info_CANCEL_button,%eax
+		mov    $EXPORT_SYMBOL(world_info_CANCEL_button),%eax
 		call   *EXPORT_SYMBOL(world_info_CANCEL_button)+0x10
 	jump_d2d1e:
 		xor    %al,%al
@@ -183268,129 +183268,8 @@ GLOBAL (word_1C6F48)	/* 0x1C6F48 */
 		.short  0x0
 GLOBAL (edit_flag)	/* 0x1C6F4A */
 		.byte	0x0
+		.align	4
 
-GLOBAL (net_protocol_option_button)	/* 0x1C76FC */
-		.fill   0x30
-GLOBAL (brief_graphical_box)	/* 0x1C772C */
-		.fill   0x18
-GLOBAL (brief_netscan_box)	/* 0x1C7744 */
-		.fill   0x44
-GLOBAL (brief_mission_text_box)	/* 0x1C7788 */
-		.fill   0x44
-GLOBAL (unkn1_ACCEPT_button)	/* 0x1C77CC */
-		.fill   0x30
-GLOBAL (unkn1_CANCEL_button)	/* 0x1C77FC */
-		.fill   0x30
-GLOBAL (brief_NETSCAN_button)	/* 0x1C782C */
-		.fill   0x30
-GLOBAL (brief_NETSCAN_COST_box)	/* 0x1C785C */
-		.fill   0x2C
-GLOBAL (debrief_mission_box)	/* 0x1C7888 */
-		.fill   0x18
-GLOBAL (debrief_people_box)	/* 0x1C78A0 */
-		.fill   0x18
-GLOBAL (world_landmap_box)	/* 0x1C78B8 */
-		.fill   0x18
-GLOBAL (world_city_info_box)	/* 0x1C78D0 */
-		.fill   0x44
-GLOBAL (world_info_ACCEPT_button)	/* 0x1C7914 */
-		.fill   0x30
-GLOBAL (world_info_CANCEL_button)	/* 0x1C7944 */
-		.fill   0x30
-GLOBAL (main_quit_button)	/* 0x1C7974 */
-		.fill   0x30
-GLOBAL (main_login_button)	/* 0x1C79A4 */
-		.fill   0x30
-GLOBAL (login_continue_button)	/* 0x1C79D4 */
-		.fill   0x30
-GLOBAL (login_abort_button)	/* 0x1C7A04 */
-		.fill   0x30
-GLOBAL (main_map_editor_button)	/* 0x1C7A34 */
-		.fill   0x30
-GLOBAL (main_load_button)	/* 0x1C7A64 */
-		.fill   0x30
-GLOBAL (login_campaigns_box)	/* 0x1C7A94 */
-		.fill   0x18
-GLOBAL (login_name_box)	/* 0x1C7AAC */
-		.fill   0x18
-GLOBAL (equip_list_head_box)	/* 0x1C7AC4 */
-		.fill   0x44
-GLOBAL (equip_name_box)	/* 0x1C7B08 */
-		.fill   0x44
-GLOBAL (weapon_slots)	/* 0x1C7B4C */
-		.fill   0x18
-GLOBAL (equip_list_box)	/* 0x1C7B64 */
-		.fill   0x44
-GLOBAL (equip_display_box)	/* 0x1C7BA8 */
-		.fill   0x44
-GLOBAL (equip_offer_buy_button)	/* 0x1C7BEC */
-		.fill   0x30
-GLOBAL (cryo_offer_cancel_button)	/* 0x1C7C1C */
-		.fill   0x30
-GLOBAL (equip_cost_box)	/* 0x1C7C4C */
-		.fill   0x2C
-GLOBAL (equip_agent_select_shapes)	/* 0x1C7C78 */
-		.fill   0x0D4
-GLOBAL (equip_all_agents_button)	/* 0x1C7D4C */
-		.fill   0x30
-GLOBAL (research_unkn21_box)	/* 0x1C7D7C */
-		.fill   0x44
-GLOBAL (research_submit_button)	/* 0x1C7DC0 */
-		.fill   0x30
-GLOBAL (unkn12_WEAPONS_MODS_button)	/* 0x1C7DF0 */
-		.fill   0x30
-GLOBAL (research_progress_button)	/* 0x1C7E20 */
-		.fill   0x44
-GLOBAL (research_graph_box)	/* 0x1C7E64 */
-		.fill   0x18
-GLOBAL (research_list_buttons)	/* 0x1C7E7C */
-		.fill   0x5C
-GLOBAL (cryo_agent_list_box)	/* 0x1C7ED8 */
-		.fill   0x44
-GLOBAL (cryo_blokey_box)	/* 0x1C7F1C */
-		.fill   0x18
-GLOBAL (cryo_cybmod_list_box)	/* 0x1C7F34 */
-		.fill   0x44
-GLOBAL (net_INITIATE_button)	/* 0x1C7F78 */
-		.fill   0x30
-GLOBAL (net_groups_LOGON_button)	/* 0x1C7FA8 */
-		.fill   0x30
-GLOBAL (unkn8_EJECT_button)	/* 0x1C7FD8 */
-		.fill   0x30
-GLOBAL (net_protocol_select_button)	/* 0x1C8008 */
-		.fill   0x30
-GLOBAL (net_unkn40_button)	/* 0x1C8038 */
-		.fill   0x30
-GLOBAL (net_SET2_button)	/* 0x1C8068 */
-		.fill   0x30
-GLOBAL (net_SET_button)	/* 0x1C8098 */
-		.fill   0x30
-GLOBAL (net_groups_box)	/* 0x1C80C8 */
-		.fill   0x18
-GLOBAL (net_users_box)	/* 0x1C80E0 */
-		.fill   0x18
-GLOBAL (net_faction_box)	/* 0x1C80F8 */
-		.fill   0x18
-GLOBAL (net_team_box)	/* 0x1C8110 */
-		.fill   0x18
-GLOBAL (net_benefits_box)	/* 0x1C8128 */
-		.fill   0x18
-GLOBAL (net_comms_box)	/* 0x1C8140 */
-		.fill   0x18
-GLOBAL (net_grpaint)	/* 0x1C8158 */
-		.fill   0x18
-GLOBAL (net_protocol_box)	/* 0x1C8170 */
-		.fill   0x18
-GLOBAL (controls_defaults_button)	/* 0x1C8188 */
-		.fill   0x30
-GLOBAL (controls_save_button)	/* 0x1C81B8 */
-		.fill   0x30
-GLOBAL (controls_calibrate_button)	/* 0x1C81E8 */
-		.fill   0x30
-GLOBAL (save_slot_names)	/* 0x1C8218 */
-		.fill   0xc8
-GLOBAL (save_active_desc)
-		.fill   0x1c
 GLOBAL (save_slot_base)	/* 0x1C82FC */
 		.long	0x0
 GLOBAL (alert_text)	/* 0x1C8300 */

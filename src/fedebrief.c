@@ -46,8 +46,8 @@
 
 struct DebriefReport curr_report;
 
-extern struct ScreenBox debrief_mission_box;
-extern struct ScreenBox debrief_people_box;
+struct ScreenBox debrief_mission_box = {0};
+struct ScreenBox debrief_people_box = {0};
 
 const ushort mod_group_type_strid[] = {74, 71, 72, 70, 73, };
 
