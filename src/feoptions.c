@@ -40,12 +40,12 @@
 #include "sound.h"
 #include "swlog.h"
 /******************************************************************************/
-extern struct ScreenBox audio_tracks_box;
-extern struct ScreenBox audio_volume_boxes[3];
-extern struct ScreenButton options_audio_buttons[7];
+struct ScreenBox audio_tracks_box = {0};
+struct ScreenBox audio_volume_boxes[3] = {0};
+struct ScreenButton options_audio_buttons[7] = {0};
 
-extern struct ScreenBox options_gfx_box;
-extern struct ScreenButton options_gfx_buttons[16];
+struct ScreenBox options_gfx_box = {0};
+struct ScreenButton options_gfx_buttons[16] = {0};
 
 extern short word_1C4866[3];
 
@@ -57,6 +57,8 @@ ubyte audio_volume_sliders_draw_state[3] = {0};
 /** How many pixels the slider is spill outside of its active rect area.
  */
 #define HORIZ_PROSLIDER_MAIN_SPILL_W 6
+
+/******************************************************************************/
 
 ubyte ac_change_panel_permutation(ubyte click);
 ubyte ac_change_trenchcoat_preference(ubyte click);

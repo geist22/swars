@@ -37,11 +37,13 @@
 #include "sound.h"
 #include "swlog.h"
 /******************************************************************************/
-extern struct ScreenButton storage_LOAD_button;
-extern struct ScreenButton storage_SAVE_button;
-extern struct ScreenButton storage_NEW_MORTAL_button;
-extern struct ScreenTextBox storage_slots_box;
+struct ScreenButton storage_LOAD_button = {0};
+struct ScreenButton storage_SAVE_button = {0};
+struct ScreenButton storage_NEW_MORTAL_button = {0};
+struct ScreenTextBox storage_slots_box = {0};
 extern ubyte byte_1C4880[8];
+
+/******************************************************************************/
 
 ubyte ac_do_storage_NEW_MORTAL(ubyte click);
 ubyte ac_load_game_slot(ubyte click);

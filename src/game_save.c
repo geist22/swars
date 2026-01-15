@@ -43,6 +43,8 @@
 
 /******************************************************************************/
 
+ubyte *save_game_buffer = NULL;
+
 extern ubyte save_crypto_tables_state[3];
 extern ubyte save_crypto_data_state[3];
 

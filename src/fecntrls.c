@@ -42,7 +42,7 @@
 #include "sound.h"
 #include "swlog.h"
 /******************************************************************************/
-extern struct ScreenBox controls_joystick_box;
+struct ScreenBox controls_joystick_box = {0};
 struct ScreenTextBox controls_list_box;
 extern struct ScreenButton controls_defaults_button;
 extern struct ScreenButton controls_save_button;
@@ -62,7 +62,7 @@ ubyte ac_show_menu_controls_list_box(struct ScreenTextBox *p_box);
  * Max value is 2x max GameKey index - because it also stored distinction
  * between entering keyboard key and joystick key.
  */
-extern ubyte controls_edited_gkey;
+ubyte controls_edited_gkey = 0;
 
 /******************************************************************************/
 

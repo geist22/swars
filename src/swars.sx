@@ -111507,7 +111507,7 @@ GLOBAL_FUNC(ASM_show_audio_tracks_box)	/* 0x094844 */
 		mov    %al,%dl
 		test   %si,%si
 		je     jump_9496a
-		mov    $options_audio_buttons,%eax
+		mov    $EXPORT_SYMBOL(options_audio_buttons),%eax
 		call   *EXPORT_SYMBOL(options_audio_buttons)+0x10
 		mov    $EXPORT_SYMBOL(options_audio_buttons)+0x2E,%eax
 		call   *EXPORT_SYMBOL(options_audio_buttons)+0x3E
@@ -111630,7 +111630,7 @@ GLOBAL_FUNC(ASM_show_netgame_unkn1)	/* 0x094990 */
 		mov    EXPORT_SYMBOL(lbDisplay)+96,%bx # lbDisplay__DrawFlags
 		and    $0xfe,%bh
 		mov    %bx,EXPORT_SYMBOL(lbDisplay)+96 # lbDisplay__DrawFlags
-		mov    $options_gfx_buttons,%ebx
+		mov    $EXPORT_SYMBOL(options_gfx_buttons),%ebx
 		xor    %ecx,%ecx
 	jump_94af0:
 		imul   $0x2e,%ecx,%esi
@@ -111765,7 +111765,7 @@ GLOBAL_FUNC(ASM_show_netgame_unkn1)	/* 0x094990 */
 		xor    %eax,%eax
 		xor    %ebx,%ebx
 		mov    EXPORT_SYMBOL(options_gfx_buttons)+0x04(%esi),%ax
-		mov    options_gfx_buttons(%esi),%bx
+		mov    EXPORT_SYMBOL(options_gfx_buttons)(%esi),%bx
 		add    %eax,%ebx
 		add    $0xa,%ebx
 		xor    %eax,%eax
@@ -111892,7 +111892,7 @@ GLOBAL_FUNC(ASM_show_netgame_unkn1)	/* 0x094990 */
 	jump_94e53:
 		mov    $0x8004,%eax
 		xor    %ecx,%ecx
-		movzwl options_gfx_buttons(%esi),%ebp
+		movzwl EXPORT_SYMBOL(options_gfx_buttons)(%esi),%ebp
 		mov    EXPORT_SYMBOL(options_gfx_buttons)+0x02(%esi),%cx
 		sub    $0x13,%ebp
 		inc    %ecx
@@ -112699,14 +112699,14 @@ GLOBAL_FUNC(ASM_show_menu_storage_slots_box)	/* 0x094F08 */
 	jump_958bc:
 		xor    %ebx,%ebx
 		mov    %bx,EXPORT_SYMBOL(lbDisplay)+96 # lbDisplay__DrawFlags
-		mov    $storage_LOAD_button,%eax
+		mov    $EXPORT_SYMBOL(storage_LOAD_button),%eax
 		call   *EXPORT_SYMBOL(storage_LOAD_button)+0x10
 		cmpb   $0x0,restore_savegame
 		jne    jump_958e4
-		mov    $storage_SAVE_button,%eax
+		mov    $EXPORT_SYMBOL(storage_SAVE_button),%eax
 		call   *EXPORT_SYMBOL(storage_SAVE_button)+0x10
 	jump_958e4:
-		mov    $storage_NEW_MORTAL_button,%eax
+		mov    $EXPORT_SYMBOL(storage_NEW_MORTAL_button),%eax
 		call   *EXPORT_SYMBOL(storage_NEW_MORTAL_button)+0x10
 		xor    %al,%al
 		add    $0x20,%esp
@@ -115917,7 +115917,7 @@ GLOBAL_FUNC(ASM_show_debrief_screen)	/* 0x09D584 */
 		mov    %ch,EXPORT_SYMBOL(debrief_mission_box)+0x0A
 		mov    %ah,EXPORT_SYMBOL(world_city_info_box)+0x3C
 	jump_9d5eb:
-		mov    $heading_box,%eax
+		mov    $EXPORT_SYMBOL(heading_box),%eax
 		call   *EXPORT_SYMBOL(heading_box)+0x20
 		test   %al,%al
 		je     jump_9d623
@@ -115976,7 +115976,7 @@ GLOBAL_FUNC(ASM_show_mission_screen)	/* 0x09D628 */
 		mov    %ah,EXPORT_SYMBOL(brief_netscan_box)+0x3C
 		mov    %dh,EXPORT_SYMBOL(brief_NETSCAN_COST_box)+0x24
 	jump_9d6b0:
-		mov    $heading_box,%eax
+		mov    $EXPORT_SYMBOL(heading_box),%eax
 		call   *EXPORT_SYMBOL(heading_box)+0x20
 		test   %al,%al
 		je     jump_9d79e
@@ -116122,7 +116122,7 @@ GLOBAL_FUNC(ASM_show_research_screen)	/* 0x09DEB8 */
 	jump_9dfac:
 		orb    $0x80,EXPORT_SYMBOL(research_unkn21_box)+0x3C
 	jump_9dfb3:
-		mov    $heading_box,%eax
+		mov    $EXPORT_SYMBOL(heading_box),%eax
 		call   *EXPORT_SYMBOL(heading_box)+0x20
 		test   %al,%al
 		je     jump_9dfeb
@@ -183268,40 +183268,7 @@ GLOBAL (word_1C6F48)	/* 0x1C6F48 */
 		.short  0x0
 GLOBAL (edit_flag)	/* 0x1C6F4A */
 		.byte	0x0
-GLOBAL (controls_edited_gkey)	/* 0x1C6F4B */
-		.byte	0x0
-GLOBAL (save_game_buffer)	/* 0x1C6F4C */
-		.long	0x0
-GLOBAL (heading_box)	/* 0x1C6F50 */
-		.fill   0x44
-GLOBAL (loading_INITIATING_box)	/* 0x1C6F94 */
-		.fill   0x44
-GLOBAL (unkn13_SYSTEM_button)	/* 0x1C6FD8 */
-		.fill   0x44
-GLOBAL (system_screen_shared_header_box)	/* 0x1C701C */
-		.fill   0x44
-GLOBAL (options_gfx_box)	/* 0x1C7060 */
-		.fill   0x18
-GLOBAL (storage_slots_box)	/* 0x1C7078 */
-		.fill   0x44
-GLOBAL (sysmnu_buttons)	/* 0x1C70BC */
-		.fill   0x114
-GLOBAL (storage_LOAD_button)	/* 0x1C71D0 */
-		.fill   0x30
-GLOBAL (storage_SAVE_button)	/* 0x1C7200 */
-		.fill   0x30
-GLOBAL (storage_NEW_MORTAL_button)	/* 0x1C7230 */
-		.fill   0x30
-GLOBAL (controls_joystick_box)	/* 0x1C7260 */
-		.fill   0x18
-GLOBAL (audio_volume_boxes)	/* 0x1C7278 */
-		.fill   0x48
-GLOBAL (audio_tracks_box)	/* 0x1C72C0 */
-		.fill   0x18
-GLOBAL (options_audio_buttons)	/* 0x1C72D8, audio -> music track */
-		.fill   0x144
-GLOBAL (options_gfx_buttons)	/* 0x1C741C */
-		.fill   0x2E0
+
 GLOBAL (net_protocol_option_button)	/* 0x1C76FC */
 		.fill   0x30
 GLOBAL (brief_graphical_box)	/* 0x1C772C */

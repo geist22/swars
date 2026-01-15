@@ -66,7 +66,7 @@
 /******************************************************************************/
 #define SYSMNU_BUTTONS_COUNT 6
 
-extern struct ScreenButton sysmnu_buttons[SYSMNU_BUTTONS_COUNT];
+struct ScreenButton sysmnu_buttons[SYSMNU_BUTTONS_COUNT] = {0};
 extern char options_title_text[];
 
 extern struct ScreenButton main_quit_button;
@@ -77,7 +77,9 @@ extern struct ScreenButton main_load_button;
 extern struct ScreenBox alert_box;
 extern struct ScreenButton alert_OK_button;
 
-extern struct ScreenTextBox loading_INITIATING_box;
+struct ScreenTextBox heading_box = {0};
+struct ScreenTextBox loading_INITIATING_box = {0};
+struct ScreenTextBox unkn13_SYSTEM_button = {0};
 
 extern ubyte research_curr_wep_daily_done;
 extern ubyte research_curr_mod_daily_done;
@@ -91,6 +93,8 @@ extern short alert_textpos;
 
 struct ScreenBoxBase global_top_bar_box = {4, 4, 632, 15};
 struct ScreenBoxBase global_apps_bar_box = {3, 432, 634, 48};
+
+/******************************************************************************/
 
 ubyte ac_main_do_my_quit(ubyte click);
 ubyte ac_main_do_login_1(ubyte click);
