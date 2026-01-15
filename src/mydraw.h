@@ -45,6 +45,14 @@ int font_word_length(const char *text);
 ubyte my_char_to_upper(ubyte c);
 ubyte my_char_height(uchar c);
 
+/** Amount of padding pixels at top of the char.
+ */
+ubyte my_char_padding_top(uchar c);
+
+/** Amount of padding pixels at bottom of the char.
+ */
+ubyte my_char_padding_bottom(uchar c);
+
 u32 my_string_width(const char *text);
 
 ushort my_draw_text(short x, short y, const char *text, ushort startline);

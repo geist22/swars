@@ -41,29 +41,32 @@
 #include "sound.h"
 #include "swlog.h"
 /******************************************************************************/
+/** How many pixels the slider is spill outside of its active rect area.
+ */
+#define HORIZ_PROSLIDER_MAIN_SPILL_W 6
+#define GFX_TOGGLE_OPTIONS_COUNT 7
+#define GFX_MULTIVAL_OPTIONS_COUNT 2
+
 struct ScreenBox audio_tracks_box = {0};
 struct ScreenBox audio_volume_boxes[3] = {0};
 struct ScreenButton options_audio_buttons[7] = {0};
+struct ScreenShape audio_volume_sliders[9] = {0};
+ubyte audio_volume_sliders_draw_state[3] = {0};
 
 struct ScreenBox options_gfx_box = {0};
-struct ScreenButton options_gfx_buttons[16] = {0};
+struct ScreenButton options_gfx_buttons[GFX_TOGGLE_OPTIONS_COUNT * 2 + GFX_MULTIVAL_OPTIONS_COUNT] = {0};
+struct ScreenButton options_gfx_labels[GFX_TOGGLE_OPTIONS_COUNT+GFX_MULTIVAL_OPTIONS_COUNT] = {0};
 
 extern short word_1C4866[3];
 
 extern short textpos[10];
-
-struct ScreenShape audio_volume_sliders[9] = {0};
-ubyte audio_volume_sliders_draw_state[3] = {0};
-
-/** How many pixels the slider is spill outside of its active rect area.
- */
-#define HORIZ_PROSLIDER_MAIN_SPILL_W 6
 
 /******************************************************************************/
 
 ubyte ac_change_panel_permutation(ubyte click);
 ubyte ac_change_trenchcoat_preference(ubyte click);
 ubyte ac_show_netgame_unkn1(struct ScreenBox *box);
+ubyte ac_flashy_draw_purple_label(struct ScreenButton *p_button);
 
 void show_audio_volume_box_func_02(short scr_x, short scr_y, short a3, short a4, TbPixel colour)
 {
@@ -337,17 +340,20 @@ TbBool input_horiz_proslider_right_arrow(struct ScreenShape *p_shp, short *p_val
 void update_options_gfx_state(void)
 {
     const char *text;
-    int i;
+    int i, val;
 
-    i = ingame.PanelPermutation;
-    if (i < 0)
-        text = gui_strings[579 + abs(i)];
+    i = GFX_TOGGLE_OPTIONS_COUNT * 2 + 0;
+    val = ingame.PanelPermutation;
+    if (val < 0)
+        text = gui_strings[579 + abs(val)];
     else
-        text = gui_strings[580 + i];
-    options_gfx_buttons[14].Text = text;
+        text = gui_strings[580 + val];
+    options_gfx_buttons[i].Text = text;
 
-    i = ingame.TrenchcoatPreference;
-    options_gfx_buttons[15].Text = gui_strings[583 + i];
+    i = GFX_TOGGLE_OPTIONS_COUNT * 2 + 1;
+    val = ingame.TrenchcoatPreference;
+    text = gui_strings[583 + val];
+    options_gfx_buttons[i].Text = text;
 }
 
 ubyte show_netgame_unkn1(struct ScreenBox *p_box)
@@ -367,49 +373,24 @@ ubyte show_netgame_unkn1(struct ScreenBox *p_box)
     }
 
     my_set_text_window(p_box->X + 4, p_box->Y + 4, p_box->Width - 8, p_box->Height - 8);
-    lbFontPtr = med_font;
-    tx_height = my_char_height('A');
-    scr_x = 20;
-    scr_y = 20;
 
-    draw_text_purple_list2(scr_x, scr_y, game_option_desc(GOpt_ProjectorSpeed), 0);
-    scr_y += tx_height + 8;
+    for (i = 0; i < GFX_TOGGLE_OPTIONS_COUNT+GFX_MULTIVAL_OPTIONS_COUNT; i++)
+    {
+        ubyte drawn;
+        //drawn = options_gfx_labels[i].DrawFn(&options_gfx_labels[i]); -- incompatible calling convention
+        asm volatile ("call *%2\n"
+            : "=r" (drawn) : "a" (&options_gfx_labels[i]), "g" (options_gfx_labels[i].DrawFn));
+        if (drawn < 2) break;
+    }
 
-    draw_text_purple_list2(scr_x, scr_y, game_option_desc(GOpt_HighResolution), 0);
-    scr_y += tx_height + 8;
-
-    draw_text_purple_list2(scr_x, scr_y, game_option_desc(GOpt_DetailLevel), 0);
-    scr_y += tx_height + 8;
-
-    draw_text_purple_list2(scr_x, scr_y, game_option_desc(GOpt_CameraPerspective), 0);
-    scr_y += tx_height + 8;
-
-    draw_text_purple_list2(scr_x, scr_y, game_option_desc(GOpt_AdvancedLights), 0);
-    scr_y += tx_height + 8;
-
-    draw_text_purple_list2(scr_x, scr_y, game_option_desc(GOpt_BillboardMovies), 0);
-    scr_y += tx_height + 8;
-
-    draw_text_purple_list2(scr_x, scr_y, game_option_desc(GOpt_DeepRadar), 0);
-    scr_y += tx_height + 8;
-    scr_y += tx_height + 8;
-    scr_y += tx_height + 8 + 2;
-
-    lbDisplay.DrawFlags |= 0x0100;
-    draw_text_purple_list2(scr_x, scr_y, game_option_desc(GOpt_PanelPermutation), 0);
-    scr_y += tx_height + 8;
-    scr_y += tx_height + 8;
-    draw_text_purple_list2(scr_x, scr_y, game_option_desc(GOpt_TrenchcoatPreference), 0);
-    lbDisplay.DrawFlags &= ~0x0100;
-
-    for (i = 0; i < 16; i++)
+    for (i = 0; i < GFX_TOGGLE_OPTIONS_COUNT * 2 + GFX_MULTIVAL_OPTIONS_COUNT; i++)
     {
         //options_gfx_buttons[i].DrawFn(&options_gfx_buttons[i]); -- incompatible calling convention
         asm volatile ("call *%1\n"
             : : "a" (&options_gfx_buttons[i]), "g" (options_gfx_buttons[i].DrawFn));
     }
 
-    for (i = 14; i < 16; i++)
+    for (i = GFX_TOGGLE_OPTIONS_COUNT * 2; i < GFX_TOGGLE_OPTIONS_COUNT * 2 + GFX_MULTIVAL_OPTIONS_COUNT; i++)
     {
       scr_x = options_gfx_buttons[i].X - 19;
       scr_y = options_gfx_buttons[i].Y + 1;
@@ -422,10 +403,10 @@ ubyte show_netgame_unkn1(struct ScreenBox *p_box)
               lbDisplay.LeftButton = 0;
               switch (i)
               {
-              case 15:
+              case GFX_TOGGLE_OPTIONS_COUNT * 2 + 1:
                   game_option_dec(GOpt_TrenchcoatPreference);
                   break;
-              case 14:
+              case GFX_TOGGLE_OPTIONS_COUNT * 2 + 0:
                   game_option_dec(GOpt_PanelPermutation);
                   break;
               }
@@ -817,6 +798,61 @@ ubyte change_trenchcoat_preference(ubyte click)
     return 1;
 }
 
+ubyte flashy_draw_purple_label(struct ScreenButton *p_btn)
+{
+    my_set_text_window(p_btn->X + 2, p_btn->Y + 2, p_btn->Width - 18, p_btn->Height - 4);
+    lbFontPtr = p_btn->Font;
+
+    if ((p_btn->Flags & GBxFlg_Unkn0002) != 0)
+    {
+        p_btn->Flags &= ~(GBxFlg_Unkn0080|GBxFlg_Unkn0002|GBxFlg_Unkn0001);
+        p_btn->Timer = -1;
+        if (p_btn->Text != NULL)
+            p_btn->TextFadePos = strlen(p_btn->Text);
+        else
+            p_btn->TextFadePos = -5;
+    }
+    if ((p_btn->Flags & GBxFlg_Unkn0001) != 0)
+    {
+        p_btn->Flags &= ~(GBxFlg_Unkn0080|GBxFlg_Unkn0001);
+        p_btn->Timer = 0;
+        p_btn->Flags |= GBxFlg_Unkn0080;
+    }
+
+    ubyte ret;
+
+    if ((p_btn->Flags & GBxFlg_TextRight) != 0)
+    {
+          lbDisplay.DrawFlags |= Lb_TEXT_HALIGN_RIGHT;
+    }
+    else if ((p_btn->Flags & GBxFlg_TextCenter) != 0)
+    {
+          lbDisplay.DrawFlags |= Lb_TEXT_HALIGN_CENTER;
+    }
+    if (p_btn->DrawTextFn != NULL) {
+        ubyte drawn;
+        //p_btn->DrawTextFn(p_btn); -- incompatible calling convention
+        asm volatile ("call *%2\n"
+          : "=r" (drawn) : "a" (p_btn), "g" (p_btn->DrawTextFn));
+    }
+    ret = (p_btn->Timer > 1) ? 3 : 0;
+    if (p_btn->Timer < 24) {
+        p_btn->Timer += p_btn->DrawSpeed;
+    }
+    lbDisplay.DrawFlags = 0;
+    return ret;
+}
+
+void init_screen_label(struct ScreenButton *p_box, ScrCoord x, ScrCoord y,
+  const char *text, int drawspeed, struct TbSprite *p_font, int textspeed, int flags)
+{
+    init_screen_button(p_box, x, y, text, drawspeed, p_font, textspeed, flags);
+    p_box->Border = 0;
+    p_box->AccelKey = 0;
+    p_box->DrawFn = ac_flashy_draw_purple_label;
+    p_box->DrawTextFn = ac_label_text;
+}
+
 void init_options_audio_screen_boxes(void)
 {
     int i, h;
@@ -973,7 +1009,7 @@ void init_options_audio_screen_boxes(void)
 
 void init_options_gfx_screen_boxes(void)
 {
-    int i;
+    int i, n;
     int val;
     ScrCoord scr_w, scr_h, start_x, start_y;
     short space_w, space_h, border;
@@ -988,48 +1024,99 @@ void init_options_gfx_screen_boxes(void)
     scr_h = 432;
 #endif
 
-    init_screen_box(&options_gfx_box, 213u, 72u, 420u, 354, 6);
+    start_y = 72;
+    init_screen_box(&options_gfx_box, 213u, start_y, 420u, 354, 6);
+    start_y += 22;
+    n = 0;
 
-    init_screen_button(&options_gfx_buttons[0], 456u, 94u,
+    assert(n == 0);
+    init_screen_label(&options_gfx_labels[n],  213 + 20,  start_y,
+      game_option_desc(GOpt_ProjectorSpeed), 6, med_font, 1, 0);
+    init_screen_button(&options_gfx_buttons[0], 213 + 243, start_y,
       gui_strings[465], 6, med2_font, 1, 0);
-    init_screen_button(&options_gfx_buttons[1], 544u, 94u,
+    init_screen_button(&options_gfx_buttons[1], 213 + 331, start_y,
       gui_strings[466], 6, med2_font, 1, 0);
-    init_screen_button(&options_gfx_buttons[2], 456u, 112u,
-      gui_strings[473], 6, med2_font, 1, 0);
-    init_screen_button(&options_gfx_buttons[3], 544u, 112u,
-      gui_strings[474], 6, med2_font, 1, 0);
-    init_screen_button(&options_gfx_buttons[4], 456u, 130u,
-      gui_strings[475], 6, med2_font, 1, 0);
-    init_screen_button(&options_gfx_buttons[5], 544u, 130u,
-      gui_strings[477], 6, med2_font, 1, 0);
-    init_screen_button(&options_gfx_buttons[6], 456u, 148u,
-      gui_strings[478], 6, med2_font, 1, 0);
-    init_screen_button(&options_gfx_buttons[7], 544u, 148u,
-      gui_strings[479], 6, med2_font, 1, 0);
-    init_screen_button(&options_gfx_buttons[8], 456u, 166u,
-      gui_strings[478], 6, med2_font, 1, 0);
-    init_screen_button(&options_gfx_buttons[9], 544u, 166u,
-      gui_strings[479], 6, med2_font, 1, 0);
-    init_screen_button(&options_gfx_buttons[10], 456u, 184u,
-      gui_strings[478], 6, med2_font, 1, 0);
-    init_screen_button(&options_gfx_buttons[11], 544u, 184u,
-      gui_strings[479], 6, med2_font, 1, 0);
-    init_screen_button(&options_gfx_buttons[12], 456u, 202u,
-      gui_strings[478], 6, med2_font, 1, 0);
-    init_screen_button(&options_gfx_buttons[13], 544u, 202u,
-      gui_strings[479], 6, med2_font, 1, 0);
+    n++;
+    start_y += 18;
 
+    assert(n == 1);
+    init_screen_label(&options_gfx_labels[n],  213 + 20,  start_y,
+      game_option_desc(GOpt_HighResolution), 6, med_font, 1, 0);
+    init_screen_button(&options_gfx_buttons[2], 213 + 243, start_y,
+      gui_strings[473], 6, med2_font, 1, 0);
+    init_screen_button(&options_gfx_buttons[3], 213 + 331, start_y,
+      gui_strings[474], 6, med2_font, 1, 0);
+    n++;
+    start_y += 18;
+
+    assert(n == 2);
+    init_screen_label(&options_gfx_labels[n],  213 + 20,  start_y,
+      game_option_desc(GOpt_DetailLevel), 6, med_font, 1, 0);
+    init_screen_button(&options_gfx_buttons[4], 213 + 243, start_y,
+      gui_strings[475], 6, med2_font, 1, 0);
+    init_screen_button(&options_gfx_buttons[5], 213 + 331, start_y,
+      gui_strings[477], 6, med2_font, 1, 0);
+    n++;
+    start_y += 18;
+
+    assert(n == 3);
+    init_screen_label(&options_gfx_labels[n],  213 + 20,  start_y,
+      game_option_desc(GOpt_CameraPerspective), 6, med_font, 1, 0);
+    init_screen_button(&options_gfx_buttons[6], 213 + 243, start_y,
+      gui_strings[478], 6, med2_font, 1, 0);
+    init_screen_button(&options_gfx_buttons[7], 213 + 331, start_y,
+      gui_strings[479], 6, med2_font, 1, 0);
+    n++;
+    start_y += 18;
+
+    assert(n == 4);
+    init_screen_label(&options_gfx_labels[n],  213 + 20,  start_y,
+      game_option_desc(GOpt_AdvancedLights), 6, med_font, 1, 0);
+    init_screen_button(&options_gfx_buttons[8], 213 + 243, start_y,
+      gui_strings[478], 6, med2_font, 1, 0);
+    init_screen_button(&options_gfx_buttons[9], 213 + 331, start_y,
+      gui_strings[479], 6, med2_font, 1, 0);
+    n++;
+    start_y += 18;
+
+    assert(n == 5);
+    init_screen_label(&options_gfx_labels[n],  213 + 20,  start_y,
+      game_option_desc(GOpt_BillboardMovies), 6, med_font, 1, 0);
+    init_screen_button(&options_gfx_buttons[10], 213 + 243, start_y,
+      gui_strings[478], 6, med2_font, 1, 0);
+    init_screen_button(&options_gfx_buttons[11], 213 + 331, start_y,
+      gui_strings[479], 6, med2_font, 1, 0);
+    n++;
+    start_y += 18;
+
+    assert(n == 6);
+    init_screen_label(&options_gfx_labels[n],  213 + 20,  start_y,
+      game_option_desc(GOpt_DeepRadar), 6, med_font, 1, 0);
+    init_screen_button(&options_gfx_buttons[12], 213 + 243, start_y,
+      gui_strings[478], 6, med2_font, 1, 0);
+    init_screen_button(&options_gfx_buttons[13], 213 + 331, start_y,
+      gui_strings[479], 6, med2_font, 1, 0);
+    n++;
+    start_y += 18;
+
+    assert(n == GFX_TOGGLE_OPTIONS_COUNT + 0);
     val = abs(ingame.PanelPermutation);
+    init_screen_label(&options_gfx_labels[n],  213 + 20,  start_y,
+      game_option_desc(GOpt_PanelPermutation), 6, med_font, 1, 0);
     init_screen_button(&options_gfx_buttons[14], 320u, 274u,
         gui_strings[579 + val], 6, med2_font, 1, 0);
+    options_gfx_buttons[14].CallBackFn = ac_change_panel_permutation;
+    options_gfx_buttons[14].Width += 60;
+    n++;
+    start_y += 18;
 
+    assert(n == GFX_TOGGLE_OPTIONS_COUNT + 1);
     val = ingame.TrenchcoatPreference;
+    init_screen_label(&options_gfx_labels[n],  213 + 20,  start_y,
+      game_option_desc(GOpt_TrenchcoatPreference), 6, med_font, 1, 0);
     init_screen_button(&options_gfx_buttons[15], 320u, 310u,
         gui_strings[583 + val], 6, med2_font, 1, 0);
-
-    options_gfx_buttons[14].CallBackFn = ac_change_panel_permutation;
     options_gfx_buttons[15].CallBackFn = ac_change_trenchcoat_preference;
-    options_gfx_buttons[14].Width += 60;
     options_gfx_buttons[15].Width = options_gfx_buttons[14].Width;
 
     val = 0;
@@ -1118,23 +1205,33 @@ void init_options_gfx_screen_boxes(void)
     // There is one box only to position, so space goes into two parts - before and after.
     options_gfx_box.Y = start_y + space_h / 2;
 
-    for (i = 0; i < 14; i+=2)
+    for (i = 0; i < GFX_TOGGLE_OPTIONS_COUNT; i++)
     {
-        options_gfx_buttons[i+0].X = options_gfx_box.X +
+        options_gfx_labels[i].X = options_gfx_box.X + 20;
+        options_gfx_labels[i].Y = options_gfx_box.Y + 22 + i * 18;
+        options_gfx_buttons[i*2+0].X = options_gfx_box.X +
           options_gfx_box.Width - 89 - 88;
-        options_gfx_buttons[i+0].Y = options_gfx_box.Y + 22 + (i/2) * 18;
-        options_gfx_buttons[i+1].X = options_gfx_box.X +
+        options_gfx_buttons[i*2+0].Y = options_gfx_labels[i].Y;
+        options_gfx_buttons[i*2+1].X = options_gfx_box.X +
           options_gfx_box.Width - 89;
-        options_gfx_buttons[i+1].Y = options_gfx_buttons[i+0].Y;
+        options_gfx_buttons[i*2+1].Y = options_gfx_labels[i].Y;
     }
 
-    for (i = 14; i < 16; i++)
+    for (n = 0; n < GFX_MULTIVAL_OPTIONS_COUNT; n++)
     {
+        int k;
+
+        i = GFX_TOGGLE_OPTIONS_COUNT * 2 + n;
+        k = GFX_TOGGLE_OPTIONS_COUNT + n;
         val = (options_gfx_box.Width -
           options_gfx_buttons[i].Width) / 2;
-        options_gfx_buttons[i].X = options_gfx_box.X +
-          val + 9;
+        options_gfx_buttons[i].X = options_gfx_box.X + val + 9;
         options_gfx_buttons[i].Y = options_gfx_buttons[12].Y + (i - 12) * 36;
+
+        val = (options_gfx_box.Width -
+          options_gfx_labels[k].Width) / 2;
+        options_gfx_labels[k].X = options_gfx_box.X + val + 9;
+        options_gfx_labels[k].Y = options_gfx_buttons[i].Y - 18;
     }
 }
 
@@ -1163,11 +1260,14 @@ void reset_options_gfx_boxes_flags(void)
 
     options_gfx_box.Flags = GBxFlg_Unkn0001;
 
-    for (i = 0; i < 14; i++) {
-      options_gfx_buttons[i].Flags = GBxFlg_RadioBtn | GBxFlg_Unkn0001;
+    for (i = 0; i < GFX_TOGGLE_OPTIONS_COUNT+GFX_MULTIVAL_OPTIONS_COUNT; i++) {
+        options_gfx_labels[i].Flags = GBxFlg_Unkn0001;
     }
-    for (; i < 16; i++) {
-      options_gfx_buttons[i].Flags = GBxFlg_Unkn0001;
+    for (i = 0; i < GFX_TOGGLE_OPTIONS_COUNT * 2; i++) {
+        options_gfx_buttons[i].Flags = GBxFlg_RadioBtn | GBxFlg_Unkn0001;
+    }
+    for (; i < GFX_TOGGLE_OPTIONS_COUNT * 2 + GFX_MULTIVAL_OPTIONS_COUNT; i++) {
+        options_gfx_buttons[i].Flags = GBxFlg_Unkn0001;
     }
 }
 
@@ -1192,8 +1292,12 @@ void skip_flashy_draw_gfx_screen_boxes(void)
 
     options_gfx_box.Flags |= GBxFlg_Unkn0002;
 
-    for (i = 0; i != 16; i++)
+    for (i = 0; i < GFX_TOGGLE_OPTIONS_COUNT+GFX_MULTIVAL_OPTIONS_COUNT; i++) {
+        options_gfx_labels[i].Flags |= GBxFlg_Unkn0002;
+    }
+    for (i = 0; i < GFX_TOGGLE_OPTIONS_COUNT * 2 + GFX_MULTIVAL_OPTIONS_COUNT; i++) {
         options_gfx_buttons[i].Flags |= GBxFlg_Unkn0002;
+    }
 }
 
 void mark_gfx_screen_boxes_redraw(void)

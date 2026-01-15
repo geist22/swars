@@ -96,6 +96,62 @@ static int my_font_to_yshift(const struct TbSprite *p_font, char chr)
     }
 }
 
+ubyte my_char_padding_top(uchar c)
+{
+    //TODO depends on open font files, not only on the pointers
+    if (lbFontPtr == small_font || lbFontPtr == small2_font)
+    {
+        return 1;
+    }
+    else if (lbFontPtr == small_med_font)
+    {
+        if (c >= 97 && c <= 122) // small letters
+            return 0;
+        else
+            return 2;
+    }
+    else if (lbFontPtr == med_font || lbFontPtr == med2_font)
+    {
+        return 2;
+    }
+    else if (lbFontPtr == big_font)
+    {
+        return 4;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+ubyte my_char_padding_bottom(uchar c)
+{
+    //TODO depends on open font files, not only on the pointers
+    if (lbFontPtr == small_font || lbFontPtr == small2_font)
+    {
+        return 0;
+    }
+    else if (lbFontPtr == small_med_font)
+    {
+        if (c >= 97 && c <= 122) // small letters
+            return 0;
+        else
+            return 1;
+    }
+    else if (lbFontPtr == med_font || lbFontPtr == med2_font)
+    {
+        return 1;
+    }
+    else if (lbFontPtr == big_font)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
 ubyte my_char_height(uchar c)
 {
 #if 0
@@ -104,33 +160,9 @@ ubyte my_char_height(uchar c)
         : "=r" (ret) : "a" (c));
     return ret;
 #endif
-    if (lbFontPtr == small_font || lbFontPtr == small2_font)
-    {
-        return LbSprFontCharHeight(lbFontPtr, c) - 1;
-    }
-    else if (lbFontPtr == small_med_font)
-    {
-        if (c < 97 || c > 122)
-        {
-          return LbSprFontCharHeight(lbFontPtr, c) - 2;
-        }
-        else
-        {
-          return LbSprFontCharHeight(lbFontPtr, c);
-        }
-    }
-    else if (lbFontPtr == med_font || lbFontPtr == med2_font)
-    {
-        return LbSprFontCharHeight(lbFontPtr, c) - 2;
-    }
-    else if (lbFontPtr == big_font)
-    {
-         return LbSprFontCharHeight(lbFontPtr, c) - 4;
-    }
-    else
-    {
-        return LbSprFontCharHeight(lbFontPtr, c);
-    }
+    return LbSprFontCharHeight(lbFontPtr, c)
+      - my_char_padding_top(c)
+      - my_char_padding_bottom(c);
 }
 
 ubyte my_char_width(uchar c)

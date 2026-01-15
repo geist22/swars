@@ -1484,6 +1484,25 @@ ubyte flashy_draw_purple_button(struct ScreenButton *p_btn)
 #endif
 }
 
+ubyte label_text(struct ScreenButton *p_btn)
+{
+    short text_x, text_y;
+    short text_w, text_h;
+
+    lbFontPtr = p_btn->Font;
+    text_w = my_string_width(p_btn->Text);
+    text_h = my_char_height('A');
+    text_x = p_btn->X + ((p_btn->Width - text_w) >> 1) + 1;
+    text_y = p_btn->Y + ((p_btn->Height - text_h) >> 1);
+    my_set_text_window(text_x, text_y, lbDisplay.GraphicsScreenWidth, text_y + text_h);
+    if (p_btn->Flags & 0x80) {
+        p_btn->TextFadePos = -3;
+        p_btn->Flags &= ~GBxFlg_Unkn0080;
+    }
+    return flashy_draw_text(0, 0, p_btn->Text, p_btn->TextSpeed, p_btn->TextTopLine,
+      &p_btn->TextFadePos, 0);
+}
+
 ubyte button_text(struct ScreenButton *p_btn)
 {
 #if 0
