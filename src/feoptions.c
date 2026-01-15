@@ -18,6 +18,7 @@
 /******************************************************************************/
 #include "feoptions.h"
 
+#include <assert.h>
 #include "bftext.h"
 #include "bfsprite.h"
 #include "bfkeybd.h"
@@ -51,7 +52,7 @@ extern short word_1C4866[3];
 
 extern short textpos[10];
 
-struct ScreenShape audio_volume_sliders[9];
+struct ScreenShape audio_volume_sliders[9] = {0};
 ubyte audio_volume_sliders_draw_state[3] = {0};
 
 /** How many pixels the slider is spill outside of its active rect area.
@@ -538,6 +539,7 @@ ubyte show_audio_volume_box(struct ScreenBox *p_box)
     {
         int i;
 
+        shapes_drawn = 3;
         for (i = 0; i < 3; i++) {
             struct ScreenShape *p_shp;
             ubyte drawn;
@@ -571,7 +573,12 @@ ubyte show_audio_volume_box(struct ScreenBox *p_box)
 
         shapes_drawn = 3;
     }
-    audio_volume_sliders_draw_state[target_var] = (shapes_drawn == 3);
+    else
+    {
+        LOGERR("Unexpected audio_volume_sliders_draw_state=%d", (int)audio_volume_sliders_draw_state[target_var]);
+        shapes_drawn = 3;
+    }
+    audio_volume_sliders_draw_state[target_var] = (shapes_drawn == 3) ? 1 : 0;
 
     lbDisplay.DrawFlags = 0;
     if (!change)
@@ -661,11 +668,18 @@ ubyte show_options_audio_screen(void)
     ubyte drawn;
     int i;
 
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < 3; i++)
     {
+        assert(audio_volume_boxes[i].DrawFn != NULL);
         //drawn = audio_volume_boxes[i].DrawFn(&audio_volume_boxes[i]); -- incompatible calling convention
         asm volatile ("call *%2\n"
             : "=r" (drawn) : "a" (&audio_volume_boxes[i]), "g" (audio_volume_boxes[i].DrawFn));
+    }
+    {
+        assert(audio_tracks_box.DrawFn != NULL);
+        //drawn = audio_tracks_box.DrawFn(&audio_tracks_box); -- incompatible calling convention
+        asm volatile ("call *%2\n"
+            : "=r" (drawn) : "a" (&audio_tracks_box), "g" (audio_tracks_box.DrawFn));
     }
     return drawn;
 }
@@ -1128,9 +1142,10 @@ void reset_options_audio_boxes_flags(void)
 {
     int i;
 
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i < 3; i++) {
         audio_volume_boxes[i].Flags = GBxFlg_Unkn0001;
     }
+    audio_tracks_box.Flags = GBxFlg_Unkn0001;
     for (i = 0; i < 9; i++) {
         audio_volume_sliders[i].Flags = GBxFlg_Unkn0001;
     }
@@ -1160,8 +1175,9 @@ void skip_flashy_draw_audio_screen_boxes(void)
 {
     int i;
 
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < 3; i++)
         audio_volume_boxes[i].Flags |= GBxFlg_Unkn0002;
+    audio_tracks_box.Flags |= GBxFlg_Unkn0002;
     for (i = 0; i < 9; i++)
         audio_volume_sliders[i].Flags |= GBxFlg_Unkn0002;
     for (i = 0; i < 7; i++)
