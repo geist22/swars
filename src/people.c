@@ -3198,21 +3198,21 @@ int mods_affect_hit_points(struct Thing *p_thing, ushort type, int hp)
     case DMG_UZI:
     case DMG_MINIGUN:
     case DMG_LONGRANGE:
-        if (cybmod_skin_level(&p_thing->U.UPerson.UMod) == 1)
+        if (person_mod_skin_level(p_thing) == 1)
             hp >>= 1;
         break;
     case DMG_ELLASER:
     case DMG_BEAM:
     case DMG_LASER:
     case DMG_ELSTRAND:
-        if (cybmod_skin_level(&p_thing->U.UPerson.UMod) == 3)
+        if (person_mod_skin_level(p_thing) == 3)
             hp >>= 1;
         break;
     case DMG_UNKN5:
     case DMG_RAP:
         break;
     case DMG_UNKN9:
-        if (cybmod_skin_level(&p_thing->U.UPerson.UMod) == 1)
+        if (person_mod_skin_level(p_thing) == 1)
             hp = 3 * (hp >> 2);
         break;
     default:

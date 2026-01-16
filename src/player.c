@@ -120,11 +120,11 @@ void player_agents_add_random_epidermises(PlayerInfo *p_player)
         p_person = p_player->MyAgent[plagent];
         if (p_person == NULL)
             continue;
-        if (cybmod_skin_level(&p_person->U.UPerson.UMod) == 0)
+        if (person_mod_skin_level(p_person) == 0)
         {
             ushort rnd;
             rnd = LbRandomAnyShort();
-            set_cybmod_skin_level(&p_person->U.UPerson.UMod, 1 + (rnd & 3));
+            set_person_mod_skin_level(p_person, 1 + (rnd & 3));
         }
     }
 }

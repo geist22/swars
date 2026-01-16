@@ -296,6 +296,17 @@ short person_slot_in_player_dcontrol(ThingIdx person, PlayerIdx plyr);
  */
 ubyte person_sex(struct Thing *p_person);
 
+ubyte person_mod_chest_level(struct Thing *p_person);
+void set_person_mod_chest_level(struct Thing *p_person, ubyte nmod);
+ubyte person_mod_legs_level(struct Thing *p_person);
+void set_person_mod_legs_level(struct Thing *p_person, ubyte nmod);
+ubyte person_mod_arms_level(struct Thing *p_person);
+void set_person_mod_arms_level(struct Thing *p_person, ubyte nmod);
+ubyte person_mod_brain_level(struct Thing *p_person);
+void set_person_mod_brain_level(struct Thing *p_person, ubyte nmod);
+ubyte person_mod_skin_level(struct Thing *p_person);
+void set_person_mod_skin_level(struct Thing *p_person, ubyte nmod);
+
 void set_person_stats_type(struct Thing *p_person, ushort type);
 void set_person_health_shield_type(struct Thing *p_person, ushort stype);
 void set_person_energy_stamina_type(struct Thing *p_person, ushort stype);
