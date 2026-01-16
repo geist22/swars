@@ -19,6 +19,7 @@
 #include "enginfexpl.h"
 
 #include <limits.h>
+#include "bfmemut.h"
 
 #include "display.h"
 #include "enginbckt.h"
@@ -30,10 +31,28 @@
 /******************************************************************************/
 ulong next_ex_face = 1;
 
+extern ushort word_1AA5CC;
+
 void init_free_explode_faces(void)
 {
+#if 0
     asm volatile ("call ASM_init_free_explode_faces\n"
         :  :  : "eax" );
+#else
+    int i;
+
+    LbMemorySet(ex_faces, 0, sizeof(ex_faces));
+    word_1AA5CC = 1;
+    for (i = 1; i < EXPLODE_FACES_COUNT - 1; i++)
+    {
+        ex_faces[i].Timer = 0;
+        ex_faces[i].Flags = i + 1;
+    }
+    ex_faces[i].Timer = 0;
+    ex_faces[i].Flags = 0;
+
+    dont_bother_with_explode_faces = 1;
+#endif
 }
 
 void animate_explode(void)
