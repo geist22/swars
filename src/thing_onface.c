@@ -22,6 +22,7 @@
 #include "bfscreen.h"
 #include "poly.h"
 
+#include "bigmap.h"
 #include "enginpriobjs.h"
 #include "enginsngobjs.h"
 #include "game.h"
@@ -196,8 +197,8 @@ void check_mouse_over_face(struct PolyPoint *p_pt1, struct PolyPoint *p_pt2,
         ms_cor_z += (((map_dist_z1 * factorA) >> 16) >> 16);
         ms_cor_z += (((map_dist_z2 * factorB) >> 16) >> 16);
 
-        prc_x = ms_cor_x << 8;
-        prc_z = ms_cor_z << 8;
+        prc_x = MAPCOORD_TO_PRCCOORD(ms_cor_x, 0);
+        prc_z = MAPCOORD_TO_PRCCOORD(ms_cor_z, 0);
         switch (type)
         {
         case 1:
