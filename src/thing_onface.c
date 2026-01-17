@@ -37,6 +37,27 @@ extern struct Thing thing_on_face;
 
 /******************************************************************************/
 
+/**
+ * Multiplication with shift and special quirks.
+ *
+ * Fills lower bits with sign, but that's not all - results are quite unique.
+ * Decompiler generates the following pseudo-C for it:
+ *    HIWORD(tmp) = (ar1 * ar2) >> 16;
+ *    LOWORD(tmp) = (ar1 * ar2) >> 32;
+ *    ret = bw_rotl32(tmp, 16);
+ * Needs testing whether something similar can really represent this ic C.
+ */
+s32 mul_shift16_sign_pad_lo(s32 ar1, s32 ar2)
+{
+    s32 ret;
+    asm volatile (
+      "imul   %%edx\n"
+      "mov    %%dx,%%ax\n"
+      "rol    $0x10,%%eax\n"
+        : "=r" (ret) : "a" (ar1), "d" (ar2));
+    return ret;
+}
+
 ubyte check_big_point_triangle(int x, int y, int ux, int uy, int vx, int vy, int wx, int wy)
 {
     ubyte ret;
@@ -172,30 +193,37 @@ void check_mouse_over_face(struct PolyPoint *p_pt1, struct PolyPoint *p_pt2,
     map_dist_x2 = (p_point2->X - p_point3->X) << 16;
     map_dist_z2 = (p_point2->Z - p_point3->Z) << 16;
 
-    m1 = (scr_dist_y2 * scr_dist_x3) >> 16;
-    m2 = (scr_dist_x2 * scr_dist_y3) >> 16;
-    m3 = (scr_dist_x1 * scr_dist_y2) >> 16;
-    m4 = (scr_dist_y1 * scr_dist_x2) >> 16;
+    m1 = mul_shift16_sign_pad_lo(scr_dist_y2, scr_dist_x3);
+    m2 = mul_shift16_sign_pad_lo(scr_dist_x2, scr_dist_y3);
+    m3 = mul_shift16_sign_pad_lo(scr_dist_x1, scr_dist_y2);
+    m4 = mul_shift16_sign_pad_lo(scr_dist_y1, scr_dist_x2);
     factorA = ((m1 - (s64)m2) << 16) / (m3 - m4);
 
-    m1 = (scr_dist_x1 * scr_dist_y3) >> 16;
-    m2 = (scr_dist_y1 * scr_dist_x3) >> 16;
-    m3 = (scr_dist_x1 * scr_dist_y2) >> 16;
-    m4 = (scr_dist_y1 * scr_dist_x2) >> 16;
+    m1 = mul_shift16_sign_pad_lo(scr_dist_x1, scr_dist_y3);
+    m2 = mul_shift16_sign_pad_lo(scr_dist_y1, scr_dist_x3);
+    m3 = mul_shift16_sign_pad_lo(scr_dist_x1, scr_dist_y2);
+    m4 = mul_shift16_sign_pad_lo(scr_dist_y1, scr_dist_x2);
     factorB = ((m1 - (s64)m2) << 16) / (m3 - m4);
 
-    if ((factorA > 0 && factorA <= 0x10000) && (factorB > 0 && factorB <= 0x10000) && (factorA + factorB) <= 0x20000 )
+    if ((factorA <= 0 || factorA > 0x10000)) {
+        return;
+    }
+    if ((factorB <= 0 || factorB > 0x10000)) {
+        return;
+    }
+
+    if ((factorA + factorB) <= 0x20000)
     {
         int prc_x, prc_z;
         int ms_cor_x, ms_cor_z;
 
         ms_cor_x = p_sobj->MapX + p_point3->X;
-        ms_cor_x += (((map_dist_x1 * factorA) >> 16) >> 16);
-        ms_cor_x += (((map_dist_x2 * factorB) >> 16) >> 16);
+        ms_cor_x += mul_shift16_sign_pad_lo(map_dist_x1, factorA) >> 16;
+        ms_cor_x += mul_shift16_sign_pad_lo(map_dist_x2, factorB) >> 16;
 
         ms_cor_z = p_sobj->MapZ + p_point3->Z;
-        ms_cor_z += (((map_dist_z1 * factorA) >> 16) >> 16);
-        ms_cor_z += (((map_dist_z2 * factorB) >> 16) >> 16);
+        ms_cor_z += mul_shift16_sign_pad_lo(map_dist_z1, factorA) >> 16;
+        ms_cor_z += mul_shift16_sign_pad_lo(map_dist_z2, factorB) >> 16;
 
         prc_x = MAPCOORD_TO_PRCCOORD(ms_cor_x, 0);
         prc_z = MAPCOORD_TO_PRCCOORD(ms_cor_z, 0);
