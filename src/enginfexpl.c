@@ -103,6 +103,14 @@ static void explode_face_delete(int exface)
     word_1AA5CC = exface;
 }
 
+static void set_explode_face_rotate_angle(ushort angX, ushort angY)
+{
+    dword_1AA5D8 = lbSinTable[(angX) & LbFPMath_AngleMask];
+    dword_1AA5DC = lbSinTable[(angX + LbFPMath_PI/2) & LbFPMath_AngleMask];
+    dword_1AA5E0 = lbSinTable[(angY) & LbFPMath_AngleMask];
+    dword_1AA5E4 = lbSinTable[(angY + LbFPMath_PI/2) & LbFPMath_AngleMask];
+}
+
 static void explode_face_point_rotate(short *p_cor_x, short *p_cor_y, short *p_cor_z)
 {
     int dist;
@@ -123,10 +131,7 @@ static void animate_explode_face1_tri(int exface)
 
     p_exface = &ex_faces[exface];
 
-    dword_1AA5D8 = lbSinTable[4 * ((2 * exface) & 0xF) + 40];
-    dword_1AA5DC = lbSinTable[4 * ((2 * exface) & 0xF) + 40 + 512];
-    dword_1AA5E0 = lbSinTable[4 * (exface & 7) + 20];
-    dword_1AA5E4 = lbSinTable[4 * (exface & 7) + 20 + 512];
+    set_explode_face_rotate_angle(4 * ((2 * exface) & 0xF) + 40, 4 * (exface & 7) + 20);
     p_exface->Timer--;
     if (p_exface->Timer == 0)
     {
@@ -168,10 +173,7 @@ static void animate_explode_face1_quad(int exface)
 
     p_exface = &ex_faces[exface];
 
-    dword_1AA5D8 = lbSinTable[4 * ((2 * exface) & 0xF) + 40];
-    dword_1AA5DC = lbSinTable[4 * ((2 * exface) & 0xF) + 40 + 512];
-    dword_1AA5E0 = lbSinTable[4 * (exface & 7) + 20];
-    dword_1AA5E4 = lbSinTable[4 * (exface & 7) + 20 + 512];
+    set_explode_face_rotate_angle(4 * ((2 * exface) & 0xF) + 40, 4 * (exface & 7) + 20);
     p_exface->Timer--;
     if (p_exface->Timer == 0)
     {
@@ -643,10 +645,7 @@ static void animate_explode_face5_tri(int exface)
         explode_face_delete(exface);
         return;
     }
-    dword_1AA5D8 = lbSinTable[(p_exface->AngleDX) & 0x7FF];
-    dword_1AA5DC = lbSinTable[(p_exface->AngleDX + 512) & 0x7FF];
-    dword_1AA5E0 = lbSinTable[(p_exface->AngleDY) & 0x7FF];
-    dword_1AA5E4 = lbSinTable[(p_exface->AngleDY + 512) & 0x7FF];
+    set_explode_face_rotate_angle(p_exface->AngleDX, p_exface->AngleDY);
     p_exface->Timer--;
     p_exface->X += 8 * p_exface->DX;
     p_exface->Y += 8 * p_exface->DY;
@@ -688,10 +687,7 @@ static void animate_explode_face5_quad(int exface)
         explode_face_delete(exface);
         return;
     }
-    dword_1AA5D8 = lbSinTable[(p_exface->AngleDX) & 0x7FF];
-    dword_1AA5DC = lbSinTable[(p_exface->AngleDX + 512) & 0x7FF];
-    dword_1AA5E0 = lbSinTable[(p_exface->AngleDY) & 0x7FF];
-    dword_1AA5E4 = lbSinTable[(p_exface->AngleDY + 512) & 0x7FF];
+    set_explode_face_rotate_angle(p_exface->AngleDX, p_exface->AngleDY);
     p_exface->Timer--;
     p_exface->X += 8 * p_exface->DX;
     p_exface->Y += 8 * p_exface->DY;
