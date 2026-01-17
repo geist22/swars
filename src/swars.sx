@@ -64031,7 +64031,7 @@ GLOBAL_FUNC(ASM_explode_thing_building)	/* 0x063F34 */
 		mov    0x48(%esp),%bl
 		mov    EXPORT_SYMBOL(dword_1AA5C4),%eax
 		add    %bl,%bl
-		mov    %bl,redo_scanner(,%eax,4)
+		mov    %bl,EXPORT_SYMBOL(redo_scanner)(,%eax,4)
 		mov    0x44(%esp),%bl
 		add    %bl,%bl
 		mov    %bl,data_1aa3c5(,%eax,4)
@@ -64956,7 +64956,7 @@ GLOBAL_FUNC(ASM_animate_explode)	/* 0x0654C8 */
 		push   %edi
 		push   %ebp
 		sub    $0xa8,%esp
-		mov    data_1aa5e4,%ebp
+		mov    EXPORT_SYMBOL(dword_1AA5E4),%ebp
 		xor    %edx,%edx
 		mov    EXPORT_SYMBOL(dont_bother_with_explode_faces),%ebx
 		mov    %edx,0x60(%esp)
@@ -64972,9 +64972,9 @@ GLOBAL_FUNC(ASM_animate_explode)	/* 0x0654C8 */
 		mov    data_1aa3c7(,%eax,4),%cl
 		mov    data_1aa3c6(,%eax,4),%bl
 		mov    data_1aa3c5(,%eax,4),%dl
-		mov    redo_scanner(,%eax,4),%al
+		mov    EXPORT_SYMBOL(redo_scanner)(,%eax,4),%al
 		and    $0xff,%eax
-		call   SCANNER_fill_in_a_little_bit
+		call   ac_SCANNER_fill_in_a_little_bit
 		mov    EXPORT_SYMBOL(dword_1AA5C8),%edi
 		inc    %edi
 		mov    %edi,%eax
@@ -64996,21 +64996,21 @@ func_6554a:
 		and    $0xf,%eax
 		shl    $0x4,%eax
 		mov    EXPORT_SYMBOL(lbSinTable)+160(%eax),%eax
-		mov    %eax,data_1aa5d8
+		mov    %eax,EXPORT_SYMBOL(dword_1AA5D8)
 		xor    %eax,%eax
 		mov    %di,%ax
 		add    %eax,%eax
 		and    $0xf,%eax
 		shl    $0x4,%eax
 		mov    EXPORT_SYMBOL(lbSinTable)+2208(%eax),%eax
-		mov    %eax,data_1aa5dc
+		mov    %eax,EXPORT_SYMBOL(dword_1AA5DC)
 		mov    %edi,%eax
 		xor    %ah,%ah
 		and    $0x7,%al
 		and    $0xffff,%eax
 		shl    $0x4,%eax
 		mov    EXPORT_SYMBOL(lbSinTable)+80(%eax),%eax
-		mov    %eax,data_1aa5e0
+		mov    %eax,EXPORT_SYMBOL(dword_1AA5E0)
 		mov    %edi,%eax
 		xor    %ah,%ah
 		and    $0x7,%al
@@ -65018,7 +65018,7 @@ func_6554a:
 		shl    $0x4,%ebp
 		mov    EXPORT_SYMBOL(lbSinTable)+2128(%ebp),%ebp
 		mov    %edx,%ebx
-		mov    %ebp,data_1aa5e4
+		mov    %ebp,EXPORT_SYMBOL(dword_1AA5E4)
 		dec    %bx
 		mov    %bx,0x20(%esi)
 		jne    jump_65605
@@ -65097,7 +65097,7 @@ func_6554a:
 		mov    %di,%ax
 		imul   $0x2e,%eax,%eax
 		mov    EXPORT_SYMBOL(word_1AA5CC),%bx
-		mov    %ebp,data_1aa5e4
+		mov    %ebp,EXPORT_SYMBOL(dword_1AA5E4)
 		xor    %esi,%esi
 		mov    %bx,data_18194e(%eax)
 		mov    %di,EXPORT_SYMBOL(word_1AA5CC)
@@ -65159,8 +65159,8 @@ func_6554a:
 		sar    $0x10,%eax
 		mov    0x14(%esp),%edx
 		mov    %eax,0x1c(%esp)
-		imul   data_1aa5dc,%edx
-		mov    data_1aa5d8,%ebx
+		imul   EXPORT_SYMBOL(dword_1AA5DC),%edx
+		mov    EXPORT_SYMBOL(dword_1AA5D8),%ebx
 		mov    0x1c(%esp),%eax
 		imul   %ebx,%eax
 		sub    %eax,%edx
@@ -65169,17 +65169,17 @@ func_6554a:
 		mov    0x14(%esp),%edx
 		imul   %ebx,%edx
 		mov    0x1c(%esp),%eax
-		imul   data_1aa5dc,%eax
+		imul   EXPORT_SYMBOL(dword_1AA5DC),%eax
 		add    %edx,%eax
 		mov    0x18(%esp),%edx
 		imul   %ebp,%edx
-		mov    data_1aa5e0,%ebx
+		mov    EXPORT_SYMBOL(dword_1AA5E0),%ebx
 		sar    $0x10,%eax
 		imul   %eax,%ebx
 		imul   %ebp,%eax
 		sub    %ebx,%edx
 		sar    $0x10,%edx
-		mov    data_1aa5e0,%ecx
+		mov    EXPORT_SYMBOL(dword_1AA5E0),%ecx
 		mov    %edx,0x4(%esp)
 		mov    0x18(%esp),%edx
 		imul   %ecx,%edx
@@ -65200,11 +65200,11 @@ func_6554a:
 		mov    %eax,0x18(%esp)
 		mov    0xe(%esi),%eax
 		sar    $0x10,%eax
-		mov    data_1aa5dc,%edx
+		mov    EXPORT_SYMBOL(dword_1AA5DC),%edx
 		mov    %eax,0x1c(%esp)
 		mov    0x14(%esp),%eax
 		imul   %edx,%eax
-		mov    data_1aa5d8,%ebx
+		mov    EXPORT_SYMBOL(dword_1AA5D8),%ebx
 		mov    0x1c(%esp),%edx
 		imul   %ebx,%edx
 		sub    %edx,%eax
@@ -65213,7 +65213,7 @@ func_6554a:
 		mov    0x14(%esp),%eax
 		imul   %ebx,%eax
 		mov    0x1c(%esp),%edx
-		imul   data_1aa5dc,%edx
+		imul   EXPORT_SYMBOL(dword_1AA5DC),%edx
 		mov    0x18(%esp),%ebx
 		imul   %ebp,%ebx
 		add    %edx,%eax
@@ -65244,11 +65244,11 @@ func_6554a:
 		mov    %eax,0x18(%esp)
 		mov    0x14(%esi),%eax
 		sar    $0x10,%eax
-		mov    data_1aa5dc,%edx
+		mov    EXPORT_SYMBOL(dword_1AA5DC),%edx
 		mov    %eax,0x1c(%esp)
 		mov    0x14(%esp),%eax
 		imul   %edx,%eax
-		mov    data_1aa5d8,%ebx
+		mov    EXPORT_SYMBOL(dword_1AA5D8),%ebx
 		mov    0x1c(%esp),%edx
 		imul   %ebx,%edx
 		sub    %edx,%eax
@@ -65257,7 +65257,7 @@ func_6554a:
 		sar    $0x10,%eax
 		mov    %eax,(%esp)
 		mov    0x1c(%esp),%eax
-		imul   data_1aa5dc,%eax
+		imul   EXPORT_SYMBOL(dword_1AA5DC),%eax
 		mov    0x18(%esp),%ebx
 		imul   %ebp,%ebx
 		add    %edx,%eax
@@ -65279,7 +65279,7 @@ func_6554a:
 		mov    0x4(%esp),%eax
 		mov    %ax,0x14(%esi)
 		mov    0x1c(%esp),%eax
-		mov    %ebp,data_1aa5e4
+		mov    %ebp,EXPORT_SYMBOL(dword_1AA5E4)
 		mov    %ax,0x16(%esi)
 		jmp    jump_67486
 
@@ -65293,21 +65293,21 @@ func_65933:
 		and    $0xf,%eax
 		shl    $0x4,%eax
 		mov    EXPORT_SYMBOL(lbSinTable)+160(%eax),%eax
-		mov    %eax,data_1aa5d8
+		mov    %eax,EXPORT_SYMBOL(dword_1AA5D8)
 		xor    %eax,%eax
 		mov    %di,%ax
 		add    %eax,%eax
 		and    $0xf,%eax
 		shl    $0x4,%eax
 		mov    EXPORT_SYMBOL(lbSinTable)+2208(%eax),%eax
-		mov    %eax,data_1aa5dc
+		mov    %eax,EXPORT_SYMBOL(dword_1AA5DC)
 		mov    %edi,%eax
 		xor    %ah,%ah
 		and    $0x7,%al
 		and    $0xffff,%eax
 		shl    $0x4,%eax
 		mov    EXPORT_SYMBOL(lbSinTable)+80(%eax),%eax
-		mov    %eax,data_1aa5e0
+		mov    %eax,EXPORT_SYMBOL(dword_1AA5E0)
 		mov    %edi,%eax
 		xor    %ah,%ah
 		and    $0x7,%al
@@ -65315,7 +65315,7 @@ func_65933:
 		shl    $0x4,%eax
 		mov    EXPORT_SYMBOL(lbSinTable)+2128(%eax),%ebp
 		mov    %edx,%ebx
-		mov    %ebp,data_1aa5e4
+		mov    %ebp,EXPORT_SYMBOL(dword_1AA5E4)
 		dec    %bx
 		mov    %bx,0x20(%esi)
 		jne    jump_659f0
@@ -65366,7 +65366,7 @@ func_65933:
 		imul   $0x2e,%eax,%eax
 		mov    EXPORT_SYMBOL(word_1AA5CC),%dx
 		movw   $0x0,0x20(%esi)
-		mov    %ebp,data_1aa5e4
+		mov    %ebp,EXPORT_SYMBOL(dword_1AA5E4)
 		mov    %dx,data_18194e(%eax)
 		xor    %edx,%edx
 		mov    %di,EXPORT_SYMBOL(word_1AA5CC)
@@ -65386,7 +65386,7 @@ func_65933:
 		mov    %di,%ax
 		imul   $0x2e,%eax,%eax
 		mov    EXPORT_SYMBOL(word_1AA5CC),%bx
-		mov    %ebp,data_1aa5e4
+		mov    %ebp,EXPORT_SYMBOL(dword_1AA5E4)
 		movw   $0x0,0x20(%esi)
 		xor    %esi,%esi
 		mov    %bx,data_18194e(%eax)
@@ -65456,8 +65456,8 @@ func_65933:
 		sar    $0x10,%eax
 		mov    0x14(%esp),%edx
 		mov    %eax,0x1c(%esp)
-		imul   data_1aa5dc,%edx
-		mov    data_1aa5d8,%ebx
+		imul   EXPORT_SYMBOL(dword_1AA5DC),%edx
+		mov    EXPORT_SYMBOL(dword_1AA5D8),%ebx
 		mov    0x1c(%esp),%eax
 		imul   %ebx,%eax
 		sub    %eax,%edx
@@ -65466,15 +65466,15 @@ func_65933:
 		mov    0x14(%esp),%edx
 		imul   %ebx,%edx
 		mov    0x1c(%esp),%eax
-		imul   data_1aa5dc,%eax
+		imul   EXPORT_SYMBOL(dword_1AA5DC),%eax
 		mov    0x18(%esp),%ebx
 		imul   %ebp,%ebx
 		add    %edx,%eax
-		mov    data_1aa5e0,%edx
+		mov    EXPORT_SYMBOL(dword_1AA5E0),%edx
 		sar    $0x10,%eax
 		imul   %eax,%edx
 		imul   %ebp,%eax
-		mov    data_1aa5e0,%ecx
+		mov    EXPORT_SYMBOL(dword_1AA5E0),%ecx
 		sub    %edx,%ebx
 		mov    0x18(%esp),%edx
 		imul   %ecx,%edx
@@ -65499,8 +65499,8 @@ func_65933:
 		sar    $0x10,%eax
 		mov    0x14(%esp),%edx
 		mov    %eax,0x1c(%esp)
-		imul   data_1aa5dc,%edx
-		mov    data_1aa5d8,%ebx
+		imul   EXPORT_SYMBOL(dword_1AA5DC),%edx
+		mov    EXPORT_SYMBOL(dword_1AA5D8),%ebx
 		mov    0x1c(%esp),%eax
 		imul   %ebx,%eax
 		sub    %eax,%edx
@@ -65510,7 +65510,7 @@ func_65933:
 		mov    0x14(%esp),%eax
 		imul   %ebx,%eax
 		mov    0x1c(%esp),%edx
-		imul   data_1aa5dc,%edx
+		imul   EXPORT_SYMBOL(dword_1AA5DC),%edx
 		mov    0x18(%esp),%ebx
 		imul   %ebp,%ebx
 		add    %edx,%eax
@@ -65542,8 +65542,8 @@ func_65933:
 		sar    $0x10,%eax
 		mov    %eax,0x1c(%esp)
 		mov    0x14(%esp),%edx
-		imul   data_1aa5dc,%edx
-		mov    data_1aa5d8,%ebx
+		imul   EXPORT_SYMBOL(dword_1AA5DC),%edx
+		mov    EXPORT_SYMBOL(dword_1AA5D8),%ebx
 		mov    0x1c(%esp),%eax
 		imul   %ebx,%eax
 		sub    %eax,%edx
@@ -65553,7 +65553,7 @@ func_65933:
 		mov    0x14(%esp),%eax
 		imul   %ebx,%eax
 		mov    0x1c(%esp),%edx
-		imul   data_1aa5dc,%edx
+		imul   EXPORT_SYMBOL(dword_1AA5DC),%edx
 		add    %edx,%eax
 		mov    0x18(%esp),%edx
 		imul   %ebp,%edx
@@ -65585,8 +65585,8 @@ func_65933:
 		sar    $0x10,%eax
 		mov    0x14(%esp),%edx
 		mov    %eax,0x1c(%esp)
-		imul   data_1aa5dc,%edx
-		mov    data_1aa5d8,%ebx
+		imul   EXPORT_SYMBOL(dword_1AA5DC),%edx
+		mov    EXPORT_SYMBOL(dword_1AA5D8),%ebx
 		mov    0x1c(%esp),%eax
 		imul   %ebx,%eax
 		sub    %eax,%edx
@@ -65595,7 +65595,7 @@ func_65933:
 		mov    0x14(%esp),%edx
 		imul   %ebx,%edx
 		mov    0x1c(%esp),%eax
-		imul   data_1aa5dc,%eax
+		imul   EXPORT_SYMBOL(dword_1AA5DC),%eax
 		mov    0x18(%esp),%ebx
 		imul   %ebp,%ebx
 		add    %edx,%eax
@@ -65617,7 +65617,7 @@ func_65933:
 		mov    0x4(%esp),%eax
 		mov    %ax,0x1a(%esi)
 		mov    0x1c(%esp),%eax
-		mov    %ebp,data_1aa5e4
+		mov    %ebp,EXPORT_SYMBOL(dword_1AA5E4)
 		mov    %ax,0x1c(%esi)
 		jmp    jump_67486
 
@@ -65806,7 +65806,7 @@ func_65db6:
 		add    %ecx,%edx
 		add    0x38(%esp),%eax
 		sar    %eax
-		mov    data_1aa5e4,%ebp
+		mov    EXPORT_SYMBOL(dword_1AA5E4),%ebp
 		mov    %eax,0x6c(%esp)
 		xor    %eax,%eax
 		sar    %ebx
@@ -65996,7 +65996,7 @@ func_65db6:
 		mov    %di,%ax
 		imul   $0x2e,%eax,%eax
 		mov    EXPORT_SYMBOL(word_1AA5CC),%dx
-		mov    %ebp,data_1aa5e4
+		mov    %ebp,EXPORT_SYMBOL(dword_1AA5E4)
 		movw   $0x0,0x20(%esi)
 		xor    %ecx,%ecx
 		mov    %dx,data_18194e(%eax)
@@ -66177,7 +66177,7 @@ func_663c6:
 		mov    0x28(%esp),%edx
 		add    %ebx,%eax
 		add    0x2c(%esp),%edx
-		mov    minimum_explode_size,%ecx
+		mov    EXPORT_SYMBOL(minimum_explode_size),%ecx
 		add    %edx,%eax
 		cmp    %ecx,%eax
 		jge    jump_66631
@@ -66242,11 +66242,11 @@ func_663c6:
 		cmp    $0x80,%edx
 		jge    jump_67486
 		call   ac_LbRandomAnyShort
-		mov    minimum_explode_and,%ecx
+		mov    EXPORT_SYMBOL(minimum_explode_and),%ecx
 		and    $0xffff,%eax
 		test   %ecx,%eax
 		jne    jump_67486
-		mov    minimum_explode_depth,%ebx
+		mov    EXPORT_SYMBOL(minimum_explode_depth),%ebx
 		mov    %esi,%eax
 		mov    $0x14,%ecx
 		call   ac_quick_crater
@@ -66265,7 +66265,7 @@ func_663c6:
 		mov    0x9c(%esp),%edx
 		mov    0x68(%esp),%eax
 		mov    %esi,%ebx
-		call   FIRE_new
+		call   ac_FIRE_new
 		jmp    jump_67486
 	jump_66631:
 		mov    0x4(%esi),%eax
@@ -66368,7 +66368,7 @@ func_663c6:
 		mov    %eax,0x8c(%esp)
 		xor    %eax,%eax
 		mov    EXPORT_SYMBOL(word_1AA5CC),%ax
-		mov    data_1aa5e4,%ebp
+		mov    EXPORT_SYMBOL(dword_1AA5E4),%ebp
 		test   %eax,%eax
 		je     jump_667a4
 		mov    %eax,%ecx
@@ -66575,7 +66575,7 @@ func_663c6:
 		mov    %di,%ax
 		imul   $0x2e,%eax,%eax
 		mov    EXPORT_SYMBOL(word_1AA5CC),%dx
-		mov    %ebp,data_1aa5e4
+		mov    %ebp,EXPORT_SYMBOL(dword_1AA5E4)
 		movw   $0x0,0x20(%esi)
 		xor    %ecx,%ecx
 		mov    %dx,data_18194e(%eax)
@@ -66754,15 +66754,15 @@ func_66c2c:
 		and    $0x7ff,%eax
 		mov    EXPORT_SYMBOL(lbSinTable)(,%eax,4),%edx
 		mov    EXPORT_SYMBOL(lbSinTable)+2048(,%eax,4),%eax
-		mov    %eax,data_1aa5dc
+		mov    %eax,EXPORT_SYMBOL(dword_1AA5DC)
 		mov    0x29(%esi),%eax
 		sar    $0x18,%eax
 		and    $0x7ff,%eax
-		mov    %edx,data_1aa5d8
+		mov    %edx,EXPORT_SYMBOL(dword_1AA5D8)
 		mov    EXPORT_SYMBOL(lbSinTable)(,%eax,4),%edx
 		mov    EXPORT_SYMBOL(lbSinTable)+2048(,%eax,4),%ebp
 		decw   0x20(%esi)
-		mov    %edx,data_1aa5e0
+		mov    %edx,EXPORT_SYMBOL(dword_1AA5E0)
 		movsbw 0x28(%esi),%ax
 		mov    0x22(%esi),%dx
 		shl    $0x3,%eax
@@ -66790,7 +66790,7 @@ func_66c2c:
 		imul   $0x2e,%eax,%eax
 		mov    EXPORT_SYMBOL(word_1AA5CC),%dx
 		movw   $0x0,0x20(%esi)
-		mov    %ebp,data_1aa5e4
+		mov    %ebp,EXPORT_SYMBOL(dword_1AA5E4)
 		mov    %dx,data_18194e(%eax)
 		xor    %edx,%edx
 		mov    %di,EXPORT_SYMBOL(word_1AA5CC)
@@ -66808,7 +66808,7 @@ func_66c2c:
 		mov    %di,%ax
 		imul   $0x2e,%eax,%eax
 		mov    EXPORT_SYMBOL(word_1AA5CC),%dx
-		mov    %ebp,data_1aa5e4
+		mov    %ebp,EXPORT_SYMBOL(dword_1AA5E4)
 		movw   $0x0,0x20(%esi)
 		xor    %esi,%esi
 		mov    %dx,data_18194e(%eax)
@@ -66845,8 +66845,8 @@ func_66c2c:
 		sar    $0x10,%eax
 		mov    0x14(%esp),%edx
 		mov    %eax,0x1c(%esp)
-		imul   data_1aa5dc,%edx
-		mov    data_1aa5d8,%ebx
+		imul   EXPORT_SYMBOL(dword_1AA5DC),%edx
+		mov    EXPORT_SYMBOL(dword_1AA5D8),%ebx
 		mov    0x1c(%esp),%eax
 		imul   %ebx,%eax
 		sub    %eax,%edx
@@ -66855,17 +66855,17 @@ func_66c2c:
 		mov    0x14(%esp),%edx
 		imul   %ebx,%edx
 		mov    0x1c(%esp),%eax
-		imul   data_1aa5dc,%eax
+		imul   EXPORT_SYMBOL(dword_1AA5DC),%eax
 		add    %edx,%eax
 		mov    0x18(%esp),%edx
 		imul   %ebp,%edx
-		mov    data_1aa5e0,%ebx
+		mov    EXPORT_SYMBOL(dword_1AA5E0),%ebx
 		sar    $0x10,%eax
 		imul   %eax,%ebx
 		imul   %ebp,%eax
 		sub    %ebx,%edx
 		sar    $0x10,%edx
-		mov    data_1aa5e0,%ecx
+		mov    EXPORT_SYMBOL(dword_1AA5E0),%ecx
 		mov    %edx,0x4(%esp)
 		mov    0x18(%esp),%edx
 		imul   %ecx,%edx
@@ -66888,8 +66888,8 @@ func_66c2c:
 		sar    $0x10,%eax
 		mov    0x14(%esp),%edx
 		mov    %eax,0x1c(%esp)
-		imul   data_1aa5dc,%edx
-		mov    data_1aa5d8,%ebx
+		imul   EXPORT_SYMBOL(dword_1AA5DC),%edx
+		mov    EXPORT_SYMBOL(dword_1AA5D8),%ebx
 		mov    0x1c(%esp),%eax
 		imul   %ebx,%eax
 		sub    %eax,%edx
@@ -66898,7 +66898,7 @@ func_66c2c:
 		sar    $0x10,%edx
 		mov    %edx,(%esp)
 		mov    0x1c(%esp),%edx
-		imul   data_1aa5dc,%edx
+		imul   EXPORT_SYMBOL(dword_1AA5DC),%edx
 		mov    0x18(%esp),%ebx
 		imul   %ebp,%ebx
 		add    %edx,%eax
@@ -66930,8 +66930,8 @@ func_66c2c:
 		sar    $0x10,%eax
 		mov    %eax,0x1c(%esp)
 		mov    0x14(%esp),%edx
-		imul   data_1aa5dc,%edx
-		mov    data_1aa5d8,%ebx
+		imul   EXPORT_SYMBOL(dword_1AA5DC),%edx
+		mov    EXPORT_SYMBOL(dword_1AA5D8),%ebx
 		mov    0x1c(%esp),%eax
 		imul   %ebx,%eax
 		sub    %eax,%edx
@@ -66941,7 +66941,7 @@ func_66c2c:
 		mov    0x14(%esp),%eax
 		imul   %ebx,%eax
 		mov    0x1c(%esp),%edx
-		imul   data_1aa5dc,%edx
+		imul   EXPORT_SYMBOL(dword_1AA5DC),%edx
 		add    %edx,%eax
 		mov    0x18(%esp),%edx
 		imul   %ebp,%edx
@@ -66962,7 +66962,7 @@ func_66c2c:
 		mov    0x4(%esp),%eax
 		mov    %ax,0x14(%esi)
 		mov    0x1c(%esp),%eax
-		mov    %ebp,data_1aa5e4
+		mov    %ebp,EXPORT_SYMBOL(dword_1AA5E4)
 		mov    %ax,0x16(%esi)
 		jmp    jump_67486
 
@@ -67033,16 +67033,16 @@ func_6700f:
 		and    $0x7ff,%eax
 		mov    EXPORT_SYMBOL(lbSinTable)(,%eax,4),%edx
 		mov    EXPORT_SYMBOL(lbSinTable)+2048(,%eax,4),%eax
-		mov    %eax,data_1aa5dc
+		mov    %eax,EXPORT_SYMBOL(dword_1AA5DC)
 		mov    0x29(%esi),%eax
 		sar    $0x18,%eax
 		and    $0x7ff,%eax
 		mov    0x20(%esi),%cx
-		mov    %edx,data_1aa5d8
+		mov    %edx,EXPORT_SYMBOL(dword_1AA5D8)
 		mov    EXPORT_SYMBOL(lbSinTable)(,%eax,4),%edx
 		mov    EXPORT_SYMBOL(lbSinTable)+2048(,%eax,4),%ebp
 		movsbw 0x28(%esi),%ax
-		mov    %edx,data_1aa5e0
+		mov    %edx,EXPORT_SYMBOL(dword_1AA5E0)
 		shl    $0x3,%eax
 		mov    0x22(%esi),%dx
 		mov    0x24(%esi),%bx
@@ -67071,7 +67071,7 @@ func_6700f:
 		imul   $0x2e,%eax,%eax
 		mov    EXPORT_SYMBOL(word_1AA5CC),%dx
 		movw   $0x0,0x20(%esi)
-		mov    %ebp,data_1aa5e4
+		mov    %ebp,EXPORT_SYMBOL(dword_1AA5E4)
 		mov    %dx,data_18194e(%eax)
 		xor    %edx,%edx
 		mov    %di,EXPORT_SYMBOL(word_1AA5CC)
@@ -67089,7 +67089,7 @@ func_6700f:
 		mov    %di,%ax
 		imul   $0x2e,%eax,%eax
 		mov    EXPORT_SYMBOL(word_1AA5CC),%dx
-		mov    %ebp,data_1aa5e4
+		mov    %ebp,EXPORT_SYMBOL(dword_1AA5E4)
 		movw   $0x0,0x20(%esi)
 		xor    %esi,%esi
 		mov    %dx,data_18194e(%eax)
@@ -67126,8 +67126,8 @@ func_6700f:
 		sar    $0x10,%eax
 		mov    0x14(%esp),%edx
 		mov    %eax,0x1c(%esp)
-		imul   data_1aa5dc,%edx
-		mov    data_1aa5d8,%ebx
+		imul   EXPORT_SYMBOL(dword_1AA5DC),%edx
+		mov    EXPORT_SYMBOL(dword_1AA5D8),%ebx
 		mov    0x1c(%esp),%eax
 		imul   %ebx,%eax
 		sub    %eax,%edx
@@ -67136,15 +67136,15 @@ func_6700f:
 		mov    0x14(%esp),%edx
 		imul   %ebx,%edx
 		mov    0x1c(%esp),%eax
-		imul   data_1aa5dc,%eax
+		imul   EXPORT_SYMBOL(dword_1AA5DC),%eax
 		mov    0x18(%esp),%ebx
 		imul   %ebp,%ebx
 		add    %edx,%eax
-		mov    data_1aa5e0,%edx
+		mov    EXPORT_SYMBOL(dword_1AA5E0),%edx
 		sar    $0x10,%eax
 		imul   %eax,%edx
 		imul   %ebp,%eax
-		mov    data_1aa5e0,%ecx
+		mov    EXPORT_SYMBOL(dword_1AA5E0),%ecx
 		sub    %edx,%ebx
 		mov    0x18(%esp),%edx
 		imul   %ecx,%edx
@@ -67169,8 +67169,8 @@ func_6700f:
 		sar    $0x10,%eax
 		mov    0x14(%esp),%edx
 		mov    %eax,0x1c(%esp)
-		imul   data_1aa5dc,%edx
-		mov    data_1aa5d8,%ebx
+		imul   EXPORT_SYMBOL(dword_1AA5DC),%edx
+		mov    EXPORT_SYMBOL(dword_1AA5D8),%ebx
 		mov    0x1c(%esp),%eax
 		imul   %ebx,%eax
 		sub    %eax,%edx
@@ -67179,7 +67179,7 @@ func_6700f:
 		mov    0x14(%esp),%edx
 		imul   %ebx,%edx
 		mov    0x1c(%esp),%eax
-		imul   data_1aa5dc,%eax
+		imul   EXPORT_SYMBOL(dword_1AA5DC),%eax
 		mov    0x18(%esp),%ebx
 		imul   %ebp,%ebx
 		add    %edx,%eax
@@ -67211,8 +67211,8 @@ func_6700f:
 		sar    $0x10,%eax
 		mov    %eax,0x1c(%esp)
 		mov    0x14(%esp),%edx
-		imul   data_1aa5dc,%edx
-		mov    data_1aa5d8,%ebx
+		imul   EXPORT_SYMBOL(dword_1AA5DC),%edx
+		mov    EXPORT_SYMBOL(dword_1AA5D8),%ebx
 		mov    0x1c(%esp),%eax
 		imul   %ebx,%eax
 		sub    %eax,%edx
@@ -67221,7 +67221,7 @@ func_6700f:
 		mov    0x14(%esp),%edx
 		imul   %ebx,%edx
 		mov    0x1c(%esp),%eax
-		imul   data_1aa5dc,%eax
+		imul   EXPORT_SYMBOL(dword_1AA5DC),%eax
 		mov    0x18(%esp),%ebx
 		imul   %ebp,%ebx
 		add    %edx,%eax
@@ -67253,8 +67253,8 @@ func_6700f:
 		sar    $0x10,%eax
 		mov    0x14(%esp),%edx
 		mov    %eax,0x1c(%esp)
-		imul   data_1aa5dc,%edx
-		mov    data_1aa5d8,%ebx
+		imul   EXPORT_SYMBOL(dword_1AA5DC),%edx
+		mov    EXPORT_SYMBOL(dword_1AA5D8),%ebx
 		mov    0x1c(%esp),%eax
 		imul   %ebx,%eax
 		sub    %eax,%edx
@@ -67263,7 +67263,7 @@ func_6700f:
 		mov    0x14(%esp),%edx
 		imul   %ebx,%edx
 		mov    0x1c(%esp),%eax
-		imul   data_1aa5dc,%eax
+		imul   EXPORT_SYMBOL(dword_1AA5DC),%eax
 		mov    0x18(%esp),%ebx
 		imul   %ebp,%ebx
 		add    %edx,%eax
@@ -67284,10 +67284,10 @@ func_6700f:
 		mov    0x4(%esp),%eax
 		mov    %ax,0x1a(%esi)
 		mov    0x1c(%esp),%eax
-		mov    %ebp,data_1aa5e4
+		mov    %ebp,EXPORT_SYMBOL(dword_1AA5E4)
 		mov    %ax,0x1c(%esi)
 	jump_67486:
-		mov    data_1aa5e4,%ebp
+		mov    EXPORT_SYMBOL(dword_1AA5E4),%ebp
 		inc    %edi
 	jump_6748d:
 		xor    %eax,%eax
@@ -67298,7 +67298,7 @@ func_6700f:
 		imul   $0x2e,%eax,%eax
 		mov    $EXPORT_SYMBOL(ex_faces),%esi
 		add    %eax,%esi
-		mov    %ebp,data_1aa5e4
+		mov    %ebp,EXPORT_SYMBOL(dword_1AA5E4)
 		mov    0x20(%esi),%dx
 		mov    %eax,0x98(%esp)
 		test   %dx,%dx
@@ -67314,12 +67314,12 @@ func_6700f:
 		jmp    *%cs:vtable_654b0(,%eax,4)
 	jump_674df:
 		mov    0x60(%esp),%esi
-		mov    %ebp,data_1aa5e4
+		mov    %ebp,EXPORT_SYMBOL(dword_1AA5E4)
 		test   %esi,%esi
 		jne    jump_674f7
 		movl   $0x1,EXPORT_SYMBOL(dont_bother_with_explode_faces)
 	jump_674f7:
-		mov    data_1aa5e4,%ebp
+		mov    EXPORT_SYMBOL(dword_1AA5E4),%ebp
 		add    $0xa8,%esp
 		pop    %ebp
 		pop    %edi
@@ -67695,13 +67695,13 @@ func_67864:
 		mov    0x18(%esi),%eax
 		sar    $0x5,%edx
 		movw   $0x425,0x26(%esi)
-		call   FIRE_new
+		call   ac_FIRE_new
 		mov    $0x4,%ecx
 		mov    0x20(%esi),%ebx
 		mov    0x1c(%esi),%edx
 		mov    0x18(%esi),%eax
 		sar    $0x5,%edx
-		call   FIRE_new
+		call   ac_FIRE_new
 		mov    game_full_lights,%edi
 		pop    %edi
 		pop    %esi
@@ -67716,7 +67716,7 @@ func_67864:
 		mov    0x18(%esi),%eax
 		sar    $0x5,%edx
 		movw   $0x428,0x26(%esi)
-		call   FIRE_new
+		call   ac_FIRE_new
 		mov    game_full_lights,%edi
 		pop    %edi
 		pop    %esi
@@ -67731,7 +67731,7 @@ func_67864:
 		mov    0x18(%esi),%eax
 		sar    $0x5,%edx
 		movw   $0x426,0x26(%esi)
-		call   FIRE_new
+		call   ac_FIRE_new
 		mov    game_full_lights,%edi
 		pop    %edi
 		pop    %esi
@@ -67746,7 +67746,7 @@ func_67864:
 		mov    0x18(%esi),%eax
 		sar    $0x5,%edx
 		movw   $0x429,0x26(%esi)
-		call   FIRE_new
+		call   ac_FIRE_new
 		mov    game_full_lights,%edi
 		pop    %edi
 		pop    %esi
@@ -67761,13 +67761,13 @@ func_67864:
 		mov    0x18(%esi),%eax
 		sar    $0x5,%edx
 		movw   $0x427,0x26(%esi)
-		call   FIRE_new
+		call   ac_FIRE_new
 		mov    $0x4,%ecx
 		mov    0x20(%esi),%ebx
 		mov    0x1c(%esi),%edx
 		mov    0x18(%esi),%eax
 		sar    $0x5,%edx
-		call   FIRE_new
+		call   ac_FIRE_new
 		mov    game_full_lights,%edi
 		pop    %edi
 		pop    %esi
@@ -80823,7 +80823,7 @@ GLOBAL_FUNC(ASM_process_my_crashing_vehicle)	/* 0x077E34 */
 		mov    $0x5,%ecx
 		sar    $0x5,%edx
 		mov    0x18(%esi),%eax
-		call   FIRE_new
+		call   ac_FIRE_new
 	jump_78039:
 		xor    %eax,%eax
 		mov    0x8(%esi),%al
@@ -131403,7 +131403,7 @@ GLOBAL_FUNC(ASM_SCANNER_unkn_func_205)	/* 0x0B0908 */
 
 
 /*----------------------------------------------------------------*/
-SCANNER_fill_in_a_little_bit:	/* 0x0B0C30 */
+GLOBAL_FUNC(ASM_SCANNER_fill_in_a_little_bit)	/* 0x0B0C30 */
 /*----------------------------------------------------------------*/
 		push   %esi
 		push   %edi
@@ -131677,11 +131677,11 @@ GLOBAL_FUNC (ASM_bang_set_detail)
 		mov    %ecx,data_1a72f4
 		mov    %esi,data_1a7308
 		mov    %ecx,data_1a7300
-		mov    %ebx,minimum_explode_and
+		mov    %ebx,EXPORT_SYMBOL(minimum_explode_and)
 		mov    $0x457,%edx
 		mov    $0x2,%ecx
-		mov    %edx,minimum_explode_size
-		mov    %ecx,minimum_explode_depth
+		mov    %edx,EXPORT_SYMBOL(minimum_explode_size)
+		mov    %ecx,EXPORT_SYMBOL(minimum_explode_depth)
 		pop    %ebp
 		pop    %edi
 		pop    %esi
@@ -131730,10 +131730,10 @@ GLOBAL_FUNC (ASM_bang_set_detail)
 		mov    %eax,data_1a7308
 		mov    %ebx,data_1a7300
 		mov    %ecx,bangdetailmask
-		mov    %edi,minimum_explode_and
+		mov    %edi,EXPORT_SYMBOL(minimum_explode_and)
 		mov    $0x1bc,%esi
-		mov    %ecx,minimum_explode_depth
-		mov    %esi,minimum_explode_size
+		mov    %ecx,EXPORT_SYMBOL(minimum_explode_depth)
+		mov    %esi,EXPORT_SYMBOL(minimum_explode_size)
 		pop    %ebp
 		pop    %edi
 		pop    %esi
@@ -158450,7 +158450,7 @@ GLOBAL_FUNC(ASM_process_rocket)	/* 0x0C9100 */
 		mov    $0x1,%ecx
 		sar    $0x5,%edx
 		mov    0x18(%esi),%eax
-		call   FIRE_new
+		call   ac_FIRE_new
 	jump_c9923:
 		mov    $0x5f,%ecx
 		mov    0x20(%esi),%ebx
@@ -169795,7 +169795,7 @@ vtable_d6724:
 
 
 /*----------------------------------------------------------------*/
-FIRE_new:	/* 0x0D6738 */
+GLOBAL_FUNC(ASM_FIRE_new)	/* 0x0D6738 */
 /*----------------------------------------------------------------*/
 		push   %esi
 		push   %edi
@@ -182295,7 +182295,7 @@ GLOBAL (unkn01_pos_x)	/* 0x1AA3BC */
 		.long	0x0
 GLOBAL (unkn01_pos_y)	/* 0x1AA3C0 */
 		.long	0x0
-redo_scanner:	/* 0x1AA3C4 */
+GLOBAL (redo_scanner)	/* 0x1AA3C4 */
 		.byte	0x0
 data_1aa3c5:
 		.byte	0x0
@@ -182313,19 +182313,19 @@ data_1aa5d0:
 		.long	0x0
 data_1aa5d4:
 		.long	0x0
-data_1aa5d8:
+GLOBAL (dword_1AA5D8)	/* 0x1AA5D8 */
 		.long	0x0
-data_1aa5dc:
+GLOBAL (dword_1AA5DC)	/* 0x1AA5DC */
 		.long	0x0
-data_1aa5e0:
+GLOBAL (dword_1AA5E0)	/* 0x1AA5E0 */
 		.long	0x0
-data_1aa5e4:
+GLOBAL (dword_1AA5E4)	/* 0x1AA5E4 */
 		.long	0x0
-minimum_explode_size:	/* 0x1AA5E8 */
+GLOBAL (minimum_explode_size)	/* 0x1AA5E8 */
 		.long	0x0
-minimum_explode_and:	/* 0x1AA5EC */
+GLOBAL (minimum_explode_and)	/* 0x1AA5EC */
 		.long	0x0
-minimum_explode_depth:	/* 0x1AA5F0 */
+GLOBAL (minimum_explode_depth)	/* 0x1AA5F0 */
 		.long	0x0
 GLOBAL (word_1AA5F4)	/* 0x1AA5F4 */
 		.short  0x0

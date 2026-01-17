@@ -19,8 +19,12 @@
 #include "enginfexpl.h"
 
 #include <limits.h>
+#include <stdlib.h>
 #include "bfmemut.h"
+#include "bfutility.h"
 
+#include "bigmap.h"
+#include "bmbang.h"
 #include "display.h"
 #include "enginbckt.h"
 #include "engindrwlstm.h"
@@ -29,9 +33,34 @@
 #include "engintrns.h"
 #include "swlog.h"
 /******************************************************************************/
+#pragma pack(1)
+
+struct rectangle { // sizeof=4
+    ubyte x1;
+    ubyte y1;
+    ubyte x2;
+    ubyte y2;
+};
+
+#pragma pack()
+
 ulong next_ex_face = 1;
 
 extern ushort word_1AA5CC;
+extern struct rectangle redo_scanner[128];
+
+extern long minimum_explode_depth;
+extern ulong minimum_explode_and;
+extern long minimum_explode_size;
+
+extern long dword_1AA5C4;
+extern long dword_1AA5C8;
+extern long dword_1AA5D8;
+extern long dword_1AA5DC;
+extern long dword_1AA5E0;
+extern long dword_1AA5E4;
+
+/******************************************************************************/
 
 void init_free_explode_faces(void)
 {
@@ -55,10 +84,759 @@ void init_free_explode_faces(void)
 #endif
 }
 
+void FIRE_new(int x, int y, int z, ubyte type)
+{
+    asm volatile ("call ASM_FIRE_new\n"
+        : : "a" (x), "d" (y), "b" (z), "c" (type));
+}
+
+void SCANNER_fill_in_a_little_bit(int x1, int y1, int x2, int y2)
+{
+    asm volatile ("call ASM_SCANNER_fill_in_a_little_bit\n"
+        : : "a" (x1), "d" (y1), "b" (x2), "c" (y2));
+}
+
 void animate_explode(void)
 {
+#if 0
     asm volatile ("call ASM_animate_explode\n"
         :  :  : "eax" );
+    return;
+#endif
+    struct ExplodeFace3 *p_exface;
+    struct ExplodeFace3 *p_neface;
+    int dist;
+    int rndv;
+    int cor_x, cor_y, cor_z;
+    int dist_x, dist_y, dist_z;
+    int avg_x0, avg_y0, avg_z0;
+    int avg_x1, avg_y1, avg_z1;
+    int avg_x2, avg_y2, avg_z2;
+    int avg_x3, avg_y3, avg_z3;
+    int avg_x4, avg_y4, avg_z4;
+    int i;
+    int remain;
+    int eface;
+
+    if (dont_bother_with_explode_faces)
+    {
+        while (dword_1AA5C8 != dword_1AA5C4)
+        {
+            struct rectangle *p_rct;
+            p_rct = &redo_scanner[dword_1AA5C8];
+            SCANNER_fill_in_a_little_bit(p_rct->x1, p_rct->y1, p_rct->x2, p_rct->y2);
+            dword_1AA5C8 = (dword_1AA5C8 + 1) & 0x7F;
+        }
+        return;
+    }
+
+    remain = 0;
+
+    for (i = 1; i < EXPLODE_FACES_COUNT; i++)
+    {
+        p_exface = &ex_faces[i];
+        if (p_exface->Timer == 0) {
+            continue;
+        }
+        ++remain;
+
+        switch (p_exface->Type)
+        {
+        case 1:
+            dword_1AA5D8 = lbSinTable[4 * ((2 * i) & 0xF) + 40];
+            dword_1AA5DC = lbSinTable[4 * ((2 * i) & 0xF) + 40 + 512];
+            dword_1AA5E0 = lbSinTable[4 * (i & 7) + 20];
+            dword_1AA5E4 = lbSinTable[4 * (i & 7) + 20 + 512];
+            p_exface->Timer--;
+            if (p_exface->Timer == 0)
+            {
+                ex_faces[i].Flags = word_1AA5CC;
+                ex_faces[i].Timer = 0;
+                word_1AA5CC = i;
+                bang_new4(p_exface->X << 8, p_exface->Y, p_exface->Z << 8, 35);
+                break;
+            }
+            p_exface->X += p_exface->DX;
+            p_exface->Y += p_exface->DY;
+            p_exface->Z += p_exface->DZ;
+
+            if (p_exface->X < 0)
+            {
+                ex_faces[i].Flags = word_1AA5CC;
+                ex_faces[i].Timer = 0;
+                word_1AA5CC = i;
+                bang_new4(p_exface->X << 8, p_exface->Y, p_exface->Z << 8, 35);
+                break;
+            }
+            if (p_exface->Y < 0)
+            {
+                ex_faces[i].Flags = word_1AA5CC;
+                ex_faces[i].Timer = 0;
+                word_1AA5CC = i;
+                break;
+            }
+            if (p_exface->DY < 0
+              && ((p_exface->Y + p_exface->Y0 < 0)
+               || (p_exface->Y + p_exface->Y1 < 0)
+               || (p_exface->Y + p_exface->Y2 < 0)))
+            {
+                p_exface->Y -= p_exface->DY;
+                p_exface->DY = -((200 * p_exface->DY) >> 8);
+                if (p_exface->Timer < 0)
+                    p_exface->Timer = 10;
+            }
+            p_exface->DY -= 10;
+
+            cor_x = p_exface->X0;
+            cor_y = p_exface->Y0;
+            cor_z = p_exface->Z0;
+            dist = (dword_1AA5D8 * cor_x + dword_1AA5DC * cor_z) >> 16;
+            p_exface->X0 = (dword_1AA5DC * cor_x - dword_1AA5D8 * cor_z) >> 16;
+            p_exface->Y0 = (dword_1AA5E4 * cor_y - dist * dword_1AA5E0) >> 16;
+            p_exface->Z0 = (dword_1AA5E4 * dist + dword_1AA5E0 * cor_y) >> 16;
+
+            cor_x = p_exface->X1;
+            cor_y = p_exface->Y1;
+            cor_z = p_exface->Z1;
+            dist = (dword_1AA5DC * cor_z + dword_1AA5D8 * cor_x) >> 16;
+            p_exface->X1 = (dword_1AA5DC * cor_x - dword_1AA5D8 * cor_z) >> 16;
+            p_exface->Y1 = (dword_1AA5E4 * cor_y - dist * dword_1AA5E0) >> 16;
+            p_exface->Z1 = (dword_1AA5E0 * cor_y + dword_1AA5E4 * dist) >> 16;
+
+            cor_x = p_exface->X2;
+            cor_y = p_exface->Y2;
+            cor_z = p_exface->Z2;
+            dist = (dword_1AA5D8 * cor_x + dword_1AA5DC * cor_z) >> 16;
+            p_exface->X2 = (dword_1AA5DC * cor_x - dword_1AA5D8 * cor_z) >> 16;
+            p_exface->Y2 = (dword_1AA5E4 * cor_y - dist * dword_1AA5E0) >> 16;
+            p_exface->Z2 = (dword_1AA5E0 * cor_y + dword_1AA5E4 * dist) >> 16;
+            break;
+
+        case 2:
+            dword_1AA5D8 = lbSinTable[4 * ((2 * i) & 0xF) + 40];
+            dword_1AA5DC = lbSinTable[4 * ((2 * i) & 0xF) + 40 + 512];
+            dword_1AA5E0 = lbSinTable[4 * (i & 7) + 20];
+            dword_1AA5E4 = lbSinTable[4 * (i & 7) + 20 + 512];
+            p_exface->Timer--;
+            if (p_exface->Timer == 0)
+            {
+                ex_faces[i].Flags = word_1AA5CC;
+                ex_faces[i].Timer = 0;
+                word_1AA5CC = i;
+                bang_new4(p_exface->X << 8, p_exface->Y, p_exface->Z << 8, 35);
+                break;
+            }
+            p_exface->X += p_exface->DX;
+            p_exface->Y += p_exface->DY;
+            p_exface->Z += p_exface->DZ;
+
+            if (p_exface->X < 0)
+            {
+                p_exface->Timer = 0;
+                ex_faces[i].Flags = word_1AA5CC;
+                ex_faces[i].Timer = 0;
+                word_1AA5CC = i;
+                break;
+            }
+            if (p_exface->Y < 0)
+            {
+                p_exface->Timer = 0;
+                ex_faces[i].Flags = word_1AA5CC;
+                ex_faces[i].Timer = 0;
+                word_1AA5CC = i;
+                break;
+            }
+            if (p_exface->DY < 0
+              && ((p_exface->Y0 + p_exface->Y) < 0
+               || (p_exface->Y1 + p_exface->Y) < 0
+               || (p_exface->Y2 + p_exface->Y) < 0
+               || (p_exface->Y3 + p_exface->Y) < 0))
+            {
+                p_exface->Y -= p_exface->DY;
+                p_exface->DY = -((200 * p_exface->DY) >> 8);
+                if (p_exface->Timer < 0)
+                    p_exface->Timer = 10;
+            }
+            p_exface->DY -= 10;
+
+            cor_x = p_exface->X0;
+            cor_y = p_exface->Y0;
+            cor_z = p_exface->Z0;
+            dist = (dword_1AA5D8 * cor_x + dword_1AA5DC * cor_z) >> 16;
+            p_exface->X0 = (dword_1AA5DC * cor_x - dword_1AA5D8 * cor_z) >> 16;
+            p_exface->Y0 = (dword_1AA5E4 * cor_y - dist * dword_1AA5E0) >> 16;
+            p_exface->Z0 = (dword_1AA5E0 * cor_y + dword_1AA5E4 * dist) >> 16;
+
+            cor_x = p_exface->X1;
+            cor_y = p_exface->Y1;
+            cor_z = p_exface->Z1;
+            dist = (dword_1AA5DC * cor_z + dword_1AA5D8 * cor_x) >> 16;
+            p_exface->X1 = (dword_1AA5DC * cor_x - dword_1AA5D8 * cor_z) >> 16;
+            p_exface->Y1 = (dword_1AA5E4 * cor_y - dist * dword_1AA5E0) >> 16;
+            p_exface->Z1 = (dword_1AA5E0 * cor_y + dword_1AA5E4 * dist) >> 16;
+
+            cor_x = p_exface->X2;
+            cor_y = p_exface->Y2;
+            cor_z = p_exface->Z2;
+            dist = (dword_1AA5DC * cor_z + dword_1AA5D8 * cor_x) >> 16;
+            p_exface->X2 = (dword_1AA5DC * cor_x - dword_1AA5D8 * cor_z) >> 16;
+            p_exface->Y2 = (dword_1AA5E4 * cor_y - dist * dword_1AA5E0) >> 16;
+            p_exface->Z2 = (dword_1AA5E0 * cor_y + dword_1AA5E4 * dist) >> 16;
+
+            cor_x = p_exface->X3;
+            cor_y = p_exface->Y3;
+            cor_z = p_exface->Z3;
+            dist = (dword_1AA5D8 * cor_x + dword_1AA5DC * cor_z) >> 16;
+            p_exface->X3 = (dword_1AA5DC * cor_x - dword_1AA5D8 * cor_z) >> 16;
+            p_exface->Y3 = (dword_1AA5E4 * cor_y - dist * dword_1AA5E0) >> 16;
+            p_exface->Z3 = (dword_1AA5E0 * cor_y + dword_1AA5E4 * dist) >> 16;
+            break;
+
+        case 3:
+            cor_y = alt_at_point(p_exface->X0, p_exface->Z0) >> 5;
+            if (p_exface->Y0 >= cor_y && p_exface->Y1 >= cor_y && p_exface->Y2 >= cor_y)
+            {
+                rndv = LbRandomAnyShort() & 0x3FF;
+                if (p_exface->Y0 > rndv)
+                {
+                    p_exface->X0 -= p_exface->DX;
+                    p_exface->Z0 -= p_exface->DZ;
+                }
+                rndv = LbRandomAnyShort() & 7;
+                p_exface->Y0 += p_exface->DY - rndv;
+
+                rndv = LbRandomAnyShort() & 0x3FF;
+                if (p_exface->Y1 > rndv)
+                {
+                    p_exface->X1 -= p_exface->DX;
+                    p_exface->Z1 -= p_exface->DZ;
+                }
+                rndv = LbRandomAnyShort() & 7;
+                p_exface->Y1 += p_exface->DY - rndv;
+
+                rndv = LbRandomAnyShort() & 0x3FF;
+                if (p_exface->Y2 > rndv)
+                {
+                    p_exface->X2 -= p_exface->DX;
+                    p_exface->Z2 -= p_exface->DZ;
+                }
+                rndv = LbRandomAnyShort() & 0x7;
+                p_exface->Y2 += p_exface->DY - rndv;
+
+                if (p_exface->DY > -120)
+                    p_exface->DY -= 3;
+                break;
+            }
+
+            dist_x = abs(p_exface->X2 - p_exface->X0) + abs(p_exface->X1 - p_exface->X0);
+            dist_y = abs(p_exface->Y2 - p_exface->Y0) + abs(p_exface->Y1 - p_exface->Y0);
+            dist_z = abs(p_exface->Z2 - p_exface->Z0) + abs(p_exface->Z1 - p_exface->Z0);
+            if ((dist_y + dist_x + dist_z) < 400)
+            {
+                p_exface->Timer = 0;
+                ex_faces[i].Flags = word_1AA5CC;
+                ex_faces[i].Timer = 0;
+                word_1AA5CC = i;
+
+                rndv = LbRandomAnyShort() & 0x3F;
+                cor_z = (p_exface->Z0 + rndv - 31) << 8;
+                rndv = LbRandomAnyShort() & 0x3F;
+                cor_x = (p_exface->X0 + rndv - 31) << 8;
+                bang_new4(cor_x, 32 * cor_y, cor_z, 65);
+                break;
+            }
+
+            avg_y0 = (p_exface->Y1 + p_exface->Y0) >> 1;
+            avg_z0 = (p_exface->Z1 + p_exface->Z0) >> 1;
+            avg_x1 = (p_exface->X2 + p_exface->X1) >> 1;
+            avg_y1 = (p_exface->Y2 + p_exface->Y1) >> 1;
+            avg_z1 = (p_exface->Z2 + p_exface->Z1) >> 1;
+            avg_x2 = (p_exface->X2 + p_exface->X0) >> 1;
+            avg_z2 = (p_exface->Z0 + p_exface->Z2) >> 1;
+            avg_x0 = (p_exface->X1 + p_exface->X0) >> 1;
+            avg_y2 = (p_exface->Y0 + p_exface->Y2) >> 1;
+
+            eface = word_1AA5CC;
+            if (eface != 0)
+                word_1AA5CC = ex_faces[word_1AA5CC].Flags;
+            if (eface != 0)
+            {
+                p_neface = &ex_faces[eface];
+                p_neface->Type = 3;
+                p_neface->Texture = p_exface->Texture;
+                p_neface->Flags = p_exface->Flags;
+                p_neface->Col = p_exface->Col;
+                p_neface->X0 = p_exface->X0;
+                p_neface->Y0 = p_exface->Y0;
+                p_neface->Z0 = p_exface->Z0;
+                p_neface->X1 = avg_x0;
+                p_neface->Y2 = avg_y2;
+                p_neface->Y1 = avg_y0;
+                p_neface->Z1 = avg_z0;
+                p_neface->X2 = avg_x2;
+                p_neface->Z2 = avg_z2;
+                p_neface->DX = p_exface->DX;
+                p_neface->DY = p_exface->DY;
+                p_neface->DZ = p_exface->DZ;
+                p_neface->Timer = 1;
+            }
+
+            eface = word_1AA5CC;
+            if (eface != 0)
+                word_1AA5CC = ex_faces[word_1AA5CC].Flags;
+            if (eface != 0)
+            {
+                p_neface = &ex_faces[eface];
+                p_neface->Type = 3;
+                p_neface->Texture = p_exface->Texture;
+                p_neface->Flags = p_exface->Flags;
+                p_neface->Col = p_exface->Col;
+                p_neface->X0 = avg_x0;
+                p_neface->Y0 = avg_y0;
+                p_neface->Z0 = avg_z0;
+                p_neface->X1 = p_exface->X1;
+                p_neface->Y1 = p_exface->Y1;
+                p_neface->Z1 = p_exface->Z1;
+                p_neface->X2 = avg_x1;
+                p_neface->Y2 = avg_y1;
+                p_neface->Z2 = avg_z1;
+                p_neface->DX = p_exface->DX;
+                p_neface->DY = p_exface->DY;
+                p_neface->DZ = p_exface->DZ;
+                p_neface->Timer = 1;
+            }
+
+            eface = word_1AA5CC;
+            if (eface != 0)
+                word_1AA5CC = ex_faces[word_1AA5CC].Flags;
+            if (eface != 0)
+            {
+                p_neface = &ex_faces[eface];
+                p_neface->Type = 3;
+                p_neface->Texture = p_exface->Texture;
+                p_neface->Flags = p_exface->Flags;
+                p_neface->Col = p_exface->Col;
+                p_neface->X0 = avg_x1;
+                p_neface->Y0 = avg_y1;
+                p_neface->Z0 = avg_z1;
+                p_neface->X1 = p_exface->X2;
+                p_neface->Y1 = p_exface->Y2;
+                p_neface->Z1 = p_exface->Z2;
+                p_neface->Y2 = avg_y2;
+                p_neface->X2 = avg_x2;
+                p_neface->Z2 = avg_z2;
+                p_neface->DX = p_exface->DX;
+                p_neface->DY = p_exface->DY;
+                p_neface->DZ = p_exface->DZ;
+                p_neface->Timer = 1;
+            }
+
+            eface = word_1AA5CC;
+            if (eface != 0)
+                word_1AA5CC = ex_faces[word_1AA5CC].Flags;
+            if (eface != 0)
+            {
+                p_neface = &ex_faces[eface];
+                p_neface->Type = 3;
+                p_neface->Texture = p_exface->Texture;
+                p_neface->Flags = p_exface->Flags;
+                p_neface->Col = p_exface->Col;
+                p_neface->X0 = avg_x0;
+                p_neface->Y2 = avg_y2;
+                p_neface->Y0 = avg_y0;
+                p_neface->Z2 = avg_z2;
+                p_neface->Z0 = avg_z0;
+                p_neface->X1 = avg_x1;
+                p_neface->Y1 = avg_y1;
+                p_neface->Z1 = avg_z1;
+                p_neface->X2 = avg_x2;
+                p_neface->DX = p_exface->DX;
+                p_neface->DY = p_exface->DY;
+                p_neface->DZ = p_exface->DZ;
+                p_neface->Timer = 1;
+            }
+            p_exface->Timer = 0;
+            ex_faces[i].Flags = word_1AA5CC;
+            ex_faces[i].Timer = 0;
+            word_1AA5CC = i;
+            break;
+
+        case 4:
+            cor_y = alt_at_point(p_exface->X0, p_exface->Z0) >> 5;
+            if (p_exface->Y0 >= cor_y
+                && p_exface->Y1 >= cor_y
+                && p_exface->Y2 >= cor_y
+                && p_exface->Y3 >= cor_y)
+            {
+                rndv = LbRandomAnyShort() & 0x3FF;
+                if (p_exface->Y0 > rndv)
+                {
+                    p_exface->X0 -= p_exface->DX;
+                    p_exface->Z0 -= p_exface->DZ;
+                }
+                rndv = LbRandomAnyShort() & 7;
+                p_exface->Y0 += p_exface->DY - rndv;
+
+                rndv = LbRandomAnyShort() & 0x3FF;
+                if (p_exface->Y1 > rndv)
+                {
+                    p_exface->X1 -= p_exface->DX;
+                    p_exface->Z1 -= p_exface->DZ;
+                }
+                rndv = LbRandomAnyShort() & 7;
+                p_exface->Y1 += p_exface->DY - rndv;
+
+                rndv = LbRandomAnyShort() & 0x3FF;
+                if (p_exface->Y2 > rndv)
+                {
+                    p_exface->X2 -= p_exface->DX;
+                    p_exface->Z2 -= p_exface->DZ;
+                }
+                rndv = LbRandomAnyShort() & 0x7;
+                p_exface->Y2 += p_exface->DY - rndv;
+
+                rndv = LbRandomAnyShort() & 0x3FF;
+                if (p_exface->Y3 > rndv)
+                {
+                    p_exface->X3 -= p_exface->DX;
+                    p_exface->Z3 -= p_exface->DZ;
+                }
+                rndv = LbRandomAnyShort() & 7;
+                p_exface->Y3 += p_exface->DY - rndv;
+                if (p_exface->DY > -120)
+                    p_exface->DY -= 3;
+                break;
+            }
+            dist_x = abs(p_exface->X2 - p_exface->X0) + abs(p_exface->X1 - p_exface->X0);
+            dist_y = abs(p_exface->Y2 - p_exface->Y0) + abs(p_exface->Y1 - p_exface->Y0);
+            dist_z = abs(p_exface->Z2 - p_exface->Z0) + abs(p_exface->Z1 - p_exface->Z0);
+            if ((dist_y + dist_x + dist_z) < minimum_explode_size)
+            {
+                int base_x, base_z;
+                int tile_x, tile_z;
+
+                p_exface->Timer = 0;
+                ex_faces[i].Flags = word_1AA5CC;
+                ex_faces[i].Timer = 0;
+                word_1AA5CC = i;
+
+                rndv = LbRandomAnyShort() & 0x1FF;
+                base_x = rndv + p_exface->X0 - 255;
+                rndv = LbRandomAnyShort() & 0x1FF;
+                base_z = p_exface->Z0 + rndv - 255;
+                bang_new4(base_x << 8, 32 * cor_y, base_z << 8, 65);
+
+                cor_x = base_x - 16 * p_exface->DX;
+                cor_z = base_z - 16 * p_exface->DZ;
+                tile_x = cor_x >> 8;
+                tile_z = cor_z >> 8;
+                if (tile_x >= 0 && tile_x < 128)
+                {
+                  if (tile_z >= 0 && tile_z < 128)
+                  {
+                      if ((minimum_explode_and & LbRandomAnyShort()) == 0)
+                      {
+                          quick_crater(tile_x, tile_z, minimum_explode_depth);
+                          bang_new4(cor_x << 8, 32 * cor_y, cor_z << 8, 20);
+                          if ((LbRandomAnyShort() & 7) == 0)
+                          {
+                              FIRE_new(cor_x << 8, cor_y, cor_z << 8, 3u);
+                          }
+                      }
+                  }
+                }
+                break;
+            }
+            avg_y0 = (p_exface->Y1 + p_exface->Y0) >> 1;
+            avg_z0 = (p_exface->Z1 + p_exface->Z0) >> 1;
+            avg_x1 = (p_exface->X3 + p_exface->X1) >> 1;
+            avg_y1 = (p_exface->Y3 + p_exface->Y1) >> 1;
+            avg_z1 = (p_exface->Z3 + p_exface->Z1) >> 1;
+            avg_x2 = (p_exface->X2 + p_exface->X3) >> 1;
+            avg_y2 = (p_exface->Y2 + p_exface->Y3) >> 1;
+            avg_z2 = (p_exface->Z2 + p_exface->Z3) >> 1;
+            avg_x3 = (p_exface->X0 + p_exface->X2) >> 1;
+            avg_x0 = (p_exface->X0 + p_exface->X1) >> 1;
+            avg_z3 = (p_exface->Z0 + p_exface->Z2) >> 1;
+            avg_y3 = (p_exface->Y2 + p_exface->Y0) >> 1;
+            avg_x4 = (avg_x3 + avg_x2 + avg_x0 + avg_x1) >> 2;
+            avg_y4 = (avg_y3 + avg_y2 + avg_y1 + avg_y0) >> 2;
+            avg_z4 = (avg_z3 + avg_z2 + avg_z1 + avg_z0) >> 2;
+
+            eface = word_1AA5CC;
+            if (eface != 0)
+                word_1AA5CC = ex_faces[word_1AA5CC].Flags;
+            if (eface != 0)
+            {
+                p_neface = &ex_faces[eface];
+                p_neface->Type = 4;
+                p_neface->Texture = p_exface->Texture;
+                p_neface->Flags = p_exface->Flags;
+                p_neface->Col = p_exface->Col;
+                p_neface->X0 = p_exface->X0;
+                p_neface->Y0 = p_exface->Y0;
+                p_neface->Z0 = p_exface->Z0;
+                p_neface->X1 = avg_x0;
+                p_neface->Y2 = avg_y3;
+                p_neface->Y1 = avg_y0;
+                p_neface->Z1 = avg_z0;
+                p_neface->X2 = avg_x3;
+                p_neface->Z2 = avg_z3;
+                p_neface->X3 = avg_x4;
+                p_neface->Y3 = avg_y4;
+                p_neface->Z3 = avg_z4;
+                p_neface->DX = p_exface->DX;
+                p_neface->DY = p_exface->DY;
+                p_neface->DZ = p_exface->DZ;
+                p_neface->Timer = 1;
+            }
+
+            eface = word_1AA5CC;
+            if (eface != 0)
+                word_1AA5CC = ex_faces[word_1AA5CC].Flags;
+            if (eface != 0)
+            {
+                p_neface = &ex_faces[eface];
+                p_neface->Type = 4;
+                p_neface->Texture = p_exface->Texture;
+                p_neface->Flags = p_exface->Flags;
+                p_neface->Col = p_exface->Col;
+                p_neface->X0 = avg_x0;
+                p_neface->Y0 = avg_y0;
+                p_neface->Z0 = avg_z0;
+                p_neface->X1 = p_exface->X1;
+                p_neface->Y1 = p_exface->Y1;
+                p_neface->Z1 = p_exface->Z1;
+                p_neface->X2 = avg_x4;
+                p_neface->Y2 = avg_y4;
+                p_neface->Z2 = avg_z4;
+                p_neface->X3 = avg_x1;
+                p_neface->Y3 = avg_y1;
+                p_neface->Z3 = avg_z1;
+                p_neface->DX = p_exface->DX;
+                p_neface->DY = p_exface->DY;
+                p_neface->DZ = p_exface->DZ;
+                p_neface->Timer = 1;
+            }
+
+            eface = word_1AA5CC;
+            if (eface != 0)
+            {
+                word_1AA5CC = ex_faces[word_1AA5CC].Flags;
+            }
+            if (eface != 0)
+            {
+                p_neface = &ex_faces[eface];
+                p_neface->Type = 4;
+                p_neface->Texture = p_exface->Texture;
+                p_neface->Flags = p_exface->Flags;
+                p_neface->Col = p_exface->Col;
+                p_neface->X0 = avg_x4;
+                p_neface->Y0 = avg_y4;
+                p_neface->Z0 = avg_z4;
+                p_neface->X1 = avg_x1;
+                p_neface->Y1 = avg_y1;
+                p_neface->Z1 = avg_z1;
+                p_neface->X2 = avg_x2;
+                p_neface->Y2 = avg_y2;
+                p_neface->Z2 = avg_z2;
+                p_neface->X3 = p_exface->X3;
+                p_neface->Y3 = p_exface->Y3;
+                p_neface->Z3 = p_exface->Z3;
+                p_neface->DX = p_exface->DX;
+                p_neface->DY = p_exface->DY;
+                p_neface->DZ = p_exface->DZ;
+                p_neface->Timer = 1;
+            }
+
+            eface = word_1AA5CC;
+            if (eface != 0)
+            {
+                word_1AA5CC = ex_faces[word_1AA5CC].Flags;
+            }
+            if (eface != 0)
+            {
+                p_neface = &ex_faces[eface];
+                p_neface->Type = 4;
+                p_neface->Texture = p_exface->Texture;
+                p_neface->Flags = p_exface->Flags;
+                p_neface->Col = p_exface->Col;
+                p_neface->Y0 = avg_y3;
+                p_neface->X0 = avg_x3;
+                p_neface->Z0 = avg_z3;
+                p_neface->X1 = avg_x4;
+                p_neface->Y1 = avg_y4;
+                p_neface->Z1 = avg_z4;
+                p_neface->X2 = p_exface->X2;
+                p_neface->Y2 = p_exface->Y2;
+                p_neface->Z2 = p_exface->Z2;
+                p_neface->X3 = avg_x2;
+                p_neface->Y3 = avg_y2;
+                p_neface->Z3 = avg_z2;
+                p_neface->DX = p_exface->DX;
+                p_neface->DY = p_exface->DY;
+                p_neface->DZ = p_exface->DZ;
+                p_neface->Timer = 1;
+            }
+            p_exface->Timer = 0;
+            ex_faces[i].Flags = word_1AA5CC;
+            ex_faces[i].Timer = 0;
+            word_1AA5CC = i;
+            break;
+
+        case 5:
+            if (p_exface->Timer > 1000)
+            {
+                p_exface->Timer--;
+                if (p_exface->Timer == 1000 && (LbRandomAnyShort() & 0x1F) == 0)
+                    bang_new4(p_exface->X << 8, p_exface->Y, p_exface->Z << 8, 100);
+                break;
+            }
+            rndv = LbRandomAnyShort() & 0x3FF;
+            if (rndv > p_exface->Timer && (LbRandomAnyShort() & 0xF) == 0)
+            {
+                p_exface->Timer = 0;
+                bang_new4(p_exface->X << 8, p_exface->Y, p_exface->Z << 8, 35);
+                ex_faces[i].Flags = word_1AA5CC;
+                ex_faces[i].Timer = 0;
+                word_1AA5CC = i;
+                break;
+            }
+            dword_1AA5D8 = lbSinTable[(p_exface->AngleDX) & 0x7FF];
+            dword_1AA5DC = lbSinTable[(p_exface->AngleDX + 512) & 0x7FF];
+            dword_1AA5E0 = lbSinTable[(p_exface->AngleDY) & 0x7FF];
+            dword_1AA5E4 = lbSinTable[(p_exface->AngleDY + 512) & 0x7FF];
+            p_exface->Timer--;
+            p_exface->X += 8 * p_exface->DX;
+            p_exface->Y += 8 * p_exface->DY;
+            p_exface->Z += 8 * p_exface->DZ;
+            if (p_exface->X < 0)
+            {
+                p_exface->Timer = 0;
+                ex_faces[i].Flags = word_1AA5CC;
+                ex_faces[i].Timer = 0;
+                word_1AA5CC = i;
+                break;
+            }
+            if (p_exface->Y < 0)
+            {
+                p_exface->Timer = 0;
+                ex_faces[i].Flags = word_1AA5CC;
+                ex_faces[i].Timer = 0;
+                word_1AA5CC = i;
+                break;
+            }
+            p_exface->DX -= (p_exface->DX >> 5);
+            p_exface->DY -= (p_exface->DY >> 5);
+            p_exface->DZ -= (p_exface->DZ >> 5);
+
+            cor_x = p_exface->X0;
+            cor_y = p_exface->Y0;
+            cor_z = p_exface->Z0;
+            dist = (dword_1AA5D8 * cor_x + dword_1AA5DC * cor_z) >> 16;
+            p_exface->X0 = (dword_1AA5DC * cor_x - dword_1AA5D8 * cor_z) >> 16;
+            p_exface->Y0 = (dword_1AA5E4 * cor_y - dist * dword_1AA5E0) >> 16;
+            p_exface->Z0 = (dword_1AA5E0 * cor_y + dword_1AA5E4 * dist) >> 16;
+
+            cor_x = p_exface->X1;
+            cor_y = p_exface->Y1;
+            cor_z = p_exface->Z1;
+            dist = (dword_1AA5DC * cor_z + dword_1AA5D8 * cor_x) >> 16;
+            p_exface->X1 = (dword_1AA5DC * cor_x - dword_1AA5D8 * cor_z) >> 16;
+            p_exface->Y1 = (dword_1AA5E4 * cor_y - dist * dword_1AA5E0) >> 16;
+            p_exface->Z1 = (dword_1AA5E0 * cor_y + dword_1AA5E4 * dist) >> 16;
+
+            cor_x = p_exface->X2;
+            cor_y = p_exface->Y2;
+            cor_z = p_exface->Z2;
+            dist = (dword_1AA5DC * cor_z + dword_1AA5D8 * cor_x) >> 16;
+            p_exface->X2 = (dword_1AA5DC * cor_x - dword_1AA5D8 * cor_z) >> 16;
+            p_exface->Y2 = (dword_1AA5E4 * cor_y - dist * dword_1AA5E0) >> 16;
+            p_exface->Z2 = (dword_1AA5E0 * cor_y + dword_1AA5E4 * dist) >> 16;
+            break;
+
+        case 6:
+            if (p_exface->Timer > 1000)
+            {
+                p_exface->Timer--;
+                if (p_exface->Timer == 1000 && (LbRandomAnyShort() & 0x1F) == 0)
+                    bang_new4(p_exface->X << 8, p_exface->Y, p_exface->Z << 8, 100);
+                break;
+            }
+            rndv = LbRandomAnyShort() & 0x3FF;
+            if (rndv > p_exface->Timer && (LbRandomAnyShort() & 0xF) == 0)
+            {
+                p_exface->Timer = 0;
+                ex_faces[i].Flags = word_1AA5CC;
+                ex_faces[i].Timer = 0;
+                word_1AA5CC = i;
+                bang_new4(p_exface->X << 8, p_exface->Y, p_exface->Z << 8, 35);
+                break;
+            }
+            dword_1AA5D8 = lbSinTable[(p_exface->AngleDX) & 0x7FF];
+            dword_1AA5DC = lbSinTable[(p_exface->AngleDX + 512) & 0x7FF];
+            dword_1AA5E0 = lbSinTable[(p_exface->AngleDY) & 0x7FF];
+            dword_1AA5E4 = lbSinTable[(p_exface->AngleDY + 512) & 0x7FF];
+            p_exface->Timer--;
+            p_exface->X += 8 * p_exface->DX;
+            p_exface->Y += 8 * p_exface->DY;
+            p_exface->Z += 8 * p_exface->DZ;
+            if (p_exface->X < 0)
+            {
+                p_exface->Timer = 0;
+                ex_faces[i].Flags = word_1AA5CC;
+                ex_faces[i].Timer = 0;
+                word_1AA5CC = i;
+                break;
+            }
+            if (p_exface->Y < 0)
+            {
+                p_exface->Timer = 0;
+                ex_faces[i].Flags = word_1AA5CC;
+                ex_faces[i].Timer = 0;
+                word_1AA5CC = i;
+                break;
+            }
+            p_exface->DX -= (p_exface->DX >> 5);
+            p_exface->DY -= (p_exface->DY >> 5);
+            p_exface->DZ -= (p_exface->DZ >> 5);
+
+            cor_x = p_exface->X0;
+            cor_y = p_exface->Y0;
+            cor_z = p_exface->Z0;
+            dist = (dword_1AA5D8 * cor_x + dword_1AA5DC * cor_z) >> 16;
+            p_exface->X0 = (dword_1AA5DC * cor_x - dword_1AA5D8 * cor_z) >> 16;
+            p_exface->Y0 = (dword_1AA5E4 * cor_y - dist * dword_1AA5E0) >> 16;
+            p_exface->Z0 = (dword_1AA5E0 * cor_y + dword_1AA5E4 * dist) >> 16;
+
+            cor_x = p_exface->X1;
+            cor_y = p_exface->Y1;
+            cor_z = p_exface->Z1;
+            dist = (dword_1AA5D8 * cor_x + dword_1AA5DC * cor_z) >> 16;
+            p_exface->X1 = (dword_1AA5DC * cor_x - dword_1AA5D8 * cor_z) >> 16;
+            p_exface->Y1 = (dword_1AA5E4 * cor_y - dist * dword_1AA5E0) >> 16;
+            p_exface->Z1 = (dword_1AA5E0 * cor_y + dword_1AA5E4 * dist) >> 16;
+
+            cor_x = p_exface->X2;
+            cor_y = p_exface->Y2;
+            cor_z = p_exface->Z2;
+            dist = (dword_1AA5D8 * cor_x + dword_1AA5DC * cor_z) >> 16;
+            p_exface->X2 = (dword_1AA5DC * cor_x - dword_1AA5D8 * cor_z) >> 16;
+            p_exface->Y2 = (dword_1AA5E4 * cor_y - dist * dword_1AA5E0) >> 16;
+            p_exface->Z2 = (dword_1AA5E0 * cor_y + dword_1AA5E4 * dist) >> 16;
+
+            cor_x = p_exface->X3;
+            cor_y = p_exface->Y3;
+            cor_z = p_exface->Z3;
+            dist = (dword_1AA5D8 * cor_x + dword_1AA5DC * cor_z) >> 16;
+            p_exface->X3 = (dword_1AA5DC * cor_x - dword_1AA5D8 * cor_z) >> 16;
+            p_exface->Y3 = (dword_1AA5E4 * cor_y - dist * dword_1AA5E0) >> 16;
+            p_exface->Z3 = (dword_1AA5E0 * cor_y + dword_1AA5E4 * dist) >> 16;
+            break;
+        }
+    }
+    if (remain == 0)
+        dont_bother_with_explode_faces = 1;
 }
 
 
