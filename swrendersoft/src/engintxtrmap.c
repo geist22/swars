@@ -22,7 +22,7 @@
 #include "bfmemory.h"
 #include "bfmemut.h"
 
-#include "swlog.h"
+#include "privrdlog.h"
 /******************************************************************************/
 ubyte *vec_tmap[VEC_TMAP_LIMIT] = {0};
 

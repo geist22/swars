@@ -25,7 +25,7 @@
 
 #include "display.h"
 #include "engintrns.h"
-#include "swlog.h"
+#include "privrdlog.h"
 /******************************************************************************/
 
 void draw_text(short x, short y, const char *text, ubyte colour)

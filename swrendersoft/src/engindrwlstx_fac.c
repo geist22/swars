@@ -33,7 +33,7 @@
 #include "engintrns.h"
 #include "engintxtrmap.h"
 #include "render_gpoly.h"
-#include "swlog.h"
+#include "privrdlog.h"
 /******************************************************************************/
 #define SINGLE_TEXTURE_DIM 32
 

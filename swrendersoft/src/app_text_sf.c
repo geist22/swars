@@ -33,7 +33,7 @@
 #include "bfanywnd.h"
 
 #include "display.h"
-#include "swlog.h"
+#include "privrdlog.h"
 
 #if defined(LB_ENABLE_SHADOW_COLOUR)
 #  define SHADOW_COLOUR lbDisplay.ShadowColour

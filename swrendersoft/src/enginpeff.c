@@ -30,7 +30,7 @@
 #include "engintrns.h"
 #include "engintxtrmap.h"
 #include "scanner.h"
-#include "swlog.h"
+#include "privrdlog.h"
 /******************************************************************************/
 ushort gamep_scene_effect_intensity = 1000;
 short gamep_scene_effect_change = -1;

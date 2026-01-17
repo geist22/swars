@@ -21,7 +21,7 @@
 #include "bigmap.h"
 #include "display.h"
 #include "enginzoom.h"
-#include "swlog.h"
+#include "privrdlog.h"
 /******************************************************************************/
 
 short next_floor_tile = 1;

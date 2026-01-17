@@ -22,7 +22,7 @@
 #include "bfmemut.h"
 
 #include "game_speed.h" // required for fifties_per_gameturn
-#include "swlog.h"
+#include "privrdlog.h"
 /******************************************************************************/
 
 ushort next_anim_tmap = 10;
@@ -33,6 +33,8 @@ ushort next_floor_texture = 1;
 
 ushort next_local_mat = 1;
 
+/* Texture walking data.
+ */
 extern ubyte textwalk_data[640];
 
 /******************************************************************************/

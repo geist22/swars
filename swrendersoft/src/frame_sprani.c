@@ -22,7 +22,7 @@
 #include "bfsprite.h"
 #include "bfmemut.h"
 
-#include "swlog.h"
+#include "privrdlog.h"
 
 /******************************************************************************/
 struct Frame *frame2;

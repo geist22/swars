@@ -33,7 +33,7 @@
 #include "enginshrapn.h"
 #include "enginzoom.h"
 #include "frame_sprani.h"
-#include "swlog.h"
+#include "privrdlog.h"
 /******************************************************************************/
 extern long dword_176CE0;
 extern long dword_176CE4;

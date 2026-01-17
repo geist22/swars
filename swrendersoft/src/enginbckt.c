@@ -21,7 +21,7 @@
 #include "engindrwlstx.h"
 #include "enginpeff.h"
 #include "enginprops.h"
-#include "swlog.h"
+#include "privrdlog.h"
 /******************************************************************************/
 #define DEBUG_DRAWLIST_BUCKETS_LIMITS 0
 

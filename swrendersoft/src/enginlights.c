@@ -19,7 +19,7 @@
 #include "enginlights.h"
 
 #include "bfmemut.h"
-#include "swlog.h"
+#include "privrdlog.h"
 /******************************************************************************/
 
 ushort next_quick_light = 1;

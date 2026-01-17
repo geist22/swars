@@ -25,7 +25,7 @@
 #include "poly_gp.h"
 #include "poly_trigp.h"
 
-#include "swlog.h"
+#include "privrdlog.h"
 /******************************************************************************/
 
 long gpoly_pro_enable_mode_ofs;

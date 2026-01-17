@@ -22,7 +22,7 @@
 #include "bfutility.h"
 
 #include "display.h"
-#include "swlog.h"
+#include "privrdlog.h"
 /******************************************************************************/
 
 extern long dword_176D70;

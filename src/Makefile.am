@@ -41,6 +41,7 @@ syndwarsfx_SOURCES = \
 	../swrendersoft/include/frame_sprani.h \
 	../swrendersoft/include/render_gpoly.h \
 	../swrendersoft/src/render_gpoly.c \
+	../swrendersoft/include/privrdlog.h \
 	bflib_joyst.c \
 	bflib_joyst.h \
 	bflib_joyst_s.sx \
