@@ -48,9 +48,11 @@
 #include "game_speed.h"
 #include "game_sprts.h"
 #include "game.h"
+#include "packet.h"
 #include "player.h"
 #include "scandraw.h"
 #include "thing.h"
+#include "thing_onface.h"
 #include "swlog.h"
 #include "vehicle.h"
 /******************************************************************************/
@@ -517,15 +519,6 @@ ubyte check_mouse_over_unkn2(ushort sspr, struct Thing *p_thing)
         return 1;
     }
     return 0;
-}
-
-void check_mouse_over_face(struct PolyPoint *pt1, struct PolyPoint *pt2,
-  struct PolyPoint *pt3, int face, int type)
-{
-    asm volatile (
-      "push %4\n"
-      "call ASM_check_mouse_over_face\n"
-        : : "a" (pt1), "d" (pt2), "b" (pt3), "c" (face), "g" (type));
 }
 
 void draw_sort_sprite1a_callback(ushort sspr)

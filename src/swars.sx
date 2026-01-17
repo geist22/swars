@@ -5853,7 +5853,7 @@ GLOBAL_FUNC(ASM_check_mouse_over_face)	/* 0x24A2C */
 		push   %edx
 		mov    0x4(%edi),%ecx
 		mov    0x60(%esp),%edx
-		call   check_big_point_triangle
+		call   ac_check_big_point_triangle
 		test   %al,%al
 		jne    jump_24d25
 		add    $0x70,%esp
@@ -6283,13 +6283,13 @@ GLOBAL_FUNC(ASM_check_mouse_over_face)	/* 0x24A2C */
 		jmp    jump_25089
 	jump_25061:
 		xor    %ecx,%ecx
-		mov    $data_176d90,%eax
+		mov    $EXPORT_SYMBOL(thing_on_face),%eax
 		mov    %si,%cx
 		call   ac_set_thing_height_on_face_tri
 		jmp    jump_25089
 	jump_25072:
 		xor    %ecx,%ecx
-		mov    $data_176d90,%eax
+		mov    $EXPORT_SYMBOL(thing_on_face),%eax
 		mov    %si,%cx
 		call   ac_set_thing_height_on_face_quad
 		jmp    jump_25089
@@ -54614,7 +54614,7 @@ GLOBAL_FUNC(ASM_check_col_collision)	/* 0x05C888 */
 
 
 /*----------------------------------------------------------------*/
-check_big_point_triangle:	/* 0x05CB0C */
+GLOBAL_FUNC(ASM_check_big_point_triangle)	/* 0x05CB0C */
 /*----------------------------------------------------------------*/
 		push   %esi
 		push   %edi
@@ -181343,7 +181343,7 @@ GLOBAL (dword_176D88)	/* 0x176D88 */
 		.long	0x0
 GLOBAL (dword_176D8C)	/* 0x176D8C */
 		.long	0x0
-data_176d90:
+GLOBAL (thing_on_face)	/* 0x176D90 */
 		.fill   0xa8
 GLOBAL (word_176E38)
 		.short  0x0

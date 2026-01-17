@@ -50,6 +50,7 @@
 #include "sound.h"
 #include "thing.h"
 #include "thing_fire.h"
+#include "thing_onface.h"
 #include "thing_search.h"
 #include "tngcolisn.h"
 #include "vehicle.h"
@@ -4979,43 +4980,6 @@ ubyte create_intelligent_door(short col)
     asm volatile (
       "call ASM_create_intelligent_door\n"
         : "=r" (ret) : "a" (col));
-    return ret;
-}
-
-ushort set_thing_height_on_face_tri(struct Thing *p_thing, int x, int z, short face)
-{
-    ushort ret;
-    asm volatile (
-      "call ASM_set_thing_height_on_face_tri\n"
-        : "=r" (ret) : "a" (p_thing), "d" (x), "b" (z), "c" (face));
-    return ret;
-}
-
-ushort set_thing_height_on_face_quad(struct Thing *p_thing, int x, int z, short face)
-{
-    ushort ret;
-    asm volatile (
-      "call ASM_set_thing_height_on_face_quad\n"
-        : "=r" (ret) : "a" (p_thing), "d" (x), "b" (z), "c" (face));
-    return ret;
-}
-
-ushort set_thing_height_on_face(struct Thing *p_thing, int x, int z, short face)
-{
-    if (face > 0) {
-        return set_thing_height_on_face_tri(p_thing, x, z, face);
-    } else if (face < 0) {
-        return set_thing_height_on_face_quad(p_thing, x, z, -face);
-    }
-    return 0;
-}
-
-short find_and_set_connected_face(struct Thing *p_thing, int x, int z, short face)
-{
-    short ret;
-    asm volatile (
-      "call ASM_find_and_set_connected_face\n"
-        : "=r" (ret) : "a" (p_thing), "d" (x), "b" (z), "c" (face));
     return ret;
 }
 

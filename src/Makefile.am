@@ -245,6 +245,8 @@ syndwarsfx_SOURCES = \
 	thing_fire.h \
 	thing_debug.c \
 	thing_debug_s.sx \
+	thing_onface.h \
+	thing_onface.c \
 	tngcolisn.c \
 	tngcolisn.h \
 	tngobjdrw.c \
