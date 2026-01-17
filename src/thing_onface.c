@@ -19,6 +19,7 @@
 /******************************************************************************/
 #include "thing_onface.h"
 
+#include <assert.h>
 #include "bfscreen.h"
 #include "poly.h"
 
@@ -111,7 +112,7 @@ short find_and_set_connected_face(struct Thing *p_thing, int x, int z, short fac
 void check_mouse_over_face(struct PolyPoint *p_pt1, struct PolyPoint *p_pt2,
   struct PolyPoint *p_pt3, int face, int type)
 {
-#if 1
+#if 0
     asm volatile (
       "push %4\n"
       "call ASM_check_mouse_over_face\n"
