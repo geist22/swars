@@ -190,10 +190,14 @@ void build_person(struct Thing *p_thing)
       frame, p_thing->Radius, bri);
 }
 
+/** Build rendering drawlist items for a rocket.
+ *
+ * Unlike most shots, a rocket is an UObject.
+ */
 void build_rocket(struct Thing *p_thing)
 {
     struct SingleObject *p_sobj;
-    struct M33 *m;
+    struct M33 *p_matx;
     struct M31 vec1, vec2, vec3;
     ushort obj;
     short tng_x, tng_y, tng_z;
@@ -201,28 +205,39 @@ void build_rocket(struct Thing *p_thing)
     get_thing_position_mapcoords(&tng_x, &tng_y, &tng_z, p_thing->ThingOffset);
     build_glare(tng_x, tng_y, tng_z, 64);
 
-    p_thing->U.UObject.MatrixIndex = next_local_mat + 1;
-    m = &local_mats[p_thing->U.UObject.MatrixIndex];
-    m->R[0][2] = -64 * p_thing->VX;
-    m->R[1][2] = -512 * p_thing->VY;
-    m->R[2][2] = -64 * p_thing->VZ;
-    m->R[0][1] = 0;
-    m->R[1][1] = 0x4000;
-    m->R[2][1] = 0;
-    vec2.R[0] = m->R[0][2];
-    vec2.R[1] = m->R[1][2];
-    vec2.R[2] = m->R[2][2];
-    vec1.R[0] = m->R[0][1];
-    vec1.R[1] = m->R[1][1];
-    vec1.R[2] = m->R[2][1];
+    // Use transformation matrix for the rocket only temporarly, while adding
+    // it to drawlist. Since we will not be using the transform matrix
+    // beyond this function, do not mark it as allocated.
+    if (next_local_mat + 1 < LOCAL_MATS_COUNT) {
+        p_thing->U.UObject.MatrixIndex = next_local_mat + 1;
+    } else {
+        LOGWARN("Rocket cannot get temp matrix, next_local_mat=%d", (int)next_local_mat);
+        // Entry 0 should be unused; but its better than just diappearing the rocket
+        p_thing->U.UObject.MatrixIndex = 0;
+    }
+    p_matx = &local_mats[p_thing->U.UObject.MatrixIndex];
+    p_matx->R[0][2] = -64 * p_thing->VX;
+    p_matx->R[1][2] = -512 * p_thing->VY;
+    p_matx->R[2][2] = -64 * p_thing->VZ;
+    p_matx->R[0][1] = 0;
+    p_matx->R[1][1] = 0x4000;
+    p_matx->R[2][1] = 0;
+    vec2.R[0] = p_matx->R[0][2];
+    vec2.R[1] = p_matx->R[1][2];
+    vec2.R[2] = p_matx->R[2][2];
+    vec1.R[0] = p_matx->R[0][1];
+    vec1.R[1] = p_matx->R[1][1];
+    vec1.R[2] = p_matx->R[2][1];
     vec_cross_prod(&vec3, &vec1, &vec2);
-    m->R[0][0] = vec3.R[0] >> 14;
-    m->R[1][0] = vec3.R[1] >> 14;
-    m->R[2][0] = vec3.R[2] >> 14;
-    object_vec_normalisation(m, 0);
+    p_matx->R[0][0] = vec3.R[0] >> 14;
+    p_matx->R[1][0] = vec3.R[1] >> 14;
+    p_matx->R[2][0] = vec3.R[2] >> 14;
+    object_vec_normalisation(p_matx, 0);
 
-    if (ingame.NextRocket >= WEP_ROCKETS_FIRED_LIMIT)
+    if (ingame.NextRocket >= WEP_ROCKETS_FIRED_LIMIT) {
+        LOGWARN("Rockets limit exceeded, next=%d", (int)ingame.NextRocket);
         return;
+    }
 
     obj = ingame.Rocket1[ingame.NextRocket++];
     p_sobj = &game_objects[obj];
