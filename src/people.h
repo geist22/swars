@@ -383,7 +383,11 @@ TbBool person_use_medikit(struct Thing *p_person, PlayerIdx plyr);
 void set_person_persuaded(struct Thing *p_person, struct Thing *p_attacker, ushort energy);
 void person_init_drop(struct Thing *p_person, ThingIdx item);
 void person_init_pickup(struct Thing *p_person, ThingIdx item);
+
+TbBool person_is_in_vehicle(struct Thing *p_person);
+TbBool person_is_standing_on_vehicle(struct Thing *p_person);
 void person_enter_vehicle(struct Thing *p_person, struct Thing *p_vehicle);
+
 void thing_shoot_at_thing(struct Thing *p_thing, short target);
 ubyte person_attempt_to_leave_vehicle(struct Thing *p_thing);
 void thing_shoot_at_point(struct Thing *p_thing, short x, short y, short z, uint fast_flag);

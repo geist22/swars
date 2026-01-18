@@ -1130,7 +1130,7 @@ TbBool can_i_enter_vehicle(struct Thing *p_me, struct Thing *p_vehicle)
     ThingIdx thing;
     ushort tngroup, mygroup;
 
-    if ((p_me->Flag2 & 0x0800) != 0)
+    if ((p_me->Flag2 & TgF2_Unkn0800) != 0)
         return true;
 
     thing = p_vehicle->U.UVehicle.PassengerHead;
@@ -3491,6 +3491,21 @@ void vehicle_passenger_list_remove(struct Thing *p_vehicle, ThingIdx passngr)
         crpassngr = p_pvpassngr->U.UPerson.LinkPassenger;
         k++;
     }
+}
+
+TbBool person_is_in_vehicle(struct Thing *p_person)
+{
+    return ((p_person->Flag & TngF_InVehicle) != 0);
+}
+
+TbBool person_is_standing_on_vehicle(struct Thing *p_person)
+{
+    struct Thing *p_standtng;
+
+    if (p_person->U.UPerson.StandOnThing <= 0)
+        return false;
+    p_standtng = &things[p_person->U.UPerson.StandOnThing];
+    return (p_standtng->Type == TT_VEHICLE);
 }
 
 void person_enter_vehicle(struct Thing *p_person, struct Thing *p_vehicle)

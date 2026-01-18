@@ -1359,7 +1359,6 @@ static void scanner_coords_line_clip(int *x1, int *y1, int *x2, int *y2, int sc_
 
 static void map_coords_to_scanner(int *sc_x, int *sc_y, int sh_x, int sh_y, int bsh_x, int bsh_y)
 {
-    u32 tmp;
     int rval_xy, rval_yy, rval_yx, rval_xx, rval_div;
     long prec_x, prec_y;
 

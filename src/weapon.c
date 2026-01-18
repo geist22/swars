@@ -1445,10 +1445,6 @@ void init_rocket(struct Thing *p_owner)
         // Transfer the flag from owner to shot
         p_shot->Flag |= TngF_Unkn20000000;
         p_owner->Flag &= ~TngF_Unkn20000000;
-
-        pos_dt_x = p_shot->U.UEffect.GotoX - PRCCOORD_TO_MAPCOORD(prc_beg_x);
-        pos_dt_y = p_shot->U.UEffect.GotoY - PRCCOORD_TO_MAPCOORD(prc_beg_y);
-        pos_dt_z = p_shot->U.UEffect.GotoZ - PRCCOORD_TO_MAPCOORD(prc_beg_z);
     }
     else if (p_target != NULL)
     {
@@ -1456,19 +1452,18 @@ void init_rocket(struct Thing *p_owner)
         p_shot->U.UEffect.GotoY = PRCCOORD_TO_MAPCOORD(p_target->Y) + 20;
         p_shot->U.UEffect.GotoZ = PRCCOORD_TO_MAPCOORD(p_target->Z);
         p_shot->PTarget = p_target;
-
-        pos_dt_x = PRCCOORD_TO_MAPCOORD(p_target->X - prc_beg_x);
-        pos_dt_y = PRCCOORD_TO_MAPCOORD(p_target->Y - prc_beg_y) + 20;
-        pos_dt_z = PRCCOORD_TO_MAPCOORD(p_target->Z - prc_beg_z);
     }
     else
     {
         int angl;
         angl = p_owner->U.UPerson.Angle;
-        pos_dt_x = angle_direction[angl].DiX;
-        pos_dt_y = 0;
-        pos_dt_z = angle_direction[angl].DiY;
+        p_shot->U.UEffect.GotoX = PRCCOORD_TO_MAPCOORD(prc_beg_x) + angle_direction[angl].DiX;
+        p_shot->U.UEffect.GotoY = PRCCOORD_TO_MAPCOORD(prc_beg_y);
+        p_shot->U.UEffect.GotoZ = PRCCOORD_TO_MAPCOORD(prc_beg_z) + angle_direction[angl].DiY;
     }
+    pos_dt_x = p_shot->U.UEffect.GotoX - PRCCOORD_TO_MAPCOORD(prc_beg_x);
+    pos_dt_y = p_shot->U.UEffect.GotoY - PRCCOORD_TO_MAPCOORD(prc_beg_y);
+    pos_dt_z = p_shot->U.UEffect.GotoZ - PRCCOORD_TO_MAPCOORD(prc_beg_z);
 
     dist = LbSqrL(pos_dt_z * pos_dt_z + pos_dt_x * pos_dt_x + pos_dt_y * pos_dt_y);
     if (dist == 0)

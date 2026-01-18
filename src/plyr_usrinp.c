@@ -35,6 +35,7 @@
 #include "sound.h"
 #include "swlog.h"
 #include "thing.h"
+#include "vehicle.h"
 /******************************************************************************/
 
 short get_agent_move_direction_delta_x(const struct SpecialUserInput *p_usrinp)
@@ -327,12 +328,28 @@ ubyte input_user_control_agent(ushort plyr, short dmuser)
     if ((p_player->UserInput[dmuser].Bits & SpUIn_DoTrigger) != 0)
     {
         p_dcthing = &things[dcthing];
-        if ((p_dcthing->Flag & TngF_InVehicle) == 0)
+        if (!person_is_in_vehicle(p_dcthing) && person_is_standing_on_vehicle(p_dcthing))
         {
-            p_player->UserInput[dmuser].Bits &= ~SpUIn_DoTrigger;
-            loc_build_packet(p_pckt, PAct_ENTER_VEHICLE, dcthing,
-              p_dcthing->U.UPerson.Vehicle, 0, 0);
-            return GINPUT_PACKET;
+            struct Thing *p_vehicle;
+            p_vehicle = &things[p_dcthing->U.UPerson.StandOnThing];
+
+            if (can_i_enter_vehicle(p_dcthing, p_vehicle))
+            {
+                p_player->UserInput[dmuser].Bits &= ~SpUIn_DoTrigger;
+                loc_build_packet(p_pckt, PAct_ENTER_VEHICLE, dcthing,
+                  p_dcthing->U.UPerson.StandOnThing, 0, 0);
+                return GINPUT_PACKET;
+            }
+            else
+            {
+                if ((debug_log_things & 0x01) != 0) {
+                    LOGSYNC("Person %s %d state %d.%d cannot enter %s %d state %d.%d",
+                      person_type_name(p_dcthing->SubType), (int)p_dcthing->ThingOffset,
+                      p_dcthing->State, p_dcthing->SubState,
+                      vehicle_type_name(p_vehicle->SubType), (int)p_vehicle->ThingOffset,
+                      p_vehicle->State, p_vehicle->SubState);
+                }
+            }
         }
     }
 
