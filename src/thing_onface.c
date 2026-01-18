@@ -20,6 +20,7 @@
 #include "thing_onface.h"
 
 #include <assert.h>
+#include "bfendian.h"
 #include "bfscreen.h"
 #include "poly.h"
 
@@ -50,6 +51,12 @@ extern struct Thing thing_on_face;
  */
 s32 mul_shift16_sign_pad_lo(s32 ar1, s32 ar2)
 {
+#if 0
+    s32 tmp;
+    tmp = (ar1 * ar2) & 0xFFFF0000;
+    tmp |= ((ar1 * (s64)ar2) >> 32) & 0xFFFF;
+    return bw_rotl32(tmp, 16);
+#else
     s32 ret;
     asm volatile (
       "imul   %%edx\n"
@@ -57,6 +64,7 @@ s32 mul_shift16_sign_pad_lo(s32 ar1, s32 ar2)
       "rol    $0x10,%%eax\n"
         : "=r" (ret) : "a" (ar1), "d" (ar2));
     return ret;
+#endif
 }
 
 ubyte check_big_point_triangle(int x, int y, int ux, int uy, int vx, int vy, int wx, int wy)

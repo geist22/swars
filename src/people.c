@@ -18,6 +18,7 @@
 /******************************************************************************/
 #include "people.h"
 
+#include <assert.h>
 #include "bfmath.h"
 #include "bfmemory.h"
 #include "bffile.h"
@@ -5044,9 +5045,15 @@ void adjust_speed_for_colvect_collision(int *p_speed_x, int *p_speed_z, struct T
     ldt = (s64)(p_colvect->Z2 - p_colvect->Z1) << 24;
     norm_z = ldt / dvdr;
 
+#if 0 // original implementation
+    dist_sum = mul_shift16_sign_pad_lo(*p_speed_x, norm_x) + mul_shift16_sign_pad_lo(*p_speed_z, norm_z);
+    speed_x2 = mul_shift16_sign_pad_lo(norm_x, dist_sum);
+    speed_z2 = mul_shift16_sign_pad_lo(norm_z, dist_sum);
+#else // easier to read version, seem to produce the same results as original implementation? verify!
     dist_sum = (((*p_speed_x) * norm_x) >> 16) + (((*p_speed_z) * norm_z) >> 16);
     speed_x2 = (norm_x * dist_sum) >> 16;
     speed_z2 = (norm_z * dist_sum) >> 16;
+#endif
 
     chk_z = (p_person->Z - (p_colvect->Z1 << 8)) * norm_x;
     chk_x = (p_person->X - (p_colvect->X1 << 8)) * norm_z;

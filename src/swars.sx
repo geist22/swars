@@ -56392,6 +56392,7 @@ GLOBAL_FUNC(ASM_get_height_on_face_quad)	/* 0x05DF9C */
 
 
 /*----------------------------------------------------------------*/
+/* TODO when rewriting, use mul_shift16_sign_pad_lo() */
 set_thing_height_on_face_tri64:	/* 0x05E20C */
 /*----------------------------------------------------------------*/
 		push   %esi
@@ -56715,6 +56716,7 @@ GLOBAL_FUNC(ASM_set_thing_height_on_face_tri)	/* 0x05E4FC */
 
 
 /*----------------------------------------------------------------*/
+/* TODO when rewriting, use mul_shift16_sign_pad_lo() */
 set_thing_height_on_face_quad64:	/* 0x05E544 */
 /*----------------------------------------------------------------*/
 		push   %esi
@@ -127210,17 +127212,17 @@ GLOBAL_FUNC(ASM_SCANNER_find_position)	/* 0x0AD188 */
 		ret
 
 vtable_ad2c8:
-		.long   func_ad485
-		.long   func_ad60c
-		.long   func_ad669
-		.long   func_ad914
-		.long   func_ad6ca
-		.long   func_ad788
-		.long   func_ad7e9
-		.long   func_ad914
-		.long   func_ad727
-		.long   func_ad84e
-		.long   func_ad8b0
+		.long   case_ad485
+		.long   case_ad60c
+		.long   case_ad669
+		.long   case_ad914
+		.long   case_ad6ca
+		.long   case_ad788
+		.long   case_ad7e9
+		.long   case_ad914
+		.long   case_ad727
+		.long   case_ad84e
+		.long   case_ad8b0
 
 /*----------------------------------------------------------------*/
 GLOBAL_FUNC(ASM_SCANNER_unkn_func_196)	/* 0xAD2F4 */
@@ -127333,12 +127335,10 @@ GLOBAL_FUNC(ASM_SCANNER_unkn_func_196)	/* 0xAD2F4 */
 		mov    EXPORT_SYMBOL(SCANNER_screenptr),%eax
 		xor    %edx,%edx
 		call   ac_memset
-		jmp    func_ad914
+		jmp    case_ad914
 
 
-/*----------------------------------------------------------------*/
-func_ad485:
-/*----------------------------------------------------------------*/
+  case_ad485:
 		mov    $0xfffffff,%esi
 		mov    %esi,%edi
 		test   $0x1,%cl
@@ -127462,18 +127462,16 @@ func_ad485:
 		popa
 	jump_ad5e7:
 		test   %ebx,%ebx
-		jle    func_ad914
+		jle    case_ad914
 		cmp    $0x190,%ebx
-		jg     func_ad914
+		jg     case_ad914
 		mov    EXPORT_SYMBOL(SCANNER_screenptr),%eax
 		xor    %edx,%edx
 		call   ac_memset
-		jmp    func_ad914
+		jmp    case_ad914
 
 
-/*----------------------------------------------------------------*/
-func_ad60c:
-/*----------------------------------------------------------------*/
+  case_ad60c:
 		pusha
 		mov    EXPORT_SYMBOL(SCANNER_dw06C),%ecx
 		mov    EXPORT_SYMBOL(SCANNER_dw070),%ebp
@@ -127498,12 +127496,10 @@ func_ad60c:
 		popa
 		cmp    EXPORT_SYMBOL(SCANNER_dw074),%ebx
 		jne    jump_ad9eb
-		jmp    func_ad914
+		jmp    case_ad914
 
 
-/*----------------------------------------------------------------*/
-func_ad669:
-/*----------------------------------------------------------------*/
+  case_ad669:
 		pusha
 		mov    EXPORT_SYMBOL(SCANNER_dw06C),%ecx
 		mov    EXPORT_SYMBOL(SCANNER_dw070),%ebp
@@ -127528,12 +127524,10 @@ func_ad669:
 		popa
 		cmp    EXPORT_SYMBOL(SCANNER_dw074),%ebx
 		jne    jump_ad9eb
-		jmp    func_ad914
+		jmp    case_ad914
 
 
-/*----------------------------------------------------------------*/
-func_ad6ca:
-/*----------------------------------------------------------------*/
+  case_ad6ca:
 		pusha
 		mov    EXPORT_SYMBOL(SCANNER_dw06C),%ecx
 		mov    EXPORT_SYMBOL(SCANNER_dw070),%ebp
@@ -127558,12 +127552,10 @@ func_ad6ca:
 		popa
 		cmp    EXPORT_SYMBOL(SCANNER_dw074),%ebx
 		jne    jump_ad9eb
-		jmp    func_ad914
+		jmp    case_ad914
 
 
-/*----------------------------------------------------------------*/
-func_ad727:
-/*----------------------------------------------------------------*/
+  case_ad727:
 		pusha
 		mov    EXPORT_SYMBOL(SCANNER_dw06C),%ecx
 		mov    EXPORT_SYMBOL(SCANNER_dw070),%ebp
@@ -127588,12 +127580,10 @@ func_ad727:
 		popa
 		cmp    EXPORT_SYMBOL(SCANNER_dw074),%ebx
 		jne    jump_ad9eb
-		jmp    func_ad914
+		jmp    case_ad914
 
 
-/*----------------------------------------------------------------*/
-func_ad788:
-/*----------------------------------------------------------------*/
+  case_ad788:
 		pusha
 		mov    EXPORT_SYMBOL(SCANNER_dw06C),%ecx
 		mov    EXPORT_SYMBOL(SCANNER_dw070),%ebp
@@ -127620,12 +127610,10 @@ func_ad788:
 		popa
 		cmp    EXPORT_SYMBOL(SCANNER_dw074),%ebx
 		jne    jump_ad9eb
-		jmp    func_ad914
+		jmp    case_ad914
 
 
-/*----------------------------------------------------------------*/
-func_ad7e9:
-/*----------------------------------------------------------------*/
+  case_ad7e9:
 		pusha
 		mov    EXPORT_SYMBOL(SCANNER_dw06C),%ecx
 		mov    EXPORT_SYMBOL(SCANNER_dw070),%ebp
@@ -127652,12 +127640,10 @@ func_ad7e9:
 		popa
 		cmp    EXPORT_SYMBOL(SCANNER_dw074),%ebx
 		jne    jump_ad9eb
-		jmp    func_ad914
+		jmp    case_ad914
 
 
-/*----------------------------------------------------------------*/
-func_ad84e:
-/*----------------------------------------------------------------*/
+  case_ad84e:
 		pusha
 		mov    EXPORT_SYMBOL(SCANNER_dw06C),%ecx
 		mov    EXPORT_SYMBOL(SCANNER_dw070),%ebp
@@ -127684,12 +127670,10 @@ func_ad84e:
 		popa
 		cmp    EXPORT_SYMBOL(SCANNER_dw074),%ebx
 		jne    jump_ad9eb
-		jmp    func_ad914
+		jmp    case_ad914
 
 
-/*----------------------------------------------------------------*/
-func_ad8b0:
-/*----------------------------------------------------------------*/
+  case_ad8b0:
 		pusha
 		mov    EXPORT_SYMBOL(SCANNER_dw06C),%ecx
 		mov    EXPORT_SYMBOL(SCANNER_dw070),%ebp
@@ -127718,9 +127702,7 @@ func_ad8b0:
 		jne    jump_ad9eb
 
 
-/*----------------------------------------------------------------*/
-func_ad914:
-/*----------------------------------------------------------------*/
+  case_ad914:
 		mov    0x40(%esp),%edi
 		mov    0x28(%esp),%eax
 		mov    0x3c(%esp),%edx
@@ -127849,10 +127831,10 @@ func_ad914:
 		mov    %edi,EXPORT_SYMBOL(SCANNER_screenptr)
 		mov    %esi,EXPORT_SYMBOL(SCANNER_dw074)
 		popa
-		jmp    func_ad914
+		jmp    case_ad914
 	jump_adac7:
 		cmp    $0xa,%eax
-		ja     func_ad914
+		ja     case_ad914
 		jmp    *%cs:vtable_ad2c8(,%eax,4)
 	jump_adad8:
 		mov    EXPORT_SYMBOL(lbDisplay)+40,%eax # lbDisplay.GraphicsWindowX

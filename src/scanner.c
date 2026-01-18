@@ -164,6 +164,7 @@ void SCANNER_init_arcpoint(int x1, int z1, int x2, int z2, int c)
 
 void SCANNER_unkn_func_196(void)
 {
+    // TODO when rewriting, use mul_shift16_sign_pad_lo()
     asm volatile ("call ASM_SCANNER_unkn_func_196\n"
         :  :  : "eax" );
 }
