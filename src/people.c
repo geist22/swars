@@ -1130,8 +1130,10 @@ TbBool can_i_enter_vehicle(struct Thing *p_me, struct Thing *p_vehicle)
     ThingIdx thing;
     ushort tngroup, mygroup;
 
-    if ((p_me->Flag2 & TgF2_Unkn0800) != 0)
+    if (person_is_executing_commands(p_me->ThingOffset)) {
+        // if person is executing commands, allow unconditionally
         return true;
+    }
 
     thing = p_vehicle->U.UVehicle.PassengerHead;
     if (thing <= 0)

@@ -766,8 +766,7 @@ void process_packet(PlayerIdx plyr, struct Packet *p_pckt, ushort i)
             result = PARes_EBADSLT;
             break;
         }
-        // Enforcing this flag makes it unneccessary to check can_i_enter_vehicle()
-        if ((p_thing->Flag2 & TgF2_Unkn0800) != 0) {
+        if (person_is_executing_commands(p_thing->ThingOffset)) {
             result = PARes_TNGBADST;
             break;
         }
@@ -784,7 +783,7 @@ void process_packet(PlayerIdx plyr, struct Packet *p_pckt, ushort i)
             result = PARes_EBADSLT;
             break;
         }
-        if ((p_thing->Flag2 & TgF2_Unkn0800) != 0) {
+        if (person_is_executing_commands(p_thing->ThingOffset)) {
             result = PARes_TNGBADST;
             break;
         }
@@ -1023,7 +1022,7 @@ void process_packet(PlayerIdx plyr, struct Packet *p_pckt, ushort i)
             result = PARes_EBADSLT;
             break;
         }
-        if ((p_thing->Flag2 & TgF2_Unkn0800) != 0) {
+        if (person_is_executing_commands(p_thing->ThingOffset)) {
             result = PARes_TNGBADST;
             break;
         }
@@ -1178,7 +1177,7 @@ void process_packet(PlayerIdx plyr, struct Packet *p_pckt, ushort i)
             result = PARes_EBADSLT;
             break;
         }
-        if ((p_thing->Flag2 & TgF2_Unkn0800) != 0) {
+        if (person_is_executing_commands(p_thing->ThingOffset)) {
             result = PARes_TNGBADST;
             break;
         }
@@ -1347,7 +1346,7 @@ void process_packet(PlayerIdx plyr, struct Packet *p_pckt, ushort i)
             result = PARes_EBADSLT;
             break;
         }
-        if ((p_thing->Flag2 & TgF2_Unkn0800) != 0) {
+        if (person_is_executing_commands(p_thing->ThingOffset)) {
             result = PARes_TNGBADST;
             break;
         }
