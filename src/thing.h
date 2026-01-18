@@ -339,7 +339,7 @@ struct TngUEffect
   ubyte Group;
   ubyte EffectiveGroup;
   short Object;
-  short WeaponTurn;
+  short MatrixIndex;
   ubyte NumbObjects;
   ubyte Angle;
   short PassengerHead;
@@ -352,7 +352,7 @@ struct TngUEffect
   short GotoY;
   short GotoZ;
   short VehicleAcceleration;
-  short MatrixIndex;
+  short MatrixIndexBAD;
   ushort LeisurePlace;
 };
 

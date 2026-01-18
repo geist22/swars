@@ -1814,6 +1814,7 @@ void init_v_rocket(struct Thing *p_owner)
     p_shot->Frame = 0;
     p_shot->StartFrame = 0;
     p_shot->U.UEffect.Object = 0;
+    p_shot->U.UEffect.MatrixIndex = 0;
     p_shot->Parent = 0;
     p_shot->Owner = p_owner->ThingOffset;
     p_shot->Flag |= 0x0004;

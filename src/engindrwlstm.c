@@ -1173,6 +1173,7 @@ int draw_rot_object(int offset_x, int offset_y, int offset_z, struct SingleObjec
     // This function can be called for objects, vehicles, mguns and rockets
     assert(offsetof(struct Thing, U.UObject.MatrixIndex) == offsetof(struct Thing, U.UVehicle.MatrixIndex));
     assert(offsetof(struct Thing, U.UObject.MatrixIndex) == offsetof(struct Thing, U.UMGun.MatrixIndex));
+    assert(offsetof(struct Thing, U.UObject.MatrixIndex) == offsetof(struct Thing, U.UEffect.MatrixIndex));
     // Matrix for anything other than rocket shall respect the allocated entries counter
     assert((p_thing->U.UObject.MatrixIndex < next_local_mat) || (p_thing->Type == TT_ROCKET));
 
