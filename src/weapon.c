@@ -1078,6 +1078,13 @@ void elec_hit_building(int x, int y, int z, short col)
         : : "a" (x), "d" (y), "b" (z), "c" (col));
 }
 
+void init_shoot_recoil(struct Thing *p_person, short vx, short vy, short vz)
+{
+#if 1
+    asm volatile ("call ASM_init_shoot_recoil\n"
+        : : "a" (p_person), "d" (vx), "b" (vy), "c" (vz));
+#endif
+}
 
 void init_laser(struct Thing *p_owner, ushort start_age)
 {
@@ -1388,8 +1395,118 @@ short init_taser(struct Thing *p_person)
 
 void init_rocket(struct Thing *p_owner)
 {
+#if 0
     asm volatile ("call ASM_init_rocket\n"
         : : "a" (p_owner));
+#endif
+    struct Thing *p_shot;
+    struct Thing *p_target;
+    int prc_beg_x, prc_beg_z, prc_beg_y;
+    int pos_dt_x, pos_dt_z, pos_dt_y;
+    int dist;
+    ThingIdx shottng;
+
+    LOGSYNC("Shot fired by %s offs=%d", thing_type_name(p_owner->Type, p_owner->SubType),
+      (int)p_owner->ThingOffset);
+
+    shottng = get_new_thing();
+    if (shottng == 0) {
+        LOGERR("No thing slots for a shot");
+        return;
+    }
+
+    p_shot = &things[shottng];
+
+    {
+        int angl;
+        angl = p_owner->U.UPerson.Angle;
+        prc_beg_x = p_owner->X + 32 * angle_direction[angl].DiX;
+        prc_beg_y = p_owner->Y + MAPCOORD_TO_PRCCOORD(20,0);
+        prc_beg_z = p_owner->Z + 32 * angle_direction[angl].DiY;
+    }
+
+    if ((PRCCOORD_TO_MAPCOORD(prc_beg_x) >= MAP_COORD_WIDTH) ||
+      (PRCCOORD_TO_MAPCOORD(prc_beg_z) >= MAP_COORD_HEIGHT))
+    {
+        remove_thing(shottng);
+        LOGERR("Start position beyond map area");
+        return;
+    }
+
+    p_shot->PTarget = NULL;
+    p_shot->Flag = 0;
+    p_shot->U.UEffect.Angle = p_owner->U.UPerson.Angle;
+    p_target = p_owner->PTarget;
+    if ((p_owner->Flag & TngF_Unkn20000000) != 0)
+    {
+        p_shot->U.UEffect.GotoX = p_owner->VX;
+        p_shot->U.UEffect.GotoY = p_owner->VY + 20;
+        p_shot->U.UEffect.GotoZ = p_owner->VZ;
+        // Transfer the flag from owner to shot
+        p_shot->Flag |= TngF_Unkn20000000;
+        p_owner->Flag &= ~TngF_Unkn20000000;
+
+        pos_dt_x = p_shot->U.UEffect.GotoX - PRCCOORD_TO_MAPCOORD(prc_beg_x);
+        pos_dt_y = p_shot->U.UEffect.GotoY - PRCCOORD_TO_MAPCOORD(prc_beg_y);
+        pos_dt_z = p_shot->U.UEffect.GotoZ - PRCCOORD_TO_MAPCOORD(prc_beg_z);
+    }
+    else if (p_target != NULL)
+    {
+        p_shot->U.UEffect.GotoX = PRCCOORD_TO_MAPCOORD(p_target->X);
+        p_shot->U.UEffect.GotoY = PRCCOORD_TO_MAPCOORD(p_target->Y) + 20;
+        p_shot->U.UEffect.GotoZ = PRCCOORD_TO_MAPCOORD(p_target->Z);
+        p_shot->PTarget = p_target;
+
+        pos_dt_x = PRCCOORD_TO_MAPCOORD(p_target->X - prc_beg_x);
+        pos_dt_y = PRCCOORD_TO_MAPCOORD(p_target->Y - prc_beg_y) + 20;
+        pos_dt_z = PRCCOORD_TO_MAPCOORD(p_target->Z - prc_beg_z);
+    }
+    else
+    {
+        int angl;
+        angl = p_owner->U.UPerson.Angle;
+        pos_dt_x = angle_direction[angl].DiX;
+        pos_dt_y = 0;
+        pos_dt_z = angle_direction[angl].DiY;
+    }
+
+    dist = LbSqrL(pos_dt_z * pos_dt_z + pos_dt_x * pos_dt_x + pos_dt_y * pos_dt_y);
+    if (dist == 0)
+        dist = 1;
+
+    p_shot->VX = (SHOT_ROCKED_SPEED * pos_dt_x) / dist;
+    p_shot->VY = (SHOT_ROCKED_SPEED * pos_dt_y) / dist;
+    p_shot->VZ = (SHOT_ROCKED_SPEED * pos_dt_z) / dist;
+
+    init_shoot_recoil(p_owner, -p_shot->VX, 0, -p_shot->VZ);
+    p_shot->X = prc_beg_x;
+    p_shot->Z = prc_beg_z;
+    p_shot->Y = prc_beg_y;
+    p_shot->StartTimer1 = 20;
+    p_shot->Timer1 = 30;
+    p_shot->Speed = 400;
+    p_shot->Frame = 0;
+    p_shot->StartFrame = 0;
+    p_shot->U.UEffect.Object = 0;
+    p_shot->U.UEffect.MatrixIndex = 0;
+    p_shot->Parent = 0;
+    p_shot->Owner = p_owner->ThingOffset;
+    p_shot->Flag |= 0x0004;
+    add_node_thing(shottng);
+    p_shot->Type = TT_ROCKET;
+    p_shot->Radius = 50;
+    if (p_owner->U.UPerson.WeaponTimer <= 14)
+    {
+        p_shot->SubType = 0;
+        p_shot->Timer1 = 20;
+        p_shot->Speed = 700;
+    }
+    else
+    {
+        p_shot->SubType = 1;
+        p_shot->Timer1 = 32;
+    }
+    play_dist_sample(p_shot, 0x18u, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3);
 }
 
 void init_razor_wire(struct Thing *p_person, ubyte flag)
@@ -1673,7 +1790,7 @@ void init_air_strike(struct Thing *p_owner)
     p_thing->U.UEffect.EffectiveGroup = grp;
     p_thing->U.UEffect.Group = grp;
 
-    play_dist_sample(p_thing, 66, 127u, 64u, 100, 990, 3);
+    play_dist_sample(p_thing, 66, FULL_VOL, EQUL_PAN, NORM_PTCH, 990, 3);
 }
 
 void init_stasis_gun(struct Thing *p_owner)
@@ -1773,11 +1890,12 @@ void init_v_rocket(struct Thing *p_owner)
 
     if ((p_owner->Flag & TngF_Unkn20000000) != 0)
     {
-        p_owner->Flag &= ~TngF_Unkn20000000;
         p_shot->U.UEffect.GotoX = p_veh->U.UVehicle.TargetDX;
         p_shot->U.UEffect.GotoY = p_veh->U.UVehicle.TargetDY;
         p_shot->U.UEffect.GotoZ = p_veh->U.UVehicle.TargetDZ;
-        p_shot->Flag |= 0x20000000;
+        // Transfer the flag from owner to shot
+        p_owner->Flag &= ~TngF_Unkn20000000;
+        p_shot->Flag |= TngF_Unkn20000000;
     }
     else if (p_target != NULL)
     {
@@ -1822,7 +1940,7 @@ void init_v_rocket(struct Thing *p_owner)
     p_shot->Radius = 50;
     add_node_thing(p_shot->ThingOffset);
 
-    play_dist_sample(p_shot, 24, 0x7Fu, 0x40u, 100, 0, 3);
+    play_dist_sample(p_shot, 24, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3);
 #endif
 }
 

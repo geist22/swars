@@ -147552,7 +147552,7 @@ GLOBAL_FUNC(ASM_unkn_path_func_001)	/* 0x0C0ED4 */
 
 
 /*----------------------------------------------------------------*/
-init_shoot_recoil:	/* 0x0C19F0 */
+GLOBAL_FUNC(ASM_init_shoot_recoil)	/* 0x0C19F0 */
 /*----------------------------------------------------------------*/
 		push   %esi
 		mov    %eax,%esi
@@ -151621,7 +151621,7 @@ GLOBAL_FUNC(ASM_init_laser_beam)	/* 0x0C48CC */
 		xor    %ebx,%ebx
 		mov    0x1c(%esp),%eax
 		movw   $0x32,0x14(%esi)
-		call   init_shoot_recoil
+		call   ac_init_shoot_recoil
 		xor    %eax,%eax
 		mov    0x2c(%esp),%ax
 		cmp    $0xf,%eax
@@ -156373,7 +156373,7 @@ GLOBAL_FUNC(ASM_init_rocket)	/* 0x0C7F10 */
 		movswl %cx,%ecx
 		movswl %bx,%edx
 		xor    %ebx,%ebx
-		call   init_shoot_recoil
+		call   ac_init_shoot_recoil
 		mov    0x10(%esp),%eax
 		mov    $0xa8,%ebx
 		mov    things,%ebp
