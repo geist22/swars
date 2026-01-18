@@ -1656,7 +1656,7 @@ void number_player(struct Thing *p_person, ubyte n)
     {
         int tng_cor_x, tng_cor_y, tng_cor_z;
 
-        if (((p_person->Flag & TngF_InVehicle) != 0) && things[p_person->U.UPerson.Vehicle].SubType == SubTT_VEH_TRAIN)
+        if (person_is_in_a_train(p_person))
         {
             tng_cor_x = p_person->X;
             tng_cor_y = p_person->Y;

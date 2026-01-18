@@ -384,8 +384,10 @@ void set_person_persuaded(struct Thing *p_person, struct Thing *p_attacker, usho
 void person_init_drop(struct Thing *p_person, ThingIdx item);
 void person_init_pickup(struct Thing *p_person, ThingIdx item);
 
-TbBool person_is_in_vehicle(struct Thing *p_person);
+TbBool person_is_in_a_vehicle(struct Thing *p_person);
+TbBool person_is_in_a_train(struct Thing *p_person);
 TbBool person_is_standing_on_vehicle(struct Thing *p_person);
+TbBool person_is_in_vehicle(struct Thing *p_person, ThingIdx vehicle);
 void person_enter_vehicle(struct Thing *p_person, struct Thing *p_vehicle);
 
 void thing_shoot_at_thing(struct Thing *p_thing, short target);

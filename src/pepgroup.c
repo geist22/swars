@@ -294,7 +294,7 @@ TbBool group_has_all_survivors_in_vehicle(ushort group, ThingIdx vehicle)
     for (; thing > 0; thing = p_thing->LinkSameGroup)
     {
         p_thing = &things[thing];
-        if (p_thing->U.UPerson.Vehicle != vehicle)
+        if (!person_is_in_vehicle(p_thing, vehicle))
         {
             if (!person_is_dead(thing) && !thing_is_destroyed(thing))
                 return false;
@@ -316,7 +316,7 @@ TbBool group_has_no_less_members_in_vehicle(ushort group, ThingIdx vehicle, usho
         p_thing = &things[thing];
         if (!person_is_dead(thing) && !thing_is_destroyed(thing))
         {
-            if (p_thing->U.UPerson.Vehicle == vehicle)
+            if (person_is_in_vehicle(p_thing, vehicle))
                 n++;
         }
         if (n >= amount)

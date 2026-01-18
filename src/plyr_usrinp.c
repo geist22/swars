@@ -328,7 +328,7 @@ ubyte input_user_control_agent(ushort plyr, short dmuser)
     if ((p_player->UserInput[dmuser].Bits & SpUIn_DoTrigger) != 0)
     {
         p_dcthing = &things[dcthing];
-        if (!person_is_in_vehicle(p_dcthing) && person_is_standing_on_vehicle(p_dcthing))
+        if (!person_is_in_a_vehicle(p_dcthing) && person_is_standing_on_vehicle(p_dcthing))
         {
             struct Thing *p_vehicle;
             p_vehicle = &things[p_dcthing->U.UPerson.StandOnThing];

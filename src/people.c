@@ -3495,9 +3495,27 @@ void vehicle_passenger_list_remove(struct Thing *p_vehicle, ThingIdx passngr)
     }
 }
 
-TbBool person_is_in_vehicle(struct Thing *p_person)
+TbBool person_is_in_a_vehicle(struct Thing *p_person)
 {
     return ((p_person->Flag & TngF_InVehicle) != 0);
+}
+
+TbBool person_is_in_a_train(struct Thing *p_person)
+{
+    struct Thing *p_vehicle;
+
+    if ((p_person->Flag & TngF_InVehicle) == 0)
+        return false;
+
+    p_vehicle = &things[p_person->U.UPerson.Vehicle];
+    return (p_vehicle->SubType == SubTT_VEH_TRAIN);
+}
+
+TbBool person_is_in_vehicle(struct Thing *p_person, ThingIdx vehicle)
+{
+    if ((p_person->Flag & TngF_InVehicle) == 0)
+        return false;
+    return (vehicle == p_person->U.UPerson.Vehicle);
 }
 
 TbBool person_is_standing_on_vehicle(struct Thing *p_person)
