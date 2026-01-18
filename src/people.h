@@ -171,6 +171,24 @@ enum PersonSex {
 
 #define PERSON_MAX_SPEED 2048
 
+/** Length from person center to tip of the persons weapon, for beam weapons.
+ *
+ * Used as starting point of shots.
+ */
+#define PERSON_CENTER_TO_BEAM_WEAPON_TIP_MAPCOORD 128
+
+/** Length from person center to tip of the persons weapon, for rocket weapons.
+ *
+ * Used as starting point of shots.
+ */
+#define PERSON_CENTER_TO_ROCKT_WEAPON_TIP_MAPCOORD 32
+
+/** Distance from bottom of the person to where the weapon barrel is.
+ *
+ * Used as starting point of shots.
+ */
+#define PERSON_BOTTOM_TO_WEAPON_HEIGHT 20
+
 /** Multiplayer when transferring weapon energy points to shield points.
  */
 #define PERSON_ENERGY_TO_SHIELD_MUL 4

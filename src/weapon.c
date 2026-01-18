@@ -1086,6 +1086,45 @@ void init_shoot_recoil(struct Thing *p_person, short vx, short vy, short vz)
 #endif
 }
 
+void thing_fire_shot_star_position(struct Thing *p_owner, WeaponType wtype, ushort barrel, int *prc_x, int *prc_y, int *prc_z)
+{
+    switch (p_owner->Type)
+    {
+    case TT_PERSON:
+        if ((p_owner->Flag2 & TgF2_ExistsOffMap) != 0)
+        {
+            *prc_x = p_owner->X;
+            *prc_y = p_owner->Y + MAPCOORD_TO_PRCCOORD(PERSON_BOTTOM_TO_WEAPON_HEIGHT, 0);
+            *prc_z = p_owner->Z;
+        }
+        else
+        {
+            ubyte angle;
+            angle = p_owner->U.UPerson.Angle;
+
+            switch (wtype)
+            {
+            case WEP_RAP:
+                *prc_x = p_owner->X + PERSON_CENTER_TO_ROCKT_WEAPON_TIP_MAPCOORD * angle_direction[angle].DiX;
+                *prc_y = p_owner->Y + MAPCOORD_TO_PRCCOORD(PERSON_BOTTOM_TO_WEAPON_HEIGHT, 0);
+                *prc_z = p_owner->Z + PERSON_CENTER_TO_ROCKT_WEAPON_TIP_MAPCOORD * angle_direction[angle].DiY;
+                break;
+            default:
+                *prc_x = p_owner->X + PERSON_CENTER_TO_BEAM_WEAPON_TIP_MAPCOORD * angle_direction[angle].DiX;
+                *prc_y = p_owner->Y + MAPCOORD_TO_PRCCOORD(PERSON_BOTTOM_TO_WEAPON_HEIGHT, 0);
+                *prc_z = p_owner->Z + PERSON_CENTER_TO_BEAM_WEAPON_TIP_MAPCOORD * angle_direction[angle].DiY;
+                break;
+            }
+        }
+        break;
+    default:
+        *prc_x = p_owner->X;
+        *prc_y = p_owner->Y + MAPCOORD_TO_PRCCOORD(PERSON_BOTTOM_TO_WEAPON_HEIGHT, 0);
+        *prc_z = p_owner->Z;
+        break;
+    }
+}
+
 void init_laser(struct Thing *p_owner, ushort start_age)
 {
 #if 0
@@ -1107,25 +1146,14 @@ void init_laser(struct Thing *p_owner, ushort start_age)
         return;
     }
     p_shot = &things[shottng];
-    if ((p_owner->Flag2 & TgF2_ExistsOffMap) != 0)
-    {
-        prc_beg_x = p_owner->X;
-        prc_beg_y = p_owner->Y + 5120;
-        prc_beg_z = p_owner->Z;
-    }
-    else
-    {
-        ubyte angle;
-        angle = p_owner->U.UObject.Angle;
-        prc_beg_x = p_owner->X + (angle_direction[angle].DiX << 7);
-        prc_beg_y = p_owner->Y + 5120;
-        prc_beg_z = p_owner->Z + (angle_direction[angle].DiY << 7);
-    }
 
-    p_shot->U.UObject.Angle = p_owner->U.UObject.Angle;
+    p_shot->U.UObject.Angle = p_owner->U.UPerson.Angle;
+
+    thing_fire_shot_star_position(p_owner, WEP_LASER, 0, &prc_beg_x, &prc_beg_y, &prc_beg_z);
     if ((PRCCOORD_TO_MAPCOORD(prc_beg_x) < 0) || (PRCCOORD_TO_MAPCOORD(prc_beg_x) >= MAP_COORD_WIDTH) ||
       (PRCCOORD_TO_MAPCOORD(prc_beg_z) < 0) || (PRCCOORD_TO_MAPCOORD(prc_beg_z) >= MAP_COORD_HEIGHT)) {
         remove_thing(shottng);
+        LOGERR("Start position beyond map area");
         return;
     }
 
@@ -1417,17 +1445,9 @@ void init_rocket(struct Thing *p_owner)
 
     p_shot = &things[shottng];
 
-    {
-        int angl;
-        angl = p_owner->U.UPerson.Angle;
-        prc_beg_x = p_owner->X + 32 * angle_direction[angl].DiX;
-        prc_beg_y = p_owner->Y + MAPCOORD_TO_PRCCOORD(20,0);
-        prc_beg_z = p_owner->Z + 32 * angle_direction[angl].DiY;
-    }
-
-    if ((PRCCOORD_TO_MAPCOORD(prc_beg_x) >= MAP_COORD_WIDTH) ||
-      (PRCCOORD_TO_MAPCOORD(prc_beg_z) >= MAP_COORD_HEIGHT))
-    {
+    thing_fire_shot_star_position(p_owner, WEP_LASER, 0, &prc_beg_x, &prc_beg_y, &prc_beg_z);
+    if ((PRCCOORD_TO_MAPCOORD(prc_beg_x) < 0) || (PRCCOORD_TO_MAPCOORD(prc_beg_x) >= MAP_COORD_WIDTH) ||
+      (PRCCOORD_TO_MAPCOORD(prc_beg_z) < 0) || (PRCCOORD_TO_MAPCOORD(prc_beg_z) >= MAP_COORD_HEIGHT)) {
         remove_thing(shottng);
         LOGERR("Start position beyond map area");
         return;
@@ -1582,25 +1602,14 @@ void init_laser_elec(struct Thing *p_owner, ushort start_age)
         return;
     }
     p_shot = &things[shottng];
-    if ((p_owner->Flag2 & TgF2_ExistsOffMap) != 0)
-    {
-        prc_beg_x = p_owner->X;
-        prc_beg_y = p_owner->Y + 5120;
-        prc_beg_z = p_owner->Z;
-    }
-    else
-    {
-        ubyte angle;
-        angle = p_owner->U.UObject.Angle;
-        prc_beg_x = p_owner->X + (angle_direction[angle].DiX << 7);
-        prc_beg_y = p_owner->Y + 5120;
-        prc_beg_z = p_owner->Z + (angle_direction[angle].DiY << 7);
-    }
 
-    p_shot->U.UObject.Angle = p_owner->U.UObject.Angle;
+    p_shot->U.UEffect.Angle = p_owner->U.UPerson.Angle;
+
+    thing_fire_shot_star_position(p_owner, WEP_ELLASER, 0, &prc_beg_x, &prc_beg_y, &prc_beg_z);
     if ((PRCCOORD_TO_MAPCOORD(prc_beg_x) < 0) || (PRCCOORD_TO_MAPCOORD(prc_beg_x) >= MAP_COORD_WIDTH) ||
       (PRCCOORD_TO_MAPCOORD(prc_beg_z) < 0) || (PRCCOORD_TO_MAPCOORD(prc_beg_z) >= MAP_COORD_HEIGHT)) {
         remove_thing(shottng);
+        LOGERR("Start position beyond map area");
         return;
     }
 
@@ -1870,9 +1879,8 @@ void init_v_rocket(struct Thing *p_owner)
         }
 
     }
-    if ((PRCCOORD_TO_MAPCOORD(prc_beg_x) >= MAP_COORD_WIDTH) ||
-      (PRCCOORD_TO_MAPCOORD(prc_beg_z) >= MAP_COORD_HEIGHT))
-    {
+    if ((PRCCOORD_TO_MAPCOORD(prc_beg_x) < 0) || (PRCCOORD_TO_MAPCOORD(prc_beg_x) >= MAP_COORD_WIDTH) ||
+      (PRCCOORD_TO_MAPCOORD(prc_beg_z) < 0) || (PRCCOORD_TO_MAPCOORD(prc_beg_z) >= MAP_COORD_HEIGHT)) {
         remove_thing(shottng);
         LOGERR("Start position beyond map area");
         return;

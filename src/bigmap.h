@@ -62,6 +62,10 @@ extern "C" {
  */
 #define SPIRAL_STEPS_COUNT   1700
 
+/** Length of the vectors stored in angle_direction[].
+ */
+#define ANGLE_DIRECTION_DISTANCE 256
+
 #define MAX_WALKABLE_STEEPNESS (21 * LbFPMath_PI / 180)
 
 /* Linear distance equal to tan(MAX_WALKABLE_STEEPNESS) * 256
