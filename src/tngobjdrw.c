@@ -18,6 +18,7 @@
 /******************************************************************************/
 #include "tngobjdrw.h"
 
+#include <assert.h>
 #include "bfkeybd.h"
 
 #include "bigmap.h"
@@ -38,6 +39,7 @@
 #include "keyboard.h"
 #include "matrix.h"
 #include "player.h"
+#include "swlog.h"
 #include "thing.h"
 #include "vehicle.h"
 /******************************************************************************/
@@ -57,7 +59,7 @@ void process_child_object(struct Thing *p_vehicle)
 #endif
     struct SingleObject *p_sobj;
     struct Thing *p_mgun;
-    struct M33 *p_mat;
+    struct M33 *p_matx;
     struct M31 vec1;
     struct M31 vec2;
     struct M31 gear;
@@ -74,8 +76,9 @@ void process_child_object(struct Thing *p_vehicle)
     vec2.R[1] = p_mgun->Y >> 4;
     vec2.R[2] = PRCCOORD_TO_MAPCOORD(p_mgun->Z);
 
-    p_mat = &local_mats[p_vehicle->U.UVehicle.MatrixIndex];
-    matrix_transform(&vec1, p_mat, &vec2);
+    assert(p_vehicle->U.UVehicle.MatrixIndex < next_local_mat);
+    p_matx = &local_mats[p_vehicle->U.UVehicle.MatrixIndex];
+    matrix_transform(&vec1, p_matx, &vec2);
 
     p_sobj = &game_objects[p_mgun->U.UMGun.Object];
     draw_rot_object(

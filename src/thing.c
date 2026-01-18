@@ -149,6 +149,8 @@ const char *state_change_result_names[] = {
     "goal unattainable",
 };
 
+/******************************************************************************/
+
 TbBool thing_type_is_simple(short ttype)
 {
     return (ttype == SmTT_STATIC) ||
@@ -1353,7 +1355,7 @@ short new_thing_static_clone(struct SimpleThing *p_clsthing)
     return thing;
 }
 
-ThingIdx new_thing_building_clone(struct Thing *p_clthing, struct M33 *p_clmat, short shut_h)
+ThingIdx new_thing_building_clone(struct Thing *p_clthing, struct M33 *p_clmatx, short shut_h)
 {
     struct Thing *p_thing;
     struct SingleObject *p_sobj;
@@ -1426,10 +1428,10 @@ ThingIdx new_thing_building_clone(struct Thing *p_clthing, struct M33 *p_clmat, 
     }
     else if (styp == SubTT_BLD_MGUN)
     {
-        p_thing->U.UMGun.MatrixIndex = next_local_mat;
-        next_local_mat++;
-        if (p_clmat != NULL)
-            memcpy(&local_mats[p_thing->U.UMGun.MatrixIndex], p_clmat, sizeof(struct M33));
+        assert(next_local_mat < LOCAL_MATS_COUNT);
+        p_thing->U.UMGun.MatrixIndex = next_local_mat++;
+        if (p_clmatx != NULL)
+            memcpy(&local_mats[p_thing->U.UMGun.MatrixIndex], p_clmatx, sizeof(struct M33));
         else
             matrix_identity_fill(&local_mats[p_thing->U.UMGun.MatrixIndex]);
         p_thing->U.UMGun.AngleX = 1024;
@@ -1442,10 +1444,10 @@ ThingIdx new_thing_building_clone(struct Thing *p_clthing, struct M33 *p_clmat, 
     }
     else if (styp >= SubTT_BLD_MOVN_ROTOR && styp <= SubTT_BLD_37)
     {
-        p_thing->U.UObject.MatrixIndex = next_local_mat;
-        next_local_mat++;
-        if (p_clmat != NULL)
-            memcpy(&local_mats[p_thing->U.UObject.MatrixIndex], p_clmat, sizeof(struct M33));
+        assert(next_local_mat < LOCAL_MATS_COUNT);
+        p_thing->U.UObject.MatrixIndex = next_local_mat++;
+        if (p_clmatx != NULL)
+            memcpy(&local_mats[p_thing->U.UObject.MatrixIndex], p_clmatx, sizeof(struct M33));
         else
             matrix_identity_fill(&local_mats[p_thing->U.UObject.MatrixIndex]);
         p_thing->Flag |=  TngF_Unkn1000;

@@ -20,6 +20,10 @@
 #include "swlog.h"
 /******************************************************************************/
 
+ushort next_local_mat = 1;
+
+/******************************************************************************/
+
 void matrix_identity_fill(struct M33 *p_mat)
 {
     asm volatile ("call ASM_matrix_identity_fill\n"

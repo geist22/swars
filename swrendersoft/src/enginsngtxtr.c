@@ -31,8 +31,6 @@ ushort next_face_texture = 1;
 
 ushort next_floor_texture = 1;
 
-ushort next_local_mat = 1;
-
 /* Texture walking data.
  */
 extern ubyte textwalk_data[640];

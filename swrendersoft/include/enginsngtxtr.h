@@ -76,7 +76,6 @@ extern struct AnimTmap *game_anim_tmaps;
 extern ushort next_face_texture;
 extern ushort next_floor_texture;
 extern ushort next_anim_tmap;
-extern ushort next_local_mat;
 
 extern ushort tnext_floor_texture;
 

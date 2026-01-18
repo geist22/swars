@@ -1066,7 +1066,7 @@ void draw_bang(struct SimpleThing *p_pow)
  *
  * Before this call, the caller needs to ensure there is a free screen point.
  */
-static void transform_rot_object_shpoint(struct ShEnginePoint *p_sp, int offset_x, int offset_y, int offset_z, ushort mat, ushort pt)
+static void transform_rot_object_shpoint(struct ShEnginePoint *p_sp, int offset_x, int offset_y, int offset_z, ushort matx, ushort pt)
 {
     struct SinglePoint *p_snpoint;
     struct SpecialPoint *p_specpt;
@@ -1089,7 +1089,8 @@ static void transform_rot_object_shpoint(struct ShEnginePoint *p_sp, int offset_
         vec_inp.R[0] = 2 * p_snpoint->X;
         vec_inp.R[1] = 2 * p_snpoint->Y;
         vec_inp.R[2] = 2 * p_snpoint->Z;
-        matrix_transform(&vec_rot, &local_mats[mat], &vec_inp);
+        assert(matx < LOCAL_MATS_COUNT);
+        matrix_transform(&vec_rot, &local_mats[matx], &vec_inp);
 
         dxc = offset_x + (vec_rot.R[0] >> 15);
         dyc = offset_y + (vec_rot.R[1] >> 15);
@@ -1169,6 +1170,12 @@ int draw_rot_object(int offset_x, int offset_y, int offset_z, struct SingleObjec
         p_snpoint->Flags = 0;
     }
 
+    // This function can be called for objects, vehicles, mguns and rockets
+    assert(offsetof(struct Thing, U.UObject.MatrixIndex) == offsetof(struct Thing, U.UVehicle.MatrixIndex));
+    assert(offsetof(struct Thing, U.UObject.MatrixIndex) == offsetof(struct Thing, U.UMGun.MatrixIndex));
+    // Matrix for anything other than rocket shall respect the allocated entries counter
+    assert((p_thing->U.UObject.MatrixIndex < next_local_mat) || (p_thing->Type == TT_ROCKET));
+
     for (i = point_object->OffsetX; i < point_object->OffsetY; i++)
     {
         struct M31 vec_nx, vec_rot;
@@ -1177,7 +1184,7 @@ int draw_rot_object(int offset_x, int offset_y, int offset_z, struct SingleObjec
 
         p_nrml = &game_normals[i];
         vec_nx = *(struct M31 *)&p_nrml->NX;
-        matrix_transform(&vec_rot, &local_mats[p_thing->U.UVehicle.MatrixIndex], &vec_nx);
+        matrix_transform(&vec_rot, &local_mats[p_thing->U.UObject.MatrixIndex], &vec_nx);
 
         fctr_o = dword_176D14 * (vec_rot.R[0] >> 14) - dword_176D10 * (vec_rot.R[2] >> 14);
         fctr_p = (dword_176D14 * (vec_rot.R[2] >> 14) + dword_176D10 * (vec_rot.R[0] >> 14)) >> 16;

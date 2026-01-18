@@ -306,11 +306,14 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
                 if (fmtver <= 8)
                     p_thing->Y >>= 3;
 
-                assert(sizeof(struct M33) == 36);
-                k = next_local_mat++;
-                LbFileRead(lev_fh, &local_mats[k], sizeof(struct M33));
-
-                p_thing->U.UVehicle.MatrixIndex = k;
+                {
+                    int matx;
+                    assert(sizeof(struct M33) == 36);
+                    assert(next_local_mat < LOCAL_MATS_COUNT);
+                    matx = next_local_mat++;
+                    LbFileRead(lev_fh, &local_mats[matx], sizeof(struct M33));
+                    p_thing->U.UVehicle.MatrixIndex = matx;
+                }
                 byte_1C83D1 = 0;
 
                 n = next_normal;
@@ -325,10 +328,13 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
                 game_objects[next_object - 1].ThingNo = k;
                 VNAV_unkn_func_207(p_thing);
                 {
-                    struct M33 *p_mat;
+                    struct M33 *p_matx;
+                    int matx;
 
-                    p_mat = &local_mats[p_thing->U.UVehicle.MatrixIndex];
-                    angle = LbArcTanAngle(p_mat->R[0][2], p_mat->R[2][2]);
+                    matx = p_thing->U.UVehicle.MatrixIndex;
+                    assert(matx < next_local_mat);
+                    p_matx = &local_mats[matx];
+                    angle = LbArcTanAngle(p_matx->R[0][2], p_matx->R[2][2]);
                     p_thing->U.UVehicle.AngleY = (angle + LbFPMath_PI) & LbFPMath_AngleMask;
                 }
 
@@ -339,12 +345,13 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
                     if (p_thing->U.UVehicle.SubThing != 0)
                     {
                         struct Thing *p_mgun;
-                        struct M33 *p_mat;
+                        struct M33 *p_matx;
 
                         // Mounted Gun matrix was created during veh_add()
                         p_mgun = &things[p_thing->U.UVehicle.SubThing];
-                        p_mat = &local_mats[p_mgun->U.UVehicle.MatrixIndex];
-                        angle = LbArcTanAngle(p_mat->R[0][2], p_mat->R[2][2]);
+                        assert(p_thing->U.UVehicle.MatrixIndex < next_local_mat);
+                        p_matx = &local_mats[p_mgun->U.UVehicle.MatrixIndex];
+                        angle = LbArcTanAngle(p_matx->R[0][2], p_matx->R[2][2]);
                         p_mgun->U.UVehicle.AngleY = (angle + LbFPMath_PI) & LbFPMath_AngleMask;
                     }
                 }
@@ -512,7 +519,7 @@ void save_level_pc_handle(TbFileHandle lev_fh)
 {
     u32 fmtver;
     ushort count;
-    int i, k;
+    int i;
 
     assert(sizeof(struct Thing) == 168);
     assert(sizeof(struct Command) == 32);
@@ -551,9 +558,11 @@ void save_level_pc_handle(TbFileHandle lev_fh)
             LbFileWrite(lev_fh, p_thing, sizeof(struct Thing));
             if (p_thing->Type == TT_VEHICLE)
             {
+                int matx;
                 assert(sizeof(struct M33) == 36);
-                k = p_thing->U.UVehicle.MatrixIndex;
-                LbFileWrite(lev_fh, &local_mats[k], sizeof(struct M33));
+                matx = p_thing->U.UVehicle.MatrixIndex;
+                assert(matx < next_local_mat);
+                LbFileWrite(lev_fh, &local_mats[matx], sizeof(struct M33));
 
             }
             // Per thing code end

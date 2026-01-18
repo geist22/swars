@@ -229,6 +229,7 @@ void draw_vehicle_shadow(ushort veh, ushort sort)
     vec_inp.R[0] = -shd_w;
     vec_inp.R[2] = -shd_l;
     vec_inp.R[1] = 0;
+    assert(p_vehicle->U.UVehicle.MatrixIndex < next_local_mat);
     matrix_transform(&vec_rot, &local_mats[p_vehicle->U.UVehicle.MatrixIndex], &vec_inp);
     cor1_x = (p_vehicle->X >> 8) - engn_xc + (vec_rot.R[0] >> 15);
     cor1_z = (p_vehicle->Z >> 8) - engn_zc + (vec_rot.R[2] >> 15);
@@ -236,6 +237,7 @@ void draw_vehicle_shadow(ushort veh, ushort sort)
     vec_inp.R[1] = 0;
     vec_inp.R[0] = shd_w;
     vec_inp.R[2] = -shd_l;
+    assert(p_vehicle->U.UVehicle.MatrixIndex < next_local_mat);
     matrix_transform(&vec_rot, &local_mats[p_vehicle->U.UVehicle.MatrixIndex], &vec_inp);
     cor2_x = (p_vehicle->X >> 8) - engn_xc + (vec_rot.R[0] >> 15);
     cor2_z = (p_vehicle->Z >> 8) - engn_zc + (vec_rot.R[2] >> 15);
@@ -243,6 +245,7 @@ void draw_vehicle_shadow(ushort veh, ushort sort)
     vec_inp.R[0] = p_shtextr->Width;
     vec_inp.R[1] = 0;
     vec_inp.R[2] = shd_l;
+    assert(p_vehicle->U.UVehicle.MatrixIndex < next_local_mat);
     matrix_transform(&vec_rot, &local_mats[p_vehicle->U.UVehicle.MatrixIndex], &vec_inp);
     cor3_x = (p_vehicle->X >> 8) - engn_xc + (vec_rot.R[0] >> 15);
     cor3_z = (p_vehicle->Z >> 8) - engn_zc + (vec_rot.R[2] >> 15);
@@ -250,6 +253,7 @@ void draw_vehicle_shadow(ushort veh, ushort sort)
     vec_inp.R[0] = -p_shtextr->Width;
     vec_inp.R[1] = 0;
     vec_inp.R[2] = shd_l;
+    assert(p_vehicle->U.UVehicle.MatrixIndex < next_local_mat);
     matrix_transform(&vec_rot, &local_mats[p_vehicle->U.UVehicle.MatrixIndex], &vec_inp);
     cor4_x = (p_vehicle->X >> 8) - engn_xc + (vec_rot.R[0] >> 15);
     cor4_z = (p_vehicle->Z >> 8) - engn_zc + (vec_rot.R[2] >> 15);
