@@ -233,6 +233,24 @@ void get_thing_position_mapcoords(short *x, short *y, short *z, ThingIdx thing)
         *z = cor_z;
 }
 
+u32 get_things_distance_mapcoords_precise(ThingIdx tng1, ThingIdx tng2)
+{
+    short x1, y1, z1;
+    short x2, y2, z2;
+    get_thing_position_mapcoords(&x1, &y1, &z1, tng1);
+    get_thing_position_mapcoords(&x2, &y2, &z2, tng2);
+    return map_distance_deltas_precise(x2 - x1, y2 - y1, z2 - z1);
+}
+
+u32 get_things_distance_mapcoords_fast(ThingIdx tng1, ThingIdx tng2)
+{
+    short x1, y1, z1;
+    short x2, y2, z2;
+    get_thing_position_mapcoords(&x1, &y1, &z1, tng1);
+    get_thing_position_mapcoords(&x2, &y2, &z2, tng2);
+    return map_distance_deltas_fast(x2 - x1, y2 - y1, z2 - z1);
+}
+
 const char *state_change_result_name(StateChRes res)
 {
     return state_change_result_names[res];

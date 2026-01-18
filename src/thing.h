@@ -142,6 +142,11 @@ enum ThingFlags {
  */
 #define TngF_TransCloseRq TngF_Unkn0080
 
+/** Thing on which a person is standing is a valid and really near vehicle.
+ * The flag has this meaning for people, different meaning for other things.
+ */
+#define TngF_StandOnVehicle TngF_Unkn01000000
+
 enum ThingFlags2 {
     TgF2_Unkn0001     = 0x0001,
     TgF2_Unkn0002     = 0x0002,
@@ -979,6 +984,18 @@ TbBool thing_type_is_simple(short ttype);
  * This function deals with all that and just gives the straight, simple position.
  */
 void get_thing_position_mapcoords(short *x, short *y, short *z, ThingIdx thing);
+
+/** Computes distance between two things.
+ *
+ * Uses precise algorithm for vector length. Returns value in map coords.
+ */
+u32 get_things_distance_mapcoords_precise(ThingIdx tng1, ThingIdx tng2);
+
+/** Computes distance between two things.
+ *
+ * Uses some simplifications, but is fast. Returns value in map coords.
+ */
+u32 get_things_distance_mapcoords_fast(ThingIdx tng1, ThingIdx tng2);
 
 /** Get a string representing text name of a state change result.
  */

@@ -3524,7 +3524,10 @@ TbBool person_is_standing_on_vehicle(struct Thing *p_person)
 
     if (p_person->U.UPerson.StandOnThing <= 0)
         return false;
+    if ((p_person->Flag & TngF_StandOnVehicle) == 0)
+        return false;
     p_standtng = &things[p_person->U.UPerson.StandOnThing];
+
     return (p_standtng->Type == TT_VEHICLE);
 }
 
@@ -3551,7 +3554,7 @@ void person_enter_vehicle(struct Thing *p_person, struct Thing *p_vehicle)
     }
 
     p_person->Flag |= TngF_InVehicle|TngF_Unkn02000000;
-    p_person->Flag &= ~TngF_Unkn01000000;
+    p_person->Flag &= ~TngF_StandOnVehicle;
     p_person->State = PerSt_DRIVING_VEHICLE;
 
     vehicle_passenger_list_add_first(p_vehicle, p_person->ThingOffset);
@@ -4569,7 +4572,7 @@ void process_knocked_out(struct Thing *p_person)
 
         p_person->Flag2 &= ~TgF2_KnockedOut;
         p_person->Timer1 = 48;
-        p_person->Flag &= ~TngF_Unkn01000000;
+        p_person->Flag &= ~TngF_StandOnVehicle;
     }
 }
 
@@ -4847,7 +4850,7 @@ void person_use_vehicle(struct Thing *p_person)
     }
 
     person_goto_point(p_person);
-    if ((p_person->Flag & TngF_Unkn01000000) == 0) {
+    if ((p_person->Flag & TngF_StandOnVehicle) == 0) {
         if ((debug_log_things & 0x01) != 0) {
             LOGSYNC("Person %s %d has wrong flags to enter, state %d.%d",
               person_type_name(p_person->SubType), (int)p_person->ThingOffset,
@@ -5225,7 +5228,7 @@ short person_move(struct Thing *p_person)
             thing = check_for_other_people(x, y, z, p_person);
             if (thing != 0) {
                 p_person->U.UPerson.BumpCount++;
-                if (((p_person->Flag & TngF_Unkn0010) == 0) && ((p_person->Flag & TngF_Unkn01000000) != 0))
+                if (((p_person->Flag & TngF_Unkn0010) == 0) && ((p_person->Flag & TngF_StandOnVehicle) != 0))
                     return 1;
             } else {
                 p_person->Flag &= ~(TngF_Unkn0004|TngF_Unkn0010);
@@ -5737,7 +5740,7 @@ void process_person(struct Thing *p_person)
         if ((state != PerSt_WAIT) && (state != 0))
         {
             p_person->Flag &= ~TngF_Unkn08000000;
-            p_person->Flag &= ~TngF_Unkn01000000;
+            p_person->Flag &= ~TngF_StandOnVehicle;
         }
     }
     if ((p_person->U.UPerson.BumpMode != 0) && ((p_person->Flag & TngF_Destroyed) == 0))

@@ -154,7 +154,7 @@ u32 map_distance_deltas_fast(int dt_x, int dt_y, int dt_z);
 u32 map_distance_deltas_precise(int dt_x, int dt_y, int dt_z);
 
 /** Computes length of vector defined by two 3D points.
- * Uses some simplifications, but is fast. Requires the givn values
+ * Uses some simplifications, but is fast. Requires the given values
  * to be map coords - they can not exceed 15-bit.
  */
 u32 map_distance_coords_fast(short pt1_x, short pt1_y, short pt1_z,
