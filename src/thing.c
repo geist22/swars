@@ -116,7 +116,7 @@ const char *thing_type_names[] = {
   "TIME_POD",
   "AIR_STRIKE",
   "CANISTER",
-  "UNKN33",
+  "VEH_TURRET",
   "UNKN34",
   "UNKN35",
   "STASIS_POD",

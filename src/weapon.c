@@ -1117,6 +1117,61 @@ TbBool thing_fire_shot_start_position(struct M31 *prc_beg_pt, struct Thing *p_ow
             }
         }
         break;
+    case TT_VEHICLE:
+        if (p_owner->SubType == SubTT_VEH_TANK)
+        {
+            struct Thing *p_mgun;
+            short angl;
+
+            p_mgun = &things[p_owner->U.UVehicle.SubThing];
+
+            if ((barrel & 1) != 0) // which rocket pack to shoot from
+                angl = p_mgun->U.UMGun.AngleY + 7 * LbFPMath_PI / 16;
+            else
+                angl = p_mgun->U.UMGun.AngleY - 7 * LbFPMath_PI / 16;
+            angl = (angl + 2 * LbFPMath_PI) & LbFPMath_AngleMask;
+
+            // the mounted gun position is relative; use trigonometry to switch rocket packs
+            prc_beg_pt->R[0] = p_owner->X + p_mgun->X - 3 * lbSinTable[angl] / 2;
+            prc_beg_pt->R[2] = p_owner->Z + p_mgun->Z - 3 * lbSinTable[angl + LbFPMath_PI/2] / 2;
+            if (p_mgun->StartFrame == VehOM_MBTANK)
+            {
+                 // MBT has 6-rocket pack; but simplify to 2 - select upper or lower rocket within pack
+                if ((barrel & 2) != 0)
+                    prc_beg_pt->R[1] = p_owner->Y + p_mgun->Y + (50 << 5);
+                else
+                    prc_beg_pt->R[1] = p_owner->Y + p_mgun->Y + (200 << 5);
+            }
+            else
+            {
+                // Claw tank (and others) do not have multiple rockets in a pack
+                prc_beg_pt->R[1] = p_owner->Y + p_mgun->Y + (170 << 5);
+            }
+        }
+        else if (p_owner->SubType == SubTT_VEH_MECH)
+        {
+            assert(!"Not implemented");
+        }
+        else
+        {
+            assert(!"Vehicle subtype with no shooting ability");
+        }
+        break;
+    case TT_BUILDING:
+        // The only building with shooting capability is mounted gun
+        assert(p_owner->SubType == SubTT_BLD_MGUN);
+        {
+            short angl;
+            if (barrel != 0) // which barrel to shoot from
+                angl = p_owner->U.UMGun.AngleY + 48;
+            else
+                angl = p_owner->U.UMGun.AngleY - 48;
+            angl = (angl + 2 * LbFPMath_PI) & LbFPMath_AngleMask;
+            prc_beg_pt->R[0] = p_owner->X + 3 * lbSinTable[angl] / 2;
+            prc_beg_pt->R[2] = p_owner->Z - 3 * lbSinTable[angl + LbFPMath_PI/2] / 2;
+            prc_beg_pt->R[1] = p_owner->Y;
+        }
+        break;
     default:
         prc_beg_pt->R[0] = p_owner->X;
         prc_beg_pt->R[1] = p_owner->Y + MAPCOORD_TO_PRCCOORD(PERSON_BOTTOM_TO_WEAPON_HEIGHT, 0);
@@ -1300,7 +1355,6 @@ void init_mgun_laser(struct Thing *p_owner, ushort start_age)
     short tgtng_x, tgtng_y, tgtng_z;
     u32 rhit;
     ThingIdx shottng;
-    short angl;
     short damage;
     ubyte wdmgtyp;
 
@@ -1313,14 +1367,11 @@ void init_mgun_laser(struct Thing *p_owner, ushort start_age)
         return;
     }
     p_shot = &things[shottng];
-    if (p_owner->U.UMGun.ShotTurn != 0) // which barrel to shoot from
-        angl = p_owner->U.UMGun.AngleY + 48;
-    else
-        angl = p_owner->U.UMGun.AngleY - 48;
-    angl = (angl + 2 * LbFPMath_PI) & LbFPMath_AngleMask;
-    prc_beg_pt.R[0] = p_owner->X + 3 * lbSinTable[angl] / 2;
-    prc_beg_pt.R[2] = p_owner->Z - 3 * lbSinTable[angl + LbFPMath_PI/2] / 2;
-    prc_beg_pt.R[1] = p_owner->Y;
+
+    if (!thing_fire_shot_start_position(&prc_beg_pt, p_owner, WEP_LASER, p_owner->U.UMGun.ShotTurn)) {
+        remove_thing(shottng);
+        return;
+    }
 
     wdef = &weapon_defs[WEP_LASER];
     wdmgtyp = DMG_LASER;
@@ -1842,6 +1893,7 @@ void init_v_rocket(struct Thing *p_owner)
     ThingIdx shottng;
     struct Thing *p_shot;
     struct Thing *p_veh;
+    struct Thing *p_mgun;
     struct Thing *p_target;
     struct M31 prc_beg_pt;
     int pos_dt_x, pos_dt_z, pos_dt_y;
@@ -1858,43 +1910,14 @@ void init_v_rocket(struct Thing *p_owner)
 
     p_shot = &things[shottng];
     p_veh = &things[p_owner->U.UPerson.Vehicle];
-    {
-        struct Thing *p_mgun;
-        short angl;
 
-        p_mgun = &things[p_veh->U.UVehicle.SubThing];
-        LOGDBG("Shot from vehicle %s offs=%d, mgun %s offs=%d",
-          thing_type_name(p_veh->Type, p_veh->SubType), (int)p_veh->ThingOffset,
-          thing_type_name(p_mgun->Type, p_mgun->SubType), (int)p_mgun->ThingOffset);
+    p_mgun = &things[p_veh->U.UVehicle.SubThing];
+    LOGDBG("Shot from vehicle %s offs=%d, mgun %s offs=%d",
+      thing_type_name(p_veh->Type, p_veh->SubType), (int)p_veh->ThingOffset,
+      thing_type_name(p_mgun->Type, p_mgun->SubType), (int)p_mgun->ThingOffset);
 
-        if ((p_mgun->U.UMGun.ShotTurn & 1) != 0) // which rocket pack to shoot from
-            angl = p_mgun->U.UMGun.AngleY + 7 * LbFPMath_PI / 16;
-        else
-            angl = p_mgun->U.UMGun.AngleY - 7 * LbFPMath_PI / 16;
-        angl = (angl + 2 * LbFPMath_PI) & LbFPMath_AngleMask;
-
-        // the mounted gun position is relative; use trigonometry to switch rocket packs
-        prc_beg_pt.R[0] = p_veh->X + p_mgun->X - 3 * lbSinTable[angl] / 2;
-        prc_beg_pt.R[2] = p_veh->Z + p_mgun->Z - 3 * lbSinTable[angl + LbFPMath_PI/2] / 2;
-        if (p_mgun->StartFrame == VehOM_MBTANK)
-        {
-             // MBT has 6-rocket pack; but simplify to 2 - select upper or lower rocket within pack
-            if ((p_mgun->U.UMGun.ShotTurn & 2) != 0)
-                prc_beg_pt.R[1] = p_veh->Y + p_mgun->Y + (50 << 5);
-            else
-                prc_beg_pt.R[1] = p_veh->Y + p_mgun->Y + (200 << 5);
-        }
-        else
-        {
-            // Claw tank (and others) do not have multiple rockets in a pack
-            prc_beg_pt.R[1] = p_veh->Y + p_mgun->Y + (170 << 5);
-        }
-
-    }
-    if ((PRCCOORD_TO_MAPCOORD(prc_beg_pt.R[0]) < 0) || (PRCCOORD_TO_MAPCOORD(prc_beg_pt.R[0]) >= MAP_COORD_WIDTH) ||
-      (PRCCOORD_TO_MAPCOORD(prc_beg_pt.R[2]) < 0) || (PRCCOORD_TO_MAPCOORD(prc_beg_pt.R[2]) >= MAP_COORD_HEIGHT)) {
+    if (!thing_fire_shot_start_position(&prc_beg_pt, p_veh, WEP_RAP, p_mgun->U.UMGun.ShotTurn)) {
         remove_thing(shottng);
-        LOGERR("Start position beyond map area");
         return;
     }
 
