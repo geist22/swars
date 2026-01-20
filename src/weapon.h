@@ -48,11 +48,15 @@ extern "C" {
 
 /** Initial age of explosion; higher value makes the explosion shorter.
  */
-#define WEP_AIRSTRIKE_IMPACT_GTURNS 17
+#define WEP_AIRSTRIKE_IMPACT_GTURNS 14
 
 /** Game turns between the weapon triggered and the bombs start.
  */
 #define WEP_AIRSTRIKE_DELAY_GTURNS 20
+
+/** Speed at which rockets move, in map coords.
+ */
+#define SHOT_ROCKED_SPEED 256
 
 enum WeaponType
 {
@@ -290,6 +294,8 @@ short current_hand_weapon_range(struct Thing *p_person);
  * Implements modifications for vehicle weapons and throwing weapons.
  */
 int get_weapon_range(struct Thing *p_person);
+
+int get_weapon_zoom_min(WeaponType wtype);
 
 void choose_best_weapon_for_range(struct Thing *p_person, int dist);
 

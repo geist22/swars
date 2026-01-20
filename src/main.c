@@ -436,8 +436,7 @@ void read_conf_file(void)
                 CONFWRNLOG("Couldn't recognize \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
                 break;
             }
-            // FIXME implementing original error - 'Intro' sets wrong option
-            game_dirs[DirPlace_Sound].use_cd = (i != 2);
+            game_dirs[DirPlace_Intro].use_cd = (i != 2);
             break;
         case ConfCmd_Anims:
             i = LbIniValueGetNamedEnum(&parser, conf_file_disk_inst_lev);
@@ -445,8 +444,7 @@ void read_conf_file(void)
                 CONFWRNLOG("Couldn't recognize \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
                 break;
             }
-            // FIXME implementing original error - 'Anims' sets wrong option
-            game_dirs[7].use_cd = (i != 2);
+            game_dirs[DirPlace_Equip].use_cd = (i != 2);
             break;
         case ConfCmd_Maps:
             i = LbIniValueGetNamedEnum(&parser, conf_file_disk_inst_lev);
@@ -470,8 +468,7 @@ void read_conf_file(void)
                 CONFWRNLOG("Couldn't recognize \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
                 break;
             }
-            // FIXME implementing original error - 'Sound' sets wrong option
-            game_dirs[DirPlace_Equip].use_cd = (i != 2);
+            game_dirs[DirPlace_Sound].use_cd = (i != 2);
             break;
         case ConfCmd_DOS:
             i = LbIniValueGetNamedEnum(&parser, conf_file_disk_inst_lev);
@@ -562,7 +559,8 @@ main (int argc, char **argv)
 
     set_default_user_settings();
     read_strings_file();
-    game_setup();
+    if (!game_setup())
+        return 1;
 
     game_process();
 

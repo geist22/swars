@@ -27,41 +27,30 @@ extern "C" {
 /******************************************************************************/
 #pragma pack(1)
 
-typedef struct {
-  char field_0[35];
-  char field_23;
-} PrimObject;
-
-typedef struct {
-  char field_0[39];
-  char field_27;
-} PrimObjectFace4;
-
-typedef struct {
-  char field_0[31];
-  char field_1F;
-} PrimObjectFace;
-
-typedef struct {
-  char field_0[9];
-  char field_9;
-} PrimObjectPoint;
+struct SingleObject;
+struct SinglePoint;
+struct SingleObjectFace3;
+struct SingleObjectFace4;
 
 #pragma pack()
 /******************************************************************************/
-extern PrimObjectPoint *prim_object_points;
-extern PrimObjectFace *prim_object_faces;
-extern PrimObjectFace4 *prim_object_faces4;
-extern PrimObject *prim_objects;
+extern struct SinglePoint *prim_object_points;
+extern struct SingleObjectFace3 *prim_object_faces;
+extern struct SingleObjectFace4 *prim_object_faces4;
+extern struct SingleObject *prim_objects;
 extern ushort prim_object_points_count;
 extern ushort prim_object_faces_count;
 extern ushort prim_object_faces4_count;
 extern ushort prim_objects_count;
 extern ushort prim_unknprop01;
 
+extern ushort unkn2_pos_x;
+extern ushort unkn2_pos_y;
+extern ushort unkn2_pos_z;
+
 void read_primveh_obj(const char *fname, int a2);
 
-void sub_6031C(short tx, short tz, short a3, short ty);
+void copy_prim_obj_to_game_object(short tx, short tz, short a3, short ty);
 /******************************************************************************/
 #ifdef __cplusplus
 }

@@ -23,38 +23,6 @@ enum GameModes {
     GamM_Unkn3       = 3,
 };
 
-enum GameFlags {
-    GamF_BillboardMovies = 0x0001,
-    GamF_AdvLights    = 0x0002,
-    GamF_Unkn0004     = 0x0004,
-    GamF_Unkn0008     = 0x0008,
-    GamF_MortalGame   = 0x0010,
-    GamF_Unkn0020     = 0x0020,
-    GamF_RenderScene  = 0x0040,
-    GamF_StopThings   = 0x0080, /**< Do not process things, stopping ingame action. */
-    GamF_Unkn0100     = 0x0100,
-    GamF_Unkn0200     = 0x0200,
-    GamF_DeepRadar    = 0x0400,
-    GamF_Unkn0800     = 0x0800,
-    GamF_Unkn1000     = 0x1000,
-    GamF_HUDPanel     = 0x2000,
-    GamF_Unkn4000     = 0x4000,
-    GamF_ThermalView  = 0x8000,
-    GamF_Unkn00010000 = 0x00010000,
-    GamF_Unkn00020000 = 0x00020000,
-    GamF_Unkn00040000 = 0x00040000,
-    GamF_SkipIntro    = 0x00080000,
-    GamF_Unkn00100000 = 0x00100000,
-    GamF_NoScannerBeep = 0x00200000,
-    GamF_BillboardBAT = 0x00400000,
-    GamF_Unkn00800000 = 0x00800000,
-    GamF_Unkn01000000 = 0x01000000,
-    GamF_Unkn02000000 = 0x02000000,
-    GamF_Unkn04000000 = 0x04000000,
-    GamF_Unkn08000000 = 0x08000000,
-    GamF_Unkn10000000 = 0x10000000,
-};
-
 enum UserFlags {
     UsrF_WonBAT       =  0x0001,
     UsrF_Cheats       =  0x0004,
@@ -205,8 +173,8 @@ extern long unkn01_pos_y;
 extern ushort current_map;
 extern short current_level;
 
-extern ulong engine_mem_alloc_size;
 extern void *engine_mem_alloc_ptr;
+extern u32 engine_mem_alloc_size;
 
 extern long navi2_unkn_counter;
 extern long navi2_unkn_counter_max;
@@ -215,9 +183,6 @@ extern ubyte anim_slots[];
 extern struct Animation animations[2];
 
 extern ubyte *scratch_buf1;
-
-extern void *dword_1810D1;
-extern ulong dword_1810D5;
 
 extern ushort game_level_unique_id;
 extern ubyte game_level_unkn1[40];
@@ -252,7 +217,6 @@ extern ubyte byte_1C6D4A;
 extern ubyte byte_1C6DDC[5];
 extern ushort word_1C8446;
 extern ushort unkn3de_len;
-extern ubyte byte_19EC6F;
 
 extern ushort weapon_text_index[32];
 extern ushort cybmod_text_index[16];
@@ -267,7 +231,6 @@ extern char *outro_text_z;
 extern long data_197150;
 extern long data_1dd91c;
 extern ubyte unkn_flags_01;
-extern ushort palette_brightness;
 extern long outro_credits_enabled;
 extern long outro_unkn02;
 extern long outro_unkn03;
@@ -344,7 +307,6 @@ extern sbyte selected_agent;
 extern int mouse_map_x;
 extern int mouse_map_y;
 extern int mouse_map_z;
-extern void *scratch_malloc_mem;
 
 extern ubyte game_gfx_advanced_lights;
 extern ubyte game_billboard_movies;
@@ -369,19 +331,11 @@ void game_update (void);
 int game_hacky_update(void);
 void game_quit (void);
 
-/** File name transform function, to be used only for DOS calls simulation.
- */
-void game_transform_path (const char *file_name, char *result);
-
-const char *game_get_data_path (void);
-const char *game_get_user_path (void);
-
 void read_conf_file(void);
-void game_setup(void);
+TbBool game_setup(void);
 void game_process(void);
 void game_reset(void);
 void host_reset(void);
-void free_texturemaps(void);
 void init_variables(void);
 void init_agents(void);
 void srm_reset_research(void);

@@ -161,6 +161,14 @@ const struct TbNamedEnum missions_conf_weather_types[] = {
   {NULL,			0},
 };
 
+const struct TbNamedEnum missions_conf_wait_to_fade_types[] = {
+  {"NEVER",			1},
+  {"ON_SUCCESS",	WTFade_ON_SUCCESS | 1},
+  {"ON_FAIL",		WTFade_ON_FAIL | 1},
+  {"ALWAYS",		WTFade_ON_SUCCESS|WTFade_ON_FAIL | 1},
+  {NULL,			0},
+};
+
 const struct TbNamedEnum missions_conf_extra_reward_types[] = {
   {"Scientists",	MEReward_Scientists},
   {"ResearchLab",	MEReward_ResearchLab},
@@ -674,7 +682,9 @@ void save_mission_single_conf(TbFileHandle fh, struct Mission *p_missi, char *bu
         LbFileWrite(fh, buf, strlen(buf));
     }
     if (p_missi->WaitToFade != 0) {
-        sprintf(buf, "WaitToFade = %hu\n", p_missi->WaitToFade);
+        sprintf(buf, "WaitToFade = 0x%x %u\n", (p_missi->WaitToFade & 0xE000),
+                  (p_missi->WaitToFade & 0x1FFF));
+
         LbFileWrite(fh, buf, strlen(buf));
     }
     if (p_missi->PreProcess != 0) {
@@ -800,16 +810,21 @@ TbBool read_missions_conf_info(int num)
     conf_fh = LbFileOpen(conf_fname, Lb_FILE_MODE_READ_ONLY);
     if (conf_fh != INVALID_FILE) {
         conf_len = LbFileLengthHandle(conf_fh);
-        if (conf_len > 1024*1024)
-            conf_len = 1024*1024;
-        conf_buf = LbMemoryAlloc(conf_len+16);
+    } else {
+        LOGSYNC("Could not open '%s' file", conf_fname);
+        conf_len = 0;
+    }
+    if (conf_len > 1024*1024)
+        conf_len = 1024*1024;
+    conf_buf = LbMemoryAlloc(conf_len+16);
+    if (conf_buf == NULL) {
+        LOGSYNC("Could not alloc mem for '%s' file", conf_fname);
+        return false;
+    }
+    if (conf_fh != INVALID_FILE) {
         conf_len = LbFileRead(conf_fh, conf_buf, conf_len);
         LOGSYNC("Processing '%s' file, %d bytes", conf_fname, conf_len);
         LbFileClose(conf_fh);
-    } else {
-        LOGSYNC("Could not open '%s' file", conf_fname);
-        conf_buf = LbMemoryAlloc(16);
-        conf_len = 0;
     }
     conf_buf[conf_len] = '\0';
     LbIniParseStart(&parser, conf_buf, conf_len);
@@ -1485,13 +1500,20 @@ void read_missions_conf_file(int num)
                 CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)p_missi->PANEnd);
                 break;
             case MissL_WaitToFade:
-                i = LbIniValueGetLongInt(&parser, &k);
+                i = LbIniValueGetNamedEnum(&parser, missions_conf_wait_to_fade_types);
                 if (i <= 0) {
-                    CONFWRNLOG("Could not read \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
+                    CONFWRNLOG("Could not recognize \"%s\" command 1st parameter.", COMMAND_TEXT(cmd_num));
                     break;
                 }
-                p_missi->WaitToFade = k;
-                CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)p_missi->WaitToFade);
+                p_missi->WaitToFade = (i & 0xE000);
+                i = LbIniValueGetLongInt(&parser, &k);
+                if (i <= 0) {
+                    CONFWRNLOG("Could not read \"%s\" command 2nd parameter.", COMMAND_TEXT(cmd_num));
+                    break;
+                }
+                p_missi->WaitToFade |= (k & 0x1FFF);
+                CONFDBGLOG("%s 0x%x %d", COMMAND_TEXT(cmd_num), (p_missi->WaitToFade & 0xE000),
+                  (p_missi->WaitToFade & 0x1FFF));
                 break;
 
             case MissL_ImmediateNextOnSuccess:

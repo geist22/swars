@@ -6,6 +6,7 @@
 #include <sys/types.h>
 
 #include "bfconfig.h"
+#include "bfcircle.h"
 #include "bfdata.h"
 #include "bfendian.h"
 #include "bfsprite.h"
@@ -39,6 +40,9 @@
 #include "bftringl.h"
 #include "bfscd.h"
 
+#include "enginprops.h"
+#include "engintxtrmap.h"
+
 #include "linksmk.h"
 #include "bat.h"
 #include "bmbang.h"
@@ -48,12 +52,12 @@
 #include "bflib_joyst.h"
 #include "ssampply.h"
 #include "matrix.h"
-#include "app_text_cw.h"
 #include "dos.h"
 #include "drawtext.h"
 #include "enginbckt.h"
 #include "engindrwlstm.h"
 #include "engindrwlstx.h"
+#include "engindrwlstx_tng.h"
 #include "enginfexpl.h"
 #include "enginfloor.h"
 #include "enginlights.h"
@@ -63,6 +67,7 @@
 #include "enginsngtxtr.h"
 #include "enginpeff.h"
 #include "enginshadws.h"
+#include "engintext.h"
 #include "engintrns.h"
 #include "enginzoom.h"
 #include "game_data.h"
@@ -104,10 +109,10 @@
 #include "bigmap.h"
 #include "display.h"
 #include "dos.h"
+#include "frame_sprani.h"
 #include "game.h"
 #include "game_data.h"
 #include "game_speed.h"
-#include "game_sprani.h"
 #include "hud_target.h"
 #include "keyboard.h"
 #include "misstat.h"
@@ -146,6 +151,10 @@
  */
 #define EXPECTED_LANG_TXT_SIZE 8000
 
+/** How many game turns should pass before intro is replayed.
+ */
+#define INTRO_REPLAY_TURNS 1100
+
 enum PostRenderAction {
     PRend_NONE = 0,
     PRend_SaveScreenshot,
@@ -173,19 +182,15 @@ extern ulong stored_l3d_next_local_mat[1];
 extern ulong stored_level3d_inuse;
 
 extern unsigned char *display_palette;
-extern unsigned short unkn2_pos_x;
-extern unsigned short unkn2_pos_y;
-extern unsigned short unkn2_pos_z;
 extern int data_1c8428;
 const char *primvehobj_fname = "qdata/primveh.obj";
-extern unsigned char textwalk_data[640];
 
 extern short word_1C6E08;
 extern short word_1C6E0A;
 
 extern long dword_1DDECC;
 
-ulong engine_mem_alloc_size = 5900000;
+u32 engine_mem_alloc_size = 5900000;
 
 extern struct GamePanel unknstrct7_arr2[];
 
@@ -226,9 +231,6 @@ extern short word_1774E8[2 * 150];
 
 char *data_15319c = unknmsg_str;
 
-extern ushort word_1A7330[1000];
-extern ubyte byte_1A7B00[1000];
-extern ubyte byte_1A7EE8[8192];
 extern ubyte billboard_anim_no;
 extern ubyte byte_1AAA88;
 extern long dword_1AAB74;
@@ -242,8 +244,6 @@ extern long mech_unkn_tile_x2;
 extern long mech_unkn_tile_y2;
 extern long mech_unkn_tile_x3;
 extern long mech_unkn_tile_y3;
-
-extern short brightness;
 
 //TODO this is not an extern only because I was unable to locate it in asm
 ushort next_bezier_pt = 1;
@@ -277,7 +277,7 @@ char *misc_text[] = {
  * files will be stored in the same buffer upon switch, so the buffer allocated
  * here must fit all the variants.
  */
-struct TbLoadFiles unk02_load_files[] =
+struct TbLoadFiles missionspr_load_files[] =
 {
   { "*VESA",			(void **)&lbVesaData,		(void **)NULL,LB_VESA_DATA_SIZE, 1, 0 },
 #if 1 // !defined(LB_WSCREEN_CONTROL)
@@ -285,7 +285,7 @@ struct TbLoadFiles unk02_load_files[] =
 #endif
   { "data/pop2-3.dat",	(void **)&pop1_data,		(void **)&pop1_data_end,	0, 0, 0 },
   { "data/pop2-3.tab",	(void **)&pop1_sprites,		(void **)&pop1_sprites_end, 0, 0, 0 },
-  { "data/mspr-0.dat",	(void **)&m_spr_data,		(void **)&m_spr_data_end,	0, 0, 0 },
+  { "data/mspr-0.dat",	(void **)&m_sprites_data,	(void **)&m_sprites_data_end,0, 0, 0 },
   { "data/mspr-0.tab",	(void **)&m_sprites,		(void **)&m_sprites_end,	0, 0, 0 },
   { "data/mele-0.ani",	(void **)&melement_ani,		(void **)&mele_ani_end,		0, 0, 0 },
   { "data/nsta-0.ani",	(void **)&nstart_ani,		(void **)&nstart_ani_end,	0, 0, 0 },
@@ -357,10 +357,50 @@ void game_handle_sdl_events(void)
     }
 }
 
+int existing_texturemaps(void)
+{
+    char locstr[DISKPATH_SIZE];
+    int i;
+
+    for (i = 0; ; i++)
+    {
+        sprintf(locstr, "data/tex%02d.dat", i);
+        if (!LbFileExists(locstr))
+          break;
+    }
+    return i;
+}
+
+int reload_texturemaps(void)
+{
+    char locstr[DISKPATH_SIZE];
+    int i;
+
+    for (i = 0; vec_tmap[i] != NULL; i++)
+    {
+        sprintf(locstr, "data/tex%02d.dat", i);
+        LbFileLoadAt(locstr, vec_tmap[i]);
+    }
+    return i;
+}
+
 void load_texturemaps(void)
 {
+#if 0
     asm volatile ("call ASM_load_texturemaps\n"
         :  :  : "eax" );
+#endif
+    if (vec_tmap[0] == NULL)
+    {
+        int tmap_count;
+        tmap_count = existing_texturemaps();
+        if (!alloc_texturemaps(tmap_count)) {
+            exit_game = 1;
+            return;
+        }
+        ingame.LastTmap = tmap_count - 1;
+    }
+    reload_texturemaps();
 }
 
 void test_open(int num)
@@ -376,17 +416,6 @@ ushort my_count_lines(const char *text)
     return ret;
 }
 
-void read_textwalk(void)
-{
-    TbFileHandle handle;
-    handle = LbFileOpen("data/textwalk.dat", Lb_FILE_MODE_READ_ONLY);
-    if (handle != INVALID_FILE)
-    {
-        LbFileRead(handle, textwalk_data, 640);
-        LbFileClose(handle);
-    }
-}
-
 void load_prim_quad(void)
 {
     unkn2_pos_x = 64;
@@ -396,7 +425,7 @@ void load_prim_quad(void)
     prim_unknprop01 = 1000;
     read_primveh_obj(primvehobj_fname, 1);
     read_textwalk();
-    byte_19EC6F = 1;
+    engine_render_lights = 1;
     ingame.DisplayMode = DpM_PURPLEMNU;
     if (cmdln_param_bcg == 99)
         test_open(99);
@@ -459,11 +488,13 @@ void colour_tables_ghost_fixup(void)
         opal[i] = ipal[i];
 }
 
-void game_setup_stuff(void)
+TbBool game_setup_stuff(void)
 {
     TbFileHandle fh;
     ushort i;
+    TbBool ret;
 
+    ret = true;
     for (i = 0; i < PALETTE_8b_COLORS; i++)
         linear_vec_pal[i] = i;
     vec_pal = linear_vec_pal;
@@ -472,11 +503,23 @@ void game_setup_stuff(void)
     if (fh != INVALID_FILE) {
         nsta_size = LbFileSeek(fh, 0, Lb_FILE_SEEK_END);
         LbFileClose(fh);
+    } else {
+        ret = false;
     }
 
-    colour_brown2 = LbPaletteFindColour(display_palette, 42, 37, 30);
-    colour_grey2 = LbPaletteFindColour(display_palette, 32, 32, 32);
-    colour_grey1 = LbPaletteFindColour(display_palette, 16, 16, 16);
+    if (display_palette != NULL) {
+        colour_brown2 = LbPaletteFindColour(display_palette, 42, 37, 30);
+        colour_grey2 = LbPaletteFindColour(display_palette, 32, 32, 32);
+        colour_grey1 = LbPaletteFindColour(display_palette, 16, 16, 16);
+    } else {
+        colour_brown2 = 60;
+        colour_grey2 = 61;
+        colour_grey1 = 62;
+        LOGERR("Display palette not set, using dummies");
+        ret = false;
+    }
+
+    return ret;
 }
 
 void anim_show_FLI_SS2_NP(void)
@@ -707,23 +750,6 @@ void update_danger_music(ubyte a1)
     ingame.fld_unkC8B = 0;
 }
 
-void ingame_palette_load(int pal_id)
-{
-    char locstr[DISKPATH_SIZE];
-
-    sprintf(locstr, "qdata/pal%d.dat", pal_id);
-    LbFileLoadAt(locstr, display_palette);
-}
-
-void ingame_palette_reload(void)
-{
-    if ((ingame.Flags & GamF_ThermalView) != 0) {
-        ingame_palette_load(3);
-    } else {
-        ingame_palette_load(ingame.PalType);
-    }
-}
-
 void sprint_fmv_filename(ushort vid_type, char *fnbuf, ulong buflen)
 {
     const char *fname;
@@ -851,6 +877,7 @@ static void clear_smacker_skip_keys(void)
 void play_smacker(ushort vid_type)
 {
     char fname[FILENAME_MAX];
+    u32 plyflags;
     TbScreenMode scr_md_fmvid;
     TbBool prepare_draw_on_last_frame;
 
@@ -880,10 +907,12 @@ void play_smacker(ushort vid_type)
     }
     LbMouseChangeSprite(NULL);
 
+    plyflags = 0;
+
     if (fname[0] != '\0') {
         show_black_screen();
         clear_smacker_skip_keys();
-        play_smk(fname, 13, 0);
+        play_smk(fname, 13, plyflags);
         smack_malloc_free_all();
     }
 
@@ -934,32 +963,24 @@ void play_smacker_then_back_to_menu(ushort vid_type)
 
 void play_intro(void)
 {
-    char fname[FILENAME_MAX];
-
     LOGSYNC("Starting");
-    lbDisplay.LeftButton = 0;
-    clear_key_pressed(KC_ESCAPE);
     if ( (cmdln_param_bcg || is_single_game) &&
       ((ingame.Flags & GamF_SkipIntro) == 0))
     {
-        setup_screen_mode(screen_mode_fmvid_lo);
-        LbMouseChangeSprite(NULL);
-        sprint_fmv_filename(MPly_Intro, fname, sizeof(fname));
-        if (fname[0] != '\0') {
-            play_smk(fname, 13, 0);
-            smack_malloc_free_all();
-        }
-        LbMouseChangeSprite(&pointer_sprites[1]);
+        // After this function, we return either to engine or to menu,
+        // depending on how the app was started
+        if (cmdln_param_bcg)
+            play_smacker_then_back_to_menu(MPly_Intro);
+        else
+            play_smacker_then_back_to_engine(MPly_Intro);
     }
-    if (cmdln_param_bcg)
-        setup_screen_mode(screen_mode_menu);
 }
 
-char func_cc638(const char *text, const char *fname)
+char func_cc638(const char *text1, const char *text2)
 {
     char ret;
     asm volatile ("call ASM_func_cc638\n"
-        : "=r" (ret) : "a" (text), "d" (fname));
+        : "=r" (ret) : "a" (text1), "d" (text2));
     return ret;
 }
 
@@ -982,6 +1003,7 @@ int load_outro_text(ubyte *buf)
     }
     buf[totlen] = '\0';
     s = (char *)buf;
+    // The font can handle lower case letters, upper case just looks better
     for (i = 0; i < totlen; i++) {
         s[i] = my_char_to_upper(s[i]);
     }
@@ -1117,59 +1139,57 @@ int load_people_text(ubyte *buf)
     return totlen;
 }
 
-void load_outro_sprites(void)
+TbResult load_outro_sprites(void)
 {
-    ubyte *data_buf;
+    PathInfo *pinfo;
+    ubyte *p_buf;
     ubyte *outtxt_ptr;
     ubyte *peptxt_ptr;
     int next_pos, next_len;
     int total_allocs;
+    TbResult tret, ret;
+    short max_detail;
+
+    max_detail = 0;//UNKN_sprites_scale / 2;
+    tret = Lb_OK;
+
+    pinfo = &game_dirs[DirPlace_Data];
 
     total_allocs = 3 * EXPECTED_FONT_DAT_TAB_SIZE_8 + 2 * EXPECTED_LANG_TXT_SIZE;
     next_pos = engine_mem_alloc_size - 64000 - total_allocs;
 
     assert(next_pos >= 0);
-    data_buf = engine_mem_alloc_ptr + next_pos;
+    p_buf = engine_mem_alloc_ptr + next_pos;
 
-    next_pos = 0;
-    med_font_data = &data_buf[next_pos];
-    next_len = LbFileLoadAt("data/tit-font.dat", med_font_data);
-    next_pos += next_len;
-    med_font = (struct TbSprite *)&data_buf[next_pos];
-    next_len = LbFileLoadAt("data/tit-font.tab", med_font);
-    next_pos += next_len;
-    med_font_end = (struct TbSprite *)&data_buf[next_pos];
+    ret = load_sprites_med_font(&p_buf, pinfo->directory, 7, max_detail);
+    if (tret == Lb_OK)
+        tret = ret;
 
-    big_font_data = &data_buf[next_pos];
-    next_len = LbFileLoadAt("data/nam-font.dat", big_font_data);
-    next_pos += next_len;
-    big_font = (struct TbSprite *)&data_buf[next_pos];
-    next_len = LbFileLoadAt("data/nam-font.tab", big_font);
-    next_pos += next_len;
-    big_font_end = (struct TbSprite *)&data_buf[next_pos];
+    ret = load_sprites_big_font(&p_buf, pinfo->directory, 6, max_detail + 1);
+    if (tret == Lb_OK)
+        tret = ret;
 
-    med2_font_data = &data_buf[next_pos];
-    next_len = LbFileLoadAt("data/qot-font.dat", med2_font_data);
-    next_pos += next_len;
-    med2_font = (struct TbSprite *)&data_buf[next_pos];
-    next_len = LbFileLoadAt("data/qot-font.tab", med2_font);
-    next_pos += next_len;
-    med2_font_end = (struct TbSprite *)&data_buf[next_pos];
+    ret = load_sprites_med2_font(&p_buf, pinfo->directory, 12, max_detail);
+    if (tret == Lb_OK)
+        tret = ret;
 
     setup_sprites_med_font();
     setup_sprites_med2_font();
     setup_sprites_big_font();
 
-
-    outtxt_ptr = &data_buf[next_pos];
+    outtxt_ptr = p_buf;
     next_len = load_outro_text(outtxt_ptr);
-    next_pos += next_len;
+    p_buf += next_len;
 
-    peptxt_ptr = &data_buf[next_pos];
+    peptxt_ptr = p_buf;
     next_len = load_people_text(peptxt_ptr);
-    next_pos += next_len;
+    p_buf += next_len;
 
-    assert(next_pos <= total_allocs);
+    assert((p_buf - ((ubyte *)engine_mem_alloc_ptr + next_pos)) <= total_allocs);
+    if (tret == Lb_FAIL) {
+        LOGERR("Some files were not loaded successfully");
+    }
+    return tret;
 }
 
 void fill_floor_textures(void)
@@ -1210,19 +1230,24 @@ void fill_netgame_agent_pos(int plyr, int group, int num_agents)
     }
 }
 
+/** Change flags of commands containing "until".
+ * This seem to just block execution of commands. Maybe it was
+ * used to one-time fix some specific levels?
+ * Remove pending.
+ */
 void unkn_f_pressed_func(void)
 {
     ThingIdx thing;
     short i;
 
-    thing = same_type_head[1];
+    thing = get_thing_same_type_head(TT_PERSON, -1);
     for (i = 0; thing != 0; i++)
     {
         struct Thing *p_thing;
         ushort cmd;
         struct Command *p_cmd_prev;
 
-        if (i >= max(STHINGS_LIMIT,THINGS_LIMIT)) {
+        if (i >= THINGS_LIMIT) {
             LOGERR("Infinite loop in same type things list");
             break;
         }
@@ -1751,7 +1776,7 @@ void process_engine_unk3(void)
 
     if ((ingame.Flags & GamF_RenderScene) != 0)
     {
-        if ((gamep_scene_effect_type == ScEff_SPACE) && byte_19EC6F)
+        if ((gamep_scene_effect_type == ScEff_SPACE) && engine_render_lights)
             draw_background_stars();
         if (game_perspective == 6) {
             draw_background_stars();
@@ -1764,6 +1789,7 @@ void process_engine_unk3(void)
     {
         clear_super_quick_lights();
     }
+    assert(vec_tmap[1] != NULL);
     vec_map = vec_tmap[1];
     p_locplayer = &players[local_player_no];
     if ((ingame.Flags & GamF_RenderScene) != 0)
@@ -1901,6 +1927,7 @@ void init_outro(void)
     outro_unkn02 = 0;
     outro_unkn03 = 0;
     gameturn = 0;
+    render_anim_turn = gameturn;
 
     screen_animate_draw_outro_text();
     // Sleep for up to 10 seconds
@@ -1918,8 +1945,7 @@ void init_outro(void)
     data_1dd91c = 0;
     unkn_flags_01 = 1;
     overall_scale = 40;
-    palette_brightness = 0;
-    change_brightness(-64);
+    set_brightness_fadedout();
 
     while (1)
     {
@@ -1946,6 +1972,7 @@ void init_outro(void)
         }
 
         gameturn++;
+        render_anim_turn = gameturn;
         traffic_unkn_func_01();
         process_engine_unk1();
         process_sound_heap();
@@ -2032,17 +2059,27 @@ void init_scanner(void)
 /**
  * Updates engine parameters for best display for current video mode within the tactical mission.
  */
-void adjust_mission_engine_to_video_mode(void)
+TbBool adjust_mission_engine_to_video_mode(void)
 {
+    TbBool ret;
+
+    ret = true;
     game_high_resolution = (lbDisplay.ScreenMode == screen_mode_game_hi);
     // Set scale 15% over the min, to create a nice pan effect
     overall_scale = (get_overall_scale_min() * 295) >> 8;
-    load_pop_sprites_for_current_mode();
-    load_mouse_pointers_sprites_for_current_mode();
-    load_small_font_for_current_ingame_mode();
+
+    if (load_pop_sprites_for_current_mode() == Lb_FAIL)
+        ret = false;
+    if (load_mouse_pointers_sprites_for_current_mode() == Lb_FAIL)
+        ret = false;
+    if (load_small_font_for_current_ingame_mode() == Lb_FAIL)
+        ret = false;
+
     render_area_a = render_area_b = \
       get_render_area_for_zoom(user_zoom_min);
     srm_scanner_size_update();
+
+    return ret;
 }
 
 void show_simple_load_screen(void)
@@ -2089,8 +2126,19 @@ void setup_initial_screen_mode(void)
     setup_simple_screen_mode(lbDisplay.ScreenMode);
     show_black_screen();
     // Setup colour conversion tables, allowing generation
-    LbColourTablesLoad(display_palette, "data/tables.dat");
-    LbGhostTableGenerate(display_palette, 50, "data/synghost.tab");
+    if (display_palette != NULL)
+    {
+        LbColourTablesLoad(display_palette, "data/tables.dat");
+        LbGhostTableGenerate(display_palette, 50, "data/synghost.tab");
+    }
+    else
+    {
+        LOGERR("Palette not ready - skipping colour tables setup");
+    }
+    if (screen_idle_update_initialize() != Lb_SUCCESS)
+    {
+        LOGERR("Idle screen update not registered - expect choppy mouse");
+    }
 #if 0
     // Not sure why we would do this fixup. Maybe it's only for
     // sprite generation? If used before gameplay, it causes bad
@@ -2253,8 +2301,11 @@ TbResult prep_multicolor_sprites(void)
     return ret;
 }
 
-void setup_host(void)
+TbBool setup_host(void)
 {
+    TbBool ret;
+
+    ret = true;
     BAT_unknsub_20(0, 0, 0, 0, vec_tmap[4] + 160 * 256 + 64);
     smack_malloc_setup();
     LOGDBG("&setup_host() = 0x%p", (void *)setup_host);
@@ -2268,19 +2319,33 @@ void setup_host(void)
 
     setup_mouse_pointers();
     lbMouseAutoReset = false;
-    LbMouseSetup(&pointer_sprites[1],
-      2 * NORMAL_MOUSE_MOVE_RATIO, 2 * NORMAL_MOUSE_MOVE_RATIO);
+    mouse_setup(true);
 
     setup_debug_obj_trace();
 
-    // Default Trenchcoat color loaded from unk02_load_files[]
-    ingame.TrenchcoatPreference = 0;
+    // Default Trenchcoat color loaded from missionspr_load_files[]
+    // should be set earlier with default user options
+    assert(ingame.TrenchcoatPreference == 0);
     setup_multicolor_sprites();
-    ingame.PanelPermutation = -2;
-    load_pop_sprites_for_current_mode();
-    load_mouse_pointers_sprites_for_current_mode();
-    load_small_font_for_current_ingame_mode();
-    init_memory(mem_game);
+    assert(ingame.PanelPermutation == -2);
+
+    if (load_pop_sprites_for_current_mode() == Lb_FAIL) {
+        LOGERR("Load pop sprites failed.");
+        ret = false;
+    }
+    if (load_mouse_pointers_sprites_for_current_mode() == Lb_FAIL) {
+        LOGERR("Load mouse pinters sprites failed.");
+        ret = false;
+    }
+    if (load_small_font_for_current_ingame_mode() == Lb_FAIL) {
+        LOGERR("Load small font sprites failed.");
+        ret = false;
+    }
+    if (init_memory(mem_game) == Lb_FAIL) {
+        LOGERR("Init memory failed.");
+        ret = false;
+    }
+    propagate_memory_sizes();
 
     init_syndwars();
     LoadSounds(0);
@@ -2289,6 +2354,8 @@ void setup_host(void)
     setup_host_sub6();
     play_intro();
     flic_unkn03(AniSl_BILLBOARD);
+
+    return ret;
 }
 
 void init_engine(void)
@@ -2326,17 +2393,6 @@ void func_74934(void)
         :  :  : "eax" );
 }
 
-void set_default_brightness(void)
-{
-#if 0
-    asm volatile ("call ASM_set_default_brightness\n"
-        :  :  : "eax" );
-    return;
-#endif
-    palette_brightness = brightness;
-    change_brightness(0);
-}
-
 void init_crater_textures(void)
 {
     asm volatile ("call ASM_init_crater_textures\n"
@@ -2356,40 +2412,6 @@ void func_749fc(void)
     asm volatile ("call ASM_func_749fc\n"
         :  :  : "eax" );
     return;
-}
-
-void func_3d904(void)
-{
-#if 0
-    asm volatile ("call ASM_func_3d904\n"
-        :  :  : "eax" );
-    return;
-#endif
-    uint i;
-    ushort idx3;
-
-    for (i = 0; i < 999; i++)
-    {
-        idx3 = (i / 333) % 3;
-        if (idx3 == 0)
-        {
-            uint rnd;
-            ushort idx1, idx2;
-            ubyte *tmap;
-
-            rnd = (gameturn >> 2) + LbRandomAnyShort();
-            idx1 = (rnd >> 3) & 0x1FFF;
-            if ((byte_1A7EE8[idx1] & (1 << (idx1 & 7))) == 0)
-            {
-                idx2 = rnd & 0xFFFF;
-                word_1A7330[i] = idx2;
-                tmap = vec_tmap[0];
-                byte_1A7B00[i] = tmap[idx2];
-                tmap[idx2] = 63;
-                byte_1A7EE8[idx1] |= (1 << (idx1 & 7));
-            }
-        }
-    }
 }
 
 void clear_word_1774E8(void)
@@ -2533,7 +2555,7 @@ void setup_ingame_scene_effect(void)
         if (weather == MWeathr_Rainy) {
             gamep_scene_effect_type = ScEff_RAIN;
             gamep_scene_effect_intensity = 1000;
-            func_3d904();
+            scene_post_effect_rain_init();
         } else if (weather == MWeathr_Snowy) {
             gamep_scene_effect_type = ScEff_SNOW;
             gamep_scene_effect_intensity = 1000;
@@ -2629,7 +2651,7 @@ void init_level(void)
         player_target_clear(plyr_no);
     }
 
-    set_default_brightness();
+    set_user_selected_brightness();
     ingame.Flags &= ~TngF_Unkn8000;
     if (!in_network_game)
         ingame.InNetGame_UNSURE = 1;
@@ -3230,6 +3252,7 @@ void restart_back_into_mission(ushort missi)
     reload = (missi == ingame.CurrentMission);
     mapno = mission_list[missi].MapNo;
     mission_result = 0;
+    ingame.MissionEndFade = 0;
     ingame.CurrentMission = missi;
     mission_list[missi].Complete = 0;
     change_current_map(mapno);
@@ -3397,12 +3420,98 @@ void create_tables_file_from_palette(void)
       "data/tables.dat");
 }
 
-void game_setup(void)
+/** Shows a screen with startup fail message.
+ *
+ * This special screen requires zero data files, so it can shown even
+ * if the data load has failed. It is supposed to be the last information
+ * message before the game terminates.
+ */
+void game_startup_fail_screen(void)
 {
+    ubyte vga_pal[PALETTE_8b_SIZE];
+    TbBool was_locked;
+    int i, step;
+    short cent_x, cent_y, circle_diam;
+    short base_x, base_y, embeded_square_dim;
+    TbPixel col_grey1, col_grey2, col_white, col_blue1;
+
+    was_locked = LbScreenIsLocked();
+    if (!was_locked) {
+        while (LbScreenLock() != Lb_SUCCESS)
+            ;
+    }
+
+    if (lbDisplay.WScreen == NULL) {
+        if (!was_locked)
+            LbScreenUnlock();
+        return;
+    }
+
+    lbDisplay.DrawFlags = 0;
+    LbPaletteDataFillDefVGA(vga_pal);
+    LbPaletteSet(vga_pal);
+    LbScreenClear(0);
+
+    col_white = LbPaletteFindColour(vga_pal, 63, 63, 63);
+    col_grey2 = LbPaletteFindColour(vga_pal, 32, 32, 32);
+    col_grey1 = LbPaletteFindColour(vga_pal, 16, 16, 16);
+    col_blue1 = LbPaletteFindColour(vga_pal,  0,  0, 16);
+
+    cent_x = lbDisplay.GraphicsScreenWidth / 2;
+    cent_y = lbDisplay.GraphicsScreenHeight / 2;
+    circle_diam = min(lbDisplay.GraphicsScreenWidth, lbDisplay.GraphicsScreenHeight);
+
+    step = circle_diam / 20;
+    base_x = ((lbDisplay.GraphicsScreenWidth % step) / 2) - circle_diam*1/256;
+    base_y = ((lbDisplay.GraphicsScreenHeight % step) / 2) - circle_diam*1/256;
+    for (i = 0; i < lbDisplay.GraphicsScreenWidth; i += step) {
+        LbDrawBox(base_x + i, 0, circle_diam*1/128, lbDisplay.GraphicsScreenHeight, col_grey2);
+    }
+    for (i = 0; i < lbDisplay.GraphicsScreenHeight; i += step) {
+        LbDrawBox(0, base_y + i, lbDisplay.GraphicsScreenWidth, circle_diam*1/128, col_grey2);
+    }
+
+    LbDrawCircle(cent_x, cent_y, circle_diam*32/64, col_grey1);
+    LbDrawCircle(cent_x, cent_y, circle_diam*31/64, col_blue1);
+
+    embeded_square_dim = circle_diam * 128 / 181; // circle_diam divided by sqrt(2)
+
+    LbPaletteDraw(cent_x - embeded_square_dim/2, cent_y - embeded_square_dim/2, embeded_square_dim/16, embeded_square_dim/16, 0);
+    LbDrawBox(cent_x - embeded_square_dim/6, cent_y - circle_diam*2/64, embeded_square_dim * 2 / 6, circle_diam*5/64, 0);
+
+    draw_text(cent_x - 40, cent_y - circle_diam*1/64, "U.T.O.P.I.A.", col_white);
+    draw_text(cent_x - 40, cent_y - circle_diam*0/64, "Game startup failed!", col_white);
+    draw_text(cent_x - 40, cent_y + circle_diam*1/64, "Check \"error.log\".", col_white);
+
+    if (!was_locked)
+        LbScreenUnlock();
+    swap_wscreen();
+
+    for (i = 5*game_num_fps; i > 0; i--)
+    {
+        game_update();
+    }
+}
+
+TbBool game_setup(void)
+{
+    TbBool ret;
+
+    ret = true;
     engine_mem_alloc_ptr = LbMemoryAlloc(engine_mem_alloc_size);
+    if (engine_mem_alloc_ptr == NULL) {
+        LOGERR("Allocating engine memory failed.");
+        ret = false;
+    }
     load_texturemaps();
-    LbDataLoadAll(unk02_load_files);
-    read_rules_file();
+    if (LbDataLoadAll(missionspr_load_files) != 0) {
+        LOGERR("Initial loading of mission sprite files failed.");
+        ret = false;
+    }
+    if (!read_rules_file()) {
+        LOGERR("Rules config file loading failed.");
+        ret = false;
+    }
     read_weapons_conf_file();
     read_cybmods_conf_file();
     bang_init();
@@ -3412,9 +3521,16 @@ void game_setup(void)
     FIRE_init_or_samples_init();
     ingame.draw_unknprop_01 = 0;
     debug_trace_setup(-5);
-    game_setup_stuff();
-    create_strings_list(gui_strings, gui_strings_data, gui_strings_data_end);
-    setup_host();
+    if (!game_setup_stuff()) {
+        LOGERR("Setting up some misc stuff failed.");
+        ret = false;
+    }
+    if (!create_strings_list(gui_strings, gui_strings_data, gui_strings_data_end)) {
+        LOGERR("National strings list creation failed.");
+        ret = false;
+    }
+    if (!setup_host())
+        ret = false;
     debug_trace_setup(-4);
     read_user_settings();
     debug_trace_setup(-3);
@@ -3440,7 +3556,7 @@ void game_setup(void)
     }
     test_open(15);
     debug_trace_setup(1);
-    if (is_single_game && (ingame.CurrentMission != 0))
+    if (is_single_game && (ingame.CurrentMission != 0) && ret)
     {
         prep_single_mission();
     }
@@ -3458,6 +3574,11 @@ void game_setup(void)
         create_tables_file_from_fade();
         break;
     }
+    if (!ret) {
+        LOGERR("Part of the game startup has failed. See the log lines above for a cause.");
+        game_startup_fail_screen();
+    }
+    return ret;
 }
 
 void anim_show_draw_next_frame(struct Animation *p_anim)
@@ -4642,7 +4763,7 @@ ubyte do_storage_NEW_MORTAL(ubyte click)
 
     campaign_new_game_prepare();
 
-    if (save_game_write(0, save_active_desc)) {
+    if (autosave_game()) {
         alert_box_text_fmt("%s", gui_strings[566]);
     }
 
@@ -4936,12 +5057,34 @@ ubyte weapon_select_input(void)
     if (is_gamekey_pressed(GKey_USE_MEDIKIT))
     {
         clear_gamekey_pressed(GKey_USE_MEDIKIT);
-        if (person_carries_any_medikit(dcthing))
+        if (person_can_use_medikit(dcthing))
         {
             my_build_packet(p_pckt, PAct_AGENT_USE_MEDIKIT, dcthing, 0, 0, 0);
             return GINPUT_PACKET;
         }
     }
+
+#ifdef MORE_GAME_KEYS
+    if (is_gamekey_pressed(GKey_SUPERSHIELD))
+    {
+        clear_gamekey_pressed(GKey_SUPERSHIELD);
+        if (person_can_toggle_supershield(dcthing))
+        {
+            my_build_packet(p_pckt, PAct_SHIELD_TOGGLE, dcthing, 0, 0, 0);
+            return GINPUT_PACKET;
+        }
+    }
+
+    if (is_gamekey_pressed(GKey_VIEW_THERMAL))
+    {
+        clear_gamekey_pressed(GKey_VIEW_THERMAL);
+        if (player_can_toggle_thermal(local_player_no))
+        {
+            my_build_packet(p_pckt, PAct_THERMAL_TOGGLE, dcthing, 0, 0, 0);
+            return GINPUT_PACKET;
+        }
+    }
+#endif
 
     assert(sizeof(sel_weapon_gkeys)/sizeof(sel_weapon_gkeys[0]) <= WEAPONS_CARRIED_MAX_COUNT);
 
@@ -4983,19 +5126,6 @@ void do_rotate_map(void)
 {
     asm volatile ("call ASM_do_rotate_map\n"
         :  :  : "eax" );
-}
-
-void reset_brightness(void)
-{
-#if 0
-    TbResult ret;
-    asm volatile ("call ASM_reset_brightness\n"
-        : "=r" (ret) : );
-    return ret;
-#endif
-    ingame_palette_reload();
-    brightness = 0;
-    set_default_brightness();
 }
 
 ubyte process_mouse_inputs(void)
@@ -5411,21 +5541,21 @@ ubyte do_user_interface(void)
     if (is_key_pressed(KC_F11, KMod_CONTROL))
     {
         clear_key_pressed(KC_F11);
-        reset_brightness();
+        reset_user_selected_brightness();
         did_inp |= GINPUT_DIRECT;
     }
     if (is_key_pressed(KC_F11, KMod_SHIFT))
     {
         clear_key_pressed(KC_F11);
         change_brightness(-1);
-        brightness--;
+        user_sel_brightness--;
         did_inp |= GINPUT_DIRECT;
     }
     if (is_key_pressed(KC_F11, KMod_NONE))
     {
         clear_key_pressed(KC_F11);
         change_brightness(1);
-        brightness++;
+        user_sel_brightness++;
         did_inp |= GINPUT_DIRECT;
     }
 
@@ -5614,7 +5744,7 @@ ubyte do_user_interface(void)
         }
     }
 
-    if (ingame.Flags & GamF_Unkn0100)
+    if ((ingame.Flags & GamF_Unkn0100) != 0)
     {
         short dcthing;
         dcthing = p_locplayer->DirectControl[0];
@@ -5847,6 +5977,7 @@ void show_menu_screen_st2(void)
       update_mission_time(0);
       selected_city_id = -1;
       byte_1C4AA3 = brief_store[open_brief - 1].RefNum;
+      // Original code compared MissionStatus to 0 and 2, is 2 a valid value?
       if ((ingame.MissionStatus != ObvStatu_UNDECIDED) && (ingame.MissionStatus != ObvStatu_FAILED))
       {
             memcpy(&mission_status[0], &mission_status[open_brief],
@@ -5875,9 +6006,7 @@ void show_menu_screen_st2(void)
             struct MissionStatus *p_mistat;
             p_mistat = &mission_status[open_brief];
             forward_research_progress_after_mission(p_mistat->CityDays);
-            if ((ingame.Flags & GamF_MortalGame) != 0) {
-                save_game_write(0, save_active_desc);
-            }
+            autosave_game();
             screentype = SCRT_DEBRIEF;
             set_heading_box_text(gui_strings[374]);
             redraw_screen_flag = 1;
@@ -5954,7 +6083,7 @@ void show_load_and_prep_mission(void)
         }
 
         ingame.MissionEndFade = 0;
-        byte_19EC6F = 1;
+        engine_render_lights = 1;
 
         debug_trace_place(10);
         if ( in_network_game )
@@ -6029,6 +6158,7 @@ void show_load_and_prep_mission(void)
         }
         debug_trace_place(19);
     }
+    render_anim_turn = gameturn;
 
     // Set up remaining graphics data and controls
     if (start_into_mission)
@@ -6064,9 +6194,11 @@ void mouse_sprite_animate(void)
 {
     if (gameturn & 1)
     {
+      struct TbSprite *p_mspr;
       if (++mouse_sprite_anim_frame > 7)
           mouse_sprite_anim_frame = 0;
-      LbMouseChangeSprite(&fe_mouseptr_sprites[mouse_sprite_anim_frame + 1]);
+      p_mspr = &fe_mouseptr_sprites[1 + mouse_sprite_anim_frame];
+      LbMouseChangeSprite(p_mspr);
     }
 }
 
@@ -6217,7 +6349,7 @@ void show_menu_screen(void)
     if (screentype == SCRT_MAINMENU)
     {
         replay_intro_timer++;
-        if (replay_intro_timer > 1100)
+        if (replay_intro_timer > INTRO_REPLAY_TURNS)
         {
             play_smacker_then_back_to_menu(MPly_Intro);
             replay_intro_timer = 0;
@@ -6523,7 +6655,7 @@ ubyte critical_action_input(void)
         int x, y, w, h;
         short tx_height;
 
-        tx_height = font_height('A');
+        tx_height = my_char_height('A');
         w = my_string_width(locstr) + 2 * tx_height;
         h = 3 * tx_height;
         x = (lbDisplay.GraphicsWindowWidth - w) / 2;
@@ -6680,7 +6812,7 @@ void input_mission_concluded(void)
       is_key_pressed(KC_SPACE, KMod_DONTCARE) ||
       is_key_pressed(KC_ESCAPE, KMod_NONE))
     {
-        if (ingame.MissionStatus != -1 || is_key_pressed(KC_ESCAPE, KMod_NONE))
+        if (ingame.MissionStatus != ObvStatu_MissTmp_FAILED || is_key_pressed(KC_ESCAPE, KMod_NONE))
         {
           clear_key_pressed(KC_ESCAPE);
           clear_key_pressed(KC_SPACE);
@@ -6731,9 +6863,21 @@ void load_packet(void)
             if (ingame.MissionEndFade == 0)
             {
                 struct Mission *p_missi;
+                int fade_turns;
+
+                fade_turns = 0;
                 p_missi = &mission_list[ingame.CurrentMission];
-                if (p_missi->WaitToFade != 0)
-                    ingame.MissionEndFade = p_missi->WaitToFade;
+                if ((ingame.MissionStatus == ObvStatu_COMPLETED) &&
+                  ((p_missi->WaitToFade & WTFade_ON_SUCCESS) != 0))
+                    fade_turns = (p_missi->WaitToFade & 0x1FFF);
+                if ((ingame.MissionStatus == ObvStatu_MissTmp_FAILED) &&
+                  ((p_missi->WaitToFade & WTFade_ON_FAIL) != 0))
+                    fade_turns = (p_missi->WaitToFade & 0x1FFF);
+                if (fade_turns != 0) {
+                    LOGSYNC("Mission end fade initiated, status=%d, turns=%d",
+                      (int)ingame.MissionStatus, fade_turns);
+                    ingame.MissionEndFade = fade_turns;
+                }
             }
         }
     }
@@ -6758,7 +6902,7 @@ void load_packet(void)
         } else {
             init_level_3d(1);
             if (ingame.MissionStatus != ObvStatu_COMPLETED)
-                ingame.MissionStatus = -1;
+                ingame.MissionStatus = ObvStatu_MissTmp_FAILED;
             mission_over();
         }
     }
@@ -6890,6 +7034,7 @@ void game_process(void)
         update_unkn_changing_colors();
         game_process_orbital_station_explode();
         gameturn++;
+        render_anim_turn = gameturn;
         scene_post_effect_prepare();
     }
     PacketRecord_Close();
@@ -6901,25 +7046,6 @@ void game_quit(void)
     host_reset();
     LbBaseReset();
     exit(0);
-}
-
-void
-game_transform_path_full(const char *file_name, char *buffer, size_t size)
-{
-    /* skip adding main folder on absolute paths */
-    if (file_name[0] == '\\' || file_name[0] == '/'
-        || (strlen (file_name) >= 2 && file_name[1] == ':'))
-    {
-        snprintf(buffer, size, "%s", file_name);
-        return;
-    }
-
-    snprintf(buffer, size, "%s" FS_SEP_STR "%s", GetDirectoryHdd(), file_name);
-}
-
-void game_transform_path(const char *file_name, char *result)
-{
-    game_transform_path_full (file_name, result, FILENAME_MAX);
 }
 
 static void game_update_full(bool wait)
@@ -6970,6 +7096,6 @@ void game_reset(void)
 {
     host_reset();
     free_texturemaps();
-    LbDataFreeAll(unk02_load_files);
+    LbDataFreeAll(missionspr_load_files);
 }
 

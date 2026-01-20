@@ -33,8 +33,10 @@
 #include "enginlights.h"
 #include "enginpriobjs.h"
 #include "enginpritxtr.h"
+#include "enginprops.h"
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"
+#include "engintxtrmap.h"
 #include "bigmap.h"
 #include "game_options.h"
 #include "game.h"
@@ -51,6 +53,8 @@
 static char data_path_user[DISKPATH_SIZE] = "";
 static char data_path_hdd[DISKPATH_SIZE] = "";
 static char game_dir_language[64] = "language/eng";
+
+u32 scratch_malloc_size = 0;
 
 /******************************************************************************/
 
@@ -113,6 +117,14 @@ PathInfo game_dirs[] = {
   {NULL,		0},
 };
 
+void SetupBflibScreenshotsDir(void)
+{
+    PathInfo *pinfo;
+
+    pinfo = &game_dirs[DirPlace_Scrnshots];
+    LbSetImagesDirectory(pinfo->directory);
+}
+
 const char *
 GetDirectoryUser(void)
 {
@@ -124,7 +136,7 @@ GetDirectoryUser(void)
         {
             snprintf(data_path_user, sizeof(data_path_user), ".");
         }
-        LbSyncLog("Dir for user files '%s'", data_path_user);
+        LbSyncLog("Dir for user files '%s'\n", data_path_user);
 
         pinfo = &game_dirs[DirPlace_Savegame];
         LbDirectoryMake(pinfo->directory, true);
@@ -144,7 +156,7 @@ GetDirectoryHdd(void)
         {
             snprintf(data_path_hdd, sizeof(data_path_hdd), "%s", ".");
         }
-        LbSyncLog("Dir with HDD data '%s'",data_path_hdd);
+        LbSyncLog("Dir with HDD data '%s'\n",data_path_hdd);
     }
     return data_path_hdd;
 }
@@ -244,7 +256,10 @@ void SyndFileNameTransform(char *out_fname, const char *inp_fname)
 
 void setup_file_names(void)
 {
+#if LB_FILENAME_TRANSFORM
     lbFileNameTransform = SyndFileNameTransform;
+#endif
+    SetupBflibScreenshotsDir();
     // This fills the path variable; for user, it also creates the folder
     GetDirectoryHdd();
     GetDirectoryUser();
@@ -308,7 +323,7 @@ int get_memory_ptr_index(void **mgptr)
     return -1;
 }
 
-long get_memory_ptr_allocated_count(void **mgptr)
+int get_memory_ptr_allocated_count(void **mgptr)
 {
     int i;
     for (i = 0; mem_game[i].Name != NULL; i++)
@@ -452,7 +467,7 @@ uint memory_table_entries(MemSystem *mem_table)
     return i;
 }
 
-void init_memory(MemSystem *mem_table)
+TbResult init_memory(MemSystem *mem_table)
 {
     MemSystem *ment;
     int mem_table_len;
@@ -460,11 +475,22 @@ void init_memory(MemSystem *mem_table)
     ubyte *p;
     int i;
     ulong k;
+    TbResult ret;
 
+    ret = Lb_SUCCESS;
     totlen = 8192;
     mem_table_len = memory_table_entries(mem_table);
 
-    p = scratch_malloc_mem;
+    if (engine_mem_alloc_ptr == NULL) {
+        LOGWARN("Memory for engine not allocated; further init will not work correctly");
+        ret = Lb_FAIL;
+    }
+
+    if (tmaps_extra_buf == NULL) {
+        LOGWARN("Texture maps not allocated; cannor reuse their extra memory");
+    }
+
+    p = NULL;
     for (i = mem_table_len - 1; i >= 0; i--)
     {
         ment = &mem_table[i];
@@ -476,29 +502,71 @@ void init_memory(MemSystem *mem_table)
             if ((engine_mem_alloc_size & 0x80000000) == 0)
               ment->PrivBuffer = engine_mem_alloc_ptr + totlen;
             else
-              exit_game = 1;
+              ret = Lb_FAIL;
 
-            if (ment->N * (ulong)ment->ESize >= dword_1810D5 || mem_game_index_is_prim(i))
+            if (ment->N * (ulong)ment->ESize < tmaps_extra_len && !mem_game_index_is_prim(i))
+            {
+                // Reuse extra texture maps atlas memory
+                ment->PrivBuffer = tmaps_extra_buf;
+                k = ment->N * ment->ESize;
+                k = (k + 4) & ~0x3;
+                tmaps_extra_len -= k;
+                tmaps_extra_buf += k;
+            }
+            else
             {
                 k = ment->N * ment->ESize;
                 k = (k + 4) & ~0x3;
                 totlen += k;
                 assert(totlen <= engine_mem_alloc_size);
             }
-            else
-            {
-                ment->PrivBuffer = dword_1810D1;
-                k = ment->N * ment->ESize;
-                k = (k + 4) & ~0x3;
-                dword_1810D5 -= k;
-                dword_1810D1 += k;
-            }
             *(ment->BufferPtr) = ment->PrivBuffer;
         }
     }
-    scratch_malloc_mem = p;
+    if (p != NULL) {
+        scratch_malloc_mem = p;
+        assert((ubyte *)engine_mem_alloc_ptr + engine_mem_alloc_size > p);
+        scratch_malloc_size = (ubyte *)engine_mem_alloc_ptr + engine_mem_alloc_size - p;
+    } else {
+        LOGWARN("Memory for scratch_malloc not prepared");
+        scratch_malloc_size = 0;
+        ret = Lb_FAIL;
+    }
+
     memset(game_sort_sprites, 0, 0x20u);
+
     scratch_buf1 = *ment[23].BufferPtr; // prim_objects
+    if (scratch_buf1 == NULL) {
+        LOGWARN("Memory for scratch_buf1 not prepared");
+        ret = Lb_FAIL;
+    }
+
+    if (ret == Lb_FAIL) {
+        LOGSYNC("Memory init failed, game will exit");
+        exit_game = 1;
+    } else {
+        LOGSYNC("Memory init performed");
+    }
+
+    return ret;
+}
+
+TbResult propagate_memory_sizes(void)
+{
+    TbResult ret;
+
+    ret = Lb_SUCCESS;
+
+    screen_points_limit = mem_game[30].N;
+    assert(screen_points_limit > 0);
+    draw_items_limit = mem_game[31].N;
+    assert(draw_items_limit > 0);
+    game_textures_limit = get_memory_ptr_allocated_count((void **)&game_textures);
+    assert(game_textures_limit > 0);
+    face_textures_limit = get_memory_ptr_allocated_count((void **)&game_face_textures);
+    assert(face_textures_limit > 0);
+
+    return ret;
 }
 
 /******************************************************************************/

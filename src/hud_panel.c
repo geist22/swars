@@ -32,9 +32,11 @@
 #include "bfutility.h"
 #include "ssampply.h"
 
+#include "engintxtrmap.h"
+#include "render_gpoly.h"
+
 #include "app_sprite.h"
-#include "app_text_sf.h"
-#include "bflib_render_drspr.h"
+#include "engintext.h"
 #include "bigmap.h"
 #include "display.h"
 #include "engintrns.h"
@@ -127,8 +129,11 @@ TbResult load_pop_sprites_for_current_mode(void)
         name = "pop";
     }
     ret = load_pop_sprites_up_to(pinfo->directory, name, styleno, max_detail);
-    setup_pop_sprites();
-    size_panels_for_detail(pop1_sprites_scale - 1);
+    if (ret != Lb_FAIL)
+    {
+        setup_pop_sprites();
+        size_panels_for_detail(pop1_sprites_scale - 1);
+    }
     return ret;
 }
 
@@ -185,7 +190,7 @@ int SCANNER_text_draw(const char *text, int start_x, int height)
     ubyte sel_c1;
 
     lbFontPtr = small_font;
-    fnt_height = font_height('A');
+    fnt_height = my_char_height('A');
      // detail 0 font has height equal 6
     height_base = 9 * fnt_height / 6;
     y = 0;
@@ -1485,6 +1490,7 @@ void draw_transparent_slant_bar(short x, short y, ushort w, ushort h)
     point4.pp.S = 0;
 
     vec_mode = 18;
+    assert(vec_tmap[2] != NULL);
     vec_map = vec_tmap[2];
     draw_trigpoly(&point1.pp, &point4.pp, &point3.pp);
     if (vec_mode == 2)
@@ -2588,29 +2594,22 @@ ubyte check_panel_input(short panel)
         case PanT_AgentMedi:
             // Use medikit
             p_agent = p_locplayer->MyAgent[p_panel->ID];
-            if ((p_agent->Type != TT_PERSON) || !person_carries_any_medikit(p_agent->ThingOffset)) {
+            if ((p_agent->Type != TT_PERSON) || !person_can_use_medikit(p_agent->ThingOffset)) {
                 break;
             }
             my_build_packet(p_pckt, PAct_AGENT_USE_MEDIKIT, p_agent->ThingOffset, 0, 0, 0);
-            did_inp |= GINPUT_DIRECT;
-            break;
+            did_inp |= GINPUT_PACKET;
+            return did_inp;
         case PanT_WeaponEnergy:
             // Enable supershield
             if (p_locplayer->DoubleMode && byte_153198 - 1 != mouser) {
                 break;
             }
-            if (p_locplayer->DoubleMode) {
-                break;
-            }
             dcthing = p_locplayer->DirectControl[mouser];
-            if ((things[dcthing].Flag & TngF_Destroyed) != 0) {
+            if (!person_can_toggle_supershield(dcthing)) {
                 break;
             }
-            p_agent = p_locplayer->MyAgent[p_panel->ID];
-            if (p_agent->Type != TT_PERSON) {
-                break;
-            }
-            build_packet(p_pckt, PAct_SHIELD_TOGGLE, dcthing, p_agent->ThingOffset, 0, 0);
+            build_packet(p_pckt, PAct_SHIELD_TOGGLE, dcthing, 0, 0, 0);
             p_locplayer->UserInput[mouser].ControlMode |= UInpCtrF_Unkn8000;
             did_inp |= GINPUT_PACKET;
             return did_inp;
@@ -2619,9 +2618,11 @@ ubyte check_panel_input(short panel)
             {
                 // Toggle thermal view
                 dcthing = p_locplayer->DirectControl[mouser];
-                build_packet(p_pckt, PAct_THERMAL_TOGGLE, dcthing, 0, 0, 0);
-                did_inp |= GINPUT_PACKET;
-                return did_inp;
+                if (player_can_toggle_thermal(local_player_no)) {
+                    build_packet(p_pckt, PAct_THERMAL_TOGGLE, dcthing, 0, 0, 0);
+                    did_inp |= GINPUT_PACKET;
+                    return did_inp;
+                }
             }
             else
             {

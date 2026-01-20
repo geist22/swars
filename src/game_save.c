@@ -43,8 +43,13 @@
 
 /******************************************************************************/
 
+ubyte *save_game_buffer = NULL;
+
 extern ubyte save_crypto_tables_state[3];
 extern ubyte save_crypto_data_state[3];
+
+char save_slot_names[SAVE_SLOTS_VISIBLE_COUNT][25] = {0};
+char save_active_desc[25];
 
 /******************************************************************************/
 
@@ -307,8 +312,16 @@ void read_user_settings(void)
             set_default_game_keys();
             LbFileRead(fh, kbkeys, 29 * sizeof(ushort));
             LbFileRead(fh, jskeys, 29 * sizeof(ushort));
+        } else if (fmtver == 2) {
+            set_default_game_keys();
+            LbFileRead(fh, kbkeys, 50 * sizeof(ushort));
+            LbFileRead(fh, jskeys, 50 * sizeof(ushort));
         } else {
+#ifdef MORE_GAME_KEYS
+            if (fmtver != 3)
+#else
             if (fmtver != 2)
+#endif
                 LOGWARN("Settings may be invalid, as \"%s\" has unrecognized format version %d", fname, (int)fmtver);
             LbFileRead(fh, kbkeys, GKey_KEYS_COUNT * sizeof(ushort));
             LbFileRead(fh, jskeys, GKey_KEYS_COUNT * sizeof(ushort));
@@ -369,7 +382,11 @@ TbBool save_user_settings(void)
     int i;
 
     get_user_settings_fname(fname, login_name);
+#ifdef MORE_GAME_KEYS
+    fmtver = 3;
+#else
     fmtver = 2;
+#endif
 
     fh = LbFileOpen(fname, Lb_FILE_MODE_NEW);
     if (fh == INVALID_FILE)
@@ -562,12 +579,13 @@ void load_save_slot_names(void)
     char locstr[DISKPATH_SIZE];
     int i;
 
-    for (i = 0; i < 9; i++)
+    for (i = 0; i < SAVE_SLOTS_VISIBLE_COUNT + 1; i++)
     {
         TbFileHandle fh;
         int slot;
 
-        if (i == 8)
+        // the last slot is for mortal game
+        if (i == SAVE_SLOTS_VISIBLE_COUNT)
             slot = 0;
         else
             slot = save_slot_base + i + 1;

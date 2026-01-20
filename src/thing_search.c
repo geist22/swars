@@ -878,7 +878,7 @@ ThingIdx search_things_for_index(short index)
         {
             p_thing = &things[thing];
             if (index == p_thing->ThingOffset) {
-                if (p_thing->Type != TT_UNKN33)
+                if (p_thing->Type != TT_VEH_TURRET)
                     return thing;
             }
         }

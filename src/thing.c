@@ -34,10 +34,10 @@
 #include "enginfexpl.h"
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"
+#include "frame_sprani.h"
 #include "game.h"
 #include "game_options.h"
 #include "game_speed.h"
-#include "game_sprani.h"
 #include "matrix.h"
 #include "packet.h"
 #include "pepgroup.h"
@@ -116,7 +116,7 @@ const char *thing_type_names[] = {
   "TIME_POD",
   "AIR_STRIKE",
   "CANISTER",
-  "UNKN33",
+  "VEH_TURRET",
   "UNKN34",
   "UNKN35",
   "STASIS_POD",
@@ -148,6 +148,8 @@ const char *state_change_result_names[] = {
     "change denied",
     "goal unattainable",
 };
+
+/******************************************************************************/
 
 TbBool thing_type_is_simple(short ttype)
 {
@@ -229,6 +231,24 @@ void get_thing_position_mapcoords(short *x, short *y, short *z, ThingIdx thing)
         *y = cor_y;
     if (z != NULL)
         *z = cor_z;
+}
+
+u32 get_things_distance_mapcoords_precise(ThingIdx tng1, ThingIdx tng2)
+{
+    short x1, y1, z1;
+    short x2, y2, z2;
+    get_thing_position_mapcoords(&x1, &y1, &z1, tng1);
+    get_thing_position_mapcoords(&x2, &y2, &z2, tng2);
+    return map_distance_deltas_precise(x2 - x1, y2 - y1, z2 - z1);
+}
+
+u32 get_things_distance_mapcoords_fast(ThingIdx tng1, ThingIdx tng2)
+{
+    short x1, y1, z1;
+    short x2, y2, z2;
+    get_thing_position_mapcoords(&x1, &y1, &z1, tng1);
+    get_thing_position_mapcoords(&x2, &y2, &z2, tng2);
+    return map_distance_deltas_fast(x2 - x1, y2 - y1, z2 - z1);
 }
 
 const char *state_change_result_name(StateChRes res)
@@ -927,23 +947,8 @@ void process_things(void)
 
     shield_frames_cycle();
 
-    if ((ingame.Flags & GamF_ThermalView) != 0)
-    {
-        PlayerInfo *p_locplayer;
-        struct Thing *p_dcthing;
-        ThingIdx dcthing;
+    player_update_thermal(local_player_no);
 
-        p_locplayer = &players[local_player_no];
-        dcthing = p_locplayer->DirectControl[mouser];
-        p_dcthing = &things[dcthing];
-
-        p_dcthing->U.UPerson.Energy -= 3;
-        if (p_dcthing->U.UPerson.Energy <= 0)
-        {
-            ingame.Flags &= ~GamF_ThermalView;
-            ingame_palette_reload();
-        }
-    }
 #if 0
     merged_noop_unkn1(gameturn);
 #endif
@@ -1174,12 +1179,41 @@ void remove_sthing(short tngno)
 
 short add_static(int x, int y, int z, ushort frame, int timer)
 {
+#if 0
     short ret;
     asm volatile (
       "push %5\n"
       "call ASM_add_static\n"
         : "=r" (ret) : "a" (x), "d" (y), "b" (z), "c" (frame), "g" (timer));
     return ret;
+#else
+    ThingIdx thing;
+    struct SimpleThing *p_sthing;
+
+    if (map_coords_limit(NULL, NULL, NULL, x, y, z))
+        return 0;
+    if (sthings_used > STHINGS_LIMIT - 5)
+        return 0;
+
+    thing = get_new_sthing();
+    if (thing == 0)
+        return 0;
+    if (thing <= -STHINGS_LIMIT-1)
+        return 0;
+    p_sthing = &sthings[thing];
+    p_sthing->Z = MAPCOORD_TO_PRCCOORD(z,127);
+    p_sthing->X = MAPCOORD_TO_PRCCOORD(x,127);
+    p_sthing->Y = y;
+    p_sthing->Parent = 0;
+    p_sthing->StartFrame = frame - 1;
+    p_sthing->Frame = nstart_ani[p_sthing->StartFrame + 1];
+    add_node_sthing(thing);
+    p_sthing->Type = SmTT_STATIC;
+    p_sthing->Radius = 64;
+    p_sthing->Flag = 4;
+    p_sthing->Timer1 = timer;
+    return thing;
+#endif
 }
 
 TbBool thing_is_within_circle(ThingIdx thing, short X, short Z, ushort R)
@@ -1339,7 +1373,7 @@ short new_thing_static_clone(struct SimpleThing *p_clsthing)
     return thing;
 }
 
-ThingIdx new_thing_building_clone(struct Thing *p_clthing, struct M33 *p_clmat, short shut_h)
+ThingIdx new_thing_building_clone(struct Thing *p_clthing, struct M33 *p_clmatx, short shut_h)
 {
     struct Thing *p_thing;
     struct SingleObject *p_sobj;
@@ -1412,10 +1446,10 @@ ThingIdx new_thing_building_clone(struct Thing *p_clthing, struct M33 *p_clmat, 
     }
     else if (styp == SubTT_BLD_MGUN)
     {
-        p_thing->U.UMGun.MatrixIndex = next_local_mat;
-        next_local_mat++;
-        if (p_clmat != NULL)
-            memcpy(&local_mats[p_thing->U.UMGun.MatrixIndex], p_clmat, sizeof(struct M33));
+        assert(next_local_mat < LOCAL_MATS_COUNT);
+        p_thing->U.UMGun.MatrixIndex = next_local_mat++;
+        if (p_clmatx != NULL)
+            memcpy(&local_mats[p_thing->U.UMGun.MatrixIndex], p_clmatx, sizeof(struct M33));
         else
             matrix_identity_fill(&local_mats[p_thing->U.UMGun.MatrixIndex]);
         p_thing->U.UMGun.AngleX = 1024;
@@ -1428,10 +1462,10 @@ ThingIdx new_thing_building_clone(struct Thing *p_clthing, struct M33 *p_clmat, 
     }
     else if (styp >= SubTT_BLD_MOVN_ROTOR && styp <= SubTT_BLD_37)
     {
-        p_thing->U.UObject.MatrixIndex = next_local_mat;
-        next_local_mat++;
-        if (p_clmat != NULL)
-            memcpy(&local_mats[p_thing->U.UObject.MatrixIndex], p_clmat, sizeof(struct M33));
+        assert(next_local_mat < LOCAL_MATS_COUNT);
+        p_thing->U.UObject.MatrixIndex = next_local_mat++;
+        if (p_clmatx != NULL)
+            memcpy(&local_mats[p_thing->U.UObject.MatrixIndex], p_clmatx, sizeof(struct M33));
         else
             matrix_identity_fill(&local_mats[p_thing->U.UObject.MatrixIndex]);
         p_thing->Flag |=  TngF_Unkn1000;

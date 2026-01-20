@@ -30,6 +30,7 @@
 #include "campaign.h"
 #include "display.h"
 #include "thing.h"
+#include "thing_onface.h"
 #include "game_options.h"
 #include "game_speed.h"
 #include "game.h"
@@ -502,6 +503,7 @@ void SCANNER_dnt_sub1_sub1(void)
 
 void SCANNER_dnt_sub1_sub2(void)
 {
+    // TODO when rewriting, use mul_shift16_sign_pad_lo()
     asm volatile (
       "call ASM_SCANNER_dnt_sub1_sub2\n"
         :  :  : "eax" );
@@ -572,6 +574,7 @@ void SCANNER_dnt_sub1_sub11(void)
 
 void SCANNER_dnt_sub1_sub12(void)
 {
+    // TODO when rewriting, use mul_shift16_sign_pad_lo()
     asm volatile (
       "call ASM_SCANNER_dnt_sub1_sub12\n"
         :  :  : "eax" );
@@ -1356,32 +1359,19 @@ static void scanner_coords_line_clip(int *x1, int *y1, int *x2, int *y2, int sc_
 
 static void map_coords_to_scanner(int *sc_x, int *sc_y, int sh_x, int sh_y, int bsh_x, int bsh_y)
 {
-    u32 tmp;
     int rval_xy, rval_yy, rval_yx, rval_xx, rval_div;
     long prec_x, prec_y;
 
-    tmp = (sh_x * bsh_y) & 0xFFFF0000;
-    tmp |= ((sh_x * (s64)bsh_y) >> 32) & 0xFFFF;
-    rval_xy = bw_rotl32(tmp, 16);
+    rval_xy = mul_shift16_sign_pad_lo(sh_x, bsh_y);
 
-    tmp = (sh_y * bsh_y) & 0xFFFF0000;
-    tmp |= ((sh_y * (s64)bsh_y) >> 32) & 0xFFFF;
-    rval_yy = bw_rotl32(tmp, 16);
+    rval_yy = mul_shift16_sign_pad_lo(sh_y, bsh_y);
 
-    tmp = (sh_y * bsh_x) & 0xFFFF0000;
-    tmp |= ((sh_y * (s64)bsh_x) >> 32) & 0xFFFF;
-    rval_yx = bw_rotl32(tmp, 16);
+    rval_yx = mul_shift16_sign_pad_lo(sh_y, bsh_x);
 
-    tmp = (sh_x * bsh_x) & 0xFFFF0000;
-    tmp |= ((sh_x * (s64)bsh_x) >> 32) & 0xFFFF;
-    rval_xx = bw_rotl32(tmp, 16);
+    rval_xx = mul_shift16_sign_pad_lo(sh_x, bsh_x);
 
-    tmp = (sh_y * sh_y) & 0xFFFF0000;
-    tmp |= ((sh_y * (s64)sh_y) >> 32) & 0xFFFF;
-    rval_div = bw_rotl32(tmp, 16);
-    tmp = (sh_x * sh_x) & 0xFFFF0000;
-    tmp |= ((sh_x * (s64)sh_x) >> 32) & 0xFFFF;
-    rval_div += bw_rotl32(tmp, 16);
+    rval_div = mul_shift16_sign_pad_lo(sh_y, sh_y)
+      + mul_shift16_sign_pad_lo(sh_x, sh_x);
 
     prec_y = ((rval_yx - (s64)rval_xy) << 16) / rval_div;
     prec_x = ((rval_xx + (s64)rval_yy) << 16) / rval_div;

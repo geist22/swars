@@ -40,11 +40,12 @@
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"
 #include "enginsngobjs.h"
+#include "engintxtrmap.h"
+#include "frame_sprani.h"
 #include "game.h"
 #include "game_data.h"
 #include "game_options.h"
 #include "game_speed.h"
-#include "game_sprani.h"
 #include "lvobjctv.h"
 #include "lvwalk.h"
 #include "matrix.h"
@@ -213,6 +214,9 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
             short angle;
 
             new_thing = get_new_thing();
+            if (new_thing <= 0) {
+                LOGERR("No thing slots for level content");
+            }
             p_thing = &things[new_thing];
             memcpy(&loc_thing, p_thing, sizeof(struct Thing));
             if (fmtver >= 13) {
@@ -302,14 +306,18 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
                 if (fmtver <= 8)
                     p_thing->Y >>= 3;
 
-                k = next_local_mat++;
-                LbFileRead(lev_fh, &local_mats[k], 36);
-
-                p_thing->U.UVehicle.MatrixIndex = next_local_mat - 1;
+                {
+                    int matx;
+                    assert(sizeof(struct M33) == 36);
+                    assert(next_local_mat < LOCAL_MATS_COUNT);
+                    matx = next_local_mat++;
+                    LbFileRead(lev_fh, &local_mats[matx], sizeof(struct M33));
+                    p_thing->U.UVehicle.MatrixIndex = matx;
+                }
                 byte_1C83D1 = 0;
 
                 n = next_normal;
-                sub_6031C(PRCCOORD_TO_MAPCOORD(p_thing->X), PRCCOORD_TO_MAPCOORD(p_thing->Z),
+                copy_prim_obj_to_game_object(PRCCOORD_TO_MAPCOORD(p_thing->X), PRCCOORD_TO_MAPCOORD(p_thing->Z),
                   -prim_unknprop01 - p_thing->StartFrame, PRCCOORD_TO_MAPCOORD(p_thing->Y));
                 k = next_normal;
                 unkn_object_shift_03(next_object - 1);
@@ -320,8 +328,13 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
                 game_objects[next_object - 1].ThingNo = k;
                 VNAV_unkn_func_207(p_thing);
                 {
-                    k = p_thing->U.UVehicle.MatrixIndex;
-                    angle = LbArcTanAngle(local_mats[k].R[0][2], local_mats[k].R[2][2]);
+                    struct M33 *p_matx;
+                    int matx;
+
+                    matx = p_thing->U.UVehicle.MatrixIndex;
+                    assert(matx < next_local_mat);
+                    p_matx = &local_mats[matx];
+                    angle = LbArcTanAngle(p_matx->R[0][2], p_matx->R[2][2]);
                     p_thing->U.UVehicle.AngleY = (angle + LbFPMath_PI) & LbFPMath_AngleMask;
                 }
 
@@ -332,9 +345,13 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
                     if (p_thing->U.UVehicle.SubThing != 0)
                     {
                         struct Thing *p_mgun;
+                        struct M33 *p_matx;
+
+                        // Mounted Gun matrix was created during veh_add()
                         p_mgun = &things[p_thing->U.UVehicle.SubThing];
-                        k = p_mgun->U.UVehicle.MatrixIndex;
-                        angle = LbArcTanAngle(local_mats[k].R[0][2], local_mats[k].R[2][2]);
+                        assert(p_thing->U.UVehicle.MatrixIndex < next_local_mat);
+                        p_matx = &local_mats[p_mgun->U.UVehicle.MatrixIndex];
+                        angle = LbArcTanAngle(p_matx->R[0][2], p_matx->R[2][2]);
                         p_mgun->U.UVehicle.AngleY = (angle + LbFPMath_PI) & LbFPMath_AngleMask;
                     }
                 }
@@ -502,7 +519,7 @@ void save_level_pc_handle(TbFileHandle lev_fh)
 {
     u32 fmtver;
     ushort count;
-    int i, k;
+    int i;
 
     assert(sizeof(struct Thing) == 168);
     assert(sizeof(struct Command) == 32);
@@ -541,8 +558,11 @@ void save_level_pc_handle(TbFileHandle lev_fh)
             LbFileWrite(lev_fh, p_thing, sizeof(struct Thing));
             if (p_thing->Type == TT_VEHICLE)
             {
-                k = p_thing->U.UVehicle.MatrixIndex;
-                LbFileWrite(lev_fh, &local_mats[k], 36);
+                int matx;
+                assert(sizeof(struct M33) == 36);
+                matx = p_thing->U.UVehicle.MatrixIndex;
+                assert(matx < next_local_mat);
+                LbFileWrite(lev_fh, &local_mats[matx], sizeof(struct M33));
 
             }
             // Per thing code end
@@ -1636,6 +1656,8 @@ TbResult load_map_mad(ushort mapno)
         return Lb_FAIL;
 
     load_mad_pc_buffer(scratch_malloc_mem, fsize);
+
+    fix_map_outranged_properties();
 
     update_map_thing_and_traffic_refs();
     unkn_lights_processing();

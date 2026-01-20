@@ -53,6 +53,7 @@
 #include "game_sprts.h"
 #include "game.h"
 #include "keyboard.h"
+#include "mydraw.h"
 #include "network.h"
 #include "packetfe.h"
 #include "player.h"
@@ -65,18 +66,20 @@
 /******************************************************************************/
 #define SYSMNU_BUTTONS_COUNT 6
 
-extern struct ScreenButton sysmnu_buttons[SYSMNU_BUTTONS_COUNT];
+struct ScreenButton sysmnu_buttons[SYSMNU_BUTTONS_COUNT] = {0};
 extern char options_title_text[];
 
-extern struct ScreenButton main_quit_button;
-extern struct ScreenButton main_login_button;
-extern struct ScreenButton main_map_editor_button;
-extern struct ScreenButton main_load_button;
+struct ScreenButton main_quit_button = {0};
+struct ScreenButton main_login_button = {0};
+struct ScreenButton main_map_editor_button = {0};
+struct ScreenButton main_load_button = {0};
 
 extern struct ScreenBox alert_box;
 extern struct ScreenButton alert_OK_button;
 
-extern struct ScreenTextBox loading_INITIATING_box;
+struct ScreenTextBox heading_box = {0};
+struct ScreenTextBox loading_INITIATING_box = {0};
+struct ScreenTextBox unkn13_SYSTEM_button = {0};
 
 extern ubyte research_curr_wep_daily_done;
 extern ubyte research_curr_mod_daily_done;
@@ -90,6 +93,8 @@ extern short alert_textpos;
 
 struct ScreenBoxBase global_top_bar_box = {4, 4, 632, 15};
 struct ScreenBoxBase global_apps_bar_box = {3, 432, 634, 48};
+
+/******************************************************************************/
 
 ubyte ac_main_do_my_quit(ubyte click);
 ubyte ac_main_do_login_1(ubyte click);
@@ -379,7 +384,7 @@ void show_alert_box(void)
         alert_textpos = -5;
         my_preprocess_text(alert_text);
         nlines = my_count_lines(alert_text);
-        lnheight = font_height('A') + 4;
+        lnheight = my_char_height('A') + 4;
         alert_box.Y = alert_OK_button.Y - lnheight * nlines - 4;
         alert_box.Height = alert_OK_button.Height + 8 + lnheight * nlines;
     }
@@ -411,8 +416,8 @@ void init_alert_screen_boxes(void)
     loading_INITIATING_box.Text = gui_strings[376];
 
     lbFontPtr = med_font;
-    loading_INITIATING_box.Height = font_height('A') + 8;
-    w = my_string_width(gui_strings[376]);
+    loading_INITIATING_box.Height = my_char_height('A') + 8;
+    w = my_string_width(loading_INITIATING_box.Text);
     loading_INITIATING_box.Width = w + 9;
     loading_INITIATING_box.X = (scr_w - (w + 9)) / 2 - 1;
     loading_INITIATING_box.Y = 219 - (loading_INITIATING_box.Height >> 1);
@@ -483,7 +488,7 @@ ubyte show_title_box(struct ScreenTextBox *p_box)
     lbFontPtr = p_box->Font;
     cyan = (lbFontPtr == med2_font);
     tx_width = my_string_width(p_box->Text);
-    tx_height = font_height('A');
+    tx_height = my_char_height('A');
     scr_x = p_box->X + ((p_box->Width - tx_width) >> 1);
     scr_y = p_box->Y + ((p_box->Height - tx_height) >> 1);
     my_set_text_window(scr_x, scr_y, p_box->Width, p_box->Height);
@@ -627,8 +632,7 @@ void show_sysmenu_screen(void)
                 sysmnu_buttons[5].Y += 150;
             }
             game_system_screen = SySc_NONE;
-            if ((ingame.Flags & GamF_MortalGame) != 0)
-                save_game_write(0, save_active_desc);
+            autosave_game();
             break;
         }
         edit_flag = 0;
@@ -1180,7 +1184,7 @@ TbResult load_all_sprites_purple_mode(void)
 
     pinfo = &game_dirs[DirPlace_Data];
 
-    ret = load_sprites_wicons(&p_buf, pinfo->directory);
+    ret = load_sprites_wepicons(&p_buf, pinfo->directory, 0, max_detail + 3);
     if (tret == Lb_OK)
         tret = ret;
 
@@ -1229,8 +1233,8 @@ TbResult load_all_sprites_purple_mode(void)
     p_buf += cryo_cyborg_part_buf_max_size();
     back_buffer = p_buf;
 
-    setup_sprites_icons();
-    setup_sprites_wicons();
+    setup_sprites_fe_icons();
+    setup_sprites_wepicons();
     setup_sprites_fepanel();
     setup_sprites_fe_mouse_pointers();
     setup_sprites_small_font();
@@ -1251,27 +1255,32 @@ TbResult load_all_sprites_purple_mode(void)
     return tret;
 }
 
-void init_purple_mode_colors_and_sprites(void)
+TbBool init_purple_mode_colors_and_sprites(void)
 {
+    TbBool ret;
     LOGSYNC("Start");
 
-    load_all_sprites_purple_mode();
+    ret = true;
+    if (load_all_sprites_purple_mode() == Lb_FAIL)
+        ret = false;
     LbMouseChangeSpriteOffset(0, 0);
-    LbFileLoadAt("data/s-proj.pal", display_palette);
+    if (LbFileLoadAt("data/s-proj.pal", display_palette) == Lb_FAIL)
+        ret = false;
     // Colour tables should be loaded when we can provide palette data
     LbColourTablesLoad(display_palette, "data/bgtables.dat");
     LbGhostTableGenerate(display_palette, 66, "data/startgho.dat");
     LbExtraGhostTableGenerate(display_palette, 66, 170, 170, 170,
       appixmap.ghost_add_table, "data/bgghoscr.dat");
-    SCANNER_init_palette_bright();
-    SCANNER_init_bright_limit_table();
+    LowTransGrey_InitPaletteBright();
+    LowTransGrey_InitBrightLimitTable();
 
     show_black_screen();
     LbPaletteSet(display_palette);
     show_black_screen();
     reload_background();
 
-    LOGSYNC("Done");
+    LOGSYNC("Done, ret=%s", ret ? "success" : "fail");
+    return ret;
 }
 
 /******************************************************************************/

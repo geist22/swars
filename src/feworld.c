@@ -39,17 +39,16 @@
 #include "purpldrw.h"
 #include "purpldrwlst.h"
 #include "keyboard.h"
+#include "mydraw.h"
 #include "network.h"
 #include "sound.h"
 #include "wrcities.h"
 #include "swlog.h"
 /******************************************************************************/
-extern struct ScreenTextBox world_city_info_box;
-extern struct ScreenButton world_info_ACCEPT_button;
-extern struct ScreenButton world_info_CANCEL_button;
-extern struct ScreenBox world_landmap_box;
-
-extern struct TbSprite *fe_icons_sprites;
+struct ScreenTextBox world_city_info_box = {0};
+struct ScreenButton world_info_ACCEPT_button = {0};
+struct ScreenButton world_info_CANCEL_button = {0};
+struct ScreenBox world_landmap_box = {0};
 
 extern short word_155110[6];
 extern ubyte byte_15511C;// = 1;
@@ -164,7 +163,7 @@ ubyte show_world_city_info_box(struct ScreenTextBox *p_box)
 
     lbDisplay.DrawFlags |= Lb_TEXT_HALIGN_CENTER;
     lbFontPtr = small_med_font;
-    tx_height = font_height('A');
+    tx_height = my_char_height('A');
     my_set_text_window(p_box->X + 3, p_box->Y + 4, p_box->Width - 6, p_box->Height - 8);
     scr_y = 4;
     ln_height = tx_height + 4;

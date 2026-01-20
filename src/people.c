@@ -18,6 +18,7 @@
 /******************************************************************************/
 #include "people.h"
 
+#include <assert.h>
 #include "bfmath.h"
 #include "bfmemory.h"
 #include "bffile.h"
@@ -30,16 +31,17 @@
 #include "building.h"
 #include "command.h"
 #include "display.h"
+#include "drawtext_wrp.h"
 #include "drawtext.h"
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"
 #include "engintrns.h"
 #include "febrief.h"
+#include "frame_sprani.h"
 #include "game.h"
 #include "game_data.h"
 #include "game_options.h"
 #include "game_speed.h"
-#include "game_sprani.h"
 #include "lvdraw3d.h"
 #include "lvobjctv.h"
 #include "misstat.h"
@@ -49,6 +51,7 @@
 #include "sound.h"
 #include "thing.h"
 #include "thing_fire.h"
+#include "thing_onface.h"
 #include "thing_search.h"
 #include "tngcolisn.h"
 #include "vehicle.h"
@@ -481,7 +484,8 @@ void snprint_person_state(char *buf, ulong buflen, struct Thing *p_thing)
     if (p_thing->State == PerSt_GOTO_POINT)
     {
         if (nparams) { sprintf(s, ", "); s += strlen(s); }
-        sprintf(s, "Coord(%d,%d,%d)", (int)p_thing->U.UPerson.GotoX, 0, (int)p_thing->U.UPerson.GotoX);
+        sprintf(s, "Coord(%d,%d,%d)", (int)p_thing->U.UPerson.GotoX,
+          0, (int)p_thing->U.UPerson.GotoZ);
         s += strlen(s);
         nparams++;
     }
@@ -593,6 +597,13 @@ TbBool person_can_accept_control(ThingIdx person)
 {
     return !person_is_dead_or_dying(person)
       && !thing_is_destroyed(person);
+}
+
+TbBool person_can_use_medikit(ThingIdx person)
+{
+    if (!person_carries_any_medikit(person))
+        return false;
+    return true;
 }
 
 void person_give_best_mods(struct Thing *p_person)
@@ -787,7 +798,7 @@ void person_start_executing_commands(struct Thing *p_person)
     ingame.Flags |= GamF_Unkn0100;
 }
 
-short person_slot_as_player_agent(struct Thing *p_person, ushort plyr)
+short person_slot_as_player_agent(struct Thing *p_person, PlayerIdx plyr)
 {
     PlayerInfo *p_player;
     struct Thing *p_agent;
@@ -806,7 +817,7 @@ short person_slot_as_player_agent(struct Thing *p_person, ushort plyr)
     return -1;
 }
 
-TbBool person_is_player_agent_in_slot(struct Thing *p_person, ushort plyr, short plagent)
+TbBool person_is_player_agent_in_slot(struct Thing *p_person, PlayerIdx plyr, short plagent)
 {
     PlayerInfo *p_player;
     struct Thing *p_agent;
@@ -815,6 +826,52 @@ TbBool person_is_player_agent_in_slot(struct Thing *p_person, ushort plyr, short
     p_agent = p_player->MyAgent[0];
 
     return (p_person->ThingOffset == p_agent->ThingOffset);
+}
+
+TbBool person_has_slot_in_any_player_dcontrol(ThingIdx person)
+{
+    struct Thing *p_person;
+
+    if (person <= 0)
+        return false;
+
+    if (person_is_executing_commands(person))
+        return false;
+
+    p_person = &things[person];
+
+    return ((p_person->Flag & TngF_PlayerAgent) != 0);
+}
+
+short person_get_dcontrol_player(ThingIdx person)
+{
+    struct Thing *p_person;
+
+    if (!person_has_slot_in_any_player_dcontrol(person))
+        return -1;
+
+    p_person = &things[person];
+
+    return (p_person->U.UPerson.ComCur >> 2);
+}
+
+short person_slot_in_player_dcontrol(ThingIdx person, PlayerIdx plyr)
+{
+    struct Thing *p_person;
+    PlayerIdx pers_plyr;
+
+    if (!person_has_slot_in_any_player_dcontrol(person)) {
+        return -1;
+    }
+
+    p_person = &things[person];
+
+    pers_plyr = p_person->U.UPerson.ComCur >> 2;
+    if (pers_plyr != plyr) {
+        return -1;
+    }
+
+    return (p_person->U.UPerson.ComCur & 3);
 }
 
 ubyte person_sex(struct Thing *p_person)
@@ -1073,8 +1130,10 @@ TbBool can_i_enter_vehicle(struct Thing *p_me, struct Thing *p_vehicle)
     ThingIdx thing;
     ushort tngroup, mygroup;
 
-    if ((p_me->Flag2 & 0x0800) != 0)
+    if (person_is_executing_commands(p_me->ThingOffset)) {
+        // if person is executing commands, allow unconditionally
         return true;
+    }
 
     thing = p_vehicle->U.UVehicle.PassengerHead;
     if (thing <= 0)
@@ -3057,7 +3116,7 @@ void person_update_kill_stats(struct Thing *p_attacker, struct Thing *p_victim)
               attack_plyr = p_realowner->U.UPerson.ComCur >> 2;
               killed_mp_agent_add_to_stats(p_victim, attack_plyr);
           }
-      }
+        }
     }
     else
     {
@@ -3143,21 +3202,21 @@ int mods_affect_hit_points(struct Thing *p_thing, ushort type, int hp)
     case DMG_UZI:
     case DMG_MINIGUN:
     case DMG_LONGRANGE:
-        if (cybmod_skin_level(&p_thing->U.UPerson.UMod) == 1)
+        if (person_mod_skin_level(p_thing) == 1)
             hp >>= 1;
         break;
     case DMG_ELLASER:
     case DMG_BEAM:
     case DMG_LASER:
     case DMG_ELSTRAND:
-        if (cybmod_skin_level(&p_thing->U.UPerson.UMod) == 3)
+        if (person_mod_skin_level(p_thing) == 3)
             hp >>= 1;
         break;
     case DMG_UNKN5:
     case DMG_RAP:
         break;
     case DMG_UNKN9:
-        if (cybmod_skin_level(&p_thing->U.UPerson.UMod) == 1)
+        if (person_mod_skin_level(p_thing) == 1)
             hp = 3 * (hp >> 2);
         break;
     default:
@@ -3436,6 +3495,42 @@ void vehicle_passenger_list_remove(struct Thing *p_vehicle, ThingIdx passngr)
     }
 }
 
+TbBool person_is_in_a_vehicle(struct Thing *p_person)
+{
+    return ((p_person->Flag & TngF_InVehicle) != 0);
+}
+
+TbBool person_is_in_a_train(struct Thing *p_person)
+{
+    struct Thing *p_vehicle;
+
+    if ((p_person->Flag & TngF_InVehicle) == 0)
+        return false;
+
+    p_vehicle = &things[p_person->U.UPerson.Vehicle];
+    return (p_vehicle->SubType == SubTT_VEH_TRAIN);
+}
+
+TbBool person_is_in_vehicle(struct Thing *p_person, ThingIdx vehicle)
+{
+    if ((p_person->Flag & TngF_InVehicle) == 0)
+        return false;
+    return (vehicle == p_person->U.UPerson.Vehicle);
+}
+
+TbBool person_is_standing_on_vehicle(struct Thing *p_person)
+{
+    struct Thing *p_standtng;
+
+    if (p_person->U.UPerson.StandOnThing <= 0)
+        return false;
+    if ((p_person->Flag & TngF_StandOnVehicle) == 0)
+        return false;
+    p_standtng = &things[p_person->U.UPerson.StandOnThing];
+
+    return (p_standtng->Type == TT_VEHICLE);
+}
+
 void person_enter_vehicle(struct Thing *p_person, struct Thing *p_vehicle)
 {
 #if 0
@@ -3459,7 +3554,7 @@ void person_enter_vehicle(struct Thing *p_person, struct Thing *p_vehicle)
     }
 
     p_person->Flag |= TngF_InVehicle|TngF_Unkn02000000;
-    p_person->Flag &= ~TngF_Unkn01000000;
+    p_person->Flag &= ~TngF_StandOnVehicle;
     p_person->State = PerSt_DRIVING_VEHICLE;
 
     vehicle_passenger_list_add_first(p_vehicle, p_person->ThingOffset);
@@ -4222,23 +4317,87 @@ void person_go_enter_vehicle(struct Thing *p_person, struct Thing *p_vehicle)
         : : "a" (p_person), "d" (p_vehicle));
 }
 
-void person_shield_toggle(struct Thing *p_person, PlayerIdx plyr)
+TbBool person_has_supershield_active(ThingIdx person)
 {
-#if 0
-    asm volatile (
-      "call ASM_person_shield_toggle\n"
-        : : "a" (p_person), "d" (plyr));
-#endif
+    struct Thing *p_person;
+
+    if (person <= 0)
+        return false;
+
+    p_person = &things[person];
+
+    if (p_person->Type != TT_PERSON)
+        return false;
+
+    return ((p_person->Flag & TngF_PersSupShld) != 0);
+}
+
+TbBool person_can_toggle_supershield(ThingIdx person)
+{
+    if (person_is_executing_commands(person))
+        return false;
+    // Restrict only enabling supershield; for disabling, it can be done almost always
+    if (!person_has_supershield_active(person))
+    {
+        short plyr; // stores PlayerIdx or -1
+
+        if (thing_is_destroyed(person))
+            return false;
+        plyr = person_get_dcontrol_player(person);
+        if (plyr >= 0)
+        {
+            PlayerInfo *p_player;
+
+            p_player = &players[plyr];
+            //TODO not sure why cannot enable supershield in DoubleMode; verify, maybe remove.
+            if (p_player->DoubleMode != 0)
+                return false;
+        }
+    }
+    return true;
+}
+
+void person_supershield_toggle(struct Thing *p_person)
+{
     if ((p_person->Flag & TngF_PersSupShld) != 0)
     {
         p_person->Flag &= ~(TngF_Unkn00200000|TngF_PersSupShld);
     }
     else
     {
+        short plagent;
         p_person->Flag |= (TngF_Unkn00200000|TngF_PersSupShld);
-        if (plyr == local_player_no)
+        plagent = person_slot_in_player_dcontrol(p_person->ThingOffset, local_player_no);
+        if (plagent >= 0)
             play_sample_using_heap(0, 96, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3);
     }
+}
+
+TbBool person_can_sustain_thermal(ThingIdx person)
+{
+    struct Thing *p_person;
+
+    p_person = &things[person];
+
+    if (p_person->U.UPerson.Energy <= 100)
+        return false;
+
+    return true;
+}
+
+TbBool person_update_thermal(ThingIdx person)
+{
+    struct Thing *p_person;
+
+    p_person = &things[person];
+
+    p_person->U.UPerson.Energy -= 3;
+
+    if (p_person->U.UPerson.Energy <= 0) {
+        return false;
+    }
+
+    return true;
 }
 
 void make_peeps_scatter(struct Thing *p_person, int x, int z)
@@ -4413,7 +4572,7 @@ void process_knocked_out(struct Thing *p_person)
 
         p_person->Flag2 &= ~TgF2_KnockedOut;
         p_person->Timer1 = 48;
-        p_person->Flag &= ~TngF_Unkn01000000;
+        p_person->Flag &= ~TngF_StandOnVehicle;
     }
 }
 
@@ -4691,7 +4850,7 @@ void person_use_vehicle(struct Thing *p_person)
     }
 
     person_goto_point(p_person);
-    if ((p_person->Flag & TngF_Unkn01000000) == 0) {
+    if ((p_person->Flag & TngF_StandOnVehicle) == 0) {
         if ((debug_log_things & 0x01) != 0) {
             LOGSYNC("Person %s %d has wrong flags to enter, state %d.%d",
               person_type_name(p_person->SubType), (int)p_person->ThingOffset,
@@ -4863,43 +5022,6 @@ ubyte create_intelligent_door(short col)
     return ret;
 }
 
-ushort set_thing_height_on_face_tri(struct Thing *p_thing, int x, int z, short face)
-{
-    ushort ret;
-    asm volatile (
-      "call ASM_set_thing_height_on_face_tri\n"
-        : "=r" (ret) : "a" (p_thing), "d" (x), "b" (z), "c" (face));
-    return ret;
-}
-
-ushort set_thing_height_on_face_quad(struct Thing *p_thing, int x, int z, short face)
-{
-    ushort ret;
-    asm volatile (
-      "call ASM_set_thing_height_on_face_quad\n"
-        : "=r" (ret) : "a" (p_thing), "d" (x), "b" (z), "c" (face));
-    return ret;
-}
-
-ushort set_thing_height_on_face(struct Thing *p_thing, int x, int z, short face)
-{
-    if (face > 0) {
-        return set_thing_height_on_face_tri(p_thing, x, z, face);
-    } else if (face < 0) {
-        return set_thing_height_on_face_quad(p_thing, x, z, -face);
-    }
-    return 0;
-}
-
-short find_and_set_connected_face(struct Thing *p_thing, int x, int z, short face)
-{
-    short ret;
-    asm volatile (
-      "call ASM_find_and_set_connected_face\n"
-        : "=r" (ret) : "a" (p_thing), "d" (x), "b" (z), "c" (face));
-    return ret;
-}
-
 /** Get collision vector which would collide with given thing at given position.
  */
 short move_colide_on_tile(struct Thing *p_person, short tl_x, short tl_z, int speed_x, int speed_z)
@@ -4961,9 +5083,15 @@ void adjust_speed_for_colvect_collision(int *p_speed_x, int *p_speed_z, struct T
     ldt = (s64)(p_colvect->Z2 - p_colvect->Z1) << 24;
     norm_z = ldt / dvdr;
 
+#if 0 // original implementation
+    dist_sum = mul_shift16_sign_pad_lo(*p_speed_x, norm_x) + mul_shift16_sign_pad_lo(*p_speed_z, norm_z);
+    speed_x2 = mul_shift16_sign_pad_lo(norm_x, dist_sum);
+    speed_z2 = mul_shift16_sign_pad_lo(norm_z, dist_sum);
+#else // easier to read version, seem to produce the same results as original implementation? verify!
     dist_sum = (((*p_speed_x) * norm_x) >> 16) + (((*p_speed_z) * norm_z) >> 16);
     speed_x2 = (norm_x * dist_sum) >> 16;
     speed_z2 = (norm_z * dist_sum) >> 16;
+#endif
 
     chk_z = (p_person->Z - (p_colvect->Z1 << 8)) * norm_x;
     chk_x = (p_person->X - (p_colvect->X1 << 8)) * norm_z;
@@ -5100,7 +5228,7 @@ short person_move(struct Thing *p_person)
             thing = check_for_other_people(x, y, z, p_person);
             if (thing != 0) {
                 p_person->U.UPerson.BumpCount++;
-                if (((p_person->Flag & TngF_Unkn0010) == 0) && ((p_person->Flag & TngF_Unkn01000000) != 0))
+                if (((p_person->Flag & TngF_Unkn0010) == 0) && ((p_person->Flag & TngF_StandOnVehicle) != 0))
                     return 1;
             } else {
                 p_person->Flag &= ~(TngF_Unkn0004|TngF_Unkn0010);
@@ -5612,7 +5740,7 @@ void process_person(struct Thing *p_person)
         if ((state != PerSt_WAIT) && (state != 0))
         {
             p_person->Flag &= ~TngF_Unkn08000000;
-            p_person->Flag &= ~TngF_Unkn01000000;
+            p_person->Flag &= ~TngF_StandOnVehicle;
         }
     }
     if ((p_person->U.UPerson.BumpMode != 0) && ((p_person->Flag & TngF_Destroyed) == 0))

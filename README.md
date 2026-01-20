@@ -38,14 +38,20 @@ as american release, were tested and will definitely work; other version were
 not fully tested. Only releases for PC can be used. Releases from popular
 digital distribution platforms all include one of the tested images.
 
-The CD version which you use narrows the range of available languages.
+The CD version which you use narrows the range of languages available during
+installation.
 
 * Multi-lingual CD contains `eng` `fre` `ita` `spa` `swe`,
 * German release is required to use `ger`,
 * Japaneses "SW Premium" release contains `eng` `fre` `jap`, but asian fonts
   are not supported by the port.
 
-The steps you need to take vary depending on your operating system.
+After installing, you can change the language manually by editing `config.ini`.
+Some fanmade translations can be actually only enabled this way. However,
+several media files which are not packaged with **SyndWarsFX** will stay
+at the language version chosen during installation, so it still matters.
+
+The steps you need to take for installation vary depending on your operating system.
 
 ### Installing on GNU or UNIX
 
@@ -211,7 +217,7 @@ was starting. There is also a troubleshooting page on the
 
 ## Building
 
-Note that you can oly build the port for x86 architecture, and you either need
+Note that you can only build the port for x86 architecture, and you either need
 32-bit OS, or 64-bit OS with 32-bit user space libraries available.
 
 ### General building instructions
@@ -286,7 +292,7 @@ Next, proceed with the build steps; we will do that in a separate folder.
 
 ```
 mkdir -p release; cd release
-PKG_CONFIG_PATH="/usr/lib/i386-linux-gnu/pkgconfig" CFLAGS="-m32" CXXFLAGS="-m32" LDFLAGS="-m32" ../configure --enable-lb-mouse-wheel
+PKG_CONFIG_PATH="/usr/lib/i386-linux-gnu/pkgconfig" CFLAGS="-m32" CXXFLAGS="-m32" LDFLAGS="-m32" ../configure --disable-lb-wscreen-control
 make V=1
 ```
 
@@ -299,7 +305,7 @@ In case you also want a debug build:
 
 ```
 mkdir -p debug; cd debug
-PKG_CONFIG_PATH="/usr/lib/i386-linux-gnu/pkgconfig" CPPFLAGS="-DDEBUG -D__DEBUG" CFLAGS="-m32 -g -O0 -Wall" CXXFLAGS="-m32 -g -O0 -Wall" LDFLAGS="-m32 -g -O0 -Wall" ../configure --enable-lb-mouse-wheel
+PKG_CONFIG_PATH="/usr/lib/i386-linux-gnu/pkgconfig" CPPFLAGS="-DDEBUG -D__DEBUG" CFLAGS="-m32 -g -O0 -Wall" CXXFLAGS="-m32 -g -O0 -Wall" LDFLAGS="-m32 -g -O0 -Wall" ../configure --disable-lb-wscreen-control
 make V=1
 ```
 
@@ -384,7 +390,7 @@ the default mingw64 ones:
 
 ```
 mkdir -p release; cd release
-PATH="/mingw32/bin:$PATH" PKG_CONFIG_PATH="/mingw32/lib/pkgconfig" CFLAGS="-m32" CXXFLAGS="-m32" LDFLAGS="-m32" ../configure --prefix=/mingw32 --enable-lb-mouse-wheel
+PATH="/mingw32/bin:$PATH" PKG_CONFIG_PATH="/mingw32/lib/pkgconfig" CFLAGS="-m32" CXXFLAGS="-m32" LDFLAGS="-m32" ../configure --prefix=/mingw32 --disable-lb-wscreen-control
 PATH="/mingw32/bin:$PATH" make V=1
 ```
 
@@ -414,7 +420,7 @@ When you configure your compilation toolchain and location of libraries,
 you will need to pass `CFLAGS="-arch i386"`, like so:
 
 ```
-./configure --enable-lb-mouse-wheel CFLAGS="-arch i386"
+./configure --disable-lb-wscreen-control CFLAGS="-arch i386"
 ```
 
 If you are planning to create [Mac OS app bundle](#making-a-mac-os-app-bundle),
@@ -422,7 +428,7 @@ you will also need to pass `data-path`, so your final command will be:
 
 
 ```
-./configure --with-data-path="SyndWarsFX.app/Contents/Resources" --enable-lb-mouse-wheel CFLAGS="-arch i386"
+./configure --with-data-path="SyndWarsFX.app/Contents/Resources" --disable-lb-wscreen-control CFLAGS="-arch i386"
 ```
 
 Then, do `make` as the [general building instructions](#general-building-instructions) tell.

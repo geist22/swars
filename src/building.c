@@ -18,6 +18,7 @@
 /******************************************************************************/
 #include "building.h"
 
+#include <assert.h>
 #include "bfmath.h"
 #include "bfmemory.h"
 #include "bfutility.h"
@@ -682,9 +683,10 @@ void process_gate1(struct Thing *p_building)
 
 void process_bld36(struct Thing *p_building)
 {
-    struct M33 *mat;
-    mat = &local_mats[p_building->U.UObject.MatrixIndex];
-    rotate_object_axis(mat, 0, 0, 32);
+    struct M33 *p_matx;
+    assert(p_building->U.UObject.MatrixIndex < next_local_mat);
+    p_matx = &local_mats[p_building->U.UObject.MatrixIndex];
+    rotate_object_axis(p_matx, 0, 0, 32);
 }
 
 void process_building(struct Thing *p_building)

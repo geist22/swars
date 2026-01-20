@@ -18,15 +18,33 @@
 /******************************************************************************/
 #include "linksmk.h"
 
+#include <assert.h>
+
 #include "bfsmack.h"
 
-/******************************************************************************/
-extern ulong smack_malloc_used_tot;
+#include "game_data.h"
 
 /******************************************************************************/
-void *ASM_smack_malloc(int msize);
-void ASM_smack_mfree(void *ptr);
+extern u32 smack_malloc_used_tot;
 
+/******************************************************************************/
+
+/** Primitive but very fast mem allocation.
+ */
+void *opti_smack_malloc(uint32_t msize)
+{
+    void *ptr;
+
+    assert(smack_malloc_used_tot + msize < scratch_malloc_size);
+    ptr = scratch_malloc_mem + smack_malloc_used_tot;
+    smack_malloc_used_tot += msize;
+    return ptr;
+}
+
+void opti_smack_mfree(void *ptr)
+{
+    // Do not free any memory - we have enough space to play one video
+}
 
 void smack_malloc_free_all(void)
 {
@@ -35,8 +53,9 @@ void smack_malloc_free_all(void)
 
 void smack_malloc_setup(void)
 {
-    set_smack_malloc(ASM_smack_malloc);
-    set_smack_free(ASM_smack_mfree);
+    smack_malloc_used_tot = 0;
+    set_smack_malloc(opti_smack_malloc);
+    set_smack_free(opti_smack_mfree);
 }
 
 /******************************************************************************/

@@ -34,6 +34,7 @@
 #include "guigraph.h"
 #include "guitext.h"
 #include "keyboard.h"
+#include "mydraw.h"
 #include "purpldrw.h"
 #include "player.h"
 #include "weapon.h"
@@ -41,12 +42,12 @@
 #include "swlog.h"
 #include "util.h"
 /******************************************************************************/
-extern struct ScreenTextBox research_unkn21_box;
-extern struct ScreenButton research_submit_button;
-extern struct ScreenButton unkn12_WEAPONS_MODS_button;
-extern struct ScreenTextBox research_progress_button;
-extern struct ScreenBox research_graph_box;
-extern struct ScreenButton research_list_buttons[2];
+struct ScreenTextBox research_unkn21_box = {0};
+struct ScreenButton research_submit_button = {0};
+struct ScreenButton unkn12_WEAPONS_MODS_button = {0};
+struct ScreenTextBox research_progress_button = {0};
+struct ScreenBox research_graph_box = {0};
+struct ScreenButton research_list_buttons[2] = {0};
 
 extern ubyte research_completed;// = 0;
 extern ubyte research_on_weapons;// = true;
@@ -54,6 +55,8 @@ extern ubyte research_unkn_var_01;
 extern sbyte research_selected_wep; // = -1;
 extern sbyte research_selected_mod; // = -1;
 extern ubyte byte_1551E4[5];
+
+/******************************************************************************/
 
 ubyte ac_do_research_submit(ubyte click);
 ubyte ac_do_research_suspend(ubyte click);
@@ -285,7 +288,7 @@ ubyte show_unkn21_box(struct ScreenTextBox *p_box)
     }
 
     scr_y = 3;
-    tx_height = font_height('A');
+    tx_height = my_char_height('A');
     line = p_box->TextTopLine;
     ln_height = tx_height + 4;
     while (line < 32)
@@ -545,8 +548,7 @@ void draw_unkn20_subfunc_01(int x, int y, char *text, ubyte a4)
             ch = text[i++];
             if (ch == '\0')
               return;
-            if (lbFontPtr != small_med_font || language_3str[0] != 'e')
-            {
+            if (my_font_prefer_upper_case(lbFontPtr)) {
                 ch = fontchrtoupper(ch);
             }
             w = LbSprFontCharWidth(lbFontPtr, ch);
@@ -581,7 +583,7 @@ void draw_unkn20_subfunc_01(int x, int y, char *text, ubyte a4)
             dy = 0;
         }
         draw_sprite_purple_list(scr_x - dx, scr_y - dy, LbFontCharSprite(lbFontPtr, ch));
-        scr_y += a4 + font_height(ch);
+        scr_y += a4 + my_char_height(ch);
     }
 }
 

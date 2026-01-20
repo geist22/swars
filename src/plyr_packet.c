@@ -65,7 +65,7 @@ void net_player_leave(PlayerIdx plyr)
     {
         net_players_num--;
         sprintf(player_unknCC9[plyr], "%s %s", unkn2_names[plyr], gui_strings[GSTR_NET_LEFT_GAME]);
-        player_unkn0C9[plyr] = -106;
+        player_unkn0C9[plyr] = 150;
         LbNetworkSessionStop();
         ingame.InNetGame_UNSURE &= ~(1 << plyr);
     }
@@ -176,24 +176,6 @@ void unkn_player_group_prot(sbyte a1, ubyte a2)
 {
     asm volatile ("call ASM_unkn_player_group_prot\n"
         :  : "a" (a1), "d" (a2));
-}
-
-void player_thermal_toggle(PlayerIdx plyr, struct Thing *p_person)
-{
-    if ((ingame.Flags & GamF_ThermalView) == 0)
-    {
-        if (p_person->U.UPerson.Energy > 100)
-        {
-            ingame.Flags |= GamF_ThermalView;
-            play_sample_using_heap(0, 35, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 1);
-            ingame_palette_reload();
-        }
-    }
-    else
-    {
-        ingame.Flags &= ~GamF_ThermalView;
-        change_brightness(0);
-    }
 }
 
 void peep_change_weapon(struct Thing *p_person)
@@ -784,7 +766,7 @@ void process_packet(PlayerIdx plyr, struct Packet *p_pckt, ushort i)
             result = PARes_EBADSLT;
             break;
         }
-        if ((p_thing->Flag2 & TgF2_Unkn0800) != 0) {
+        if (person_is_executing_commands(p_thing->ThingOffset)) {
             result = PARes_TNGBADST;
             break;
         }
@@ -801,7 +783,7 @@ void process_packet(PlayerIdx plyr, struct Packet *p_pckt, ushort i)
             result = PARes_EBADSLT;
             break;
         }
-        if ((p_thing->Flag2 & TgF2_Unkn0800) != 0) {
+        if (person_is_executing_commands(p_thing->ThingOffset)) {
             result = PARes_TNGBADST;
             break;
         }
@@ -1040,7 +1022,7 @@ void process_packet(PlayerIdx plyr, struct Packet *p_pckt, ushort i)
             result = PARes_EBADSLT;
             break;
         }
-        if ((p_thing->Flag2 & TgF2_Unkn0800) != 0) {
+        if (person_is_executing_commands(p_thing->ThingOffset)) {
             result = PARes_TNGBADST;
             break;
         }
@@ -1144,11 +1126,11 @@ void process_packet(PlayerIdx plyr, struct Packet *p_pckt, ushort i)
             result = PARes_EBADSLT;
             break;
         }
-        if ((p_thing->Flag2 & TgF2_Unkn0800) != 0) {
+        if (!person_can_toggle_supershield(p_thing->ThingOffset)) {
             result = PARes_TNGBADST;
             break;
         }
-        person_shield_toggle(p_thing, plyr);
+        person_supershield_toggle(p_thing);
         result = PARes_DONE;
         break;
     case PAct_PLANT_MINE_AT_GND_PT_FF:
@@ -1195,7 +1177,7 @@ void process_packet(PlayerIdx plyr, struct Packet *p_pckt, ushort i)
             result = PARes_EBADSLT;
             break;
         }
-        if ((p_thing->Flag2 & TgF2_Unkn0800) != 0) {
+        if (person_is_executing_commands(p_thing->ThingOffset)) {
             result = PARes_TNGBADST;
             break;
         }
@@ -1237,7 +1219,7 @@ void process_packet(PlayerIdx plyr, struct Packet *p_pckt, ushort i)
             result = PARes_EBADSLT;
             break;
         }
-        if (!person_carries_any_medikit(p_thing->ThingOffset)) {
+        if (!person_can_use_medikit(p_thing->ThingOffset)) {
             result = PARes_TNGBADST;
             break;
         }
@@ -1275,7 +1257,11 @@ void process_packet(PlayerIdx plyr, struct Packet *p_pckt, ushort i)
             result = PARes_EBADSLT;
             break;
         }
-        player_thermal_toggle(plyr, p_thing);
+        if (!player_can_toggle_thermal(plyr)) {
+            result = PARes_TNGBADST;
+            break;
+        }
+        player_toggle_thermal(plyr);
         result = PARes_DONE;
         break;
     case PAct_CHAT_MESSAGE_KEY:
@@ -1360,7 +1346,7 @@ void process_packet(PlayerIdx plyr, struct Packet *p_pckt, ushort i)
             result = PARes_EBADSLT;
             break;
         }
-        if ((p_thing->Flag2 & TgF2_Unkn0800) != 0) {
+        if (person_is_executing_commands(p_thing->ThingOffset)) {
             result = PARes_TNGBADST;
             break;
         }
@@ -1412,11 +1398,6 @@ void process_packet(PlayerIdx plyr, struct Packet *p_pckt, ushort i)
 
 void process_packets(void)
 {
-#if 0
-    asm volatile ("call ASM_process_packets\n"
-        :  :  : "eax" );
-    return;
-#endif
     ushort v53;
     PlayerIdx plyr;
 

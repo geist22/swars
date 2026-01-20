@@ -20,8 +20,10 @@
 
 #include <limits.h>
 #include <stdlib.h>
+
 #include "bfmemut.h"
 #include "bfmath.h"
+
 #include "bigmap.h"
 #include "swlog.h"
 /******************************************************************************/
@@ -194,6 +196,7 @@ int get_height_on_face(int x, int z, ushort face)
 
 int get_height_on_face_quad(int x, int z, ushort face)
 {
+    // TODO when rewriting, use mul_shift16_sign_pad_lo()
     int ret;
     asm volatile (
       "call ASM_get_height_on_face_quad\n"

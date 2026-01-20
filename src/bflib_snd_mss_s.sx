@@ -215,7 +215,7 @@ GLOBAL_FUNC (ASM_MSSLOWSOUNDCLOSE)
 		push   %edi
 		push   %ebp
 		mov    0x10(%esp),%esi
-		cmpl   $0x0,_fss
+		cmpl   $0x0,EXPORT_SYMBOL(fss)
 		je     jump_fbf34
 		mov    0x38(%esi),%ebx
 		push   %ebx
@@ -234,12 +234,12 @@ GLOBAL_FUNC (ASM_MSSLOWSOUNDCLOSE)
 		add    $0x8,%esp
 		mov    0x54(%esi),%ebp
 		push   %ebp
-		call   RADFREE
-		mov    _fss,%eax
+		call   ac_RADFREE
+		mov    EXPORT_SYMBOL(fss),%eax
 		cmp    %eax,%esi
 		jne    jump_fbf16
 		mov    0x34(%eax),%eax
-		mov    %eax,_fss
+		mov    %eax,EXPORT_SYMBOL(fss)
 		jmp    jump_fbf34
 	jump_fbf16:
 		cmpl   $0x0,0x34(%eax)
@@ -289,7 +289,7 @@ GLOBAL_FUNC (ASM_MSSLOWSOUNDOPEN)
 		mov    0x14(%esp),%esi
 		cmpl   $0x0,SmackMSSDigDriver
 		jne    jump_fc041
-		cmpl   $0x0,MSSLiteInit
+		cmpl   $0x0,EXPORT_SYMBOL(MSSLiteInit)
 		je     jump_fc026
 		testb  $0x20,0x10(%esp)
 		jne    jump_fbfae
@@ -389,7 +389,7 @@ GLOBAL_FUNC (ASM_MSSLOWSOUNDOPEN)
 		mov    0x3c(%esi),%eax
 		add    %eax,%eax
 		push   %eax
-		call   RADMALLOC
+		call   ac_RADMALLOC
 		mov    %eax,0x54(%esi)
 		test   %eax,%eax
 		jne    jump_fc0cf
@@ -415,7 +415,7 @@ GLOBAL_FUNC (ASM_MSSLOWSOUNDOPEN)
 		jne    jump_fc10a
 		mov    0x54(%esi),%ebx
 		push   %ebx
-		call   RADFREE
+		call   ac_RADFREE
 		xor    %al,%al
 		pop    %ebp
 		pop    %edi
@@ -428,8 +428,8 @@ GLOBAL_FUNC (ASM_MSSLOWSOUNDOPEN)
 		mov    %eax,0x58(%esi)
 		mov    %esi,%eax
 		call   doinit_
-		mov    _fss,%eax
-		mov    %esi,_fss
+		mov    EXPORT_SYMBOL(fss),%eax
+		mov    %esi,EXPORT_SYMBOL(fss)
 		mov    %eax,0x34(%esi)
 		mov    $0x1,%al
 	jump_fc12c:
@@ -534,7 +534,7 @@ GLOBAL_FUNC (ASM_MSSLOWSOUNDCHECK)	/* 0xfc210 */
 		push   %esi
 		push   %edi
 		push   %ebp
-		mov    _fss,%esi
+		mov    EXPORT_SYMBOL(fss),%esi
 		test   %esi,%esi
 		je     jump_fc2ef
 	jump_fc221:
@@ -571,7 +571,7 @@ GLOBAL_FUNC (ASM_MSSLOWSOUNDCHECK)	/* 0xfc210 */
 		mov    0x4(%esi),%eax
 		push   %eax
 		push   %edi
-		call   SMACKWRAPCOPY
+		call   ac_SMACKWRAPCOPY
 		mov    0x6c(%esi),%edx
 		mov    %eax,0x8(%esi)
 		test   %edx,%edx
@@ -654,11 +654,7 @@ aSblaster_dig:	/* 0x15F7F4 */
 
 .data
 
-_fss:	/* 1592cc */
-		.long	0x0
 GLOBAL (SmackMSSDigDriver)
-		.long	0x0
-MSSLiteInit:
 		.long	0x0
 GLOBAL (mss_i_count)
 		.long	0x0

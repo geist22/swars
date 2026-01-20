@@ -43,6 +43,7 @@
 #include "game_data.h"
 #include "game.h"
 #include "keyboard.h"
+#include "mydraw.h"
 #include "network.h"
 #include "packetfe.h"
 #include "player.h"
@@ -53,13 +54,13 @@
 #include "sound.h"
 #include "swlog.h"
 /******************************************************************************/
-extern struct ScreenTextBox equip_name_box;
-extern struct ScreenBox weapon_slots;
-extern struct ScreenTextBox equip_list_head_box;
-extern struct ScreenTextBox equip_list_box;
-extern struct ScreenTextBox equip_display_box;
-extern struct ScreenButton equip_offer_buy_button;
-extern struct ScreenInfoBox equip_cost_box;
+struct ScreenTextBox equip_name_box = {0};
+struct ScreenBox weapon_slots = {0};
+struct ScreenTextBox equip_list_head_box = {0};
+struct ScreenTextBox equip_list_box = {0};
+struct ScreenTextBox equip_display_box = {0};
+struct ScreenButton equip_offer_buy_button = {0};
+struct ScreenInfoBox equip_cost_box = {0};
 extern struct ScreenButton equip_all_agents_button;
 extern struct ScreenShape equip_agent_select_shapes[5];
 
@@ -72,7 +73,6 @@ extern ubyte equip_agents_panel_draw_state;
 extern ubyte equip_agent_name_draw_state;
 
 extern ubyte mo_from_agent;
-extern struct TbSprite *fe_icons_sprites;
 
 extern char unkn41_text[];
 extern char equip_cost_text[20];
@@ -100,6 +100,8 @@ short agent_name_shape_points_x[] = {
 short agent_name_shape_points_y[] = {
       0,   0,  17,  17,   0,
 };
+
+/******************************************************************************/
 
 ubyte ac_display_weapon_info(struct ScreenTextBox *box);
 ubyte ac_show_weapon_name(struct ScreenTextBox *box);
@@ -726,7 +728,7 @@ void draw_text_property_lv(struct ScreenBoxBase *box, const char *text)
     my_set_text_window(box->X, box->Y, box->Width, box->Height);
     lbDisplay.DrawFlags = Lb_TEXT_HALIGN_CENTER;
     lbFontPtr = small_med_font;
-    cy = box->Height - font_height('A');
+    cy = box->Height - my_char_height('A');
     draw_text_purple_list2(0, cy, text, 0);
 }
 
@@ -1115,7 +1117,7 @@ ubyte show_weapon_name(struct ScreenTextBox *box)
 
     lbFontPtr = box->Font;
     text_w = my_string_width(box->Text);
-    text_h = font_height('A');
+    text_h = my_char_height('A');
     scr_x = box->X + ((box->Width - text_w) >> 1);
     scr_y = box->Y + ((box->Height - text_h) >> 1);
     my_set_text_window(scr_x, scr_y, 640u, scr_y + text_h);
@@ -1270,7 +1272,7 @@ void show_weapon_slot(short scr_x, short scr_y, WeaponType wtype)
 
     lbDisplay.DrawColour = 174;
     lbDisplay.DrawFlags = 0x8000 | Lb_TEXT_ONE_COLOR;
-    draw_sprite_purple_list(scr_x, scr_y, &unk1_sprites[wtype - 1 + 1]);
+    draw_sprite_purple_list(scr_x, scr_y, &wepicons_sprites[wtype + 1]);
     lbDisplay.DrawFlags &= ~0x8000;
 
     fp = weapon_fourpack_index(wtype);
@@ -1312,12 +1314,6 @@ void show_weapon_slot(short scr_x, short scr_y, WeaponType wtype)
 
 ubyte show_weapon_slots(struct ScreenBox *p_box)
 {
-#if 0
-    ubyte ret;
-    asm volatile ("call ASM_show_weapon_slots\n"
-        : "=r" (ret) : "a" (p_box));
-    return ret;
-#endif
     short scr_x, scr_y;
     short slot;
     WeaponType wtype;

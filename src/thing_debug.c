@@ -23,10 +23,12 @@
 #include "bfline.h"
 #include "bfmath.h"
 
+#include "drawtext.h"
+
 #include "bigmap.h"
 #include "building.h"
 #include "command.h"
-#include "drawtext.h"
+#include "drawtext_wrp.h"
 #include "display.h"
 #include "engintrns.h"
 #include "game.h"
@@ -616,8 +618,10 @@ void things_debug_hud(void)
     short path;
     short pasngr;
     char locstr[100];
+    short cmdf_scr_w, cmdf_scr_h;
     short tng_x, tng_y, tng_z;
     short scr_x, scr_y, ln;
+    short cmdf_scr_x, cmdf_scr_y;
     MapCoord cor_x, cor_y, cor_z;
 
     map_coords_limit(&cor_x, &cor_y, &cor_z, mouse_map_x, 0, mouse_map_z);
@@ -643,9 +647,20 @@ void things_debug_hud(void)
     if (thing == 0)
         return;
 
+    if (lbDisplay.GraphicsScreenHeight < 400) {
+        cmdf_scr_w = 125;
+        cmdf_scr_h = 75;
+    } else {
+        cmdf_scr_w = 250;
+        cmdf_scr_h = 150;
+    }
+    ln = 15;
+    // Left column (properties dump)
     scr_x = 16 * pop1_sprites_scale;
     scr_y = 30 * pop1_sprites_scale;
-    ln = 15;
+    // Right column (commands list)
+    cmdf_scr_x = lbDisplay.GraphicsScreenWidth - cmdf_scr_w - 32 * pop1_sprites_scale;
+    cmdf_scr_y = scr_y + 38 * pop1_sprites_scale;
 
     if (thing < 0)
     {
@@ -668,7 +683,7 @@ void things_debug_hud(void)
 
             sprintf(locstr, "%s",
               thing_type_name(p_sthing->Type, p_sthing->SubType));
-            draw_text(scr_x + 330, ln*4, locstr, colour_lookup[ColLU_PINK]);
+            draw_text(cmdf_scr_x + 8 * pop1_sprites_scale, cmdf_scr_y - ln, locstr, colour_lookup[ColLU_PINK]);
         }
         return;
     }
@@ -679,17 +694,6 @@ void things_debug_hud(void)
       colour_lookup[ColLU_WHITE]);
     // Show commands list
     {
-        short cmdf_scr_w, cmdf_scr_h;
-        short cmdf_scr_x, cmdf_scr_y;
-        if (lbDisplay.GraphicsScreenHeight < 400) {
-            cmdf_scr_w = 125;
-            cmdf_scr_h = 75;
-        } else {
-            cmdf_scr_w = 250;
-            cmdf_scr_h = 150;
-        }
-        cmdf_scr_x = lbDisplay.GraphicsScreenWidth - cmdf_scr_w - 32 * pop1_sprites_scale;
-        cmdf_scr_y = scr_y + 38 * pop1_sprites_scale;
         if (p_track_thing->Type == TT_PERSON)
              person_commands_debug_hud(cmdf_scr_x, cmdf_scr_y, cmdf_scr_w, cmdf_scr_h, thing,
                 colour_lookup[ColLU_WHITE], colour_lookup[ColLU_RED], colour_lookup[ColLU_BLUE]);
@@ -821,6 +825,17 @@ void things_debug_hud(void)
               (uint)p_track_thing->U.UVehicle.PissedOffWithWaiting,
               (int)p_track_thing->U.UVehicle.WeaponTurn,
               my_paths[p_track_thing->U.UVehicle.PathIndex].Flag - p_track_thing->PathOffset);
+            if (p_track_thing->SubType == SubTT_VEH_TANK) {
+                struct Thing *p_mgun;
+                p_mgun = &things[p_track_thing->U.UVehicle.SubThing];
+                sprintf(locstr+strlen(locstr), " MGun %d F %08x SF %d F %d ang %d sht %d",
+                  (int)p_track_thing->U.UVehicle.SubThing,
+                  (uint)p_mgun->Flag,
+                  (int)p_mgun->StartFrame,
+                  (int)p_mgun->Frame,
+                  (int)p_mgun->U.UMGun.AngleY,
+                  (int)p_mgun->U.UMGun.ShotTurn);
+            }
             break;
         case TT_PERSON:
             sprintf(locstr, "F2 %08x F3 %x cw %d wc %x WE %d wti %d wt %d PC %d",
@@ -902,7 +917,7 @@ void things_debug_hud(void)
                       thing_type_name(p_track_thing->Type, p_track_thing->SubType),
                       thing_type_name(p_spasngr->Type, p_spasngr->SubType), (int)pasngr);
                 }
-            draw_text(scr_x + 330, scr_y + ln*4, locstr, colour_lookup[ColLU_RED]);
+            draw_text(cmdf_scr_x + 8 * pop1_sprites_scale, cmdf_scr_y - ln, locstr, colour_lookup[ColLU_RED]);
             break;
         case TT_PERSON:
             sprintf(locstr, "%s: lastdist %d VX,VZ (%d,%d)",
@@ -910,12 +925,12 @@ void things_debug_hud(void)
               (int)p_track_thing->U.UPerson.LastDist,
               (int)p_track_thing->VX,
               (int)p_track_thing->VZ);
-            draw_text(scr_x + 330, scr_y + ln*4, locstr, colour_lookup[ColLU_GREEN]);
+            draw_text(cmdf_scr_x + 8 * pop1_sprites_scale, cmdf_scr_y - ln, locstr, colour_lookup[ColLU_GREEN]);
             break;
         default:
             sprintf(locstr, "%s",
               thing_type_name(p_track_thing->Type, p_track_thing->SubType));
-            draw_text(scr_x + 330, scr_y + ln*4, locstr, colour_lookup[ColLU_PINK]);
+            draw_text(cmdf_scr_x + 8 * pop1_sprites_scale, cmdf_scr_y - ln, locstr, colour_lookup[ColLU_PINK]);
             break;
         }
 

@@ -406,15 +406,9 @@ def enctable_string_to_bytes(cte, s):
 
 
 def waditem_string_national_to_upper(stri):
-    stro = ""
-    for c in stri:
-        if c in "êô":
-            stro = stro + unicodedata.normalize('NFKD', c).encode('ascii', 'ignore').decode('ascii', errors='ignore')
-        elif c in "ìäåéöüñáàèíòúù":
-            stro = stro + c.upper()
-        else:
-            stro = stro + c
-    return stro
+    # currently, there is no need to alter the national character codes
+    # no need to convert to upper() nor normalize('NFKD')
+    return stri
 
 
 def waditem_string_to_bytes(po, fname, s):
