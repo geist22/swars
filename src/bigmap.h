@@ -20,6 +20,7 @@
 #define BIGMAP_H
 
 #include "bftypes.h"
+#include "game_bstype.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,6 +61,10 @@ extern "C" {
  * be set to no more than (THINGS_LIMIT+STHINGS_LIMIT)/2.
  */
 #define SPIRAL_STEPS_COUNT   1700
+
+/** Length of the vectors stored in angle_direction[].
+ */
+#define ANGLE_DIRECTION_DISTANCE 256
 
 #define MAX_WALKABLE_STEEPNESS (21 * LbFPMath_PI / 180)
 
@@ -115,6 +120,11 @@ struct MapOffset {
   short both;
 };
 
+struct Direction {
+  short DiX;
+  short DiY;
+};
+
 #pragma pack()
 /******************************************************************************/
 extern struct MyMapElement *game_my_big_map;
@@ -123,16 +133,21 @@ extern struct MapOffset spiral_step[SPIRAL_STEPS_COUNT];
 extern ushort dist_tiles_to_spiral_step[MAP_TILE_WIDTH];
 extern ushort spiral_dist_tiles_limit;
 
+extern const struct Direction angle_direction[];
+
 /** Limit the map coordinates boundaries of valid map positions and ranges of data types used.
+ *
+ * @return Returns if the coordinates were altered (or would have been altered if not NULL).
  */
-void map_coords_limit(short *cor_x, short *cor_y, short *cor_z, long map_x, long map_y, long map_z);
+TbBool map_coords_limit(MapCoord *cor_x, MapCoord *cor_y, MapCoord *cor_z, long map_x, long map_y, long map_z);
 
 void clear_mapwho_on_whole_map(void);
 void refresh_old_my_big_map_format(struct MyMapElement *p_mapel,
- struct MyMapElementOldV7 *p_oldmapel, ulong fmtver);
+ struct MyMapElementOldV7 *p_oldmapel, u32 fmtver);
 short get_mapwho_thing_index(short tile_x, short tile_z);
 void init_search_spiral(void);
 int alt_at_point(short x, short z);
+ushort floor_texture_at_point(MapCoord cor_x, MapCoord cor_z);
 
 /** Computes length of vector defined by given 3 coordinates.
  * Uses some simplifications, but is fast. Requires the resulting
@@ -140,8 +155,10 @@ int alt_at_point(short x, short z);
  */
 u32 map_distance_deltas_fast(int dt_x, int dt_y, int dt_z);
 
+u32 map_distance_deltas_precise(int dt_x, int dt_y, int dt_z);
+
 /** Computes length of vector defined by two 3D points.
- * Uses some simplifications, but is fast. Requires the givn values
+ * Uses some simplifications, but is fast. Requires the given values
  * to be map coords - they can not exceed 15-bit.
  */
 u32 map_distance_coords_fast(short pt1_x, short pt1_y, short pt1_z,

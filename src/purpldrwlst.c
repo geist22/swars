@@ -241,7 +241,7 @@ void draw_purple_screen(void)
                     x = pditem->U.Text.X + pditem->U.Text.WindowX;
                     shift_w = w >> 1;
                 }
-                shift_h = font_height('A') >> 1;
+                shift_h = my_char_height('A') >> 1;
                 y = pditem->U.Text.Y + pditem->U.Text.WindowY;
                 hotspot_buffer[hsnext].X = x + shift_w;
                 hotspot_buffer[hsnext].Y = y + shift_h;

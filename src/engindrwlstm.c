@@ -31,6 +31,7 @@
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"
 #include "enginshrapn.h"
+#include "enginprops.h"
 #include "engintrns.h"
 #include "game.h"
 #include "game_data.h"
@@ -131,7 +132,7 @@ struct SpecialPoint *draw_item_add_points(ubyte ditype, ushort offset, int bckt,
 {
     struct SpecialPoint *p_scrpoint;
 
-    if (next_screen_point + npoints > mem_game[30].N)
+    if (next_screen_point + npoints > screen_points_limit)
         return NULL;
 
     p_scrpoint = &game_screen_point_pool[next_screen_point];
@@ -551,7 +552,7 @@ struct SingleObjectFace4 *build_polygon_slice(short x1, short y1, short x2, shor
     }
 
     pt = next_screen_point;
-    if (pt + 4 > mem_game[30].N)
+    if (pt + 4 > screen_points_limit)
         return NULL;
 
     face = next_special_face4;
@@ -833,7 +834,7 @@ struct SingleObjectFace4 *build_glare(short x1, short y1, short z1, short r1)
         return NULL;
 
     pt = next_screen_point;
-    if (pt + 4 > mem_game[30].N)
+    if (pt + 4 > screen_points_limit)
         return NULL;
     next_screen_point += 4;
 
@@ -1065,7 +1066,7 @@ void draw_bang(struct SimpleThing *p_pow)
  *
  * Before this call, the caller needs to ensure there is a free screen point.
  */
-static void transform_rot_object_shpoint(struct ShEnginePoint *p_sp, int offset_x, int offset_y, int offset_z, ushort mat, ushort pt)
+static void transform_rot_object_shpoint(struct ShEnginePoint *p_sp, int offset_x, int offset_y, int offset_z, ushort matx, ushort pt)
 {
     struct SinglePoint *p_snpoint;
     struct SpecialPoint *p_specpt;
@@ -1088,7 +1089,8 @@ static void transform_rot_object_shpoint(struct ShEnginePoint *p_sp, int offset_
         vec_inp.R[0] = 2 * p_snpoint->X;
         vec_inp.R[1] = 2 * p_snpoint->Y;
         vec_inp.R[2] = 2 * p_snpoint->Z;
-        matrix_transform(&vec_rot, &local_mats[mat], &vec_inp);
+        assert(matx < LOCAL_MATS_COUNT);
+        matrix_transform(&vec_rot, &local_mats[matx], &vec_inp);
 
         dxc = offset_x + (vec_rot.R[0] >> 15);
         dyc = offset_y + (vec_rot.R[1] >> 15);
@@ -1168,6 +1170,13 @@ int draw_rot_object(int offset_x, int offset_y, int offset_z, struct SingleObjec
         p_snpoint->Flags = 0;
     }
 
+    // This function can be called for objects, vehicles, mguns and rockets
+    assert(offsetof(struct Thing, U.UObject.MatrixIndex) == offsetof(struct Thing, U.UVehicle.MatrixIndex));
+    assert(offsetof(struct Thing, U.UObject.MatrixIndex) == offsetof(struct Thing, U.UMGun.MatrixIndex));
+    assert(offsetof(struct Thing, U.UObject.MatrixIndex) == offsetof(struct Thing, U.UEffect.MatrixIndex));
+    // Matrix for anything other than rocket shall respect the allocated entries counter
+    assert((p_thing->U.UObject.MatrixIndex < next_local_mat) || (p_thing->Type == TT_ROCKET));
+
     for (i = point_object->OffsetX; i < point_object->OffsetY; i++)
     {
         struct M31 vec_nx, vec_rot;
@@ -1176,7 +1185,7 @@ int draw_rot_object(int offset_x, int offset_y, int offset_z, struct SingleObjec
 
         p_nrml = &game_normals[i];
         vec_nx = *(struct M31 *)&p_nrml->NX;
-        matrix_transform(&vec_rot, &local_mats[p_thing->U.UVehicle.MatrixIndex], &vec_nx);
+        matrix_transform(&vec_rot, &local_mats[p_thing->U.UObject.MatrixIndex], &vec_nx);
 
         fctr_o = dword_176D14 * (vec_rot.R[0] >> 14) - dword_176D10 * (vec_rot.R[2] >> 14);
         fctr_p = (dword_176D14 * (vec_rot.R[2] >> 14) + dword_176D10 * (vec_rot.R[0] >> 14)) >> 16;
@@ -1200,7 +1209,7 @@ int draw_rot_object(int offset_x, int offset_y, int offset_z, struct SingleObjec
         int depth_max, bckt;
 
         // each transform_rot_object_shpoint() call could reserve a point
-        if (next_screen_point + 4 > mem_game[30].N)
+        if (next_screen_point + 4 > screen_points_limit)
             break;
 
         p_face = &game_object_faces[face];
@@ -1256,7 +1265,7 @@ int draw_rot_object(int offset_x, int offset_y, int offset_z, struct SingleObjec
         struct SingleObjectFace4 *p_face4;
         int depth_max, bckt;
 
-        if (next_screen_point + 5 > mem_game[30].N)
+        if (next_screen_point + 5 > screen_points_limit)
             break;
 
         p_face4 = &game_object_faces4[face];
@@ -1343,7 +1352,8 @@ int draw_rot_object(int offset_x, int offset_y, int offset_z, struct SingleObjec
     return bckt_max;
 }
 
-short draw_rot_object2(int offset_x, int offset_y, int offset_z, struct SingleObject *point_object, struct Thing *p_thing)
+short draw_rot_object2(int offset_x, int offset_y, int offset_z,
+  struct SingleObject *point_object, struct Thing *p_thing)
 {
     int i, bckt_max;
     int face_beg, face;
@@ -1377,7 +1387,7 @@ short draw_rot_object2(int offset_x, int offset_y, int offset_z, struct SingleOb
         struct SingleObjectFace3 *p_face;
         int depth_max, bckt;
 
-        if (next_screen_point + 4 > mem_game[30].N)
+        if (next_screen_point + 4 > screen_points_limit)
             break;
 
         p_face = &game_object_faces[face];
@@ -1445,7 +1455,7 @@ short draw_rot_object2(int offset_x, int offset_y, int offset_z, struct SingleOb
         struct SingleObjectFace4 *p_face4;
         int depth_max, bckt;
 
-        if (next_screen_point + 5 > mem_game[30].N)
+        if (next_screen_point + 5 > screen_points_limit)
             break;
 
         p_face4 = &game_object_faces4[face];
@@ -1508,7 +1518,7 @@ short draw_object(int x, int y, int z, struct SingleObject *point_object)
 
     starts_below_window = 0;
 
-    if ((game_perspective == 2) && byte_19EC6F)
+    if ((game_perspective == 2) && engine_render_lights)
         return 0;
 
     obj_x = point_object->MapX - engn_xc;
@@ -1534,7 +1544,7 @@ short draw_object(int x, int y, int z, struct SingleObject *point_object)
 
     // Make sure we have enough free points to start drawing the object
     points_num = point_object->EndPoint - point_object->StartPoint;
-    if (next_screen_point + 1 * points_num > mem_game[30].N)
+    if (next_screen_point + 1 * points_num > screen_points_limit)
         return 0;
 
     for (snpoint = point_object->StartPoint; snpoint <= point_object->EndPoint; snpoint++)
@@ -1841,12 +1851,12 @@ void build_polygon_circle_2d(int x1, int y1, int r1, int r2, int flag,
         ushort face;
 
         half_angl = angle - angle_detail;
-        cos_angl = lbSinTable[(half_angl & 0x7FF) + LbFPMath_PI/2];
-        sin_angl = lbSinTable[(half_angl & 0x7FF)];
+        cos_angl = lbSinTable[(half_angl & LbFPMath_AngleMask) + LbFPMath_PI/2];
+        sin_angl = lbSinTable[(half_angl & LbFPMath_AngleMask)];
         hlf_x = x1 + ((scrad1 * cos_angl) >> 16);
         hlf_y = y1 + ((scrad1 * sin_angl) >> 16);
-        cos_angl = lbSinTable[(angle & 0x7FF) + LbFPMath_PI/2];
-        sin_angl = lbSinTable[angle & 0x7FF];
+        cos_angl = lbSinTable[(angle & LbFPMath_AngleMask) + LbFPMath_PI/2];
+        sin_angl = lbSinTable[angle & LbFPMath_AngleMask];
         nxt_x = x1 + ((scrad1 * cos_angl) >> 16);
         nxt_y = y1 + ((scrad1 * sin_angl) >> 16);
 

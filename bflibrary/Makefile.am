@@ -87,6 +87,7 @@ libbullfrog_a_SOURCES = \
   src/general/gmouse.c \
   src/general/gpalcrss.c \
   src/general/gpalette.c \
+  src/general/gpalvga.c \
   src/general/gplanar.c \
   src/general/gpng.c \
   src/general/gscreen.c \

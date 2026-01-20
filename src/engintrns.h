@@ -77,6 +77,8 @@ extern long dword_176D64;
 
 short angle_between_points(int x1, int z1, int x2, int z2);
 
+void local_to_worldr(int *dx, int *dy, int *dz);
+
 /** Transform map coordinates from EnginePoint into screen position.
  *
  * Given map coordinates within the game engine, transforms them
@@ -98,8 +100,6 @@ void transform_shpoint_fpv(struct ShEnginePoint *p_sp, int dxc, int dyc, int dzc
  * If you need both coords, transforming them at the same time is much faster.
  */
 int transform_shpoint_y(int dxc, int dyc, int dzc);
-
-void draw_trigpoly(struct PolyPoint *point_a, struct PolyPoint *point_b, struct PolyPoint *point_c);
 
 void process_engine_unk1(void);
 void process_engine_unk2(void);

@@ -30,6 +30,7 @@
 #include "campaign.h"
 #include "display.h"
 #include "thing.h"
+#include "thing_onface.h"
 #include "game_options.h"
 #include "game_speed.h"
 #include "game.h"
@@ -37,6 +38,11 @@
 #include "weapon.h"
 #include "swlog.h"
 /******************************************************************************/
+
+enum ScannerArrowModes {
+    SCANNER_ARROW_NEAREST_TARGET = 0,
+    SCANNER_ARROW_ORIENTATION,
+};
 
 struct scanstr1 {
     long u;
@@ -61,10 +67,10 @@ struct NearestPos {
     short y;
 };
 
-/** String of keycodes for special input.
+/** String of keycodes for changing arrow mode.
  * Cannot be of type TbKeyCode as contains plain numeric value as well.
  */
-const int scanner_keys[] = {
+const int scanner_arrow_mode_code_keys[] = {
     KC_NUMPAD3, KC_DECIMAL, KC_NUMPAD1, KC_NUMPAD4,
     KC_NUMPAD1, KC_NUMPAD5, KC_NUMPAD9, KC_NUMPAD2,
     KC_NUMPAD6, KC_NUMPAD5, KC_NUMPAD3, KC_NUMPAD5,
@@ -409,7 +415,7 @@ extern long dword_1DBB64[];
 extern long dword_1DBB6C[512];
 extern TbPixel *SCANNER_screenptr;
 extern ulong SCANNER_keep_arcs;
-extern long scanner_blink; // = 1;
+extern long scanner_arrow_mode; // = 1;
 
 extern struct scanstr3 SCANNER_arcpoint[20];
 
@@ -417,15 +423,15 @@ void SCANNER_process_special_input(void)
 {
     ushort sckey, nxkey;
 
-    sckey = scanner_keys[scanner_next_key_no];
+    sckey = scanner_arrow_mode_code_keys[scanner_next_key_no];
     if (is_key_pressed(sckey, KMod_DONTCARE))
     {
         clear_key_pressed(sckey);
-        nxkey = scanner_keys[++scanner_next_key_no];
+        nxkey = scanner_arrow_mode_code_keys[++scanner_next_key_no];
         if (nxkey == 9999)
         {
             scanner_next_key_no = 0;
-            scanner_blink = scanner_blink ^ 1;
+            scanner_arrow_mode = scanner_arrow_mode ^ 1;
         }
     }
 }
@@ -497,6 +503,7 @@ void SCANNER_dnt_sub1_sub1(void)
 
 void SCANNER_dnt_sub1_sub2(void)
 {
+    // TODO when rewriting, use mul_shift16_sign_pad_lo()
     asm volatile (
       "call ASM_SCANNER_dnt_sub1_sub2\n"
         :  :  : "eax" );
@@ -567,6 +574,7 @@ void SCANNER_dnt_sub1_sub11(void)
 
 void SCANNER_dnt_sub1_sub12(void)
 {
+    // TODO when rewriting, use mul_shift16_sign_pad_lo()
     asm volatile (
       "call ASM_SCANNER_dnt_sub1_sub12\n"
         :  :  : "eax" );
@@ -1351,32 +1359,19 @@ static void scanner_coords_line_clip(int *x1, int *y1, int *x2, int *y2, int sc_
 
 static void map_coords_to_scanner(int *sc_x, int *sc_y, int sh_x, int sh_y, int bsh_x, int bsh_y)
 {
-    u32 tmp;
     int rval_xy, rval_yy, rval_yx, rval_xx, rval_div;
     long prec_x, prec_y;
 
-    tmp = (sh_x * bsh_y) & 0xFFFF0000;
-    tmp |= ((sh_x * (s64)bsh_y) >> 32) & 0xFFFF;
-    rval_xy = bw_rotl32(tmp, 16);
+    rval_xy = mul_shift16_sign_pad_lo(sh_x, bsh_y);
 
-    tmp = (sh_y * bsh_y) & 0xFFFF0000;
-    tmp |= ((sh_y * (s64)bsh_y) >> 32) & 0xFFFF;
-    rval_yy = bw_rotl32(tmp, 16);
+    rval_yy = mul_shift16_sign_pad_lo(sh_y, bsh_y);
 
-    tmp = (sh_y * bsh_x) & 0xFFFF0000;
-    tmp |= ((sh_y * (s64)bsh_x) >> 32) & 0xFFFF;
-    rval_yx = bw_rotl32(tmp, 16);
+    rval_yx = mul_shift16_sign_pad_lo(sh_y, bsh_x);
 
-    tmp = (sh_x * bsh_x) & 0xFFFF0000;
-    tmp |= ((sh_x * (s64)bsh_x) >> 32) & 0xFFFF;
-    rval_xx = bw_rotl32(tmp, 16);
+    rval_xx = mul_shift16_sign_pad_lo(sh_x, bsh_x);
 
-    tmp = (sh_y * sh_y) & 0xFFFF0000;
-    tmp |= ((sh_y * (s64)sh_y) >> 32) & 0xFFFF;
-    rval_div = bw_rotl32(tmp, 16);
-    tmp = (sh_x * sh_x) & 0xFFFF0000;
-    tmp |= ((sh_x * (s64)sh_x) >> 32) & 0xFFFF;
-    rval_div += bw_rotl32(tmp, 16);
+    rval_div = mul_shift16_sign_pad_lo(sh_y, sh_y)
+      + mul_shift16_sign_pad_lo(sh_x, sh_x);
 
     prec_y = ((rval_yx - (s64)rval_xy) << 16) / rval_div;
     prec_x = ((rval_xx + (s64)rval_yy) << 16) / rval_div;
@@ -1523,7 +1518,7 @@ void SCANNER_check_nearest(struct Thing *p_thing, struct NearestPos *p_nearest, 
 {
     sbyte group_col;
 
-    if (scanner_blink)
+    if (scanner_arrow_mode != SCANNER_ARROW_NEAREST_TARGET)
         return;
 
     int dist_x, dist_y;
@@ -1721,15 +1716,19 @@ void SCANNER_draw_things_dots(int pos_mx, int pos_mz, int sh_x, int sh_y, int po
         SCANNER_draw_sthing(p_sthing, pos_mx, pos_mz, sh_x, sh_y);
     }
 
-    if (scanner_blink)
+    switch (scanner_arrow_mode)
     {
+    case SCANNER_ARROW_ORIENTATION:
         SCANNER_draw_orientation_arrow(pos_x1, pos_y1, range, ingame.Scanner.Angle);
-    }
-    else if ((nearest.dist > range * range) && (nearest.dist != 0x7FFFFFFF))
-    {
-        long angle;
-        angle = arctan(nearest.x, nearest.y);
-        SCANNER_draw_orientation_arrow(pos_x1, pos_y1, range, angle);
+        break;
+    case SCANNER_ARROW_NEAREST_TARGET:
+        if ((nearest.dist > range * range) && (nearest.dist != 0x7FFFFFFF))
+        {
+            long angle;
+            angle = arctan(nearest.x, nearest.y);
+            SCANNER_draw_orientation_arrow(pos_x1, pos_y1, range, angle);
+        }
+        break;
     }
 }
 

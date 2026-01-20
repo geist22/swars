@@ -38,14 +38,20 @@ as american release, were tested and will definitely work; other version were
 not fully tested. Only releases for PC can be used. Releases from popular
 digital distribution platforms all include one of the tested images.
 
-The CD version which you use narrows the range of available languages.
+The CD version which you use narrows the range of languages available during
+installation.
 
 * Multi-lingual CD contains `eng` `fre` `ita` `spa` `swe`,
 * German release is required to use `ger`,
 * Japaneses "SW Premium" release contains `eng` `fre` `jap`, but asian fonts
   are not supported by the port.
 
-The steps you need to take vary depending on your operating system.
+After installing, you can change the language manually by editing `config.ini`.
+Some fanmade translations can be actually only enabled this way. However,
+several media files which are not packaged with **SyndWarsFX** will stay
+at the language version chosen during installation, so it still matters.
+
+The steps you need to take for installation vary depending on your operating system.
 
 ### Installing on GNU or UNIX
 
@@ -56,7 +62,7 @@ and then add the neccessary data files. The steps are:
    (e.g. in `/media/cdrom`).
 2. Choose an installation folder, like `/usr/local/share/syndwarsfx` (this is the default).
 3. Do `util/install -f <SOURCE> -t <TARGET> -l <LANG>`, where
-   * *\<SOURCE\>* is the game CD path, like `/media/cdrom`,
+   * *\<SOURCE\>* is the game CD mount path, like `/media/cdrom`,
    * *\<TARGET\>* is the destination path, meaning the installation folder you've chosen,
    * *\<LANG\>* is the installation language, and can be one of: `eng` `fre` `ger` `ita` `spa` `swe`.
 
@@ -183,7 +189,7 @@ You can now [start the game](#starting-the-game).
 The original game needed to be started with parameters to play normally. While
 with SyndWarsFX this is no longer mandatory, the parameters can still be used,
 and many new ones are actually available. The executable can be run with
-`--help` parameter to show a short description of all aprameters.
+`--help` parameter to show a short description of all parameters.
 
 Parameter `-w` (used in the original game) is not recommended when running on
 new hardware.
@@ -211,7 +217,7 @@ was starting. There is also a troubleshooting page on the
 
 ## Building
 
-Note that you can oly build the port for x86 architecture, and you either need
+Note that you can only build the port for x86 architecture, and you either need
 32-bit OS, or 64-bit OS with 32-bit user space libraries available.
 
 ### General building instructions
@@ -247,7 +253,16 @@ You should now have a working `src/syndwarsfx` executable file.
 
 Here are specific commands required to compile the executable on Ubuntu linux.
 
-Install the dependencies - remember that some must be 32-bit (i386):
+First, dependencies have to be installed. But this project can be built only
+for 32-bit address space - some installed packages have to be compatible with
+it. To even allow installing packages for a different architecture, it needs
+to be added:
+
+```
+dpkg --add-architecture i386
+```
+
+Now install the dependencies - remember that some must be 32-bit (i386):
 
 ```
 sudo apt install gcc-multilib g++-multilib lib32z1
@@ -261,6 +276,11 @@ sudo apt install libogg-dev:i386
 sudo apt install libwildmidi-dev:i386
 ```
 
+Be warned - your package manager may assume you want to replace the architecture
+if you did not explicitly added it. If the information on screen suggests
+that the installation would remove a group of currently installed packages,
+do not proceed with the changes and find another way.
+
 Now as our host is ready, we can start working on the actual `syndwarsfx` sources.
 Go to that folder, and generate build scripts from templates using autotools:
 
@@ -272,7 +292,7 @@ Next, proceed with the build steps; we will do that in a separate folder.
 
 ```
 mkdir -p release; cd release
-PKG_CONFIG_PATH="/usr/lib/i386-linux-gnu/pkgconfig" CFLAGS="-m32" CXXFLAGS="-m32" LDFLAGS="-m32" ../configure --enable-lb-mouse-wheel
+PKG_CONFIG_PATH="/usr/lib/i386-linux-gnu/pkgconfig" CFLAGS="-m32" CXXFLAGS="-m32" LDFLAGS="-m32" ../configure --disable-lb-wscreen-control
 make V=1
 ```
 
@@ -285,7 +305,7 @@ In case you also want a debug build:
 
 ```
 mkdir -p debug; cd debug
-PKG_CONFIG_PATH="/usr/lib/i386-linux-gnu/pkgconfig" CPPFLAGS="-DDEBUG -D__DEBUG" CFLAGS="-m32 -g -O0 -Wall" CXXFLAGS="-m32 -g -O0 -Wall" LDFLAGS="-m32 -g -O0 -Wall" ../configure --enable-lb-mouse-wheel
+PKG_CONFIG_PATH="/usr/lib/i386-linux-gnu/pkgconfig" CPPFLAGS="-DDEBUG -D__DEBUG" CFLAGS="-m32 -g -O0 -Wall" CXXFLAGS="-m32 -g -O0 -Wall" LDFLAGS="-m32 -g -O0 -Wall" ../configure --disable-lb-wscreen-control
 make V=1
 ```
 
@@ -370,7 +390,7 @@ the default mingw64 ones:
 
 ```
 mkdir -p release; cd release
-PATH="/mingw32/bin:$PATH" PKG_CONFIG_PATH="/mingw32/lib/pkgconfig" CFLAGS="-m32" CXXFLAGS="-m32" LDFLAGS="-m32" ../configure --prefix=/mingw32 --enable-lb-mouse-wheel
+PATH="/mingw32/bin:$PATH" PKG_CONFIG_PATH="/mingw32/lib/pkgconfig" CFLAGS="-m32" CXXFLAGS="-m32" LDFLAGS="-m32" ../configure --prefix=/mingw32 --disable-lb-wscreen-control
 PATH="/mingw32/bin:$PATH" make V=1
 ```
 
@@ -400,7 +420,7 @@ When you configure your compilation toolchain and location of libraries,
 you will need to pass `CFLAGS="-arch i386"`, like so:
 
 ```
-./configure --enable-lb-mouse-wheel CFLAGS="-arch i386"
+./configure --disable-lb-wscreen-control CFLAGS="-arch i386"
 ```
 
 If you are planning to create [Mac OS app bundle](#making-a-mac-os-app-bundle),
@@ -408,7 +428,7 @@ you will also need to pass `data-path`, so your final command will be:
 
 
 ```
-./configure --with-data-path="SyndWarsFX.app/Contents/Resources" --enable-lb-mouse-wheel CFLAGS="-arch i386"
+./configure --with-data-path="SyndWarsFX.app/Contents/Resources" --disable-lb-wscreen-control CFLAGS="-arch i386"
 ```
 
 Then, do `make` as the [general building instructions](#general-building-instructions) tell.

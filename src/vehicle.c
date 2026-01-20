@@ -276,93 +276,108 @@ void veh_add(struct Thing *p_vehicle, short frame)
     short coord_x, coord_y, coord_z;
     short mgun;
     ushort obj;
-    ushort mat;
+    ushort matx;
 
     switch (frame)
     {
-    case 18:
+    case VehOM_MBTANK:
         mgun = get_new_thing();
+        if (mgun <= 0) {
+            LOGERR("No thing slots for mounted gun");
+            break;
+        }
         p_vehicle->U.UVehicle.SubThing = mgun;
         p_vehicle->SubType = SubTT_VEH_TANK;
 
         p_mgun = &things[mgun];
         p_mgun->U.UMGun.NextThing = 0;
         p_mgun->U.UVehicle.SubThing = 0;
-        mat = next_local_mat;
-        next_local_mat++;
-        LbMemoryCopy(&local_mats[mat], &local_mats[p_vehicle->U.UVehicle.MatrixIndex], sizeof(struct M33));
-        p_mgun->U.UMGun.MatrixIndex = mat;
+        assert(p_vehicle->U.UVehicle.MatrixIndex < next_local_mat);
+        assert(next_local_mat < LOCAL_MATS_COUNT);
+        matx = next_local_mat++;
+        LbMemoryCopy(&local_mats[matx], &local_mats[p_vehicle->U.UVehicle.MatrixIndex], sizeof(struct M33));
+        p_mgun->U.UMGun.MatrixIndex = matx;
         p_mgun->StartFrame = frame;
 
-        coord_x = (p_vehicle->X >> 8);
-        coord_y = (p_vehicle->Y >> 8);
-        coord_z = (p_vehicle->Z >> 8);
+        coord_x = PRCCOORD_TO_MAPCOORD(p_vehicle->X);
+        coord_y = PRCCOORD_TO_MAPCOORD(p_vehicle->Y);
+        coord_z = PRCCOORD_TO_MAPCOORD(p_vehicle->Z);
         byte_1C83D1 = 0;
-        sub_6031C(coord_x, coord_z, -19 - prim_unknprop01, coord_y + 20);
+        copy_prim_obj_to_game_object(coord_x, coord_z, -19 - prim_unknprop01, coord_y + 20);
         p_mgun->X = 0;
         p_mgun->Y = 0x2800;
         p_mgun->Z = 0;
         obj = next_object - 1;
         unkn_object_shift_03(obj);
-        p_mgun->Type = TT_UNKN33;
+        p_mgun->Type = TT_VEH_TURRET;
         p_mgun->U.UMGun.Object = obj;
         p_snobj = &game_objects[obj];
         p_snobj->ThingNo = p_mgun - things;
         break;
-    case 26:
+    case 26: // Replaced tank (object slots reused for mech)
         mgun = get_new_thing();
+        if (mgun <= 0) {
+            LOGERR("No thing slots for mounted gun");
+            break;
+        }
         p_vehicle->U.UVehicle.SubThing = mgun;
         p_vehicle->SubType = SubTT_VEH_TANK;
 
         p_mgun = &things[mgun];
         p_mgun->U.UMGun.NextThing = 0;
         p_mgun->U.UVehicle.SubThing = 0;
-        mat = next_local_mat;
-        next_local_mat++;
-        LbMemoryCopy(&local_mats[mat], &local_mats[p_vehicle->U.UVehicle.MatrixIndex], sizeof(struct M33));
-        p_mgun->U.UMGun.MatrixIndex = mat;
+        assert(p_vehicle->U.UVehicle.MatrixIndex < next_local_mat);
+        assert(next_local_mat < LOCAL_MATS_COUNT);
+        matx = next_local_mat++;
+        LbMemoryCopy(&local_mats[matx], &local_mats[p_vehicle->U.UVehicle.MatrixIndex], sizeof(struct M33));
+        p_mgun->U.UMGun.MatrixIndex = matx;
         p_mgun->StartFrame = frame;
 
-        coord_x = (p_vehicle->X >> 8);
-        coord_y = (p_vehicle->Y >> 8);
-        coord_z = (p_vehicle->Z >> 8);
+        coord_x = PRCCOORD_TO_MAPCOORD(p_vehicle->X);
+        coord_y = PRCCOORD_TO_MAPCOORD(p_vehicle->Y);
+        coord_z = PRCCOORD_TO_MAPCOORD(p_vehicle->Z);
         byte_1C83D1 = 0;
-        sub_6031C(coord_x, coord_z, -27 - prim_unknprop01, coord_y + 20);
+        copy_prim_obj_to_game_object(coord_x, coord_z, -27 - prim_unknprop01, coord_y + 20);
         p_mgun->X = 0;
         p_mgun->Y = 0x1E00;
         p_mgun->Z = 0;
         obj = next_object - 1;
         unkn_object_shift_03(obj);
-        p_mgun->Type = TT_UNKN33;
+        p_mgun->Type = TT_VEH_TURRET;
         p_mgun->U.UMGun.Object = obj;
         p_snobj = &game_objects[obj];
         p_snobj->ThingNo = p_mgun - things;
         break;
-    case 29:
+    case VehOM_CLAWTANK:
         mgun = get_new_thing();
+        if (mgun <= 0) {
+            LOGERR("No thing slots for mounted gun");
+            break;
+        }
         p_vehicle->U.UVehicle.SubThing = mgun;
         p_vehicle->SubType = SubTT_VEH_TANK;
 
         p_mgun = &things[mgun];
         p_mgun->U.UMGun.NextThing = 0;
         p_mgun->U.UVehicle.SubThing = 0;
-        mat = next_local_mat;
-        next_local_mat++;
-        LbMemoryCopy(&local_mats[mat], &local_mats[p_vehicle->U.UVehicle.MatrixIndex], sizeof(struct M33));
-        p_mgun->U.UMGun.MatrixIndex = mat;
+        assert(p_vehicle->U.UVehicle.MatrixIndex < next_local_mat);
+        assert(next_local_mat < LOCAL_MATS_COUNT);
+        matx = next_local_mat++;
+        LbMemoryCopy(&local_mats[matx], &local_mats[p_vehicle->U.UVehicle.MatrixIndex], sizeof(struct M33));
+        p_mgun->U.UMGun.MatrixIndex = matx;
         p_mgun->StartFrame = frame;
 
         byte_1C83D1 = 0;
-        coord_x = (p_vehicle->X >> 8);
-        coord_y = (p_vehicle->Y >> 8);
-        coord_z = (p_vehicle->Z >> 8);
-        sub_6031C(coord_x, coord_z, -30 - prim_unknprop01, coord_y + 20);
+        coord_x = PRCCOORD_TO_MAPCOORD(p_vehicle->X);
+        coord_y = PRCCOORD_TO_MAPCOORD(p_vehicle->Y);
+        coord_z = PRCCOORD_TO_MAPCOORD(p_vehicle->Z);
+        copy_prim_obj_to_game_object(coord_x, coord_z, -30 - prim_unknprop01, coord_y + 20);
         p_mgun->X = 0;
         p_mgun->Y = 0x1E00;
         p_mgun->Z = 0;
         obj = next_object - 1;
         unkn_object_shift_03(obj);
-        p_mgun->Type = TT_UNKN33;
+        p_mgun->Type = TT_VEH_TURRET;
         p_mgun->U.UMGun.Object = obj;
         p_snobj = &game_objects[obj];
         p_snobj->ThingNo = p_mgun - things;
@@ -419,11 +434,11 @@ void person_hit_by_car(struct Thing *p_person, struct Thing *p_vehicle)
 static TbBool vehicle_check_collide_with_area(struct Thing *p_vehA,
   int posBx, int posBy, int posBz, int radB, int matBid)
 {
-    struct M33 *matA;
+    struct M33 *p_matA;
     int radA_incl_speed, matA02, matA22;
     int futureAx, futureAz;
     int posAx, posAz;
-    struct M33 *matB;
+    struct M33 *p_matB;
     int radB_incl_speed, matB02, matB22;
     int futureBx, futureBz;
     int posB_beg_x, posB_beg_z;
@@ -432,9 +447,10 @@ static TbBool vehicle_check_collide_with_area(struct Thing *p_vehA,
     int dist_endX, dist_endZ;
     int distXZ_sq;
 
-    matA = &local_mats[p_vehA->U.UVehicle.MatrixIndex];
-    matA02 = -4 * matA->R[0][2];
-    matA22 = -4 * matA->R[2][2];
+    assert(p_vehA->U.UVehicle.MatrixIndex < next_local_mat);
+    p_matA = &local_mats[p_vehA->U.UVehicle.MatrixIndex];
+    matA02 = -4 * p_matA->R[0][2];
+    matA22 = -4 * p_matA->R[2][2];
     radA_incl_speed = (386 * p_vehA->Radius >> 8)
       + (p_vehA->Speed >> 3) + (p_vehA->Speed >> 4);
     futureAx = radA_incl_speed * matA02 >> 8;
@@ -449,9 +465,10 @@ static TbBool vehicle_check_collide_with_area(struct Thing *p_vehA,
     if ((p_vehA->X >> 16 == posBx >> 16) && (p_vehA->Z >> 16 == posBz >> 16))
         return true;
 
-    matB = &local_mats[matBid];
-    matB02 = -4 * matB->R[0][2];
-    matB22 = -4 * matB->R[2][2];
+    assert(matBid < next_local_mat);
+    p_matB = &local_mats[matBid];
+    matB02 = -4 * p_matB->R[0][2];
+    matB22 = -4 * p_matB->R[2][2];
     radB_incl_speed = (384 * radB >> 9);
     futureBx = radB_incl_speed * matB02 >> 8;
     futureBz = radB_incl_speed * matB22 >> 8;
@@ -556,7 +573,7 @@ TbBool vehicle_first_has_right_of_way(struct Thing *p_vehA, struct Thing *p_vehB
 static TbBool check_vehicle_col_with_veh(struct Thing *p_vehA, struct Thing *p_vehB,
   int posAx, int posAy, int posAz)
 {
-    struct M33 *matB;
+    struct M33 *p_matB;
     int radB_incl_speed, matB02, matB22;
     int futureBx, futureBz;
     int posB_beg_x, posB_beg_z;
@@ -576,9 +593,10 @@ static TbBool check_vehicle_col_with_veh(struct Thing *p_vehA, struct Thing *p_v
     if (abs(p_vehB->Y - posAy) >= 2048)
         return false;
 
-    matB = &local_mats[p_vehB->U.UVehicle.MatrixIndex];
-    matB02 = -4 * matB->R[0][2];
-    matB22 = -4 * matB->R[2][2];
+    assert(p_vehB->U.UVehicle.MatrixIndex < next_local_mat);
+    p_matB = &local_mats[p_vehB->U.UVehicle.MatrixIndex];
+    matB02 = -4 * p_matB->R[0][2];
+    matB22 = -4 * p_matB->R[2][2];
     radB_incl_speed = 384 * p_vehB->Radius >> 9;
     futureBx = radB_incl_speed * matB02 >> 8;
     futureBz = radB_incl_speed * matB22 >> 8;
@@ -785,7 +803,7 @@ TbBool check_vehicle_col(struct Thing *p_vehicle)
     return ret;
 #endif
     ushort r;
-    struct M33 *matA;
+    struct M33 *p_matA;
     int rad_incl_speed, matA02, matA22;
     int tile_ctr_x, tile_ctr_z;
     int tile_x, tile_z;
@@ -795,13 +813,14 @@ TbBool check_vehicle_col(struct Thing *p_vehicle)
         return false;
 
     r = p_vehicle->Radius;
-    matA = &local_mats[p_vehicle->U.UVehicle.MatrixIndex];
+    assert(p_vehicle->U.UVehicle.MatrixIndex < next_local_mat);
+    p_matA = &local_mats[p_vehicle->U.UVehicle.MatrixIndex];
     pos_x = p_vehicle->X;
     pos_y = p_vehicle->Y;
     pos_z = p_vehicle->Z;
     rad_incl_speed = (p_vehicle->Speed >> 4) + (p_vehicle->Speed >> 3) + (386 * r >> 8);
-    matA02 = -4 * matA->R[0][2];
-    matA22 = -4 * matA->R[2][2];
+    matA02 = -4 * p_matA->R[0][2];
+    matA22 = -4 * p_matA->R[2][2];
     pos_x = (matA02 * rad_incl_speed >> 8) + pos_x - (matA22 >> 2);
     pos_z = (matA22 * rad_incl_speed >> 8) + pos_z + (matA02 >> 2);
     tile_ctr_z = pos_z >> 16;

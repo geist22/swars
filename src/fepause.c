@@ -91,7 +91,7 @@ ubyte draw_ingame_button(struct ScreenButton *p_button, ubyte enabled)
             LbDrawBox(p_button->X + i, p_button->Y + i, p_button->Width - 2 * i, p_button->Height - 2 * i, p_button->Colour);
     }
 
-    line_h = font_height('A');
+    line_h = my_char_height('A');
     text_w = my_string_width(p_button->Text);
     text_x = p_button->X + 2 * margin + (p_button->Width - (text_w + 4 * margin)) / 2;
     text_y = p_button->Y + 2 * margin + (p_button->Height - (line_h + 4 * margin)) / 2;
@@ -313,7 +313,7 @@ void init_ingame_screen_button(struct ScreenButton *p_button, ushort x, ushort y
     init_screen_button(p_button, x, y, text, 0, font, 0, 0);
 
     border = pop1_sprites_scale - 1;
-    line_h = font_height('A');
+    line_h = my_char_height('A');
     text_w = my_string_width(p_button->Text);
     fnt_scale = pop1_sprites_scale / 2 + 1;
     if (line_h < fnt_scale * 6) { // detail 0 font has height equal 6
@@ -499,7 +499,7 @@ void draw_pause_screen_static(struct ScreenBox *box)
     else
     {
         // If no special sprites, draw the text in the normal font available in-game
-        s = gui_strings[606]; // "uplink paused"
+        s = gui_strings[633]; // "uplink paused"
         w = my_string_width(s);
         x = pause_main_box.X + (pause_main_box.Width - w) / 2 + 3;
         y = pause_main_box.Y + pause_main_box.Height * 2 / 60;

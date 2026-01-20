@@ -20,6 +20,7 @@
 
 #include "bfconfig.h"
 #include "bfutility.h"
+#include "bfmemut.h"
 #include "bfscreen.h"
 #include "bfsprite.h"
 #include "bftext.h"
@@ -33,6 +34,7 @@
 #include "guiboxes.h"
 #include "guitext.h"
 #include "keyboard.h"
+#include "mydraw.h"
 #include "purpldrwlst.h"
 #include "sound.h"
 #include "swlog.h"
@@ -116,9 +118,29 @@ void draw_box_purple_list(int x, int y, ulong width, ulong height, int colour)
 
 void draw_text_purple_list2(int x, int y, const char *text, ushort line)
 {
+#if 0
     asm volatile (
       "call ASM_draw_text_purple_list2\n"
         : : "a" (x), "d" (y), "b" (text), "c" (line));
+    return;
+#endif
+    struct PurpleDrawItem *pditem;
+
+    pditem = &purple_draw_list[purple_draw_index];
+    purple_draw_index++;
+
+    pditem->U.Text.X = x;
+    pditem->U.Text.Y = y;
+    pditem->U.Text.WindowX = text_window_x1;
+    pditem->U.Text.WindowY = text_window_y1;
+    pditem->U.Text.Width = text_window_x2 - text_window_x1 + 1;
+    pditem->U.Text.Height = text_window_y2 - text_window_y1 + 1;
+    pditem->U.Text.Text = text;
+    pditem->U.Text.Line = line;
+    pditem->U.Text.Colour = lbDisplay.DrawColour;
+    pditem->U.Text.Font = lbFontPtr;
+    pditem->Flags = lbDisplay.DrawFlags;
+    pditem->Type = PuDT_TEXT;
 }
 
 void draw_sprite_purple_list(int x, int y, const struct TbSprite *p_sprite)
@@ -410,13 +432,14 @@ short get_text_box_lines_visible(struct ScreenTextBox *p_box)
 
     lbFontPtr = p_box->Font;
     if (p_box->LineHeight == 0)
-        p_box->LineHeight = p_box->LineSpacing + font_height('A');
+        p_box->LineHeight = p_box->LineSpacing + my_char_height('A');
 
     return get_text_box_window_lines_visible(p_box);
 }
 
 TbBool flashy_draw_text(int x, int y, const char *text, ubyte speed, int top_line, short *textpos, int cyan_flag)
 {
+#if 0
     TbBool ret;
     asm volatile (
       "push %7\n"
@@ -425,6 +448,71 @@ TbBool flashy_draw_text(int x, int y, const char *text, ubyte speed, int top_lin
       "call ASM_flashy_draw_text\n"
         : "=r" (ret) : "a" (x), "d" (y), "b" (text), "c" (speed), "g" (top_line), "g" (textpos), "g" (cyan_flag));
     return ret;
+#endif
+    char *gtext;
+    int text_tot_len, chunk_end;
+    int i, pos;
+    sbyte chunk_no;
+
+    if (text == NULL) {
+        return 1;
+    }
+    text_tot_len = strlen(text);
+    pos = *textpos;
+    if (pos >= text_tot_len) {
+        draw_text_purple_list2(x, y, text, top_line);
+        return 1;
+    }
+    gtext = (char *)back_buffer + text_buf_pos;
+    if (pos > 0)
+        LbMemoryCopy(gtext, text, pos);
+    if (pos <= 0)
+        pos = 0;
+    if (cyan_flag)
+    {
+        chunk_no = 12;
+        gtext[pos] = 27;
+        pos += 1;
+        for (i = 0; i < 4; i++)
+        {
+            chunk_end = i + *textpos;
+            if ((chunk_end >= 0) && (chunk_end < text_tot_len))
+            {
+              gtext[pos + 0] = 14;
+              gtext[pos + 1] = chunk_no;
+              gtext[pos + 2] = text[i + *textpos];
+              pos += 3;
+            }
+            ++chunk_no;
+        }
+    }
+    else
+    {
+        chunk_no = 6;
+        gtext[pos] = 27;
+        pos += 1;
+        for (i = 0; i < 6; i++)
+        {
+            chunk_end = i + *textpos;
+            if ((chunk_end >= 0) && (chunk_end < text_tot_len))
+            {
+              gtext[pos + 0] = 14;
+              gtext[pos + 1] = chunk_no;
+              gtext[pos + 2] = text[i + *textpos];
+              pos += 3;
+            }
+            ++chunk_no;
+        }
+    }
+    gtext[pos + 0] = 28;
+    gtext[pos + 1] = 0;
+    pos += 2;
+    text_buf_pos += pos;
+
+    *textpos += speed;
+    draw_text_purple_list2(x, y, gtext, top_line);
+    play_sample_using_heap(0, 114, 127, 64, 100, 0, 3);
+    return 0;
 }
 
 ubyte flashy_draw_purple_text_box_text(struct ScreenTextBox *p_box)
@@ -705,7 +793,7 @@ ubyte flashy_draw_purple_text_box(struct ScreenTextBox *p_box)
     lbFontPtr = p_box->Font;
     byte_197160 = p_box->LineSpacing;
     if (p_box->LineHeight == 0)
-        p_box->LineHeight = byte_197160 + font_height('A');
+        p_box->LineHeight = byte_197160 + my_char_height('A');
 
     lines_visible = get_text_box_window_lines_visible(p_box);
 
@@ -1396,6 +1484,25 @@ ubyte flashy_draw_purple_button(struct ScreenButton *p_btn)
 #endif
 }
 
+ubyte label_text(struct ScreenButton *p_btn)
+{
+    short text_x, text_y;
+    short text_w, text_h;
+
+    lbFontPtr = p_btn->Font;
+    text_w = my_string_width(p_btn->Text);
+    text_h = my_char_height('A');
+    text_x = p_btn->X + ((p_btn->Width - text_w) >> 1) + 1;
+    text_y = p_btn->Y + ((p_btn->Height - text_h) >> 1);
+    my_set_text_window(text_x, text_y, lbDisplay.GraphicsScreenWidth, text_y + text_h);
+    if (p_btn->Flags & 0x80) {
+        p_btn->TextFadePos = -3;
+        p_btn->Flags &= ~GBxFlg_Unkn0080;
+    }
+    return flashy_draw_text(0, 0, p_btn->Text, p_btn->TextSpeed, p_btn->TextTopLine,
+      &p_btn->TextFadePos, 0);
+}
+
 ubyte button_text(struct ScreenButton *p_btn)
 {
 #if 0
@@ -1409,7 +1516,7 @@ ubyte button_text(struct ScreenButton *p_btn)
 
     lbFontPtr = p_btn->Font;
     text_w = my_string_width(p_btn->Text);
-    text_h = font_height('A');
+    text_h = my_char_height('A');
     text_x = p_btn->X + ((p_btn->Width - text_w) >> 1) + 1;
     text_y = p_btn->Y + ((p_btn->Height - text_h) >> 1);
     my_set_text_window(text_x, text_y, lbDisplay.GraphicsScreenWidth, text_y + text_h);
@@ -1459,8 +1566,11 @@ void draw_flic_purple_list(void (*fn)())
 
 void draw_noise_box_purple_list(int x, int y, ulong width, ulong height)
 {
+    struct PurpleDrawItem *pditem;
+
     draw_box_purple_list(x, y, width, height, 0);
-    purple_draw_list[purple_draw_index - 1].Type = PuDT_NOISEBOX;
+    pditem = &purple_draw_list[purple_draw_index - 1];
+    pditem->Type = PuDT_NOISEBOX;
 }
 
 /******************************************************************************/

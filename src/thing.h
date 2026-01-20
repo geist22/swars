@@ -69,7 +69,7 @@ enum ThingType {
     SmTT_TIME_POD = 0x1E,
     TT_AIR_STRIKE = 0x1F,
     SmTT_CANISTER = 0x20,
-    TT_UNKN33 = 0x21,
+    TT_VEH_TURRET = 0x21,
     TT_UNKN34 = 0x22,
     TT_UNKN35 = 0x23,
     SmTT_STASIS_POD = 0x24,
@@ -141,6 +141,11 @@ enum ThingFlags {
  * when set on a building.
  */
 #define TngF_TransCloseRq TngF_Unkn0080
+
+/** Thing on which a person is standing is a valid and really near vehicle.
+ * The flag has this meaning for people, different meaning for other things.
+ */
+#define TngF_StandOnVehicle TngF_Unkn01000000
 
 enum ThingFlags2 {
     TgF2_Unkn0001     = 0x0001,
@@ -339,7 +344,7 @@ struct TngUEffect
   ubyte Group;
   ubyte EffectiveGroup;
   short Object;
-  short WeaponTurn;
+  short MatrixIndex;
   ubyte NumbObjects;
   ubyte Angle;
   short PassengerHead;
@@ -352,7 +357,7 @@ struct TngUEffect
   short GotoY;
   short GotoZ;
   short VehicleAcceleration;
-  short MatrixIndex;
+  short MatrixIndexBAD;
   ushort LeisurePlace;
 };
 
@@ -467,8 +472,15 @@ struct Thing { // sizeof=168
     ushort StartFrame;
     short Timer1;
     short StartTimer1;
+    /** Move velocity vector or shoot target position; X coord.
+     * The vector set is expected to be normalized, length od 256 means full speed.
+     */
     s32 VX;
+    /** Move velocity vector, Y coord.
+     */
     s32 VY;
+    /** Move velocity vector, Z coord.
+     */
     s32 VZ;
     short Speed;
     short Health;
@@ -564,7 +576,7 @@ struct SimpleThing
         struct STngUBang UBang;
         struct STngUFire UFire;
     } U;
-    short field_38;
+    short Owner2;
     ushort UniqueID;
 };
 
@@ -932,6 +944,7 @@ struct ThingOldV9 { // sizeof=216
 /******************************************************************************/
 extern struct Thing *things;
 extern ThingIdx things_used_head;
+extern ThingIdx things_empty_head;
 extern ushort things_used;
 extern ThingIdx same_type_head[256+32];
 extern short static_radii[];
@@ -946,7 +959,7 @@ extern ubyte debug_log_things;
 struct Thing *get_thing_safe(ThingIdx thing, ubyte ttype);
 
 void init_things(void);
-void refresh_old_thing_format(struct Thing *p_thing, struct ThingOldV9 *p_oldthing, ulong fmtver);
+void refresh_old_thing_format(struct Thing *p_thing, struct ThingOldV9 *p_oldthing, u32 fmtver);
 void process_things(void);
 
 /** Get a string up to 14 chars containing thing/sthing type name.
@@ -971,6 +984,18 @@ TbBool thing_type_is_simple(short ttype);
  * This function deals with all that and just gives the straight, simple position.
  */
 void get_thing_position_mapcoords(short *x, short *y, short *z, ThingIdx thing);
+
+/** Computes distance between two things.
+ *
+ * Uses precise algorithm for vector length. Returns value in map coords.
+ */
+u32 get_things_distance_mapcoords_precise(ThingIdx tng1, ThingIdx tng2);
+
+/** Computes distance between two things.
+ *
+ * Uses some simplifications, but is fast. Returns value in map coords.
+ */
+u32 get_things_distance_mapcoords_fast(ThingIdx tng1, ThingIdx tng2);
 
 /** Get a string representing text name of a state change result.
  */
@@ -1051,6 +1076,8 @@ TbBool thing_intersects_circle(ThingIdx thing, short X, short Z, ushort R);
  * the cylinder only a little. Even a small intersection is enough.
  */
 TbBool thing_intersects_cylinder(ThingIdx thing, short X, short Y, short Z, ushort R, ushort H);
+
+struct SimpleThing *create_scale_effect(int x, int y, int z, ushort frame, int timer);
 
 struct SimpleThing *create_sound_effect(int x, int y, int z, ushort sample, int vol, int loop);
 

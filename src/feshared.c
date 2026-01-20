@@ -28,6 +28,10 @@
 #include "swlog.h"
 /******************************************************************************/
 
+struct ScreenTextBox system_screen_shared_header_box = {0};
+
+/******************************************************************************/
+
 void init_sys_scr_shared_header_box(void)
 {
     short scr_w, start_x, content_box_width;

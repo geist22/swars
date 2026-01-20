@@ -113,9 +113,9 @@ void SCANNER_init(void)
     asm volatile ("call ASM_SCANNER_init\n"
         :  :  : "eax" );
 #else
-    SCANNER_init_palette_bright();
+    LowTransGrey_InitPaletteBright();
     SCANNER_init_bbpoints();
-    SCANNER_init_bright_limit_table();
+    LowTransGrey_InitBrightLimitTable();
     SCANNER_init_people_colours();
 #endif
 }
@@ -164,6 +164,7 @@ void SCANNER_init_arcpoint(int x1, int z1, int x2, int z2, int c)
 
 void SCANNER_unkn_func_196(void)
 {
+    // TODO when rewriting, use mul_shift16_sign_pad_lo()
     asm volatile ("call ASM_SCANNER_unkn_func_196\n"
         :  :  : "eax" );
 }

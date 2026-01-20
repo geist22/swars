@@ -38,6 +38,26 @@ extern "C" {
  */
 #define WEAPON_RANGE_BLOCKS_LIMIT 27
 
+/** Amount of bombs in a single use.
+ */
+#define WEP_AIRSTRIKE_BOMBS_NUM 10
+
+/** Game turns separating bombs.
+ */
+#define WEP_AIRSTRIKE_BOMB_GTURNS 20
+
+/** Initial age of explosion; higher value makes the explosion shorter.
+ */
+#define WEP_AIRSTRIKE_IMPACT_GTURNS 14
+
+/** Game turns between the weapon triggered and the bombs start.
+ */
+#define WEP_AIRSTRIKE_DELAY_GTURNS 20
+
+/** Speed at which rockets move, in map coords.
+ */
+#define SHOT_ROCKED_SPEED 256
+
 enum WeaponType
 {
   WEP_NULL = 0x0,
@@ -164,6 +184,23 @@ void init_weapon_text(void);
  */
 const char *weapon_codename(WeaponType wtype);
 
+/** Returns if the weapon should be used by throwing.
+ */
+TbBool weapon_is_for_throwing(WeaponType wtype);
+
+/** Returns if the weapon should be used by placing activated on the ground.
+ */
+TbBool weapon_is_for_planting(WeaponType wtype);
+
+/** Returns if the weapon should be used where the wielder stands, which
+ * consumes the thing and converts it into something else.
+ */
+TbBool weapon_is_for_deploying(WeaponType wtype);
+
+/** Returns if the weapon should be used by spreading on the ground while walking.
+ */
+TbBool weapon_is_for_spreading_on_ground(WeaponType wtype);
+
 /** Returns if the weapon activates at the location of the wielding person.
  */
 TbBool weapon_is_deployed_at_wielder_pos(WeaponType wtype);
@@ -260,6 +297,8 @@ short current_hand_weapon_range(struct Thing *p_person);
  */
 int get_weapon_range(struct Thing *p_person);
 
+int get_weapon_zoom_min(WeaponType wtype);
+
 void choose_best_weapon_for_range(struct Thing *p_person, int dist);
 
 TbBool person_can_be_persuaded_now(ThingIdx attacker, ThingIdx target,
@@ -274,8 +313,8 @@ ulong person_carried_weapons_pesuaded_sell_value(struct Thing *p_person);
 TbBool person_weapons_remove_one(struct Thing *p_person, WeaponType wtype);
 
 void do_weapon_quantities_net_to_player(struct Thing *p_person);
-void do_weapon_quantities1(struct Thing *p_person);
-void do_weapon_quantities_proper1(struct Thing *p_person);
+void player_agent_set_weapon_quantities_max(struct Thing *p_person);
+void player_agent_set_weapon_quantities_proper(struct Thing *p_person);
 
 void process_weapon(struct Thing *p_person);
 short process_persuadertron(struct Thing *p_person, ubyte target_select, ushort *energy_reqd);
@@ -285,6 +324,7 @@ int gun_out_anim(struct Thing *p_person, ubyte shoot_flag);
 s32 laser_hit_at(s32 x1, s32 y1, s32 z1, s32 *x2, s32 *y2, s32 *z2, struct Thing *p_shot);
 void finalise_razor_wire(struct Thing *p_person);
 void init_lay_razor(struct Thing *p_thing, short x, short y, short z, int flag);
+void init_mgun_laser(struct Thing *p_owner, ushort start_age);
 
 void process_clone_disguise(struct Thing *p_person);
 

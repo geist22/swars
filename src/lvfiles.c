@@ -40,11 +40,12 @@
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"
 #include "enginsngobjs.h"
+#include "engintxtrmap.h"
+#include "frame_sprani.h"
 #include "game.h"
 #include "game_data.h"
 #include "game_options.h"
 #include "game_speed.h"
-#include "game_sprani.h"
 #include "lvobjctv.h"
 #include "lvwalk.h"
 #include "matrix.h"
@@ -188,14 +189,14 @@ TbBool is_level_stored_sthing(struct SimpleThing *p_sthing)
 
 ulong load_level_pc_handle(TbFileHandle lev_fh)
 {
-    ulong fmtver;
+    u32 fmtver;
     TbBool mech_initialized;
-    long limit;
+    int limit;
     int i, k, n;
 
     mech_initialized = 0;
     fmtver = 0;
-    LbFileRead(lev_fh, &fmtver, 4);
+    LbFileRead(lev_fh, &fmtver, sizeof(u32));
 
     if (fmtver >= 1)
     {
@@ -213,6 +214,9 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
             short angle;
 
             new_thing = get_new_thing();
+            if (new_thing <= 0) {
+                LOGERR("No thing slots for level content");
+            }
             p_thing = &things[new_thing];
             memcpy(&loc_thing, p_thing, sizeof(struct Thing));
             if (fmtver >= 13) {
@@ -302,14 +306,18 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
                 if (fmtver <= 8)
                     p_thing->Y >>= 3;
 
-                k = next_local_mat++;
-                LbFileRead(lev_fh, &local_mats[k], 36);
-
-                p_thing->U.UVehicle.MatrixIndex = next_local_mat - 1;
+                {
+                    int matx;
+                    assert(sizeof(struct M33) == 36);
+                    assert(next_local_mat < LOCAL_MATS_COUNT);
+                    matx = next_local_mat++;
+                    LbFileRead(lev_fh, &local_mats[matx], sizeof(struct M33));
+                    p_thing->U.UVehicle.MatrixIndex = matx;
+                }
                 byte_1C83D1 = 0;
 
                 n = next_normal;
-                sub_6031C(PRCCOORD_TO_MAPCOORD(p_thing->X), PRCCOORD_TO_MAPCOORD(p_thing->Z),
+                copy_prim_obj_to_game_object(PRCCOORD_TO_MAPCOORD(p_thing->X), PRCCOORD_TO_MAPCOORD(p_thing->Z),
                   -prim_unknprop01 - p_thing->StartFrame, PRCCOORD_TO_MAPCOORD(p_thing->Y));
                 k = next_normal;
                 unkn_object_shift_03(next_object - 1);
@@ -320,8 +328,13 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
                 game_objects[next_object - 1].ThingNo = k;
                 VNAV_unkn_func_207(p_thing);
                 {
-                    k = p_thing->U.UVehicle.MatrixIndex;
-                    angle = LbArcTanAngle(local_mats[k].R[0][2], local_mats[k].R[2][2]);
+                    struct M33 *p_matx;
+                    int matx;
+
+                    matx = p_thing->U.UVehicle.MatrixIndex;
+                    assert(matx < next_local_mat);
+                    p_matx = &local_mats[matx];
+                    angle = LbArcTanAngle(p_matx->R[0][2], p_matx->R[2][2]);
                     p_thing->U.UVehicle.AngleY = (angle + LbFPMath_PI) & LbFPMath_AngleMask;
                 }
 
@@ -332,9 +345,13 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
                     if (p_thing->U.UVehicle.SubThing != 0)
                     {
                         struct Thing *p_mgun;
+                        struct M33 *p_matx;
+
+                        // Mounted Gun matrix was created during veh_add()
                         p_mgun = &things[p_thing->U.UVehicle.SubThing];
-                        k = p_mgun->U.UVehicle.MatrixIndex;
-                        angle = LbArcTanAngle(local_mats[k].R[0][2], local_mats[k].R[2][2]);
+                        assert(p_thing->U.UVehicle.MatrixIndex < next_local_mat);
+                        p_matx = &local_mats[p_mgun->U.UVehicle.MatrixIndex];
+                        angle = LbArcTanAngle(p_matx->R[0][2], p_matx->R[2][2]);
                         p_mgun->U.UVehicle.AngleY = (angle + LbFPMath_PI) & LbFPMath_AngleMask;
                     }
                 }
@@ -391,7 +408,7 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
         LbFileRead(lev_fh, engine_mem_alloc_ptr + engine_mem_alloc_size - 32000, unkn3de_len);
     }
     LOGSYNC("Level fmtver=%lu n_command=%hu word_1531E0=%hu unkn3de_len=%hu",
-      fmtver, next_command, word_1531E0, unkn3de_len);
+      (ulong)fmtver, next_command, word_1531E0, unkn3de_len);
     if (fmtver >= 4)
     {
         ulong count;
@@ -500,9 +517,9 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
 
 void save_level_pc_handle(TbFileHandle lev_fh)
 {
-    ulong fmtver;
+    u32 fmtver;
     ushort count;
-    int i, k;
+    int i;
 
     assert(sizeof(struct Thing) == 168);
     assert(sizeof(struct Command) == 32);
@@ -510,7 +527,7 @@ void save_level_pc_handle(TbFileHandle lev_fh)
     assert(sizeof(struct LevelMisc) == 22);
 
     fmtver = 18;
-    LbFileWrite(lev_fh, &fmtver, 4);
+    LbFileWrite(lev_fh, &fmtver, sizeof(u32));
 
     {// Things are partially stored in map, partially in level file
         struct Thing *p_thing;
@@ -530,7 +547,7 @@ void save_level_pc_handle(TbFileHandle lev_fh)
         LbFileWrite(lev_fh, &count, 2);
 
         i = 0;
-        LOGSYNC("Level fmtver=%lu n_things=%hd", fmtver, count);
+        LOGSYNC("Level fmtver=%lu n_things=%hd", (ulong)fmtver, count);
         for (thing = things_used_head; thing > 0; thing = p_thing->LinkChild)
         {
             p_thing = &things[thing];
@@ -541,8 +558,11 @@ void save_level_pc_handle(TbFileHandle lev_fh)
             LbFileWrite(lev_fh, p_thing, sizeof(struct Thing));
             if (p_thing->Type == TT_VEHICLE)
             {
-                k = p_thing->U.UVehicle.MatrixIndex;
-                LbFileWrite(lev_fh, &local_mats[k], 36);
+                int matx;
+                assert(sizeof(struct M33) == 36);
+                matx = p_thing->U.UVehicle.MatrixIndex;
+                assert(matx < next_local_mat);
+                LbFileWrite(lev_fh, &local_mats[matx], sizeof(struct M33));
 
             }
             // Per thing code end
@@ -581,7 +601,7 @@ void save_level_pc_handle(TbFileHandle lev_fh)
         LbFileWrite(lev_fh, &count, 2);
 
         i = 0;
-        LOGSYNC("Level fmtver=%lu n_sthings=%hd", fmtver, count);
+        LOGSYNC("Level fmtver=%lu n_sthings=%hd", (ulong)fmtver, count);
         for (thing = sthings_used_head; thing < 0; thing = p_sthing->LinkChild)
         {
             p_sthing = &sthings[thing];
@@ -783,13 +803,13 @@ void level_perform_deep_fix(void)
 #endif
 }
 
-void fix_level_indexes(short missi, ulong fmtver, ubyte reload, TbBool deep)
+void fix_level_indexes(short missi, u32 fmtver, ubyte reload, TbBool deep)
 {
     ushort objectv;
     ThingIdx thing;
 
-    LOGSYNC("Fixing mission %d fmtver %d reload %d deep %d",
-      (int)missi, (int)fmtver, (int)reload, (int)deep);
+    LOGSYNC("Fixing mission %d fmtver %lu reload %d deep %d",
+      (int)missi, (ulong)fmtver, (int)reload, (int)deep);
     fix_thing_commands_indexes(deep);
 
     for (objectv = 1; objectv < next_used_lvl_objective; objectv++)
@@ -842,7 +862,12 @@ int map_things_unkn_func_04(short subtype)
 TbResult level_misc_update_mgun(struct LevelMisc *p_lvmsc)
 {
     struct Thing *p_mgun;
-    short mgun;
+    s32 bkp_engn_xc, bkp_engn_yc, bkp_engn_zc;
+    ThingIdx mgun;
+
+    bkp_engn_xc = engn_xc;
+    bkp_engn_yc = engn_yc;
+    bkp_engn_zc = engn_zc;
 
     engn_xc = p_lvmsc->X;
     engn_zc = p_lvmsc->Z;
@@ -858,13 +883,18 @@ TbResult level_misc_update_mgun(struct LevelMisc *p_lvmsc)
     p_mgun->U.UMGun.CurrentWeapon = p_lvmsc->Weapon;
     LOGSYNC("Mounted gun at (%d,%d) set to %s(%d)", (int)p_lvmsc->X, (int)p_lvmsc->Z,
       weapon_codename(p_lvmsc->Weapon), (int)p_lvmsc->Weapon);
+
+    engn_xc = bkp_engn_xc;
+    engn_yc = bkp_engn_yc;
+    engn_zc = bkp_engn_zc;
+
     return Lb_SUCCESS;
 }
 
 TbResult level_misc_verify_mgun(struct LevelMisc *p_lvmsc)
 {
-    long bkp_engn_xc, bkp_engn_yc, bkp_engn_zc;
-    short mgun;
+    s32 bkp_engn_xc, bkp_engn_yc, bkp_engn_zc;
+    ThingIdx mgun;
 
     if ((p_lvmsc->Group < 0) || (p_lvmsc->Group >= PEOPLE_GROUPS_COUNT))
         return Lb_FAIL;
@@ -889,19 +919,25 @@ TbResult level_misc_verify_mgun(struct LevelMisc *p_lvmsc)
     return Lb_OK;
 }
 
-/** Removes invalid entries from level_misc[].
+/** Removes invalid entries from level_miscs[].
  */
 void level_misc_validate(void)
 {
-    int i, n, last_used;
+    int i, n, limit, last_used;
+
+    limit = get_memory_ptr_allocated_count((void **)&game_level_miscs);
+    if (limit < 0) {
+        LOGERR("No memory for \"%s\", limit %d", "level_miscs", limit);
+        return;
+    }
 
     // Get last used slot
     last_used = 0;
-    for (i = 0; i < 200; i++) //TODO get size from memory system
+    for (i = 0; i < limit; i++)
     {
         struct LevelMisc *p_lvmsc;
         p_lvmsc = &game_level_miscs[i];
-        if (p_lvmsc->Type != 0)
+        if (p_lvmsc->Type != LvMiscT_NONE)
             last_used = i;
     }
 
@@ -913,10 +949,10 @@ void level_misc_validate(void)
         p_lvmsc = &game_level_miscs[i];
         switch (p_lvmsc->Type)
         {
-        case 0: // empty entry
+        case LvMiscT_NONE: // empty entry
             ret = Lb_FAIL;
             break;
-        case 1:
+        case LvMiscT_MGUN:
             ret = level_misc_verify_mgun(p_lvmsc);
             break;
         default:
@@ -924,7 +960,8 @@ void level_misc_validate(void)
             break;
         }
         if (ret == Lb_FAIL) {
-            LOGERR("Invalid LevelMisc entry %d type %d, removed", i, (int)p_lvmsc->Type);
+            LOGERR("Invalid \"%s\" entry %d type %d, removed",
+              "level_miscs", i, (int)p_lvmsc->Type);
             for (n = i + 1; n <= last_used; n++)
                 LbMemoryCopy(&game_level_miscs[n - 1], &game_level_miscs[n], sizeof(struct LevelMisc));
             LbMemorySet(&game_level_miscs[last_used], '\0', sizeof(struct LevelMisc));
@@ -934,15 +971,21 @@ void level_misc_validate(void)
     }
 }
 
-void level_misc_update(void)
+void level_misc_update(u32 fmtver)
 {
 #if 0
     asm volatile ("call ASM_level_misc_update\n"
         :  :  : "eax" );
 #endif
-    int i;
+    int limit, i;
 
-    for (i = 0; i < 200; i++) //TODO get size from memory system
+    limit = get_memory_ptr_allocated_count((void **)&game_level_miscs);
+    if (limit < 0) {
+        LOGERR("No memory for \"%s\", limit %d", "level_miscs", limit);
+        return;
+    }
+
+    for (i = 0; i < limit; i++)
     {
         struct LevelMisc *p_lvmsc;
         TbResult ret;
@@ -950,10 +993,10 @@ void level_misc_update(void)
         p_lvmsc = &game_level_miscs[i];
         switch (p_lvmsc->Type)
         {
-        case 0: // empty entry
+        case LvMiscT_NONE: // empty entry
             ret = Lb_OK;
             break;
-        case 1:
+        case LvMiscT_MGUN:
             ret = level_misc_update_mgun(p_lvmsc);
             break;
         default:
@@ -961,9 +1004,37 @@ void level_misc_update(void)
             break;
         }
         if (ret == Lb_FAIL) {
-            LOGERR("Invalid LevelMisc entry %d type %d", i, (int)p_lvmsc->Type);
+            LOGERR("Invalid \"%s\" entry %d type %d",
+              "level_miscs", i, (int)p_lvmsc->Type);
         }
     }
+}
+
+TbBool level_misc_get_starting_camera_pos(MapCoord *cor_x, MapCoord *cor_z)
+{
+    int i, limit, last_match;
+
+    limit = get_memory_ptr_allocated_count((void **)&game_level_miscs);
+
+    // Get last used slot
+    last_match = -1;
+    for (i = 0; i < limit; i++)
+    {
+        struct LevelMisc *p_lvmsc;
+        p_lvmsc = &game_level_miscs[i];
+        if (p_lvmsc->Type == LvMiscT_MGUN)
+            last_match = i;
+    }
+
+    if (last_match >= 0)
+    {
+        struct LevelMisc *p_lvmsc;
+        p_lvmsc = &game_level_miscs[last_match];
+        *cor_x = p_lvmsc->X;
+        *cor_z = p_lvmsc->Z;
+        return true;
+    }
+    return false;
 }
 
 void load_level_pc(short level, short missi, ubyte reload)
@@ -1009,7 +1080,7 @@ void load_level_pc(short level, short missi, ubyte reload)
     lev_fh = LbFileOpen(lev_fname, Lb_FILE_MODE_READ_ONLY);
     if (lev_fh != INVALID_FILE)
     {
-        ulong fmtver;
+        u32 fmtver;
         int i;
 
         word_1C8446 = 1;
@@ -1037,7 +1108,7 @@ void load_level_pc(short level, short missi, ubyte reload)
         check_and_fix_thing_commands();
 
         if (fmtver >= 10)
-            level_misc_update();
+            level_misc_update(fmtver);
 
         if (level_deep_fix) {
             level_perform_deep_fix();
@@ -1119,7 +1190,7 @@ void fix_map_outranged_properties(void)
 
 void load_map_dat_pc_handle(TbFileHandle fh)
 {
-    ulong fmtver;
+    u32 fmtver;
     ushort num_sthings, num_things;
     short i;
 
@@ -1309,7 +1380,7 @@ void load_map_dat_pc_handle(TbFileHandle fh)
             }
             switch (loc_thing.SubType)
             {
-            case SubTT_BLD_WIND_ROTOR:
+            case SubTT_BLD_MOVN_ROTOR:
             case SubTT_BLD_37:
                 LbFileRead(fh, &loc_mat, sizeof(struct M33));
                 new_thing_building_clone(&loc_thing, &loc_mat, shut_h);
@@ -1391,15 +1462,15 @@ void load_map_dat_pc_handle(TbFileHandle fh)
 void load_mad_pc_buffer(ubyte *mad_ptr, long rdsize)
 {
     short shut_h;
-    ulong fmtver;
+    u32 fmtver;
     short i;
 
     shut_h = 100;
-    fmtver = *(ulong *)mad_ptr;
+    fmtver = *(u32 *)mad_ptr;
     mad_ptr += 4;
 
     if (fmtver != 1) {
-        LOGWARN("Unexpected MAD version %lu", fmtver);
+        LOGWARN("Unexpected MAD version %lu", (ulong)fmtver);
     }
 
     // Set amounts of quick_load array items
@@ -1513,7 +1584,7 @@ void load_mad_pc_buffer(ubyte *mad_ptr, long rdsize)
         }
         switch (p_clthing->SubType)
         {
-        case SubTT_BLD_WIND_ROTOR:
+        case SubTT_BLD_MOVN_ROTOR:
         case SubTT_BLD_37:
             new_thing_building_clone(p_clthing, (struct M33 *)mad_ptr, shut_h);
             mad_ptr += sizeof(struct M33);
@@ -1585,6 +1656,8 @@ TbResult load_map_mad(ushort mapno)
         return Lb_FAIL;
 
     load_mad_pc_buffer(scratch_malloc_mem, fsize);
+
+    fix_map_outranged_properties();
 
     update_map_thing_and_traffic_refs();
     unkn_lights_processing();

@@ -20,10 +20,16 @@
 /******************************************************************************/
 #include "packet.h"
 
+#include "bffile.h"
+#include "bfmemut.h"
+#include "bfutility.h"
+
 #include "campaign.h"
 #include "game_data.h"
 #include "game_options.h"
 #include "game.h"
+#include "lvfiles.h"
+#include "packetfe.h"
 #include "player.h"
 #include "swlog.h"
 /******************************************************************************/
@@ -114,8 +120,10 @@ const char *packet_action_name[] = {
     "UNKNACTN_3D",
     "UNKNACTN_3E",
     "UNKNACTN_3F",
-    "UNKNACTN_40",
+    "THERMAL_TOGGLE",
     "AGENT_SELF_DESTRUCT",
+    "CHEAT_AGENT_TELEPORT",
+    "CHEAT_ALL_AGENTS",
 };
 
 void (*my_build_packet)(struct Packet *packet, ushort action, ulong param1, long x, long y, long z);
@@ -124,6 +132,7 @@ void (*my_build_packet)(struct Packet *packet, ushort action, ulong param1, long
 
 extern TbFileHandle packet_rec_fh;
 ushort packet_rec_no = 0;
+ubyte packet_rec_use_levelno = 0;
 
 const char * get_packet_action_name(ushort atype)
 {
@@ -173,6 +182,8 @@ ubyte packet_action_params_count(ushort action)
     case PAct_DROP_SELC_WEAPON_SECR:
     case PAct_SHIELD_TOGGLE:
     case PAct_CONTROL_MODE:
+    case PAct_THERMAL_TOGGLE:
+    case PAct_CHEAT_ALL_AGENTS:
         return 1;
 
     case PAct_GET_ITEM:
@@ -214,6 +225,7 @@ ubyte packet_action_params_count(ushort action)
     case PAct_AGENT_GOTO_FACE_PT_ABS_FF:
     case PAct_PLANT_MINE_AT_GND_PT_FF:
     case PAct_29:
+    case PAct_CHEAT_AGENT_TELEPORT:
         return 4;
 
     case PAct_1:
@@ -234,7 +246,6 @@ ubyte packet_action_params_count(ushort action)
     case PAct_3D:
     case PAct_3E:
     case PAct_3F:
-    case PAct_40:
     default:
         return 0;
     }
@@ -422,16 +433,14 @@ void PacketRecord_Close(void)
 void PacketRecord_OpenWrite(void)
 {
     char fname[DISKPATH_SIZE];
-    struct Mission *p_missi;
     struct PacketFileHead head;
     int file_no;
 
     head.magic = 0x544B4350; // 'PCKT'
     head.campgn = background_type;
     head.missi = ingame.CurrentMission;
-    p_missi = &mission_list[head.missi];
-    head.mapno = p_missi->MapNo;
-    head.levelno = p_missi->LevelNo;
+    head.mapno = current_map;
+    head.levelno = current_level;
 
     file_no = get_highest_used_packet_record_no(head.campgn, head.missi);
     packet_rec_no = file_no + 1;
@@ -474,23 +483,124 @@ void PacketRecord_OpenRead(void)
     if ((head.mapno != p_missi->MapNo) && (head.mapno != 0xFFFF))
         LOGWARN("Packet file expects map %hu, not %d",
           fname, head.mapno, (int)p_missi->MapNo);
-    if ((head.levelno != p_missi->LevelNo) && (head.levelno != 0xFFFF))
-        LOGWARN("Packet file expects level %hu, not %d",
-          fname, head.levelno, (int)p_missi->LevelNo);
+    if (head.levelno == 0xFFFF) { // No level identified within the packet
+        packet_rec_use_levelno = p_missi->LevelNo;
+    } else if (head.levelno == p_missi->LevelNo) {
+        packet_rec_use_levelno = p_missi->LevelNo;
+    } else if ((p_missi->ReLevelNo != 0) && (head.levelno == p_missi->ReLevelNo)) {
+        packet_rec_use_levelno = p_missi->ReLevelNo;
+    } else {
+        packet_rec_use_levelno = head.levelno;
+        LOGWARN("Packet file expects level %d.%d, not %d.%d", fname,
+          LEVEL_NUM_STRAIN(head.levelno), LEVEL_NUM_VARIANT(head.levelno),
+          LEVEL_NUM_STRAIN(p_missi->LevelNo), LEVEL_NUM_VARIANT(p_missi->LevelNo));
+    }
 }
 
-void PacketRecord_Read(struct Packet *p_pckt)
+TbResult PacketRecord_Read(struct Packet *p_pckt)
 {
+#if 0
     asm volatile (
       "call ASM_PacketRecord_Read\n"
         : : "a" (p_pckt));
+#endif
+    ushort locbuf[6];
+    int nread, len;
+
+    if (packet_rec_fh == INVALID_FILE) {
+        return Lb_FAIL;
+    }
+
+    len = 2 * sizeof(ushort);
+    nread = LbFileRead(packet_rec_fh, locbuf, len);
+    locbuf[2] = 0;
+    locbuf[3] = 0;
+    locbuf[4] = 0;
+    if (locbuf[0] & 0xFF) {
+        len = 4 * sizeof(ushort);
+        nread += LbFileRead(packet_rec_fh, &locbuf[2], len);
+        len += 2 * sizeof(ushort);
+    }
+    p_pckt->Action = locbuf[0];
+    p_pckt->Data = locbuf[1];
+    p_pckt->X = locbuf[2];
+    p_pckt->Y = locbuf[3];
+    p_pckt->Z = locbuf[4];
+    return (nread == len) ? Lb_SUCCESS : Lb_FAIL;
 }
 
 void PacketRecord_Write(struct Packet *p_pckt)
 {
+#if 0
     asm volatile (
       "call ASM_PacketRecord_Write\n"
         : : "a" (p_pckt));
+#endif
+    ushort locbuf[6];
+    uint len;
+
+    if (in_network_game) {
+        return;
+    }
+    if (packet_rec_fh == INVALID_FILE) {
+        return;
+    }
+
+    locbuf[0] = p_pckt->Action;
+    locbuf[1] = p_pckt->Data;
+    locbuf[2] = p_pckt->X;
+    locbuf[3] = p_pckt->Y;
+    locbuf[4] = p_pckt->Z;
+    locbuf[5] = lbSeed;
+    if (p_pckt->Action & 0xFF)
+        len = 6 * sizeof(ushort);
+    else
+        len = 2 * sizeof(ushort);
+    LbFileWrite(packet_rec_fh, locbuf, len);
+}
+
+TbResult PacketRecord_ReadNP(struct NetworkPlayer *p_netplyr)
+{
+    ubyte locbuf[sizeof(struct NetworkPlayer)];
+    int nread, len;
+
+    if (packet_rec_fh == INVALID_FILE) {
+        return Lb_FAIL;
+    }
+
+    len = sizeof(struct NetworkPlayer);
+    nread = LbFileRead(packet_rec_fh, locbuf, len);
+    LbMemoryCopy(p_netplyr, locbuf, sizeof(struct NetworkPlayer));
+    return (nread == len) ? Lb_SUCCESS : Lb_FAIL;
+}
+
+void PacketRecord_WriteNP(struct NetworkPlayer *p_netplyr)
+{
+    ubyte locbuf[sizeof(struct NetworkPlayer)];
+    uint len;
+
+    if (in_network_game) {
+        return;
+    }
+    if (packet_rec_fh == INVALID_FILE) {
+        return;
+    }
+
+    LbMemoryCopy(locbuf, p_netplyr, sizeof(struct NetworkPlayer));
+    len = sizeof(struct NetworkPlayer);
+    LbFileWrite(packet_rec_fh, locbuf, len);
+}
+
+TbBool PacketRecord_IsPlayback(void)
+{
+    if (in_network_game)
+        return false;
+    return (pktrec_mode == PktR_PLAYBACK);
+}
+
+TbBool PacketRecord_IsRecord(void)
+{
+    return (pktrec_mode == PktR_RECORD);
 }
 
 /******************************************************************************/

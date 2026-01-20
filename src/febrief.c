@@ -22,6 +22,7 @@
 #include "bftext.h"
 #include "bfmath.h"
 #include "bfmemut.h"
+#include "bfutility.h"
 #include "bfscrcopy.h"
 #include "ssampply.h"
 
@@ -38,21 +39,27 @@
 #include "game.h"
 #include "keyboard.h"
 #include "lvobjctv.h"
+#include "mydraw.h"
 #include "scanner.h"
 #include "sound.h"
 #include "wadfile.h"
 #include "wrcities.h"
 #include "swlog.h"
 /******************************************************************************/
-extern struct ScreenButton brief_NETSCAN_button;
-extern struct ScreenInfoBox brief_NETSCAN_COST_box;
-extern struct ScreenTextBox brief_netscan_box;
 
-extern struct ScreenTextBox brief_mission_text_box;
-extern struct ScreenButton unkn1_ACCEPT_button;
-extern struct ScreenButton unkn1_CANCEL_button;
+short next_brief = 0;
+short old_mission_brief = 0;
+short open_brief = 0;
 
-extern struct ScreenBox brief_graphical_box;
+struct ScreenTextBox brief_mission_text_box = {0};
+struct ScreenButton unkn1_ACCEPT_button = {0};
+struct ScreenButton unkn1_CANCEL_button = {0};
+
+struct ScreenButton brief_NETSCAN_button = {0};
+struct ScreenInfoBox brief_NETSCAN_COST_box = {0};
+struct ScreenTextBox brief_netscan_box = {0};
+
+struct ScreenBox brief_graphical_box = {0};
 
 extern sbyte selected_netscan_objective;// = -1;
 extern char unkn39_text[];
@@ -69,16 +76,17 @@ extern ubyte byte_1C47E4;
 extern short word_1C47E6;
 extern short word_1C47E8;
 
+/******************************************************************************/
+
 ubyte ac_brief_do_netscan_enhance(ubyte click);
 ubyte ac_show_brief_netscan_box(struct ScreenTextBox *box);
 ubyte ac_accept_mission(ubyte click);
 ubyte ac_do_unkn1_CANCEL(ubyte click);
 void ac_purple_unkn2_data_to_screen(void);
 void ac_SCANNER_data_to_screen(void);
-
 void update_netscan_cost_button(ubyte city_id)
 {
-    int k;
+    int k, max_width;
     ushort ninfo;
     char *text;
 
@@ -92,6 +100,21 @@ void update_netscan_cost_button(ubyte city_id)
         text = gui_strings[442];
     }
     brief_NETSCAN_COST_box.Text1 = text;
+
+    // Update label size, in case its text got longer
+    max_width = brief_NETSCAN_button.X - brief_NETSCAN_COST_box.X;
+    // Width of the cost field can normally only reach until the
+    // netscan button. Unless said button is hidden - then it can
+    // go through the button width as well
+    if (brief_NETSCAN_COST_box.Text2[0] == '\0') {
+        max_width += brief_NETSCAN_button.Width;
+    }
+    // width algorithm from init_screen_button()
+    lbFontPtr = brief_NETSCAN_COST_box.Font1;
+    k = my_string_width(brief_NETSCAN_COST_box.Text1) + 4;
+    k = max(k, 213);
+    brief_NETSCAN_COST_box.Width = min(k, max_width);
+    brief_NETSCAN_COST_box.Flags |= GBxFlg_Unkn0001;
 }
 
 void reveal_netscan_objective(short nsobv)
@@ -171,7 +194,7 @@ ubyte show_brief_netscan_box(struct ScreenTextBox *p_box)
     my_set_text_window(p_box->X + border, p_box->ScrollWindowOffset + p_box->Y + border,
       p_box->Width - 2 * border - scrollbar_width, p_box->ScrollWindowHeight);
     lbFontPtr = small_med_font;
-    tx_height = font_height('A');
+    tx_height = my_char_height('A');
     ln_height = tx_height + margin;
     nlines = 0;
     start_shift = border - ln_height * p_box->TextTopLine;
@@ -287,7 +310,7 @@ void show_citymap_city_selection(struct ScreenBox *box)
     short dy;
     ulong bufpos;
 
-    text_h = font_height('A');
+    text_h = my_char_height('A');
     dy = text_h + 4;
     for (city_id = 0; city_id < num_cities; city_id++)
     {
@@ -308,7 +331,7 @@ ubyte input_citymap_city_selection(struct ScreenBox *p_box)
     short text_h;
     short dy;
 
-    text_h = font_height('A');
+    text_h = my_char_height('A');
     dy = text_h + 4;
     for (city_id = 0; city_id < num_cities; city_id++)
     {
@@ -706,7 +729,6 @@ void init_brief_screen_boxes(void)
       gui_strings[442], unkn39_text, 6, med_font, small_med_font, 1);
     brief_NETSCAN_COST_box.Text2 = brief_netscan_cost_text;
     brief_NETSCAN_button.CallBackFn = ac_brief_do_netscan_enhance;
-    brief_netscan_box.Flags |= (GBxFlg_RadioBtn|GBxFlg_IsMouseOver);
     brief_netscan_box.DrawTextFn = ac_show_brief_netscan_box;
 
     init_screen_text_box(&brief_mission_text_box, 338u, 72u, 295u, 354, 6, small_font, 3);
@@ -716,13 +738,14 @@ void init_brief_screen_boxes(void)
       gui_strings[437], 6, med2_font, 1, 0x80);
     brief_mission_text_box.Buttons[0] = &unkn1_ACCEPT_button;
     brief_mission_text_box.Buttons[1] = &unkn1_CANCEL_button;
-    brief_mission_text_box.Flags |= (GBxFlg_RadioBtn|GBxFlg_IsMouseOver);
     brief_mission_text_box.Text = mission_briefing_text;
     unkn1_ACCEPT_button.CallBackFn = ac_accept_mission;
     unkn1_CANCEL_button.CallBackFn = ac_do_unkn1_CANCEL;
 
     init_screen_box(&brief_graphical_box, 7, 72, 322, 200, 6);
     brief_graphical_box.SpecialDrawFn = show_citymap_box;
+
+    reset_brief_screen_boxes_flags();
 
     // Reposition the components to current resolution
 
@@ -783,7 +806,7 @@ void reset_brief_screen_player_state(void)
 
 void reset_brief_screen_boxes_flags(void)
 {
-    brief_NETSCAN_COST_box.Flags = GBxFlg_Unkn0001;
+    brief_NETSCAN_COST_box.Flags = GBxFlg_Unkn0001 | GBxFlg_NoBkCopy;
     brief_netscan_box.Flags = GBxFlg_Unkn0001 | GBxFlg_RadioBtn | GBxFlg_IsMouseOver;
     brief_graphical_box.Flags = GBxFlg_Unkn0001;
     brief_mission_text_box.Flags = GBxFlg_Unkn0001 | GBxFlg_RadioBtn | GBxFlg_IsMouseOver;

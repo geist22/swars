@@ -78,23 +78,24 @@ extern TbPixel colour_grey1;
 extern TbPixel colour_grey2;
 extern TbPixel colour_brown2;
 
-extern long engn_xc;
-extern long engn_yc;
-extern long engn_zc;
-extern long engn_anglexz;
+extern s32 engn_xc;
+extern s32 engn_yc;
+extern s32 engn_zc;
+extern s32 engn_anglexz;
+
+extern s32 engn_x_vel;
+extern s32 engn_y_vel;
 
 extern ushort text_window_x1;
 extern ushort text_window_y1;
 extern ushort text_window_x2;
 extern ushort text_window_y2;
 
-// TODO move engine texture atlas to separate file
-extern ubyte *vec_tmap[18];
-
 /******************************************************************************/
 
 void display_set_full_screen(bool full_screen);
 void display_set_lowres_stretch(bool stretch);
+TbResult screen_idle_update_initialize(void);
 void display_lock(void);
 void display_unlock(void);
 
@@ -119,11 +120,13 @@ TbResult cover_screen_rect_with_raw_file(short x, short y,
 
 
 void my_set_text_window(ushort x1, ushort y1, ushort w, ushort h);
-u32 my_string_width(const char *text);
-u32 my_str_len(const char *t);
-ubyte font_height(uchar c);
+
+void set_user_selected_brightness(void);
+void reset_user_selected_brightness(void);
 
 void change_brightness(short val);
+void set_brightness_fadedout(void);
+void ingame_palette_load(int pal_id);
 
 /******************************************************************************/
 #endif
