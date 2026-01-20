@@ -5701,6 +5701,7 @@ ubyte do_user_interface(void)
 
             if (person_can_accept_control(p_agent->ThingOffset) && ((p_agent->Flag2 & TgF2_KnockedOut) == 0) && !(lbShift & KMod_SHIFT))
             {
+				clear_gamekey_pressed(gkey);
                 if (p_locplayer->DoubleMode)
                 {
                     byte_153198 = n+1;
@@ -5734,13 +5735,13 @@ ubyte do_user_interface(void)
 				return did_inp;
             }
 			else if (lbShift & KMod_SHIFT) {
+				clear_gamekey_pressed(gkey);
 				if (person_carries_any_medikit(p_agent->ThingOffset)) {
 					my_build_packet(&packets[local_player_no], PAct_AGENT_USE_MEDIKIT, p_agent->ThingOffset, 0, 0, 0);
 				}
 				did_inp |= GINPUT_PACKET;
 				return did_inp;
 			}
-			clear_gamekey_pressed(gkey);
         }
     }
 
