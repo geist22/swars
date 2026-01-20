@@ -171,6 +171,24 @@ enum PersonSex {
 
 #define PERSON_MAX_SPEED 2048
 
+/** Length from person center to tip of the persons weapon, for beam weapons.
+ *
+ * Used as starting point of shots.
+ */
+#define PERSON_CENTER_TO_BEAM_WEAPON_TIP_MAPCOORD 128
+
+/** Length from person center to tip of the persons weapon, for rocket weapons.
+ *
+ * Used as starting point of shots.
+ */
+#define PERSON_CENTER_TO_ROCKT_WEAPON_TIP_MAPCOORD 32
+
+/** Distance from bottom of the person to where the weapon barrel is.
+ *
+ * Used as starting point of shots.
+ */
+#define PERSON_BOTTOM_TO_WEAPON_HEIGHT 20
+
 /** Multiplayer when transferring weapon energy points to shield points.
  */
 #define PERSON_ENERGY_TO_SHIELD_MUL 4
@@ -218,11 +236,6 @@ struct MyPath {
     ushort Next;
 };
 
-struct Direction {
-  short DiX;
-  short DiY;
-};
-
 #pragma pack()
 /******************************************************************************/
 extern struct PeepStat peep_type_stats[];
@@ -267,13 +280,50 @@ TbBool person_carries_any_medikit(ThingIdx person);
 
 TbBool person_can_accept_control(ThingIdx person);
 
+TbBool person_can_use_medikit(ThingIdx person);
+
+TbBool person_has_supershield_active(ThingIdx person);
+TbBool person_can_toggle_supershield(ThingIdx person);
+void person_supershield_toggle(struct Thing *p_person);
+
+/** Returns if a person can be used as energy source to enable thermal view.
+ */
+TbBool person_can_sustain_thermal(ThingIdx person);
+
+/** Updates person state due to thermal enabled; returns true if thermal is sustained.
+ */
+TbBool person_update_thermal(ThingIdx person);
+
 /** Returns slot at which given person is in given players agents, or -1.
  */
-short person_slot_as_player_agent(struct Thing *p_person, ushort plyr);
+short person_slot_as_player_agent(struct Thing *p_person, PlayerIdx plyr);
+
+/** Returns if the person contains a link to players direct control slot in ComCur field.
+ */
+TbBool person_has_slot_in_any_player_dcontrol(ThingIdx person);
+
+/** Returns player for which given person is in direct control list, or -1.
+ */
+short person_get_dcontrol_player(ThingIdx person);
+
+/** Returns slot at which given person is in given players direct control list, or -1.
+ */
+short person_slot_in_player_dcontrol(ThingIdx person, PlayerIdx plyr);
 
 /** Returns sex of a person, either PERSON_MALE or PERSON_FEMALE.
  */
 ubyte person_sex(struct Thing *p_person);
+
+ubyte person_mod_chest_level(struct Thing *p_person);
+void set_person_mod_chest_level(struct Thing *p_person, ubyte nmod);
+ubyte person_mod_legs_level(struct Thing *p_person);
+void set_person_mod_legs_level(struct Thing *p_person, ubyte nmod);
+ubyte person_mod_arms_level(struct Thing *p_person);
+void set_person_mod_arms_level(struct Thing *p_person, ubyte nmod);
+ubyte person_mod_brain_level(struct Thing *p_person);
+void set_person_mod_brain_level(struct Thing *p_person, ubyte nmod);
+ubyte person_mod_skin_level(struct Thing *p_person);
+void set_person_mod_skin_level(struct Thing *p_person, ubyte nmod);
 
 void set_person_stats_type(struct Thing *p_person, ushort type);
 void set_person_health_shield_type(struct Thing *p_person, ushort stype);
@@ -351,7 +401,13 @@ TbBool person_use_medikit(struct Thing *p_person, PlayerIdx plyr);
 void set_person_persuaded(struct Thing *p_person, struct Thing *p_attacker, ushort energy);
 void person_init_drop(struct Thing *p_person, ThingIdx item);
 void person_init_pickup(struct Thing *p_person, ThingIdx item);
+
+TbBool person_is_in_a_vehicle(struct Thing *p_person);
+TbBool person_is_in_a_train(struct Thing *p_person);
+TbBool person_is_standing_on_vehicle(struct Thing *p_person);
+TbBool person_is_in_vehicle(struct Thing *p_person, ThingIdx vehicle);
 void person_enter_vehicle(struct Thing *p_person, struct Thing *p_vehicle);
+
 void thing_shoot_at_thing(struct Thing *p_thing, short target);
 ubyte person_attempt_to_leave_vehicle(struct Thing *p_thing);
 void thing_shoot_at_point(struct Thing *p_thing, short x, short y, short z, uint fast_flag);
@@ -377,7 +433,6 @@ ubyte thing_deselect_weapon(struct Thing *p_person);
 void person_go_enter_vehicle_fast(struct Thing *p_person, struct Thing *p_vehicle, ushort plyr);
 void person_go_enter_vehicle(struct Thing *p_person, struct Thing *p_vehicle);
 void person_init_follow_person(struct Thing *p_person, struct Thing *p_other);
-void person_shield_toggle(struct Thing *p_person, PlayerIdx plyr);
 void person_self_destruct(struct Thing *p_person);
 
 struct Thing *new_sim_person(int x, int y, int z, ubyte subtype);

@@ -139,10 +139,17 @@ void player_agents_init_prev_weapon(PlayerIdx plyr);
 void player_agents_add_random_epidermises(PlayerInfo *p_player);
 void player_agent_update_prev_weapon(struct Thing *p_agent);
 short player_agent_current_or_prev_weapon(PlayerIdx plyr, ushort plagent);
-TbBool player_agent_has_weapon(PlayerIdx plyr, ushort plagent, ubyte weapon);
+TbBool player_agent_has_weapon(PlayerIdx plyr, ushort plagent, WeaponType wtype);
+short player_agent_weapon_delay(PlayerIdx plyr, ushort plagent, WeaponType wtype);
+void player_agent_set_weapon_delay(PlayerIdx plyr, ushort plagent, WeaponType wtype, short delay_turns);
+void player_agents_clear_weapon_delays(PlayerIdx plyr);
+
+TbBool player_can_toggle_thermal(PlayerIdx plyr);
+void player_toggle_thermal(PlayerIdx plyr);
+void player_update_thermal(PlayerIdx plyr);
+
 TbBool player_agent_is_alive(PlayerIdx plyr, ushort plagent);
 TbBool player_agent_is_executing_commands(PlayerIdx plyr, ushort plagent);
-short player_agent_weapon_delay(PlayerIdx plyr, ushort plagent, ubyte weapon);
 ThingIdx direct_control_thing_for_player(PlayerIdx plyr);
 void set_default_player_control(void);
 void player_target_clear(PlayerIdx plyr);

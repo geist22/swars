@@ -20,6 +20,7 @@
 
 #include <stdlib.h>
 #include <limits.h>
+#include "bfmath.h"
 #include "bfmemut.h"
 
 #include "swlog.h"
@@ -28,8 +29,22 @@ struct MapOffset spiral_step[SPIRAL_STEPS_COUNT];
 ushort dist_tiles_to_spiral_step[MAP_TILE_WIDTH];
 ushort spiral_dist_tiles_limit = 0;
 
-void map_coords_limit(short *cor_x, short *cor_y, short *cor_z, long map_x, long map_y, long map_z)
+const struct Direction angle_direction[] = {
+    {   0,  256},
+    { 181,  181},
+    { 256,    0},
+    { 181, -181},
+    {   0, -256},
+    {-181, -181},
+    {-256,    0},
+    {-181,  181},
+};
+
+TbBool map_coords_limit(MapCoord *cor_x, MapCoord *cor_y, MapCoord *cor_z, long map_x, long map_y, long map_z)
 {
+    TbBool altered;
+
+    altered = false;
     if (map_x < 0)
         map_x = 0;
     else if (map_x >= MAP_COORD_WIDTH)
@@ -45,12 +60,20 @@ void map_coords_limit(short *cor_x, short *cor_y, short *cor_z, long map_x, long
     else if (map_z >= MAP_COORD_HEIGHT)
         map_z = MAP_COORD_HEIGHT - 1;
 
-    if (cor_x != NULL)
+    if (cor_x != NULL) {
+        altered |= (*cor_x != map_x);
         *cor_x = map_x;
-    if (cor_y != NULL)
+    }
+    if (cor_y != NULL) {
+        altered |= (*cor_y != map_y);
         *cor_y = map_y;
-    if (cor_z != NULL)
+    }
+    if (cor_z != NULL) {
+        altered |= (*cor_z != map_z);
         *cor_z = map_z;
+    }
+
+    return altered;
 }
 
 void clear_mapwho_on_whole_map(void)
@@ -83,7 +106,7 @@ short get_mapwho_thing_index(short tile_x, short tile_z)
 
 /** Maps fields from old MyMapElement struct to the current one.
  */
-void refresh_old_my_big_map_format(struct MyMapElement *p_mapel, struct MyMapElementOldV7 *p_oldmapel, ulong fmtver)
+void refresh_old_my_big_map_format(struct MyMapElement *p_mapel, struct MyMapElementOldV7 *p_oldmapel, u32 fmtver)
 {
     LbMemorySet(p_mapel, 0, sizeof(struct MyMapElement));
 
@@ -197,6 +220,23 @@ void init_search_spiral(void)
     init_search_spiral_steps();
     init_dist_to_spiral_steps();
     LOGSYNC("Created for distance up to %hu tiles", spiral_dist_tiles_limit);
+}
+
+ushort floor_texture_at_point(MapCoord cor_x, MapCoord cor_z)
+{
+    struct MyMapElement *p_mapel;
+    short tile_x, tile_z;
+
+    tile_x = MAPCOORD_TO_TILE(cor_x);
+    tile_z = MAPCOORD_TO_TILE(cor_z);
+
+    if ((tile_x < 0) || (tile_x >= MAP_TILE_WIDTH))
+        return 0;
+    if ((tile_z < 0) || (tile_z >= MAP_TILE_HEIGHT))
+        return 0;
+
+    p_mapel = &game_my_big_map[MAP_TILE_WIDTH * (tile_z) + (tile_x)];
+    return (p_mapel->Texture & 0x3FFF);
 }
 
 int alt_at_point(short x, short z)
@@ -370,6 +410,11 @@ void quick_crater(int x, int z, int size)
 {
     asm volatile ("call ASM_quick_crater\n"
         :  : "a" (x), "d" (z), "b" (size));
+}
+
+u32 map_distance_deltas_precise(int dt_x, int dt_y, int dt_z)
+{
+    return LbSqrL(dt_x * dt_x + dt_y * dt_y + dt_z * dt_z);
 }
 
 u32 map_distance_deltas_fast(int dt_x, int dt_y, int dt_z)

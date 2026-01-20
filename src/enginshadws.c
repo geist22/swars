@@ -18,6 +18,7 @@
 /******************************************************************************/
 #include "enginshadws.h"
 
+#include <assert.h>
 #include <string.h>
 #include "bfmath.h"
 
@@ -29,11 +30,14 @@
 #include "engindrwlstx.h"
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"
+#include "engintxtrmap.h"
+#include "enginprops.h"
+#include "frame_sprani.h"
 #include "game.h"
 #include "game_data.h"
 #include "game_options.h"
-#include "game_sprani.h"
 #include "matrix.h"
+#include "render_gpoly.h"
 #include "thing.h"
 #include "swlog.h"
 /******************************************************************************/
@@ -131,6 +135,7 @@ void draw_person_shadow(ushort face)
 
     p_thing = game_sort_sprites[face].PThing;
     vec_mode = 10;
+    assert(vec_tmap[ingame.LastTmap] != NULL);
     vec_map = vec_tmap[ingame.LastTmap];
 
     fr = p_thing->Frame - nstart_ani[p_thing->StartFrame + 1 + p_thing->U.UObject.Angle];
@@ -224,6 +229,7 @@ void draw_vehicle_shadow(ushort veh, ushort sort)
     vec_inp.R[0] = -shd_w;
     vec_inp.R[2] = -shd_l;
     vec_inp.R[1] = 0;
+    assert(p_vehicle->U.UVehicle.MatrixIndex < next_local_mat);
     matrix_transform(&vec_rot, &local_mats[p_vehicle->U.UVehicle.MatrixIndex], &vec_inp);
     cor1_x = (p_vehicle->X >> 8) - engn_xc + (vec_rot.R[0] >> 15);
     cor1_z = (p_vehicle->Z >> 8) - engn_zc + (vec_rot.R[2] >> 15);
@@ -231,6 +237,7 @@ void draw_vehicle_shadow(ushort veh, ushort sort)
     vec_inp.R[1] = 0;
     vec_inp.R[0] = shd_w;
     vec_inp.R[2] = -shd_l;
+    assert(p_vehicle->U.UVehicle.MatrixIndex < next_local_mat);
     matrix_transform(&vec_rot, &local_mats[p_vehicle->U.UVehicle.MatrixIndex], &vec_inp);
     cor2_x = (p_vehicle->X >> 8) - engn_xc + (vec_rot.R[0] >> 15);
     cor2_z = (p_vehicle->Z >> 8) - engn_zc + (vec_rot.R[2] >> 15);
@@ -238,6 +245,7 @@ void draw_vehicle_shadow(ushort veh, ushort sort)
     vec_inp.R[0] = p_shtextr->Width;
     vec_inp.R[1] = 0;
     vec_inp.R[2] = shd_l;
+    assert(p_vehicle->U.UVehicle.MatrixIndex < next_local_mat);
     matrix_transform(&vec_rot, &local_mats[p_vehicle->U.UVehicle.MatrixIndex], &vec_inp);
     cor3_x = (p_vehicle->X >> 8) - engn_xc + (vec_rot.R[0] >> 15);
     cor3_z = (p_vehicle->Z >> 8) - engn_zc + (vec_rot.R[2] >> 15);
@@ -245,6 +253,7 @@ void draw_vehicle_shadow(ushort veh, ushort sort)
     vec_inp.R[0] = -p_shtextr->Width;
     vec_inp.R[1] = 0;
     vec_inp.R[2] = shd_l;
+    assert(p_vehicle->U.UVehicle.MatrixIndex < next_local_mat);
     matrix_transform(&vec_rot, &local_mats[p_vehicle->U.UVehicle.MatrixIndex], &vec_inp);
     cor4_x = (p_vehicle->X >> 8) - engn_xc + (vec_rot.R[0] >> 15);
     cor4_z = (p_vehicle->Z >> 8) - engn_zc + (vec_rot.R[2] >> 15);
@@ -274,7 +283,7 @@ void draw_vehicle_shadow(ushort veh, ushort sort)
         return;
 
     pt = next_screen_point;
-    if (pt + 4 > mem_game[30].N)
+    if (pt + 4 > screen_points_limit)
         return;
 
     next_special_face4++;
@@ -282,7 +291,7 @@ void draw_vehicle_shadow(ushort veh, ushort sort)
 
     p_face4 = &game_special_object_faces4[face];
     p_face4->Flags = 10;
-    p_face4->GFlags = 1;
+    p_face4->GFlags = 0x01;
     p_face4->ExCol = 16;
     p_face4->PointNo[1] = pt + 1;
     p_face4->PointNo[2] = pt + 3;

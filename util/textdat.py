@@ -99,15 +99,9 @@ def enctable_string_to_bytes(cte, s):
 
 
 def datitem_string_national_adjust(stri):
-    stro = ""
-    for c in stri:
-        if c in "êô":
-            stro = stro + unicodedata.normalize('NFKD', c).encode('ascii', 'ignore').decode('ascii', errors='ignore')
-        elif c in "ÍÓÚ": # TODO is that really needed? remove, if it will not cause regression in these chars
-            stro = stro + c.lower()
-        else:
-            stro = stro + c
-    return stro
+    # currently, there is no need to alter the national character codes
+    # no need to convert to upper() nor normalize('NFKD')
+    return stri
 
 
 def datitem_string_to_bytes(po, s):

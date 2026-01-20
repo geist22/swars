@@ -43,8 +43,13 @@
 
 /******************************************************************************/
 
+ubyte *save_game_buffer = NULL;
+
 extern ubyte save_crypto_tables_state[3];
 extern ubyte save_crypto_data_state[3];
+
+char save_slot_names[SAVE_SLOTS_VISIBLE_COUNT][25] = {0};
+char save_active_desc[25];
 
 /******************************************************************************/
 
@@ -294,7 +299,7 @@ void read_user_settings(void)
         assert(sizeof(locflags) == sizeof(ingame.UserFlags));
 
         if (LbFileLengthHandle(fh) > 126)
-            LbFileRead(fh, &fmtver, 4);
+            LbFileRead(fh, &fmtver, sizeof(u32));
         else
             fmtver = 0;
 
@@ -307,8 +312,16 @@ void read_user_settings(void)
             set_default_game_keys();
             LbFileRead(fh, kbkeys, 29 * sizeof(ushort));
             LbFileRead(fh, jskeys, 29 * sizeof(ushort));
+        } else if (fmtver == 2) {
+            set_default_game_keys();
+            LbFileRead(fh, kbkeys, 50 * sizeof(ushort));
+            LbFileRead(fh, jskeys, 50 * sizeof(ushort));
         } else {
+#ifdef MORE_GAME_KEYS
+            if (fmtver != 3)
+#else
             if (fmtver != 2)
+#endif
                 LOGWARN("Settings may be invalid, as \"%s\" has unrecognized format version %d", fname, (int)fmtver);
             LbFileRead(fh, kbkeys, GKey_KEYS_COUNT * sizeof(ushort));
             LbFileRead(fh, jskeys, GKey_KEYS_COUNT * sizeof(ushort));
@@ -369,7 +382,11 @@ TbBool save_user_settings(void)
     int i;
 
     get_user_settings_fname(fname, login_name);
+#ifdef MORE_GAME_KEYS
+    fmtver = 3;
+#else
     fmtver = 2;
+#endif
 
     fh = LbFileOpen(fname, Lb_FILE_MODE_NEW);
     if (fh == INVALID_FILE)
@@ -562,12 +579,13 @@ void load_save_slot_names(void)
     char locstr[DISKPATH_SIZE];
     int i;
 
-    for (i = 0; i < 9; i++)
+    for (i = 0; i < SAVE_SLOTS_VISIBLE_COUNT + 1; i++)
     {
         TbFileHandle fh;
         int slot;
 
-        if (i == 8)
+        // the last slot is for mortal game
+        if (i == SAVE_SLOTS_VISIBLE_COUNT)
             slot = 0;
         else
             slot = save_slot_base + i + 1;
@@ -604,7 +622,7 @@ ubyte load_game(int slot, char *desc)
         return 1;
     LbFileRead(fh, desc, 25);
     LbFileRead(fh, &gblen, 4);
-    LbFileRead(fh, &fmtver, 4);
+    LbFileRead(fh, &fmtver, sizeof(u32));
     LbFileRead(fh, save_game_buffer, gblen);
     LbFileRead(fh, &decrypt_verify, 4);
     LbFileClose(fh);
@@ -717,7 +735,8 @@ ubyte load_game(int slot, char *desc)
     else
     {
         PlayerInfo *p_locplayer;
-        int agent, i;
+        int i;
+
         p_locplayer = &players[local_player_no];
 
         i = sizeof(PlayerInfo) - offsetof(PlayerInfo, FourPacks);
@@ -752,12 +771,7 @@ ubyte load_game(int slot, char *desc)
             p_locplayer->UserVZ[i] = 0;
         }
 
-        for (agent = 0; agent < 32; agent++)
-        {
-            for (i = 0; i < 4; i++) {
-                p_locplayer->WepDelays[i][agent] = 0;
-            }
-        }
+        player_agents_clear_weapon_delays(local_player_no);
     }
     players_sync_from_cryo();
 

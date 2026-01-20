@@ -33,6 +33,7 @@
 #include "enginlights.h"
 #include "enginsngtxtr.h"
 #include "engintrns.h"
+#include "engintxtrmap.h"
 #include "enginzoom.h"
 #include "game.h"
 #include "game_options.h"
@@ -62,7 +63,7 @@ extern long dword_176CC0;
 
 extern short word_19CC64;
 extern short word_19CC66;
-extern long dword_19F4F8;
+extern long nuclear_overexposure;
 
 
 int shpoint_compute_coord_y(struct ShEnginePoint *p_sp, struct MyMapElement *p_mapel, int elcr_x, int elcr_z, int mag)
@@ -746,6 +747,7 @@ void func_2e440(void)
 
     lvdraw_do_floor_flyby(cor_z_beg, ranges_x_len, smrang_x, ranges_x);
 
+    assert(vec_tmap[1] != NULL);
     vec_map = vec_tmap[1];
 
     draw_screen();
@@ -834,7 +836,7 @@ void clear_super_quick_lights(void)
 
 void draw_screen(void)
 {
-    if (dword_19F4F8)
+    if (nuclear_overexposure)
     {
         draw_drawlist_1();
     }

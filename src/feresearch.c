@@ -34,6 +34,7 @@
 #include "guigraph.h"
 #include "guitext.h"
 #include "keyboard.h"
+#include "mydraw.h"
 #include "purpldrw.h"
 #include "player.h"
 #include "weapon.h"
@@ -41,12 +42,12 @@
 #include "swlog.h"
 #include "util.h"
 /******************************************************************************/
-extern struct ScreenTextBox research_unkn21_box;
-extern struct ScreenButton research_submit_button;
-extern struct ScreenButton unkn12_WEAPONS_MODS_button;
-extern struct ScreenTextBox research_progress_button;
-extern struct ScreenBox research_graph_box;
-extern struct ScreenButton research_list_buttons[2];
+struct ScreenTextBox research_unkn21_box = {0};
+struct ScreenButton research_submit_button = {0};
+struct ScreenButton unkn12_WEAPONS_MODS_button = {0};
+struct ScreenTextBox research_progress_button = {0};
+struct ScreenBox research_graph_box = {0};
+struct ScreenButton research_list_buttons[2] = {0};
 
 extern ubyte research_completed;// = 0;
 extern ubyte research_on_weapons;// = true;
@@ -54,6 +55,8 @@ extern ubyte research_unkn_var_01;
 extern sbyte research_selected_wep; // = -1;
 extern sbyte research_selected_mod; // = -1;
 extern ubyte byte_1551E4[5];
+
+/******************************************************************************/
 
 ubyte ac_do_research_submit(ubyte click);
 ubyte ac_do_research_suspend(ubyte click);
@@ -285,7 +288,7 @@ ubyte show_unkn21_box(struct ScreenTextBox *p_box)
     }
 
     scr_y = 3;
-    tx_height = font_height('A');
+    tx_height = my_char_height('A');
     line = p_box->TextTopLine;
     ln_height = tx_height + 4;
     while (line < 32)
@@ -545,8 +548,7 @@ void draw_unkn20_subfunc_01(int x, int y, char *text, ubyte a4)
             ch = text[i++];
             if (ch == '\0')
               return;
-            if (lbFontPtr != small_med_font || language_3str[0] != 'e')
-            {
+            if (my_font_prefer_upper_case(lbFontPtr)) {
                 ch = fontchrtoupper(ch);
             }
             w = LbSprFontCharWidth(lbFontPtr, ch);
@@ -581,7 +583,7 @@ void draw_unkn20_subfunc_01(int x, int y, char *text, ubyte a4)
             dy = 0;
         }
         draw_sprite_purple_list(scr_x - dx, scr_y - dy, LbFontCharSprite(lbFontPtr, ch));
-        scr_y += a4 + font_height(ch);
+        scr_y += a4 + my_char_height(ch);
     }
 }
 
@@ -642,25 +644,28 @@ void show_research_screen(void)
             : "=r" (drawn) : "a" (&research_unkn21_box), "g" (research_unkn21_box.DrawFn));
     }
 
-    if ((ingame.UserFlags & UsrF_Cheats) != 0 && is_key_pressed(KC_U, KMod_DONTCARE))
+    if ((ingame.UserFlags & UsrF_Cheats) != 0)
     {
-        clear_key_pressed(KC_U);
-        research_daily_progress_for_type(0);
-        research_daily_progress_for_type(1);
-    }
-    if ((ingame.UserFlags & UsrF_Cheats) != 0 && is_key_pressed(KC_0, KMod_DONTCARE))
-    {
-        clear_key_pressed(KC_0);
-        if (research_completed + 1 < MOD_TYPES_COUNT)
+        if (is_key_pressed(KC_U, KMod_DONTCARE))
         {
-            refresh_equip_list = 1;
-            research_cymod_allow(research_completed + 1);
+            clear_key_pressed(KC_U);
+            research_daily_progress_for_type(0);
+            research_daily_progress_for_type(1);
         }
-        if (research_completed + 1 < WEP_TYPES_COUNT)
+        if (is_key_pressed(KC_0, KMod_DONTCARE))
         {
-            refresh_equip_list = 1;
-            research_weapon_allow(research_completed + 1);
-            research_completed++;
+            clear_key_pressed(KC_0);
+            if (research_completed + 1 < MOD_TYPES_COUNT)
+            {
+                refresh_equip_list = 1;
+                research_cymod_allow(research_completed + 1);
+            }
+            if (research_completed + 1 < WEP_TYPES_COUNT)
+            {
+                refresh_equip_list = 1;
+                research_weapon_allow(research_completed + 1);
+                research_completed++;
+            }
         }
     }
 }
@@ -730,10 +735,42 @@ ubyte show_research_graph(struct ScreenBox *box)
         if (research.CurrentWeapon != -1)
         {
             struct WeaponDef *wdef;
+            struct WeaponDefAdd *wdefa;
 
             y_vals = &research.WeaponProgress[research.CurrentWeapon][0];
             wdef = &weapon_defs[research.CurrentWeapon + 1];
-            y_trend_delta = research_unkn_func_004(wdef->PercentPerDay, wdef->Funding, research.WeaponFunding);
+            wdefa = &weapon_defs_a[research.CurrentWeapon + 1];
+
+            // Which one of these is better, 1, 2 or 3?
+            // This part is used twice here (once for weapons & mods each) and twice in research.c
+
+            /* 1 *************************/
+            if (use_classic_research) {
+                y_trend_delta = research_unkn_func_004(wdef->PercentPerDay, wdefa->FundingClassic, research.WeaponFunding);
+            }
+            else {
+                y_trend_delta = research_unkn_func_004(wdef->PercentPerDay, wdef->Funding, research.WeaponFunding);
+            }
+            /* 1 *************************/
+
+            /* 2 ************************
+            short Funding;
+            if (use_classic_research) {
+                Funding = wdefa->FundingClassic;
+            }
+            else {
+                Funding = wdef->Funding;
+            }
+            y_trend_delta = research_unkn_func_004(wdef->PercentPerDay, Funding, research.WeaponFunding);
+            2 *************************/
+
+            /* 3 ************************
+            short Funding = wdef->Funding;
+            if (use_classic_research) {
+                Funding = wdefa->FundingClassic;
+            }
+            y_trend_delta = research_unkn_func_004(wdef->PercentPerDay, Funding, research.WeaponFunding);
+            3 *************************/
 
             draw_chartxy_curve(1, 0, w, h, y_vals, n_y_vals, RESEARCH_COMPLETE_POINTS, y_trend_delta, 10);
         }
@@ -743,10 +780,20 @@ ubyte show_research_graph(struct ScreenBox *box)
         if (research.CurrentMod != -1)
         {
             struct ModDef *mdef;
+            struct ModDefAdd *mdefa;
 
             y_vals = &research.ModProgress[research.CurrentMod][0];
             mdef = &mod_defs[research.CurrentMod + 1];
-            y_trend_delta = research_unkn_func_004(mdef->PercentPerDay, mdef->Funding, research.ModFunding);
+            mdefa = &mod_defs_a[research.CurrentMod + 1];
+
+            /* 1 *************************/
+            if (use_classic_research) {
+                y_trend_delta = research_unkn_func_004(mdef->PercentPerDay, mdefa->FundingClassic, research.ModFunding);
+            }
+            else {
+                y_trend_delta = research_unkn_func_004(mdef->PercentPerDay, mdef->Funding, research.ModFunding);
+            }
+            /* 1 *************************/
 
             draw_chartxy_curve(1, 0, w, h, y_vals, n_y_vals, RESEARCH_COMPLETE_POINTS, y_trend_delta, 10);
         }

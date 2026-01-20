@@ -30,12 +30,16 @@
 #include "bfsprite.h"
 #include "bffont.h"
 #include "bftext.h"
-#include "bfmouse.h"
 #include "bfplanar.h"
 #include "bfutility.h"
+#include "bfwindows.h"
 #include "poly.h"
 
+#include "engintxtrmap.h"
+
+#include "game_options.h"
 #include "game_sprts.h"
+#include "mouse.h"
 #include "util.h"
 #include "swlog.h"
 
@@ -49,6 +53,9 @@ TbScreenMode screen_mode_fmvid_hi = Lb_SCREEN_MODE_640_480_8;
 
 extern ushort data_1aa330;
 extern ushort data_1aa332;
+
+/** Momentary in-game brightess; base from user settings, but with automatic adjustments. */
+extern short momentary_brightness;
 
 TbPixel fade_unaffected_colours[] = {
   1,2,3,
@@ -101,6 +108,20 @@ void swap_wscreen(void)
     }
 }
 
+TbBool screen_idle_update(void)
+{
+    //TODO when this gets modified to run it separate thread, it should only run if screen not locked
+    swap_wscreen();
+    return true;
+}
+
+TbResult screen_idle_update_initialize(void)
+{
+    if (LbRegisterIdleHandler(screen_idle_update) != Lb_SUCCESS)
+        return Lb_FAIL;
+    return Lb_SUCCESS;
+}
+
 void
 display_set_full_screen (bool full_screen)
 {
@@ -147,7 +168,6 @@ void display_unlock(void)
 void setup_simple_screen_mode(TbScreenMode mode)
 {
     TbScreenModeInfo *mdinfo;
-    short ratio;
 
     printf("%s %d\n", __func__, (int)mode);
     mdinfo = LbScreenGetModeInfo(mode);
@@ -157,18 +177,13 @@ void setup_simple_screen_mode(TbScreenMode mode)
     }
     LbScreenSetup(mode, mdinfo->Width, mdinfo->Height, display_palette);
 
-    if (lbDisplay.GraphicsScreenHeight < 400)
-        ratio = 2 * NORMAL_MOUSE_MOVE_RATIO;
-    else
-        ratio = 1 * NORMAL_MOUSE_MOVE_RATIO;
-    LbMouseSetup(NULL, ratio, ratio);
+    mouse_update_on_screen_mode_change(false);
 }
 
 void setup_screen_mode(TbScreenMode mode)
 {
     TbBool was_locked;
     TbScreenModeInfo *mdinfo;
-    short ratio;
 
     printf("%s %d\n", __func__, (int)mode);
     mdinfo = LbScreenGetModeInfo(mode);
@@ -187,11 +202,7 @@ void setup_screen_mode(TbScreenMode mode)
             ;
     }
 
-    if (lbDisplay.GraphicsScreenHeight < 400)
-        ratio = 2 * NORMAL_MOUSE_MOVE_RATIO;
-    else
-        ratio = 1 * NORMAL_MOUSE_MOVE_RATIO;
-    LbMouseSetup(&pointer_sprites[1], ratio, ratio);
+    mouse_update_on_screen_mode_change(true);
 
     setup_vecs(lbDisplay.WScreen, vec_tmap[0], lbDisplay.PhysicalScreenWidth,
         lbDisplay.PhysicalScreenWidth, lbDisplay.PhysicalScreenHeight);
@@ -277,7 +288,7 @@ TbResult cover_screen_rect_with_raw_file(short x, short y, ushort w, ushort h, c
         return ret;
     }
     LbScreenUnlock();
-    ret = LbScreenSurfaceBlit(&surf, x, y, &srect, SSBlt_FLAG8 | SSBlt_FLAG4);
+    ret = LbScreenSurfaceBlit(&surf, x, y, &srect, SSBlt_TO_SCREEN);
     LbScreenSurfaceRelease(&surf);
     LbScreenLock();
     return ret;
@@ -308,6 +319,10 @@ void setup_color_lookups(void)
     asm volatile ("call ASM_setup_color_lookups\n"
         :  :  : "eax" );
 #endif
+    if (display_palette == NULL) {
+        LOGERR("Display palette not set, skipping");
+        return;
+    }
     dword_1AA270 = 1;
     colour_lookup[ColLU_BLACK] = LbPaletteFindColour(display_palette, 0, 0, 0);
     colour_lookup[ColLU_WHITE] = LbPaletteFindColour(display_palette, 63, 63, 63);
@@ -375,60 +390,101 @@ void my_set_text_window(ushort x1, ushort y1, ushort w, ushort h)
     text_window_y2 = y1 + h - 1;
 }
 
-ubyte font_height(uchar c)
+void ingame_palette_load(int pal_id)
+{
+    char locstr[DISKPATH_SIZE];
+
+    sprintf(locstr, "qdata/pal%d.dat", pal_id);
+    LbFileLoadAt(locstr, display_palette);
+}
+
+void ingame_palette_reload(void)
+{
+    if ((ingame.Flags & GamF_ThermalView) != 0) {
+        ingame_palette_load(3);
+    } else {
+        ingame_palette_load(ingame.PalType);
+    }
+}
+
+void palette_apply_brightness(ubyte *pal)
+{
+    int colr, cmpn;
+
+    for (colr = 0; colr < 0x300; colr += 3)
+    {
+        int sum, bri;
+        sum = 0;
+        for (cmpn = 0; cmpn < 3; cmpn++)
+            sum += pal[colr + cmpn];
+        if ((sum < 56) && (momentary_brightness < -1)) {
+            bri = momentary_brightness * (sum + 8) >> 6;
+        } else if ((sum > 3*63 - 56) && (momentary_brightness > 1)) {
+            bri = momentary_brightness * (sum - (3*63 - 56) + 8) >> 6;
+        } else {
+            bri = momentary_brightness;
+        }
+        for (cmpn = 0; cmpn < 3; cmpn++)
+        {
+            ubyte *p_intens;
+            int i;
+            p_intens = &pal[colr + cmpn];
+            i = (*p_intens) + bri;
+            if (i < 0)
+              i = 0;
+            if (i > 63)
+              i = 63;
+            *p_intens = i;
+        }
+    }
+}
+
+void change_brightness(short amount)
 {
 #if 0
-    int ret;
-    asm volatile ("call ASM_font_height\n"
-        : "=r" (ret) : "a" (c));
-    return ret;
-#endif
-    if (lbFontPtr == small_font || lbFontPtr == small2_font)
-    {
-        return LbSprFontCharHeight(lbFontPtr, c) - 1;
-    }
-    else if (lbFontPtr == small_med_font)
-    {
-        if (c < 97 || c > 122)
-        {
-          return LbSprFontCharHeight(lbFontPtr, c) - 2;
-        }
-        else
-        {
-          return LbSprFontCharHeight(lbFontPtr, c);
-        }
-    }
-    else if (lbFontPtr == med_font || lbFontPtr == med2_font)
-    {
-        return LbSprFontCharHeight(lbFontPtr, c) - 2;
-    }
-    else if (lbFontPtr == big_font)
-    {
-         return LbSprFontCharHeight(lbFontPtr, c) - 4;
-    }
-    else
-    {
-        return LbSprFontCharHeight(lbFontPtr, c);
-    }
-}
-
-u32 my_string_width(const char *text)
-{
-    int ret;
-    asm volatile ("call ASM_my_string_width\n"
-        : "=r" (ret) : "a" (text));
-    return ret;
-}
-
-u32 my_str_len(const char *t)
-{
-    return strlen(t);
-}
-
-void change_brightness(short val)
-{
     asm volatile ("call ASM_change_brightness\n"
         : : "a" (val));
+#endif
+    ingame_palette_reload();
+
+    momentary_brightness += amount;
+    if (momentary_brightness < -63)
+        momentary_brightness = -63;
+    if (momentary_brightness > 63)
+        momentary_brightness = 63;
+
+    palette_apply_brightness(display_palette);
+    LbPaletteSet(display_palette);
+}
+
+void set_user_selected_brightness(void)
+{
+#if 0
+    asm volatile ("call ASM_set_user_selected_brightness\n"
+        :  :  : "eax" );
+    return;
+#endif
+    momentary_brightness = user_sel_brightness;
+    change_brightness(0);
+}
+
+void reset_user_selected_brightness(void)
+{
+#if 0
+    TbResult ret;
+    asm volatile ("call ASM_reset_user_selected_brightness\n"
+        : "=r" (ret) : );
+    return ret;
+#endif
+    ingame_palette_reload();
+    user_sel_brightness = 0;
+    set_user_selected_brightness();
+}
+
+void set_brightness_fadedout(void)
+{
+    momentary_brightness = 0;
+    change_brightness(-64);
 }
 
 /******************************************************************************/

@@ -35,17 +35,18 @@
 #include "game_sprts.h"
 #include "game.h"
 #include "keyboard.h"
+#include "mydraw.h"
 #include "network.h"
 #include "player.h"
 #include "purpldrw.h"
 #include "sound.h"
 #include "swlog.h"
 /******************************************************************************/
-extern struct ScreenBox controls_joystick_box;
-struct ScreenTextBox controls_list_box;
-extern struct ScreenButton controls_defaults_button;
-extern struct ScreenButton controls_save_button;
-extern struct ScreenButton controls_calibrate_button;
+struct ScreenBox controls_joystick_box = {0};
+struct ScreenTextBox controls_list_box = {0};
+struct ScreenButton controls_defaults_button = {0};
+struct ScreenButton controls_save_button = {0};
+struct ScreenButton controls_calibrate_button = {0};
 
 extern ubyte byte_1C4970;
 extern ubyte controls_hlight_gkey;
@@ -56,6 +57,14 @@ ubyte ac_do_controls_defaults(ubyte click);
 ubyte ac_do_controls_save(ubyte click);
 ubyte ac_do_controls_calibrate(ubyte click);
 ubyte ac_show_menu_controls_list_box(struct ScreenTextBox *p_box);
+
+/** Game key currently being edited in the controls screen.
+ * Max value is 2x max GameKey index - because it also stored distinction
+ * between entering keyboard key and joystick key.
+ */
+ubyte controls_edited_gkey = 0;
+
+/******************************************************************************/
 
 ubyte do_controls_defaults(ubyte click)
 {
@@ -99,6 +108,11 @@ ubyte do_controls_calibrate(ubyte click)
     return 1;
 }
 
+TbBool is_defining_control_key(void)
+{
+    return (controls_hlight_gkey != 0);
+}
+
 ubyte show_controls_joystick_box(struct ScreenBox *p_box)
 {
 #if 0
@@ -119,7 +133,7 @@ ubyte show_controls_joystick_box(struct ScreenBox *p_box)
 
     lbFontPtr = small_med_font;
     my_set_text_window(p_box->X + 4, p_box->Y + 4, p_box->Width - 8, p_box->Height - 8);
-    ln_height = font_height('A');
+    ln_height = my_char_height('A');
 
     if ((p_box->Flags & GBxFlg_BkgndDrawn) == 0)
     {
@@ -149,7 +163,7 @@ ubyte show_controls_joystick_box(struct ScreenBox *p_box)
         p_box->Flags |= GBxFlg_BkgndDrawn;
 
         lbFontPtr = small_med_font;
-        ln_height = font_height('A');
+        ln_height = my_char_height('A');
     }
     wpos_y = 126;
 
@@ -227,7 +241,7 @@ ubyte show_controls_joystick_box(struct ScreenBox *p_box)
         if (lbDisplay.LeftButton)
         {
             lbDisplay.LeftButton = 0;
-            if (login_control__State != LognCt_Unkn5 || nsvc.I.Type == 1)
+            if (login_control__State != LognCt_Unkn5 || nsvc.I.Type == NetSvc_IPX)
             {
                 p_locplayer->DoubleMode++;
                 if (p_locplayer->DoubleMode > 3)
@@ -373,7 +387,7 @@ ubyte menu_controls_inputs(struct ScreenTextBox *p_box, short *p_tx_kbd_width, s
     ret = 0;
 
     lbFontPtr = p_box->Font;
-    ln_height = font_height('A');
+    ln_height = my_char_height('A');
 
     if (lbDisplay.LeftButton || joy.Buttons[0])
     {

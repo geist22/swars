@@ -24,6 +24,7 @@
 #include "bftext.h"
 
 #include "display.h"
+#include "mydraw.h"
 #include "purpldrw.h"
 #include "swlog.h"
 /******************************************************************************/
@@ -314,7 +315,7 @@ void init_screen_button(struct ScreenButton *p_box, ScrCoord x, ScrCoord y,
     lbFontPtr = p_font;
     p_box->Y = y;
     p_box->Width = my_string_width(text) + 4;
-    p_box->Height = font_height('A') + 6;
+    p_box->Height = my_char_height('A') + 6;
     p_box->DrawSpeed = drawspeed;
     p_box->Font = p_font;
     p_box->Flags = flags | GBxFlg_Unkn0001;
@@ -353,9 +354,9 @@ void init_screen_info_box(struct ScreenInfoBox *p_box, ScrCoord x, ScrCoord y, u
     short font1_h, font2_h, font_h;
 
     lbFontPtr = p_font1;
-    font1_h = font_height('A');
+    font1_h = my_char_height('A');
     lbFontPtr = p_font2;
-    font2_h = font_height('A');
+    font2_h = my_char_height('A');
     if (font1_h <= font2_h)
         font_h = font2_h;
     else

@@ -38,6 +38,8 @@ void skip_flashy_draw_storage_screen_boxes(void);
 void mark_storage_screen_boxes_redraw(void);
 ubyte show_storage_screen(void);
 
+int autosave_game(void);
+
 /******************************************************************************/
 #ifdef __cplusplus
 }

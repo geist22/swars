@@ -20,6 +20,7 @@
 #define LVFILES_H
 
 #include "bftypes.h"
+#include "game_bstype.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,6 +31,11 @@ extern "C" {
 #define LEVEL_NUM_STRAIN(lv) ( ((lv) < 15) ? (lv) : ((lv) - 1) % 15 + 1 )
 #define LEVEL_NUM_VARIANT(lv) ( ((lv) < 15) ? 0 : ((lv) - 1) / 15 )
 #define LEVEL_NUM(lv_strain, lv_variant) (((lv_variant) * 15 + (lv_strain) - 1) + 1)
+
+enum LevelMiscEntryType {
+    LvMiscT_NONE,
+    LvMiscT_MGUN,
+};
 
 struct Objective;
 
@@ -63,6 +69,12 @@ extern ushort next_used_lvl_objective;
 TbResult load_mad_pc(ushort mapno);
 
 void load_level_pc(short level, short missi, ubyte reload);
+
+/** Get start position for in-mission camera from misc entry with mounted gun.
+ *
+ * Makes little sense, but original game does that (if there ar any guns on a level).
+ */
+TbBool level_misc_get_starting_camera_pos(MapCoord *cor_x, MapCoord *cor_z);
 
 /******************************************************************************/
 #ifdef __cplusplus

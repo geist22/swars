@@ -29,17 +29,18 @@ extern "C" {
 
 #pragma pack()
 /******************************************************************************/
-/** Game key currently being edited in the controls screen.
- * Max value is 2x max GameKey index - because it also stored distinction
- * between entering keyboard key and joystick key.
- */
-extern ubyte controls_edited_gkey;
 
 void init_controls_screen_boxes(void);
 void reset_controls_screen_boxes_flags(void);
 ubyte show_options_controls_screen(void);
 void set_flag01_controls_screen_boxes(void);
 void skip_flashy_draw_controls_screen_boxes(void);
+
+/** Returns whether the game is currently defining a key in controls screen.
+ *
+ * Most of control buttons should be disabled during control key definition.
+ */
+TbBool is_defining_control_key(void);
 
 /******************************************************************************/
 #ifdef __cplusplus

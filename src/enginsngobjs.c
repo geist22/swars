@@ -20,8 +20,10 @@
 
 #include <limits.h>
 #include <stdlib.h>
+
 #include "bfmemut.h"
 #include "bfmath.h"
+
 #include "bigmap.h"
 #include "swlog.h"
 /******************************************************************************/
@@ -37,7 +39,7 @@ ushort next_object_face4 = 1;
 ushort next_object = 1;
 
 void refresh_old_object_face_format(struct SingleObjectFace3 *p_objface,
-  struct SingleObjectFace3OldV7 *p_oldobjface, ulong fmtver)
+  struct SingleObjectFace3OldV7 *p_oldobjface, u32 fmtver)
 {
     int i;
 
@@ -65,7 +67,7 @@ void refresh_old_object_face_format(struct SingleObjectFace3 *p_objface,
 }
 
 void refresh_old_object_face4_format(struct SingleObjectFace4 *p_objface4,
-  struct SingleObjectFace4OldV7 *p_oldobjface4, ulong fmtver)
+  struct SingleObjectFace4OldV7 *p_oldobjface4, u32 fmtver)
 {
     int i;
 
@@ -194,6 +196,7 @@ int get_height_on_face(int x, int z, ushort face)
 
 int get_height_on_face_quad(int x, int z, ushort face)
 {
+    // TODO when rewriting, use mul_shift16_sign_pad_lo()
     int ret;
     asm volatile (
       "call ASM_get_height_on_face_quad\n"

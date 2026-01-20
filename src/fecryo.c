@@ -34,8 +34,9 @@
 #include "campaign.h"
 #include "cybmod.h"
 #include "display.h"
-#include "femain.h"
 #include "feequip.h"
+#include "femain.h"
+#include "fenet.h"
 #include "game_options.h"
 #include "guiboxes.h"
 #include "guitext.h"
@@ -43,6 +44,8 @@
 #include "game_data.h"
 #include "game_sprts.h"
 #include "game.h"
+#include "mydraw.h"
+#include "packetfe.h"
 #include "player.h"
 #include "purpldrw.h"
 #include "purpldrwlst.h"
@@ -50,10 +53,10 @@
 #include "sound.h"
 #include "swlog.h"
 /******************************************************************************/
-extern struct ScreenBox cryo_blokey_box;
-extern struct ScreenTextBox cryo_agent_list_box;
-extern struct ScreenTextBox cryo_cybmod_list_box;
-extern struct ScreenButton cryo_offer_cancel_button;
+struct ScreenBox cryo_blokey_box = {0};
+struct ScreenTextBox cryo_agent_list_box = {0};
+struct ScreenTextBox cryo_cybmod_list_box = {0};
+struct ScreenButton cryo_offer_cancel_button = {0};
 
 extern char cybmod_name_text[];
 
@@ -74,10 +77,8 @@ extern struct ScreenTextBox equip_name_box;
 extern struct ScreenTextBox equip_list_box;
 extern struct ScreenInfoBox equip_cost_box;
 extern struct ScreenButton equip_offer_buy_button;
-extern struct ScreenButton equip_all_agents_button;
-extern struct ScreenShape equip_agent_select_shapes[5];
-
-extern struct TbSprite *fe_icons_sprites;
+struct ScreenButton equip_all_agents_button = {0};
+struct ScreenShape equip_agent_select_shapes[5] = {0};
 
 ubyte ac_do_cryo_offer_cancel(ubyte click);
 ubyte ac_show_cryo_agent_list(struct ScreenTextBox *box);
@@ -94,6 +95,8 @@ struct ScreenRect equip_blokey_rect[] = {
     { 0,  0, 139, 197},
     { 0,  0, 139, 295},
 };
+
+/******************************************************************************/
 
 /** Determines if buy or sell should be available in the cryo mod offer.
  *
@@ -189,7 +192,7 @@ void cryo_display_box_redraw(struct ScreenTextBox *p_box)
         p_box->Lines = 0;
         p_box->Text = &weapon_text[cybmod_text_index[selected_mod]];
         lbFontPtr = small_font;
-        p_box->LineHeight = byte_197160 + font_height('A');
+        p_box->LineHeight = byte_197160 + my_char_height('A');
         lbFontPtr = p_box->Font;
         p_box->TextFadePos = -5;
         break;
@@ -354,8 +357,8 @@ ubyte do_equip_offer_buy_cybmod(ubyte click)
 
     if (nbought > 0)
     {
-        if ((login_control__State == LognCt_Unkn5) && ((unkn_flags_08 & 0x08) != 0)) {
-            net_players_copy_cryo();
+        if ((login_control__State == LognCt_Unkn5) && ((net_game_play_flags & NGPF_Unkn08) != 0)) {
+            net_schedule_player_cryo_equip_sync();
         }
         selected_mod = -1;
         cryo_update_for_selected_cybmod();
@@ -1140,7 +1143,7 @@ ubyte draw_blokey_body_mods_names(struct ScreenBox *p_box)
 
     cx = p_box->X + 4;
     cy = p_box->Y + 20;
-    hline = font_height('A');
+    hline = my_char_height('A');
 
     for (ordpart = 0; ordpart < 5; ordpart++)
     {
@@ -1551,7 +1554,7 @@ ubyte show_cryo_cybmod_list_box(struct ScreenTextBox *p_box)
           text_window_x2 - text_window_x1 + 1, text_window_y2 - text_window_y1 + 1, 56);
 
         cy = 3;
-        text_h = font_height('A');
+        text_h = my_char_height('A');
         for (mtype = p_box->TextTopLine + 1; mtype < MOD_TYPES_COUNT; mtype++)
         {
             if (text_h + cy >= p_box->ScrollWindowHeight + 23)

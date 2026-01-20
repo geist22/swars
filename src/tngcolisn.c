@@ -24,6 +24,7 @@
 #include "bigmap.h"
 #include "display.h"
 #include "drawtext.h"
+#include "drawtext_wrp.h"
 #include "engintrns.h"
 #include "enginzoom.h"
 #include "thing.h"

@@ -4,24 +4,47 @@ bindir = $(prefix)/$(PACKAGE)
 MKW = $(PYTHON) $(top_srcdir)/util/mkwrappers
 
 syndwarsfx_SOURCES = \
-	app_gengh.c \
-	app_gentab.h \
-	app_spr_init.c \
-	ap_gspr_map.c \
-	ap_spr_smap.c \
-	app_sprite.h \
-	app_text_cw.c \
-	app_text_cw.h \
-	app_text_sf.c \
-	app_text_sf.h \
+	../swrendersoft/src/app_gengh.c \
+	../swrendersoft/include/app_gentab.h \
+	../swrendersoft/src/app_spr_init.c \
+	../swrendersoft/src/ap_gspr_map.c \
+	../swrendersoft/src/ap_spr_smap.c \
+	../swrendersoft/include/app_sprite.h \
+	../swrendersoft/src/app_text_cw.c \
+	../swrendersoft/include/app_text_cw.h \
+	../swrendersoft/src/app_text_sf.c \
+	../swrendersoft/include/app_text_sf.h \
+	../swrendersoft/src/drawtext.c \
+	../swrendersoft/include/drawtext.h \
+	../swrendersoft/src/enginbckt.c \
+	../swrendersoft/include/enginbckt.h \
+	../swrendersoft/src/enginfloor.c \
+	../swrendersoft/src/engindrwlstx_fac.c \
+	../swrendersoft/src/engindrwlstx_spr.c \
+	../swrendersoft/include/engindrwlstx.h \
+	../swrendersoft/include/enginfloor.h \
+	../swrendersoft/src/enginlights.c \
+	../swrendersoft/include/enginlights.h \
+	../swrendersoft/src/enginpeff.c \
+	../swrendersoft/include/enginpeff.h \
+	../swrendersoft/src/enginpritxtr.c \
+	../swrendersoft/include/enginpritxtr.h \
+	../swrendersoft/src/engintxtrmap.c \
+	../swrendersoft/include/engintxtrmap.h \
+	../swrendersoft/src/enginprops.c \
+	../swrendersoft/include/enginprops.h \
+	../swrendersoft/src/enginsngtxtr.c \
+	../swrendersoft/include/enginsngtxtr.h \
+	../swrendersoft/src/enginzoom.c \
+	../swrendersoft/include/enginzoom.h \
+	../swrendersoft/src/frame_sprani.c \
+	../swrendersoft/include/frame_sprani.h \
+	../swrendersoft/include/render_gpoly.h \
+	../swrendersoft/src/render_gpoly.c \
+	../swrendersoft/include/privrdlog.h \
 	bflib_joyst.c \
 	bflib_joyst.h \
 	bflib_joyst_s.sx \
-	bflib_render_gpoly.c \
-	bflib_render_plin_s.sx \
-	bflib_render_drspr.c \
-	bflib_render_drspr.h \
-	bflib_render_drspr_s.sx \
 	bflib_snd_mss_s.sx \
 	bflib_vidraw.c \
 	bflib_vidraw.h \
@@ -47,6 +70,7 @@ syndwarsfx_SOURCES = \
 	../bfsmacklib/include/smack.h \
 	../bfsmacklib/include/smack2ail.h \
 	../bfsmacklib/src/smack2ail.c \
+	../bfsmacklib/src/smailfile.c \
 	../bfsmacklib/src/bfsmacklib_s.sx \
 	linksmk.h \
 	linksmk.c \
@@ -72,38 +96,28 @@ syndwarsfx_SOURCES = \
 	display.h \
 	dos.c \
 	dos.h \
-	drawtext.c \
-	drawtext.h \
-	enginbckt.c \
-	enginbckt.h \
+	drawtext_wrp.c \
+	drawtext_wrp.h \
 	engindrwlstm.c \
 	engindrwlstm.h \
 	engindrwlstx.c \
-	engindrwlstx.h \
+	engindrwlstx_tng.h \
 	enginfexpl.c \
 	enginfexpl.h \
-	enginfloor.c \
-	enginfloor.h \
-	enginlights.c \
-	enginlights.h \
 	enginpriobjs.c \
 	enginpriobjs.h \
-	enginpritxtr.c \
-	enginpritxtr.h \
 	enginshrapn.c \
 	enginshrapn.h \
 	enginsngobjs.c \
 	enginsngobjs.h \
-	enginsngtxtr.c \
-	enginsngtxtr.h \
 	enginshadws.c \
 	enginshadws.h \
-	enginpeff.c \
-	enginpeff.h \
+	engintext.c \
+	engintext.h \
 	engintrns.c \
 	engintrns.h \
-	enginzoom.c \
-	enginzoom.h \
+	feappbar.c \
+	feappbar.h \
 	febrief.c \
 	febrief.h \
 	fedebrief.c \
@@ -152,8 +166,6 @@ syndwarsfx_SOURCES = \
 	game_save.h \
 	game_speed.c \
 	game_speed.h \
-	game_sprani.c \
-	game_sprani.h \
 	game_sprts.c \
 	game_sprts.h \
 	game.h \
@@ -194,6 +206,8 @@ syndwarsfx_SOURCES = \
 	pathtrig.h \
 	packet.c \
 	packet.h \
+	packetfe.c \
+	packetfe.h \
 	people.c \
 	people.h \
 	pepgroup.c \
@@ -233,6 +247,8 @@ syndwarsfx_SOURCES = \
 	thing_fire.h \
 	thing_debug.c \
 	thing_debug_s.sx \
+	thing_onface.h \
+	thing_onface.c \
 	tngcolisn.c \
 	tngcolisn.h \
 	tngobjdrw.c \
@@ -258,6 +274,7 @@ syndwarsfx_SOURCES = \
 
 syndwarsfx_CPPFLAGS = \
   -I"$(top_srcdir)/bfsmacklib/include" \
+  -I"$(top_srcdir)/swrendersoft/include" \
   -I"$(top_srcdir)/bfariadne/include"
 
 syndwarsfx_WRAPPERS = wrappers_dos.o wrappers_game.o wrappers_libc.o wrappers_util.o
