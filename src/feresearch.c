@@ -735,10 +735,42 @@ ubyte show_research_graph(struct ScreenBox *box)
         if (research.CurrentWeapon != -1)
         {
             struct WeaponDef *wdef;
+            struct WeaponDefAdd *wdefa;
 
             y_vals = &research.WeaponProgress[research.CurrentWeapon][0];
             wdef = &weapon_defs[research.CurrentWeapon + 1];
-            y_trend_delta = research_unkn_func_004(wdef->PercentPerDay, wdef->Funding, research.WeaponFunding);
+            wdefa = &weapon_defs_a[research.CurrentWeapon + 1];
+
+            // Which one of these is better, 1, 2 or 3?
+            // This part is used twice here (once for weapons & mods each) and twice in research.c
+
+            /* 1 *************************/
+            if (use_classic_research) {
+                y_trend_delta = research_unkn_func_004(wdef->PercentPerDay, wdefa->FundingClassic, research.WeaponFunding);
+            }
+            else {
+                y_trend_delta = research_unkn_func_004(wdef->PercentPerDay, wdef->Funding, research.WeaponFunding);
+            }
+            /* 1 *************************/
+
+            /* 2 ************************
+            short Funding;
+            if (use_classic_research) {
+                Funding = wdefa->FundingClassic;
+            }
+            else {
+                Funding = wdef->Funding;
+            }
+            y_trend_delta = research_unkn_func_004(wdef->PercentPerDay, Funding, research.WeaponFunding);
+            2 *************************/
+
+            /* 3 ************************
+            short Funding = wdef->Funding;
+            if (use_classic_research) {
+                Funding = wdefa->FundingClassic;
+            }
+            y_trend_delta = research_unkn_func_004(wdef->PercentPerDay, Funding, research.WeaponFunding);
+            3 *************************/
 
             draw_chartxy_curve(1, 0, w, h, y_vals, n_y_vals, RESEARCH_COMPLETE_POINTS, y_trend_delta, 10);
         }
@@ -748,10 +780,20 @@ ubyte show_research_graph(struct ScreenBox *box)
         if (research.CurrentMod != -1)
         {
             struct ModDef *mdef;
+            struct ModDefAdd *mdefa;
 
             y_vals = &research.ModProgress[research.CurrentMod][0];
             mdef = &mod_defs[research.CurrentMod + 1];
-            y_trend_delta = research_unkn_func_004(mdef->PercentPerDay, mdef->Funding, research.ModFunding);
+            mdefa = &mod_defs_a[research.CurrentMod + 1];
+
+            /* 1 *************************/
+            if (use_classic_research) {
+                y_trend_delta = research_unkn_func_004(mdef->PercentPerDay, mdefa->FundingClassic, research.ModFunding);
+            }
+            else {
+                y_trend_delta = research_unkn_func_004(mdef->PercentPerDay, mdef->Funding, research.ModFunding);
+            }
+            /* 1 *************************/
 
             draw_chartxy_curve(1, 0, w, h, y_vals, n_y_vals, RESEARCH_COMPLETE_POINTS, y_trend_delta, 10);
         }

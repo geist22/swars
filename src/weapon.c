@@ -47,7 +47,6 @@
 #include "swlog.h"
 #include "vehicle.h"
 /******************************************************************************/
-
 struct WeaponDef weapon_defs[] = {
     { 0,    0,  0,  0,   0,  0, 0, 0, WEPDFLG_None,          0, 0,     0,     0,  0},
     { 5,   50,  4,  5,   8, 10, 1, 1, WEPDFLG_CanPurchease, 16, 1,    40,    40, 10},
@@ -92,7 +91,42 @@ ubyte weapon_tech_level[33] = {
   0, 1, 1, 3, 3, 5, 6, 2, 4, 3, 3, 2, 4, 4, 255, 5, 7, 8, 1, 255, 9, 6, 6, 255, 8, 7, 5, 2, 6, 7, 5, 255, 255,
 };
 
-struct WeaponDefAdd weapon_defs_a[33] = {0};
+struct WeaponDefAdd weapon_defs_a[] = {
+    {{0},   0},
+    {{0},  40},
+    {{0}, 120},
+    {{0}, 114},
+    {{0}, 164},
+    {{0}, 238},
+    {{0}, 232},
+    {{0}, 150},
+    {{0}, 160},
+    {{0}, 200},
+    {{0}, 100},
+    {{0},  80},
+    {{0}, 108},
+    {{0}, 224},
+    {{0}, 144},
+    {{0},  44},
+    {{0},  26},
+    {{0}, 208},
+    {{0}, 100},
+    {{0},  82},
+    {{0}, 255},
+    {{0}, 194},
+    {{0},  76},
+    {{0},  80},
+    {{0}, 176},
+    {{0},  20},
+    {{0}, 138},
+    {{0},  30},
+    {{0}, 130},
+    {{0}, 182},
+    {{0}, 232},
+    {{0},  10},
+    {{0},  10},
+};
+
 struct TbNamedEnum weapon_names[33] = {0};
 
 short persuaded_person_weapons_sell_cost_permil = 0;
@@ -114,6 +148,7 @@ enum WeaponsConfigCmd {
     CCWep_Sprite,
     CCWep_Cost,
     CCWep_Funding,
+    CCWep_FundingClassic,
     CCWep_PercentPerDay,
 };
 
@@ -136,6 +171,7 @@ const struct TbNamedEnum weapons_conf_weapon_cmds[] = {
   {"Sprite",		CCWep_Sprite},
   {"Cost",			CCWep_Cost},
   {"ResearchFunding",		CCWep_Funding},
+  {"ResearchFundingClassic",    CCWep_FundingClassic},
   {"ResearchPercentPerDay",	CCWep_PercentPerDay},
   {NULL,		0},
 };
@@ -366,6 +402,15 @@ void read_weapons_conf_file(void)
                 }
                 wdef->Funding = k / 100;
                 CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)wdef->Funding);
+                break;
+        	case CCWep_FundingClassic:
+                i = LbIniValueGetLongInt(&parser, &k);
+                if (i <= 0) {
+                    CONFWRNLOG("Could not read \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
+                    break;
+                }
+                wdefa->FundingClassic = k / 100;
+                CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)wdefa->FundingClassic);
                 break;
             case CCWep_PercentPerDay:
                 i = LbIniValueGetLongInt(&parser, &k);
