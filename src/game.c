@@ -5699,9 +5699,8 @@ ubyte do_user_interface(void)
             p_agent = p_locplayer->MyAgent[n];
             if (p_agent->Type != TT_PERSON) continue;
 
-            if (person_can_accept_control(p_agent->ThingOffset) && ((p_agent->Flag2 & TgF2_KnockedOut) == 0))
+            if (person_can_accept_control(p_agent->ThingOffset) && ((p_agent->Flag2 & TgF2_KnockedOut) == 0) && !(lbShift & KMod_SHIFT))
             {
-                clear_gamekey_pressed(gkey);
                 if (p_locplayer->DoubleMode)
                 {
                     byte_153198 = n+1;
@@ -5715,25 +5714,33 @@ ubyte do_user_interface(void)
                     // Double tapping - center view on the agent
                     if (gameturn - last_sel_agent_turn[n] < 7)
                     {
-                      struct Packet *p_pckt;
+                        struct Packet *p_pckt;
 
-                      p_pckt = &packets[local_player_no];
+                        p_pckt = &packets[local_player_no];
 
-                      game_set_cam_track_thing_xz(p_agent->ThingOffset);
-                      engn_yc = PRCCOORD_TO_MAPCOORD(p_agent->Y);
-                      dcthing = p_locplayer->DirectControl[mouser];
-                      build_packet(p_pckt, PAct_SELECT_AGENT, dcthing, p_agent->ThingOffset, 0, 0);
-                      if (p_agent->ThingOffset == (short)p_locplayer->DirectControl[mouser])
-                      {
-                          engn_xc = PRCCOORD_TO_MAPCOORD(p_agent->X);
-                          engn_zc = PRCCOORD_TO_MAPCOORD(p_agent->Z);
-                      }
+                        game_set_cam_track_thing_xz(p_agent->ThingOffset);
+                        engn_yc = PRCCOORD_TO_MAPCOORD(p_agent->Y);
+                        dcthing = p_locplayer->DirectControl[mouser];
+                        build_packet(p_pckt, PAct_SELECT_AGENT, dcthing, p_agent->ThingOffset, 0, 0);
+                        if (p_agent->ThingOffset == (short)p_locplayer->DirectControl[mouser])
+                        {
+                            engn_xc = PRCCOORD_TO_MAPCOORD(p_agent->X);
+                            engn_zc = PRCCOORD_TO_MAPCOORD(p_agent->Z);
+                        }
                     }
                     last_sel_agent_turn[n] = gameturn;
                 }
-                did_inp |= GINPUT_PACKET;
-                return did_inp;
+				did_inp |= GINPUT_PACKET;
+				return did_inp;
             }
+			else if (lbShift & KMod_SHIFT) {
+				if (person_carries_any_medikit(p_agent->ThingOffset)) {
+					my_build_packet(&packets[local_player_no], PAct_AGENT_USE_MEDIKIT, p_agent->ThingOffset, 0, 0, 0);
+				}
+				did_inp |= GINPUT_PACKET;
+				return did_inp;
+			}
+			clear_gamekey_pressed(gkey);
         }
     }
 
