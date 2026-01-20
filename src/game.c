@@ -2135,6 +2135,10 @@ void setup_initial_screen_mode(void)
     {
         LOGERR("Palette not ready - skipping colour tables setup");
     }
+    if (screen_idle_update_initialize() != Lb_SUCCESS)
+    {
+        LOGERR("Idle screen update not registered - expect choppy mouse");
+    }
 #if 0
     // Not sure why we would do this fixup. Maybe it's only for
     // sprite generation? If used before gameplay, it causes bad

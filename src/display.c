@@ -32,6 +32,7 @@
 #include "bftext.h"
 #include "bfplanar.h"
 #include "bfutility.h"
+#include "bfwindows.h"
 #include "poly.h"
 
 #include "engintxtrmap.h"
@@ -105,6 +106,20 @@ void swap_wscreen(void)
       while ( LbScreenLock() != Lb_SUCCESS )
         ;
     }
+}
+
+TbBool screen_idle_update(void)
+{
+    //TODO when this gets modified to run it separate thread, it should only run if screen not locked
+    swap_wscreen();
+    return true;
+}
+
+TbResult screen_idle_update_initialize(void)
+{
+    if (LbRegisterIdleHandler(screen_idle_update) != Lb_SUCCESS)
+        return Lb_FAIL;
+    return Lb_SUCCESS;
 }
 
 void
