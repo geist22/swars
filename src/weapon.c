@@ -29,6 +29,7 @@
 #include "ssampply.h"
 
 #include "bigmap.h"
+#include "bmbang.h"
 #include "building.h"
 #include "enginsngtxtr.h"
 #include "enginzoom.h"
@@ -1616,16 +1617,215 @@ void update_razor_wire(struct Thing *p_person)
         : : "a" (p_person));
 }
 
-void init_laser_beam(struct Thing *p_owner, ushort size, ubyte type)
+void init_laser_beam(struct Thing *p_owner, ushort start_age, ubyte type)
 {
+#if 0
     asm volatile ("call ASM_init_laser_beam\n"
-        : : "a" (p_owner), "d" (size), "b" (type));
+        : : "a" (p_owner), "d" (start_age), "b" (type));
+#endif
+    struct Thing *p_shot;
+    struct WeaponDef *wdef;
+    struct M31 prc_beg_pt;
+    ubyte wdmgtyp;
+
+    ushort shottng;
+    int damage, dmg_delta;
+    u32 rhit;
+    int cor_x, cor_y, cor_z;
+    int cor_beg_x, cor_beg_y, cor_beg_z;
+    ThingIdx target;
+
+    target = 0;
+
+    shottng = get_new_thing();
+    if (shottng == 0) {
+        LOGERR("No thing slots for a shot");
+        return;
+    }
+    p_shot = &things[shottng];
+
+    if (!thing_fire_shot_start_position(&prc_beg_pt, p_owner, WEP_BEAM, 0)) {
+        remove_thing(shottng);
+        return;
+    }
+
+    wdef = &weapon_defs[WEP_BEAM];
+    wdmgtyp = DMG_BEAM;
+    p_shot->U.UEffect.Angle = p_owner->U.UObject.Angle;
+
+    if ((p_owner->Flag & TngF_Unkn20000000) != 0)
+    {
+        p_shot->VX = p_owner->VX;
+        p_shot->VY = p_owner->VY;
+        p_shot->VZ = p_owner->VZ;
+        p_owner->Flag &= ~TngF_Unkn20000000;
+    }
+    else if (p_owner->PTarget != NULL)
+    {
+        struct Thing *p_target;
+        p_target = p_owner->PTarget;
+        p_shot->VX = PRCCOORD_TO_MAPCOORD(p_target->X);
+        p_shot->VY = PRCCOORD_TO_MAPCOORD(p_target->Y) + 10;
+        p_shot->VZ = PRCCOORD_TO_MAPCOORD(p_target->Z);
+        target = p_target->ThingOffset;
+    }
+    else if ((p_owner->Flag & 0x1000) != 0)
+    {
+        ushort range;
+        ubyte angl;
+        range = wdef->RangeBlocks;
+        angl = p_owner->U.UObject.Angle;
+        p_shot->VX = PRCCOORD_TO_MAPCOORD(prc_beg_pt.R[0]) + (range * angle_direction[angl].DiX);
+        p_shot->VY = PRCCOORD_TO_MAPCOORD(prc_beg_pt.R[1]);
+        p_shot->VZ = PRCCOORD_TO_MAPCOORD(prc_beg_pt.R[2]) + (range * angle_direction[angl].DiY);
+    }
+    else
+    {
+        remove_thing(shottng);
+        return;
+    }
+
+    p_shot->X = prc_beg_pt.R[0];
+    p_shot->Y = prc_beg_pt.R[1];
+    p_shot->Z = prc_beg_pt.R[2];
+    p_shot->Owner = p_owner->ThingOffset;
+    p_shot->Radius = 50;
+    {
+        int push_x, push_y;
+        push_x = PRCCOORD_TO_MAPCOORD(prc_beg_pt.R[0]) - p_shot->VX;
+        push_y = PRCCOORD_TO_MAPCOORD(prc_beg_pt.R[2]) - p_shot->VZ;
+        init_shoot_recoil(p_owner, push_x, 0, push_y);
+    }
+    if (start_age > 15)
+        start_age = 15;
+    if (start_age < 5)
+        start_age = 5;
+
+    damage = wdef->HitDamage + (((start_age - 5) * wdef->HitDamage) >> 3);
+    dmg_delta = 0;
+    for (; ; damage -= dmg_delta)
+    {
+        cor_x = p_shot->VX;
+        cor_y = p_shot->VY;
+        cor_z = p_shot->VZ;
+        cor_beg_z = PRCCOORD_TO_MAPCOORD(prc_beg_pt.R[2]);
+        cor_beg_y = PRCCOORD_TO_MAPCOORD(prc_beg_pt.R[1]);
+        cor_beg_x = PRCCOORD_TO_MAPCOORD(prc_beg_pt.R[0]);
+        rhit = laser_hit_at(PRCCOORD_TO_MAPCOORD(prc_beg_pt.R[0]),
+          PRCCOORD_TO_MAPCOORD(prc_beg_pt.R[1]),
+          PRCCOORD_TO_MAPCOORD(prc_beg_pt.R[2]),
+          &cor_x, &cor_y, &cor_z, p_shot);
+
+        if ((rhit & 0x80000000) != 0) // hit 3D object collision vector
+          break;
+        if (damage <= 0)
+          break;
+
+        if ((rhit & 0x20000000) != 0)
+        {
+            p_shot->VX = cor_x;
+            p_shot->VY = cor_y;
+            p_shot->VZ = cor_z;
+            break;
+        }
+
+        else if ((rhit & 0x40000000) != 0) // hit SimpleThing
+        {
+            struct SimpleThing *p_hitstng;
+            ThingIdx hitstng;
+            hitstng = rhit & ~0x60000000;
+            p_hitstng = &sthings[-hitstng];
+            dmg_delta = person_hit_by_bullet((struct Thing *)p_hitstng, damage, p_shot->VX - cor_beg_x,
+              p_shot->VY - cor_beg_y, p_shot->VZ - cor_beg_z, p_owner, wdmgtyp);
+            if (dmg_delta < 0)
+                break;
+        }
+        else if (rhit != 0) // hit normal thing
+        {
+            struct Thing *p_hittng;
+            ThingIdx hittng;
+            hittng = rhit & ~0x60000000;
+            p_hittng = &things[hittng];
+            dmg_delta = person_hit_by_bullet(p_hittng, damage, p_shot->VX - cor_beg_x,
+              p_shot->VY - cor_beg_y, p_shot->VZ - cor_beg_z, p_owner, wdmgtyp);
+            if (dmg_delta < 0)
+                break;
+        }
+
+        prc_beg_pt.R[0] = MAPCOORD_TO_PRCCOORD(cor_x, 0);
+        prc_beg_pt.R[1] = MAPCOORD_TO_PRCCOORD(cor_y, 0);
+        prc_beg_pt.R[2] = MAPCOORD_TO_PRCCOORD(cor_z, 0);
+
+        if (dmg_delta == 0)
+        {
+          p_shot->VX = cor_x;
+          p_shot->VY = cor_y;
+          p_shot->VZ = cor_z;
+          break;
+        }
+    }
+
+    if ((rhit & 0x80000000) != 0) // hit 3D object collision vector
+    {
+        p_shot->VX = cor_x;
+        p_shot->VY = cor_y;
+        p_shot->VZ = cor_z;
+    }
+
+    damage = wdef->HitDamage + ((wdef->HitDamage * (start_age - 5)) >> 3);
+
+    if ((rhit & 0x80000000) == 0)
+    {
+        if (target > 0)
+        {
+          person_hit_by_bullet(&things[target], damage,
+            p_shot->VX - PRCCOORD_TO_MAPCOORD(prc_beg_pt.R[0]),
+            p_shot->VY - PRCCOORD_TO_MAPCOORD(prc_beg_pt.R[1]),
+            p_shot->VZ - PRCCOORD_TO_MAPCOORD(prc_beg_pt.R[2]),
+            p_owner, wdmgtyp);
+        }
+        else if ((p_owner->Flag2 & TgF2_ExistsOffMap) != 0)
+        {
+          p_shot->VY = PRCCOORD_TO_MAPCOORD(p_shot->Y);
+        }
+    }
+    else
+    {
+        if ((p_owner->Flag2 & TgF2_ExistsOffMap) == 0)
+        {
+            short hitvec;
+
+            hitvec = rhit & ~0x60000000;
+            p_owner->U.UPerson.Flag3 |= 0x0040;
+            // Why laser damage, not beam damage?
+            bul_hit_vector(p_shot->VX, p_shot->VY, p_shot->VZ, -hitvec, damage, DMG_LASER);
+        }
+    }
+    p_shot->StartTimer1 = start_age;
+    p_shot->Timer1 = start_age;
+    p_shot->Flag = TngF_Unkn0004;
+    add_node_thing(p_shot->ThingOffset);
+
+    switch (type)
+    {
+    case 17:
+        p_shot->Type = TT_LASER29;
+        break;
+    case 20:
+        p_shot->Type = 38;
+        play_dist_sample(p_shot, 0x25u, 0x7Fu, 0x40u, 100, 0, 3);
+        bang_new4(MAPCOORD_TO_PRCCOORD(p_shot->VX, 0),
+          MAPCOORD_TO_PRCCOORD(p_shot->VY, 0),
+          MAPCOORD_TO_PRCCOORD(p_shot->VZ, 0), 20);
+        quick_crater(MAPCOORD_TO_TILE(p_shot->VX), MAPCOORD_TO_TILE(p_shot->VZ), 0);
+        break;
+    }
 }
 
-void init_laser_guided(struct Thing *p_owner, ushort size)
+void init_laser_guided(struct Thing *p_owner, ushort start_age)
 {
     asm volatile ("call ASM_init_laser_guided\n"
-        : : "a" (p_owner), "d" (size));
+        : : "a" (p_owner), "d" (start_age));
 }
 
 void weapon_shooting_floor_creates_smoke(MapCoord cor_x, MapCoord cor_z)
@@ -1650,7 +1850,7 @@ void init_laser_elec(struct Thing *p_owner, ushort start_age)
 {
 #if 0
     asm volatile ("call ASM_init_laser_elec\n"
-        : : "a" (p_owner), "d" (size));
+        : : "a" (p_owner), "d" (start_age));
 #endif
     struct Thing *p_shot;
     struct WeaponDef *wdef;
@@ -1792,14 +1992,14 @@ void init_laser_elec(struct Thing *p_owner, ushort start_age)
     add_node_thing(p_shot->ThingOffset);
 }
 
-void init_laser_q_sep(struct Thing *p_owner, ushort size)
+void init_laser_q_sep(struct Thing *p_owner, ushort start_age)
 {
-    init_laser_guided(p_owner, size);
-    init_laser_guided(p_owner, size);
-    init_laser_guided(p_owner, size);
-    init_laser_guided(p_owner, size);
-    init_laser_guided(p_owner, size);
-    init_laser_beam(p_owner, size, 0x14u);
+    init_laser_guided(p_owner, start_age);
+    init_laser_guided(p_owner, start_age);
+    init_laser_guided(p_owner, start_age);
+    init_laser_guided(p_owner, start_age);
+    init_laser_guided(p_owner, start_age);
+    init_laser_beam(p_owner, start_age, 0x14u);
 }
 
 void init_uzi(struct Thing *p_owner)
