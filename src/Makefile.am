@@ -251,8 +251,6 @@ syndwarsfx_SOURCES = \
 	tngcolisn.h \
 	tngobjdrw.c \
 	tngobjdrw.h \
-	timer.c \
-	timer.h \
 	osunix.c \
 	osunix.h \
 	util.c \

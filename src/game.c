@@ -140,8 +140,6 @@
 #include "weapon.h"
 #include "wrcities.h"
 
-#include "timer.h"
-
 /** Expected sizes for font DAT/TAB files for resolution 320x200.
  * Each file has 205 sprites, TAB has 6 bytes per entry, DAT varies to use empirical value.
  */
