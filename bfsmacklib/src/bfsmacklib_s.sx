@@ -10258,7 +10258,7 @@ GLOBAL_FUNC(ASM_DEFSMACKTIMERDONE)	/* 0x10F150 */
 GLOBAL_FUNC(ASM_DEFSMACKTIMERREAD)
 /*----------------------------------------------------------------*/
 		mov    $0x46c,%eax
-		mov    _lasttimerread,%edx
+		mov    EXPORT_SYMBOL(lasttimerread),%edx
 
 		/* mov    (%eax),%eax */
 		call   ac_timer_get_18_2_hz_ticks
@@ -10272,7 +10272,7 @@ GLOBAL_FUNC(ASM_DEFSMACKTIMERREAD)
 	jump_10f181:
 		mov    $0x32,%ebx
 		mov    EXPORT_SYMBOL(timeradjust),%ecx
-		mov    %eax,_lasttimerread
+		mov    %eax,EXPORT_SYMBOL(lasttimerread)
 		add    %ecx,%eax
 		mov    $0xaba,%ecx
 		mul    %ecx
@@ -10746,6 +10746,6 @@ GLOBAL (smack_draw_callback)	/* 0x1E5A2C */
 		.long	0x0
 GLOBAL (timeradjust)
 		.long	0x0
-_lasttimerread:	/* 0x1ED5E4 */
+GLOBAL (lasttimerread)	/* 0x1ED5E4 */
 		.long	0x0
 
