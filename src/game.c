@@ -171,14 +171,14 @@ ushort word_1531E0 = 1;
 
 ushort next_mission = 1;
 
-extern ulong stored_l3d_next_object[1];
-extern ulong stored_l3d_next_object_face[1];
-extern ulong stored_l3d_next_object_face4[1];
-extern ulong stored_l3d_next_object_point[1];
-extern ulong stored_l3d_next_normal[1];
-extern ulong stored_l3d_next_face_texture[1];
-extern ulong stored_l3d_next_floor_texture[1];
-extern ulong stored_l3d_next_local_mat[1];
+extern ulong stored_l3d_next_object;
+extern ulong stored_l3d_next_object_face;
+extern ulong stored_l3d_next_object_face4;
+extern ulong stored_l3d_next_object_point;
+extern ulong stored_l3d_next_normal;
+extern ulong stored_l3d_next_face_texture;
+extern ulong stored_l3d_next_floor_texture;
+extern ulong stored_l3d_next_local_mat;
 extern ulong stored_level3d_inuse;
 
 extern unsigned char *display_palette;
@@ -2702,8 +2702,47 @@ void init_level(void)
 
 void init_level_3d(ubyte flag)
 {
+#if 0
     asm volatile ("call ASM_init_level_3d\n"
         : : "a" (flag));
+#endif
+    ushort i;
+
+    if (flag)
+    {
+        next_object = stored_l3d_next_object;
+        next_object_face = stored_l3d_next_object_face;
+        next_object_face4 = stored_l3d_next_object_face4;
+        next_object_point = stored_l3d_next_object_point;
+        next_normal = stored_l3d_next_normal;
+        next_face_texture = stored_l3d_next_face_texture;
+        next_floor_texture = stored_l3d_next_floor_texture;
+        next_local_mat = stored_l3d_next_local_mat;
+        stored_level3d_inuse = 0;
+    }
+    else
+    {
+        stored_l3d_next_object = next_object;
+        stored_l3d_next_object_face = next_object_face;
+        stored_l3d_next_object_face4 = next_object_face4;
+        stored_l3d_next_object_point = next_object_point;
+        stored_l3d_next_normal = next_normal;
+        stored_l3d_next_face_texture = next_face_texture;
+        stored_l3d_next_floor_texture = next_floor_texture;
+        stored_l3d_next_local_mat = next_local_mat;
+        stored_level3d_inuse = 1;
+
+        // Prepare objects for rockets
+        for (i = 0; i < WEP_ROCKETS_FIRED_LIMIT; i++)
+        {
+            copy_prim_obj_to_game_object(0, 0, -prim_unknprop01 - 20, 0);
+            unkn_object_shift_03(next_object - 1);
+            ingame.Rocket1[i] = next_object - 1;
+        }
+        unkn2_pos_x = 64;
+        unkn2_pos_y = 64;
+        unkn2_pos_z = 64;
+    }
 }
 
 void unkn1_handle_agent_groups(void)

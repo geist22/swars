@@ -842,14 +842,6 @@ void triangulation_init_edges(void)
 #endif
 }
 
-/** Part of triangulation allocation.
- */
-void triangulation_initialize(void)
-{
-    asm volatile ("call ASM_triangulation_initialize\n"
-        :  :  : "eax" );
-}
-
 void triangulation_allocate(int tgnNo, int maxTrigs)
 {
     asm volatile (

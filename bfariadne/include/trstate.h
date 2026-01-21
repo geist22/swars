@@ -60,6 +60,10 @@ struct Triangulation {
  */
 extern int triangulation_initied; // = 0;
 
+/** Initializes (clears) all triangulations.
+ */
+void triangulation_initialize(void);
+
 /** Triangulation states, active one and extras available for activation.
  */
 extern struct Triangulation triangulation[TRIANGULATIONS_COUNT];

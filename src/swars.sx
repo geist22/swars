@@ -181802,6 +181802,7 @@ GLOBAL (stored_g3d_next_local_mat)	/* 1aabc4 */
 		.long	0x0
 GLOBAL (stored_global3d_inuse)	/* 0x1AABC8 */
 		.long	0x0
+
 GLOBAL (things_init_times)	/* 0x1AABCC */
 		.long	0x0
 GLOBAL (word_1AABD0)	/* 0x1AABD0 */
