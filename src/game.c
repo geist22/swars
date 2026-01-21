@@ -169,15 +169,15 @@ ushort word_1531E0 = 1;
 
 ushort next_mission = 1;
 
-extern ulong stored_l3d_next_object;
-extern ulong stored_l3d_next_object_face;
-extern ulong stored_l3d_next_object_face4;
-extern ulong stored_l3d_next_object_point;
-extern ulong stored_l3d_next_normal;
-extern ulong stored_l3d_next_face_texture;
-extern ulong stored_l3d_next_floor_texture;
-extern ulong stored_l3d_next_local_mat;
-extern ulong stored_level3d_inuse;
+ulong stored_l3d_next_object;
+ulong stored_l3d_next_object_face;
+ulong stored_l3d_next_object_face4;
+ulong stored_l3d_next_object_point;
+ulong stored_l3d_next_normal;
+ulong stored_l3d_next_face_texture;
+ulong stored_l3d_next_floor_texture;
+ulong stored_l3d_next_local_mat;
+ulong stored_level3d_inuse;
 
 extern unsigned char *display_palette;
 extern int data_1c8428;
