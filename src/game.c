@@ -202,8 +202,8 @@ extern long gamep_unknval_14;
 extern long gamep_unknval_15;
 extern long gamep_unknval_16;
 
-extern ushort netgame_agent_pos_x[8][4];
-extern ushort netgame_agent_pos_z[8][4];
+ushort netgame_agent_pos_x[8][4];
+ushort netgame_agent_pos_z[8][4];
 
 extern long dword_155010;
 extern long dword_155014;
@@ -406,14 +406,6 @@ void load_texturemaps(void)
 void test_open(int num)
 {
     // Empty for production version
-}
-
-ushort my_count_lines(const char *text)
-{
-    ushort ret;
-    asm volatile ("call ASM_my_count_lines\n"
-        : "=r" (ret) : "a" (text));
-    return ret;
 }
 
 void load_prim_quad(void)

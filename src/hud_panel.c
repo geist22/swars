@@ -325,11 +325,6 @@ void draw_players_chat_talk(int x, int y)
 
 void SCANNER_draw_objective_info(int x, int y, int width)
 {
-#if 0
-    asm volatile (
-      "call ASM_SCANNER_draw_objective_info\n"
-        : : "a" (x), "d" (y), "b" (width));
-#endif
     int v48;
     int end_pos;
     struct TbAnyWindow bkpwnd;

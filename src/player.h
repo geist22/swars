@@ -115,6 +115,10 @@ extern PlayerInfo players[PLAYERS_LIMIT];
 extern PlayerIdx local_player_no;
 extern struct AgentInfo cryo_agents;
 
+extern ubyte playable_agents;
+
+/******************************************************************************/
+
 void place_single_player(void);
 
 void player_update_agents_from_cryo(PlayerInfo *p_player);

@@ -55,6 +55,8 @@ ubyte my_char_padding_bottom(uchar c);
 
 u32 my_string_width(const char *text);
 
+ushort my_count_lines(const char *text);
+
 ushort my_draw_text(short x, short y, const char *text, ushort startline);
 
 /** When drawing using this font, prefer converting strings to upper case.

@@ -33,6 +33,15 @@
 #include "weapon.h"
 #include "swlog.h"
 /******************************************************************************/
+ubyte default_agent_tiles_x[8] = {
+    45, 64, 40, 60, 30, 70, 20, 80,
+};
+ubyte default_agent_tiles_z[8] = {
+    46, 44, 60, 60, 30, 30, 70, 70,
+};
+
+ubyte playable_agents;
+/******************************************************************************/
 
 void player_mission_agents_reset(PlayerIdx plyr)
 {

@@ -168,11 +168,11 @@ GLOBAL_FUNC(ASM_place_default_player)	/* 0x0101F0 */
 		xor    %eax,%eax
 		mov    %si,%ax
 		xor    %edx,%edx
-		mov    default_agent_tiles_x(%eax),%dl
+		mov    EXPORT_SYMBOL(default_agent_tiles_x)(%eax),%dl
 		shl    $0x8,%edx
 		mov    %edx,0x10(%esp)
 		xor    %edx,%edx
-		mov    default_agent_tiles_z(%eax),%dl
+		mov    EXPORT_SYMBOL(default_agent_tiles_z)(%eax),%dl
 		shl    $0x8,%edx
 		mov    in_network_game,%cl
 		mov    %edx,0xc(%esp)
@@ -737,7 +737,7 @@ GLOBAL_FUNC(ASM_fill_netgame_agent_pos)	/* 0x010F10 */
 		jne    jump_10f7c
 		mov    0x18(%eax),%ebx
 		sar    $0x8,%ebx
-		mov    %bx,netgame_agent_pos_x(%edx)
+		mov    %bx,EXPORT_SYMBOL(netgame_agent_pos_x)(%edx)
 		mov    0x20(%eax),%ebx
 		add    $0x2,%edx
 		sar    $0x8,%ebx
@@ -117482,123 +117482,6 @@ GLOBAL_FUNC(ASM_my_set_text_window)
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC(ASM_my_char_to_upper)	/* 0x0A34C8 */
-/*----------------------------------------------------------------*/
-		push   %ebx
-		push   %edx
-		mov    %al,%bl
-		xor    %eax,%eax
-		mov    %bl,%al
-		cmp    $0x7f,%eax
-		jle    jump_a34f5
-		xor    %eax,%eax
-	jump_a34d7:
-		xor    %edx,%edx
-		mov    EXPORT_SYMBOL(subst_table_lower_to_upper)(%eax),%dl
-		test   %edx,%edx
-		je     jump_a3504
-		cmp    %dl,%bl
-		jne    jump_a34f0
-		mov    data_15521d(%eax),%al
-		pop    %edx
-		pop    %ebx
-		ret
-	jump_a34f0:
-		add    $0x2,%eax
-		jmp    jump_a34d7
-	jump_a34f5:
-		cmp    $0x61,%eax
-		jl     jump_a3504
-		cmp    $0x7a,%eax
-		jg     jump_a3504
-		sub    $0x20,%al
-		pop    %edx
-		pop    %ebx
-		ret
-	jump_a3504:
-		mov    %bl,%al
-		pop    %edx
-		pop    %ebx
-		ret
-
-
-/*----------------------------------------------------------------*/
-GLOBAL_FUNC(ASM_my_string_width)	/* 0x0A350C */
-/*----------------------------------------------------------------*/
-		push   %ebx
-		push   %ecx
-		push   %edx
-		push   %esi
-		push   %edi
-		mov    EXPORT_SYMBOL(lbFontPtr),%edi
-		mov    %eax,%ecx
-		mov    (%eax),%ah
-		xor    %esi,%esi
-		test   %ah,%ah
-		je     jump_a359d
-	jump_a3525:
-		xor    %eax,%eax
-		mov    (%ecx),%al
-		cmp    $0x1f,%eax
-		jle    jump_a3595
-		cmp    EXPORT_SYMBOL(small_med_font),%edi
-		jne    jump_a3543
-		cmpb   $0x65,language_3str
-		je     jump_a357c
-	jump_a3543:
-		mov    (%ecx),%bl
-		xor    %eax,%eax
-		mov    %bl,%al
-		cmp    $0x7f,%eax
-		jle    jump_a356d
-		xor    %eax,%eax
-	jump_a3550:
-		xor    %edx,%edx
-		mov    EXPORT_SYMBOL(subst_table_lower_to_upper)(%eax),%dl
-		test   %edx,%edx
-		je     jump_a357e
-		cmp    %dl,%bl
-		jne    jump_a3568
-		mov    data_15521d(%eax),%bl
-		jmp    jump_a357e
-	jump_a3568:
-		add    $0x2,%eax
-		jmp    jump_a3550
-	jump_a356d:
-		cmp    $0x61,%eax
-		jl     jump_a357e
-		cmp    $0x7a,%eax
-		jg     jump_a357e
-		sub    $0x20,%bl
-		jmp    jump_a357e
-	jump_a357c:
-		mov    %al,%bl
-	jump_a357e:
-		xor    %eax,%eax
-		mov    %bl,%al
-		sub    $0x1f,%eax
-		imul   $0x6,%eax,%eax
-		mov    %edi,%edx
-		mov    0x4(%edx,%eax,1),%al
-		and    $0xff,%eax
-		add    %eax,%esi
-	jump_a3595:
-		mov    0x1(%ecx),%dl
-		inc    %ecx
-		test   %dl,%dl
-		jne    jump_a3525
-	jump_a359d:
-		mov    %esi,%eax
-		mov    %edi,EXPORT_SYMBOL(lbFontPtr)
-		pop    %edi
-		pop    %esi
-		pop    %edx
-		pop    %ecx
-		pop    %ebx
-		ret
-
-
-/*----------------------------------------------------------------*/
 GLOBAL_FUNC(ASM_my_preprocess_text)	/* 0x0A35AC */
 /*----------------------------------------------------------------*/
 		push   %ebx
@@ -117814,7 +117697,7 @@ GLOBAL_FUNC(ASM_my_count_lines)	/* 0x0A36FC */
 		je     jump_a37af
 		cmp    %bl,%cl
 		jne    jump_a379b
-		mov    data_15521d(%edx),%dl
+		mov    EXPORT_SYMBOL(subst_table_lower_to_upper)+1(%edx),%dl
 		jmp    jump_a37b1
 	jump_a379b:
 		add    $0x2,%edx
@@ -118003,7 +117886,7 @@ GLOBAL_FUNC(ASM_draw_unkn20_subfunc_01)	/* 0x0A38F0 */
 		je     jump_a3987
 		cmp    %dl,%bl
 		jne    jump_a3975
-		mov    data_15521d(%eax),%bl
+		mov    EXPORT_SYMBOL(subst_table_lower_to_upper)+1(%eax),%bl
 		jmp    jump_a3987
 	jump_a3975:
 		add    $0x2,%eax
@@ -118169,7 +118052,7 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		je     jump_a3b39
 		cmp    %dl,%bl
 		jne    jump_a3b23
-		mov    data_15521d(%eax),%al
+		mov    EXPORT_SYMBOL(subst_table_lower_to_upper)+1(%eax),%al
 		jmp    jump_a3b3b
 	jump_a3b23:
 		add    $0x2,%eax
@@ -118475,7 +118358,7 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		je     jump_a3cac
 		cmp    %dl,%bl
 		jne    jump_a3c97
-		mov    data_15521d(%eax),%bl
+		mov    EXPORT_SYMBOL(subst_table_lower_to_upper)+1(%eax),%bl
 		jmp    jump_a3cac
 	jump_a3eb8:
 		mov    (%esp),%edi
@@ -118975,7 +118858,7 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		je     jump_a425a
 		cmp    %dl,%bl
 		jne    jump_a4245
-		mov    data_15521d(%eax),%bl
+		mov    EXPORT_SYMBOL(subst_table_lower_to_upper)+1(%eax),%bl
 		jmp    jump_a425a
 	jump_a445b:
 		cmp    EXPORT_SYMBOL(small_med_font),%eax
@@ -119399,7 +119282,7 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		je     jump_a471e
 		cmp    %dl,%bl
 		jne    jump_a4709
-		mov    data_15521d(%eax),%bl
+		mov    EXPORT_SYMBOL(subst_table_lower_to_upper)+1(%eax),%bl
 		jmp    jump_a471e
 	jump_a492d:
 		mov    $0x41,%eax
@@ -119792,7 +119675,7 @@ GLOBAL_FUNC(ASM_my_draw_text)	/* 0xA3A64 */
 		je     jump_a4b97
 		cmp    %dl,%bl
 		jne    jump_a4b82
-		mov    data_15521d(%eax),%bl
+		mov    EXPORT_SYMBOL(subst_table_lower_to_upper)+1(%eax),%bl
 		jmp    jump_a4b97
 	jump_a4db4:
 		movzwl 0x18(%esp),%ebp
@@ -130640,495 +130523,6 @@ GLOBAL_FUNC(ASM_SCANNER_unkn_func_203)	/* 0x0B00E8 */
 		pop    %edi
 		pop    %esi
 		ret    $0xc
-
-
-/*----------------------------------------------------------------*/
-GLOBAL_FUNC(ASM_SCANNER_draw_objective_info)	/* 0x0B0204 */
-/*----------------------------------------------------------------*/
-		push   %ecx
-		push   %esi
-		push   %edi
-		push   %ebp
-		sub    $0xf4,%esp
-		mov    %eax,%ebp
-		mov    %edx,0xa4(%esp)
-		mov    %ebx,0xcc(%esp)
-		add    %ebx,%eax
-		mov    %edx,%esi
-		dec    %eax
-		xor    %edi,%edi
-		mov    %eax,0xd0(%esp)
-		jmp    jump_b0258
-	jump_b022e:
-		mov    EXPORT_SYMBOL(ingame)+0x02C,%ebx # ingame.Scanner.Contrast
-		mov    EXPORT_SYMBOL(ingame)+0x030,%ecx # ingame.Scanner.Brightness
-		push   %ebx
-		mov    %esi,%edx
-		xor    %eax,%eax
-		push   %ecx
-		mov    EXPORT_SYMBOL(SCANNER_colour),%al
-		mov    0xd8(%esp),%ebx
-		push   %eax
-		mov    %esi,%ecx
-		mov    %ebp,%eax
-		inc    %edi
-		call   ac_SCANNER_unkn_func_203
-		inc    %esi
-	jump_b0258:
-		xor    %eax,%eax
-		mov    EXPORT_SYMBOL(lbDisplay)+100,%ax # lbDisplay.ScreenMode
-		cmp    $0x1,%eax
-		jne    jump_b026c
-		mov    $0x9,%eax
-		jmp    jump_b0271
-	jump_b026c:
-		mov    $0x12,%eax
-	jump_b0271:
-		cmp    %eax,%edi
-		jl     jump_b022e
-		mov    EXPORT_SYMBOL(lbDisplay)+40,%eax # lbDisplay.GraphicsWindowX
-		mov    %eax,0xc0(%esp)
-		mov    EXPORT_SYMBOL(lbDisplay)+44,%eax # lbDisplay.GraphicsWindowY
-		mov    %eax,0xbc(%esp)
-		mov    EXPORT_SYMBOL(lbDisplay)+48,%eax # lbDisplay.GraphicsWindowWidth
-		mov    %eax,0xc4(%esp)
-		mov    EXPORT_SYMBOL(lbDisplay)+52,%eax # lbDisplay.GraphicsWindowHeight
-		mov    %eax,0xc8(%esp)
-		xor    %eax,%eax
-		mov    EXPORT_SYMBOL(lbDisplay)+100,%ax # lbDisplay.ScreenMode
-		cmp    $0x1,%eax
-		jne    jump_b02b9
-		mov    $0x9,%ecx
-		jmp    jump_b02be
-	jump_b02b9:
-		mov    $0x12,%ecx
-	jump_b02be:
-		mov    0xcc(%esp),%ebx
-		mov    0xa4(%esp),%edx
-		lea    0x1(%ebp),%eax
-		sub    $0x2,%ebx
-		call   ac_LbScreenSetGraphicsWindow
-		movzbl EXPORT_SYMBOL(SCANNER_colour),%edi
-		xor    %edx,%edx
-		mov    EXPORT_SYMBOL(scroll_text),%eax
-		test   %eax,%eax # skip if the text pointer is NULL
-		jz     jump_b03cf
-		mov    EXPORT_SYMBOL(lbDisplay)+100,%dx # lbDisplay.ScreenMode
-		mov    scanner_unkn3CC,%esi
-		cmp    $0x1,%edx
-		jne    jump_b0365
-	jump_b02f7:
-		mov    (%eax),%dh
-		test   %dh,%dh
-		je     jump_b03cf
-		movsbl %dh,%edx
-		lea    0x1(%eax),%ebp
-		cmp    $0x1,%edx
-		jne    jump_b0315
-		movsbl 0x0(%ebp),%edi
-		lea    (%edx,%ebp,1),%eax
-		jmp    jump_b02f7
-	jump_b0315:
-		mov    (%eax),%al
-		and    $0xff,%eax
-		call   ac_my_char_to_upper
-		and    $0xff,%eax
-		imul   $0x6,%eax,%eax
-		mov    EXPORT_SYMBOL(small_font),%edx
-		xor    %ecx,%ecx
-		add    %edx,%eax
-		mov    EXPORT_SYMBOL(pixmap)+0x3800(%edi),%cl # pixmap.fade_table[?]
-		sub    $0xba,%eax
-		mov    $0x1,%edx
-		mov    %eax,0xa8(%esp)
-		mov    %eax,%ebx
-		mov    %esi,%eax
-		call   ac_LbSpriteDrawOneColour
-		mov    0xa8(%esp),%edx
-		xor    %eax,%eax
-		mov    0x4(%edx),%al
-		add    %eax,%esi
-		mov    %ebp,%eax
-		jmp    jump_b02f7
-	jump_b0365:
-		mov    (%eax),%dl
-		test   %dl,%dl
-		je     jump_b03cf
-		lea    0x1(%eax),%ebx
-		movsbl %dl,%edx
-		mov    %ebx,0xd4(%esp)
-		cmp    $0x1,%edx
-		jne    jump_b0385
-		movsbl (%ebx),%edi
-		lea    (%ebx,%edx,1),%eax
-		jmp    jump_b0365
-	jump_b0385:
-		mov    (%eax),%al
-		and    $0xff,%eax
-		call   ac_my_char_to_upper
-		and    $0xff,%eax
-		imul   $0x6,%eax,%eax
-		mov    $0x2,%ebx
-		mov    EXPORT_SYMBOL(small_font),%edx
-		xor    %ecx,%ecx
-		add    %edx,%eax
-		mov    EXPORT_SYMBOL(pixmap)+0x3800(%edi),%cl # pixmap.fade_table[0x3800+?]
-		lea    -0xba(%eax),%ebp
-		mov    %esi,%edx
-		mov    %ebp,%eax
-		call   ac_AppSpriteDrawDoubleOneColour
-		xor    %eax,%eax
-		mov    0x4(%ebp),%al
-		add    %eax,%esi
-		add    %eax,%esi
-		mov    0xd4(%esp),%eax
-		jmp    jump_b0365
-	jump_b03cf:
-		cmpb   $0x0,in_network_game
-		je     jump_b0411
-		xor    %edx,%edx
-		mov    EXPORT_SYMBOL(local_player_no),%dl
-		lea    0x0(,%edx,8),%eax
-		add    %edx,%eax
-		shl    $0x3,%eax
-		sub    %edx,%eax
-		add    %eax,%eax
-		mov    %eax,%edx
-		shl    $0x2,%eax
-		sub    %edx,%eax
-		mov    %eax,%edx
-		xor    %eax,%eax
-		mov    mouser,%al
-		mov    data_1a6390(%edx,%eax,1),%al
-		and    $0xff,%eax
-		cmp    $0x11,%eax
-		je     jump_b042d
-	jump_b0411:
-		test   %esi,%esi
-		jge    jump_b0421
-		mov    0xcc(%esp),%eax
-		mov    %eax,scanner_unkn3CC
-	jump_b0421:
-		subl   $0x4,scanner_unkn3CC
-		jmp    jump_b04af
-	jump_b042d:
-		mov    EXPORT_SYMBOL(lbDisplay)+24,%eax # lbDisplay.PhysicalScreenWidth
-		mov    EXPORT_SYMBOL(lbDisplay)+24,%edx # lbDisplay.PhysicalScreenWidth
-		sar    $0x2,%eax
-		sub    %eax,%edx
-		cmp    %edx,%esi
-		jge    jump_b044b
-		movl   $0xffffffec,scanner_unkn370
-	jump_b044b:
-		mov    EXPORT_SYMBOL(lbDisplay)+24,%eax # lbDisplay.PhysicalScreenWidth
-		sub    $0x10,%eax
-		cmp    %eax,%esi
-		jle    jump_b0461
-		movl   $0xa,scanner_unkn370
-	jump_b0461:
-		mov    scanner_unkn370,%eax
-		test   %eax,%eax
-		jle    jump_b0482
-		mov    scanner_unkn3CC,%ebx
-		lea    -0x1(%eax),%edx
-		sub    $0x2,%ebx
-		mov    %edx,scanner_unkn370
-		mov    %ebx,scanner_unkn3CC
-	jump_b0482:
-		mov    scanner_unkn370,%ecx
-		test   %ecx,%ecx
-		jge    jump_b04af
-		mov    scanner_unkn3CC,%edi
-		lea    0x1(%ecx),%esi
-		add    $0x2,%edi
-		mov    %esi,scanner_unkn370
-		mov    %edi,scanner_unkn3CC
-		test   %edi,%edi
-		jle    jump_b04af
-		xor    %eax,%eax
-		mov    %eax,scanner_unkn3CC
-	jump_b04af:
-		mov    0xc8(%esp),%ecx
-		mov    0xc4(%esp),%ebx
-		mov    0xbc(%esp),%edx
-		mov    0xc0(%esp),%eax
-		call   ac_LbScreenSetGraphicsWindow
-		cmpb   $0x0,in_network_game
-		je     jump_b08b4
-		xor    %eax,%eax
-		mov    EXPORT_SYMBOL(lbDisplay)+100,%ax # lbDisplay.ScreenMode
-		cmp    $0x1,%eax
-		jne    jump_b04fd
-		mov    $0xb,%ecx
-		mov    $0x19,%ebp
-		mov    %ecx,0xdc(%esp)
-		jmp    jump_b050e
-	jump_b04fd:
-		mov    $0x16,%ebx
-		mov    $0x33,%ebp
-		mov    %ebx,0xdc(%esp)
-	jump_b050e:
-		xor    %esi,%esi
-		mov    $unkn2_names,%edi
-		mov    %esi,0xac(%esp)
-		mov    %edi,0xd8(%esp)
-		mov    %esi,0xb0(%esp)
-		jmp    jump_b0871
-	jump_b052f:
-		mov    0xd8(%esp),%edx
-		mov    $player_unknCC9,%eax
-		mov    0xb0(%esp),%edi
-		mov    (%edx),%bl
-		add    %edi,%eax
-		test   %bl,%bl
-		je     jump_b0560
-		push   %eax
-		push   %edx
-		push   $ascSS_2
-		lea    0xc(%esp),%eax
-		push   %eax
-		call   ac_sprintf
-		add    $0x10,%esp
-		jmp    jump_b0573
-	jump_b0560:
-		push   %eax
-		push   $ascS_20
-	jump_b0566:
-		lea    0x8(%esp),%eax
-		push   %eax
-		call   ac_sprintf
-		add    $0xc,%esp
-	jump_b0573:
-		xor    %edx,%edx
-		mov    %esp,%esi
-		mov    EXPORT_SYMBOL(lbDisplay)+100,%dx # lbDisplay.ScreenMode
-		lea    0x1(%ebp),%eax
-		cmp    $0x1,%edx
-		jne    jump_b06cb
-		mov    (%esp),%cl
-		mov    0xdc(%esp),%edi
-		test   %cl,%cl
-		jne    jump_b059d
-		jmp    jump_b06c3
-	jump_b059d:
-		mov    $0xffffff4c,%edx
-		mov    %eax,0xb4(%esp)
-		mov    %edx,0xe0(%esp)
-	jump_b05b0:
-		mov    (%esi),%dl
-		cmp    $0x20,%dl
-		jne    jump_b05f6
-		lea    0x1(%esi),%eax
-		call   ac_font_word_length
-		lea    (%eax,%edi,1),%edx
-		mov    EXPORT_SYMBOL(lbDisplay)+24,%eax # lbDisplay.PhysicalScreenWidth
-		sub    $0x8,%eax
-		cmp    %eax,%edx
-		jl     jump_b05ee
-		mov    0xb4(%esp),%ecx
-		mov    0xdc(%esp),%edi
-		add    $0x6,%ecx
-		add    $0x6,%ebp
-		mov    %ecx,0xb4(%esp)
-		jmp    jump_b06a8
-	jump_b05ee:
-		add    $0x4,%edi
-		jmp    jump_b06a8
-	jump_b05f6:
-		xor    %eax,%eax
-		mov    %dl,%al
-		call   ac_my_char_to_upper
-		and    $0xff,%eax
-		imul   $0x6,%eax,%eax
-		mov    EXPORT_SYMBOL(small_font),%edx
-		add    %edx,%eax
-		sub    $0xba,%eax
-		mov    0xac(%esp),%edx
-		mov    %eax,0xec(%esp)
-		xor    %eax,%eax
-		mov    player_unkn0C9(%edx),%al
-		mov    0xe0(%esp),%ebx
-		shl    $0x2,%eax
-		add    %ebx,%eax
-		cmp    $0x3f,%eax
-		jle    jump_b0647
-		mov    $0x3f,%edx
-		sub    $0x3f,%eax
-		sub    %eax,%edx
-		mov    %edx,%eax
-	jump_b0647:
-		cmp    $0x3f,%eax
-		jle    jump_b0651
-		mov    $0x3f,%eax
-	jump_b0651:
-		test   %eax,%eax
-		jge    jump_b0657
-		xor    %eax,%eax
-	jump_b0657:
-		xor    %edx,%edx
-		shl    $0x8,%eax
-		mov    EXPORT_SYMBOL(colour_lookup)+0x08,%dl
-		xor    %ecx,%ecx
-		mov    0xec(%esp),%ebx
-		mov    EXPORT_SYMBOL(pixmap)(%edx,%eax,1),%cl # pixmap.fade_table[?]
-		mov    0xb4(%esp),%edx
-		lea    0x1(%edi),%eax
-		call   ac_LbSpriteDrawOneColour
-		mov    0xec(%esp),%ebx
-		mov    %ebp,%edx
-		xor    %ecx,%ecx
-		mov    %edi,%eax
-		mov    0xf0(%esp),%cl
-		call   ac_LbSpriteDrawOneColour
-		mov    0xec(%esp),%edx
-		xor    %eax,%eax
-		mov    0x4(%edx),%al
-		add    %eax,%edi
-	jump_b06a8:
-		mov    0xe0(%esp),%ecx
-		mov    0x1(%esi),%ah
-		inc    %ecx
-		inc    %esi
-		mov    %ecx,0xe0(%esp)
-		test   %ah,%ah
-		jne    jump_b05b0
-	jump_b06c3:
-		add    $0x6,%ebp
-		jmp    jump_b0809
-	jump_b06cb:
-		mov    (%esp),%bh
-		mov    0xdc(%esp),%edi
-		test   %bh,%bh
-		jne    jump_b06de
-		jmp    jump_b0806
-	jump_b06de:
-		mov    $0xffffff4c,%ecx
-		mov    %eax,0xe4(%esp)
-		mov    %ecx,0xb8(%esp)
-	jump_b06f1:
-		cmpb   $0x20,(%esi)
-		jne    jump_b0737
-		lea    0x1(%esi),%eax
-		call   ac_font_word_length
-		mov    EXPORT_SYMBOL(lbDisplay)+24,%edx # lbDisplay.PhysicalScreenWidth
-		add    %eax,%eax
-		sub    $0x10,%edx
-		add    %edi,%eax
-		cmp    %edx,%eax
-		jl     jump_b072f
-		mov    0xe4(%esp),%ebx
-		mov    0xdc(%esp),%edi
-		add    $0xc,%ebx
-		add    $0xc,%ebp
-		mov    %ebx,0xe4(%esp)
-		jmp    jump_b07eb
-	jump_b072f:
-		add    $0x8,%edi
-		jmp    jump_b07eb
-	jump_b0737:
-		xor    %eax,%eax
-		mov    (%esi),%al
-		call   ac_my_char_to_upper
-		and    $0xff,%eax
-		imul   $0x6,%eax,%eax
-		mov    EXPORT_SYMBOL(small_font),%edx
-		add    %edx,%eax
-		sub    $0xba,%eax
-		mov    0xac(%esp),%edx
-		mov    %eax,0xe8(%esp)
-		xor    %eax,%eax
-		mov    player_unkn0C9(%edx),%al
-		mov    0xb8(%esp),%edx
-		shl    $0x2,%eax
-		add    %edx,%eax
-		cmp    $0x3f,%eax
-		jle    jump_b0788
-		mov    $0x3f,%edx
-		sub    $0x3f,%eax
-		sub    %eax,%edx
-		mov    %edx,%eax
-	jump_b0788:
-		cmp    $0x3f,%eax
-		jle    jump_b0792
-		mov    $0x3f,%eax
-	jump_b0792:
-		test   %eax,%eax
-		jge    jump_b0798
-		xor    %eax,%eax
-	jump_b0798:
-		xor    %edx,%edx
-		shl    $0x8,%eax
-		mov    EXPORT_SYMBOL(colour_lookup)+0x08,%dl
-		xor    %ecx,%ecx
-		mov    0xe4(%esp),%ebx
-		mov    EXPORT_SYMBOL(pixmap)(%edx,%eax,1),%cl # pixmap.fade_table[?]
-		mov    0xe8(%esp),%eax
-		lea    0x1(%edi),%edx
-		call   ac_AppSpriteDrawDoubleOneColour
-		mov    0xe8(%esp),%eax
-		mov    %ebp,%ebx
-		xor    %ecx,%ecx
-		mov    %edi,%edx
-		mov    0xf0(%esp),%cl
-		call   ac_AppSpriteDrawDoubleOneColour
-		mov    0xe8(%esp),%edx
-		xor    %eax,%eax
-		mov    0x4(%edx),%al
-		add    %eax,%edi
-		add    %eax,%edi
-	jump_b07eb:
-		mov    0xb8(%esp),%ebx
-		mov    0x1(%esi),%ch
-		inc    %ebx
-		inc    %esi
-		mov    %ebx,0xb8(%esp)
-		test   %ch,%ch
-		jne    jump_b06f1
-	jump_b0806:
-		add    $0xc,%ebp
-	jump_b0809:
-		mov    0xac(%esp),%eax
-		decb   player_unkn0C9(%eax)
-		mov    0xac(%esp),%edx
-		xor    %eax,%eax
-		mov    player_unkn0C9(%edx),%al
-		test   %eax,%eax
-		jne    jump_b0838
-		mov    0xb0(%esp),%eax
-		xor    %bl,%bl
-		mov    %bl,player_unknCC9(%eax)
-	jump_b0838:
-		mov    0xd8(%esp),%edx
-		mov    0xb0(%esp),%ebx
-		mov    0xac(%esp),%ecx
-		add    $0x10,%edx
-		add    $0x80,%ebx
-		inc    %ecx
-		mov    %edx,0xd8(%esp)
-		mov    %ebx,0xb0(%esp)
-		mov    %ecx,0xac(%esp)
-		cmp    $0x8,%ecx
-		jge    jump_b08b4
-	jump_b0871:
-		mov    0xac(%esp),%eax
-		cmpb   $0x0,player_unkn0C9(%eax)
-		je     jump_b0838
-		mov    EXPORT_SYMBOL(net_player_colours)(%eax),%al
-		mov    %al,0xf0(%esp)
-		mov    0xb0(%esp),%eax
-		cmpb   $0x0,player_unknCC9(%eax)
-		jne    jump_b052f
-		mov    0xd8(%esp),%edx
-		push   %edx
-		push   $aSSaidNothing_
-		jmp    jump_b0566
-	jump_b08b4:
-		add    $0xf4,%esp
-		pop    %ebp
-		pop    %edi
-		pop    %esi
-		pop    %ecx
-		ret
 
 
 /*----------------------------------------------------------------*/
@@ -180253,12 +179647,6 @@ GLOBAL_FUNC(ASM__chain_intr_)	/* 0x11F748 */
 /*----------------------------------------------------------------*/
 .data
 
-default_agent_tiles_x:	/* 0x152E28 */
-		.ascii  "\x2d\x40\x28\x3c"
-		.ascii  "\x1e\x46\x14\x50"
-default_agent_tiles_z:	/* 0x152E30 */
-		.ascii  "\x2e\x2c\x3c\x3c"
-		.ascii  "\x1e\x1e\x46\x46"
 data_152e38:
 		.ascii  "\xff\xff\xff\xff\xff\xff\xff\xff"
 		.ascii  "\xff\xff\xff\xff\xff\xff\xff\xff"
@@ -180290,12 +179678,10 @@ GLOBAL (waft_table)	/* 0x152E9E */
 		.ascii  "\x00\x00\xfd\xff\xf9\xff\xf6\xff"
 		.ascii  "\xf2\xff\xef\xff\xeb\xff\xe8\xff"
 		.ascii  "\xe4\xff\x01\x00"
-data_152ee2:
 		.short  0x0
 
 GLOBAL (engn_xc)	/* 0x152EE4 */
 		.ascii  "\x80\x32"
-data_152ee6:
 		.short  0x0
 GLOBAL (engn_zc)	/* 0x152EE8 */
 		.ascii  "\x80\x32"
@@ -180632,9 +180018,9 @@ data_1551fc:
 		.ascii  "\x03\x00\x00\x00\x04\x00\x00\x00"
 		.ascii  "\x05\x00\x00\x00\x06\x00\x00\x00"
 		.ascii  "\x07\x00\x00\x00"
+
 GLOBAL (subst_table_lower_to_upper)	/* 0x15521C */
 		.byte	0xfc
-data_15521d:
 		.ascii  "\x9a\xf6\x99\xe4\x8e\xdf\xe1\xdc"
 		.ascii  "\x9a\xd6\x99\xc4\x8e\x81\x9a\x94"
 		.ascii  "\x99\x84\x8e\xe0\xb7\xe2\x41\xe9"
@@ -181148,16 +180534,6 @@ aDIdDTypeDSam_0:	/* 0x15EBCD */
 		.string "%d id %d type %d  sample %d vol %d sc %d pan %d"
 		.align  4
 
-aErrorAllocatio:	/* 0x15F14C */
-		.string "ERROR: Allocation %s.\n"
-aPressReturnT_0:	/* 0x15F163 */
-		.string "Press return to continue\n"
-aErrorFileS_:	/* 0x15F17D */
-		.string "ERROR: File %s.\n"
-aPressReturnToC:	/* 0x15F18E */
-		.string "Press return to continue\n"
-		.align	4
-
 GLOBAL (aGettingHeaderB)	/* 0x161630 */
 		.string "Getting header byte\n"
 GLOBAL (aResendingD)	/* 0x161645 */
@@ -181202,22 +180578,8 @@ aSingleErrorDet:	/* 0x16172A */
 		.string "Single error detected, syndrome = %02X\n"
 aDoubleErrorDet:	/* 0x161752 */
 		.string "Double error detected, syndrome = %02X\n"
-		.short  0x0
+		.align  4
 
-word_1621AC: /* TODO BUG: this is clearly referenced from below, with negative offset. */
-		.short  0x0
-		.ascii  "\x1f\x00\x3b\x00\x5a\x00\x78\x00"
-		.ascii  "\x97\x00\xb5\x00\xd4\x00\xf3\x00"
-		.ascii  "\x11\x01\x30\x01\x4e\x01"
-		.ascii  "\x6d\x01"
-		.short  0x0
-
-GLOBAL (netgame_agent_pos_x)	/* 0x176B80 */
-		.fill   0x40
-GLOBAL (netgame_agent_pos_z)	/* 0x176BC0 */
-		.fill   0x40
-GLOBAL (playable_agents)	/* 0x176C00 */
-		.long	0x0
 GLOBAL (net_agents__FourPacks)	/* 0x176C04 */
 		.fill   0x0a0
 data_176ca4:
