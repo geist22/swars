@@ -44,6 +44,9 @@ extern s32 engn_nuclear_shade_timer;
 extern s32 engn_nuclear_shade_x;
 extern s32 engn_nuclear_shade_y;
 extern s32 engn_nuclear_shade_z;
+
+ScreenTriangleRenderCallback screen_position_face_render_cb = NULL;
+
 /******************************************************************************/
 
 void set_floor_texture_uv(ushort sftex, struct PolyPoint *p_pt1, struct PolyPoint *p_pt2,

@@ -134,6 +134,7 @@
 #include "scandraw.h"
 #include "thing.h"
 #include "thing_search.h"
+#include "thing_onface.h"
 #include "tngcolisn.h"
 #include "tngobjdrw.h"
 #include "vehicle.h"
@@ -1720,6 +1721,20 @@ ubyte get_engine_inputs(void)
     return did_inp;
 }
 
+void screen_position_face_render_callback(
+  struct PolyPoint *p_pt1,
+  struct PolyPoint *p_pt2,
+  struct PolyPoint *p_pt3,
+  ushort face, ubyte type)
+{
+    PlayerInfo *p_locplayer;
+
+    p_locplayer = &players[local_player_no];
+    if (p_locplayer->TargetType < TrgTp_Unkn3) {
+        check_mouse_over_face(p_pt1, p_pt2, p_pt3, face, type);
+    }
+}
+
 void process_engine_unk3(void)
 {
     PlayerInfo *p_locplayer;
@@ -1727,6 +1742,7 @@ void process_engine_unk3(void)
     get_engine_inputs();
 
     reset_drawlist();
+    screen_position_face_render_cb = screen_position_face_render_callback;
     player_target_clear(local_player_no);
     mech_unkn_dw_1DC880 = mech_unkn_tile_x1;
     mech_unkn_dw_1DC884 = mech_unkn_tile_y1;

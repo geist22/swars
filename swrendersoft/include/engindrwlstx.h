@@ -63,6 +63,13 @@ struct SortLine {
 };
 
 struct TbSprite;
+struct PolyPoint;
+
+typedef void (*ScreenTriangleRenderCallback)(
+  struct PolyPoint *p_pt1,
+  struct PolyPoint *p_pt2,
+  struct PolyPoint *p_pt3,
+  ushort face, ubyte type);
 
 #pragma pack()
 /******************************************************************************/
@@ -88,6 +95,8 @@ extern ushort next_special_face;
 extern ushort next_special_face4;
 
 extern ubyte engine_render_lights;
+
+extern ScreenTriangleRenderCallback screen_position_face_render_cb;
 
 /******************************************************************************/
 

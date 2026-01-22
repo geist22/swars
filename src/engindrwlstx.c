@@ -53,7 +53,6 @@
 #include "player.h"
 #include "scandraw.h"
 #include "thing.h"
-#include "thing_onface.h"
 #include "swlog.h"
 #include "vehicle.h"
 /******************************************************************************/
@@ -1185,12 +1184,7 @@ void draw_object_face3_textrd(ushort face)
 
     if ((p_face->GFlags & FGFlg_Unkn04) != 0)
     {
-        PlayerInfo *p_locplayer;
-
-        p_locplayer = &players[local_player_no];
-        if (p_locplayer->TargetType < TrgTp_Unkn3) {
-            check_mouse_over_face(&point1, &point2, &point3, face, 1);
-        }
+        screen_position_face_render_cb(&point1, &point2, &point3, face, 1);
     }
 
     if (byte_1C844E) {
@@ -1365,12 +1359,7 @@ void draw_object_face4d_textrd(ushort face4)
 
     if ((p_face4->GFlags & FGFlg_Unkn04) != 0)
     {
-        PlayerInfo *p_locplayer;
-
-        p_locplayer = &players[local_player_no];
-        if (p_locplayer->TargetType < TrgTp_Unkn3) {
-            check_mouse_over_face(&point1, &point2, &point3, face4, 2);
-        }
+        screen_position_face_render_cb(&point1, &point2, &point3, face4, 2);
     }
 
     if (p_face4->Texture != 0)
@@ -1409,12 +1398,7 @@ void draw_object_face4d_textrd(ushort face4)
 
     if ((p_face4->GFlags & FGFlg_Unkn04) != 0)
     {
-        PlayerInfo *p_locplayer;
-
-        p_locplayer = &players[local_player_no];
-        if (p_locplayer->TargetType < TrgTp_Unkn3) {
-            check_mouse_over_face(&point4, &point3, &point2, face4, 3);
-        }
+        screen_position_face_render_cb(&point4, &point3, &point2, face4, 3);
     }
 }
 
@@ -1523,12 +1507,7 @@ void draw_object_face4_deep_rdr(ushort face4)
 
     if ((p_face4->GFlags & FGFlg_Unkn04) != 0)
     {
-        PlayerInfo *p_locplayer;
-
-        p_locplayer = &players[local_player_no];
-        if (p_locplayer->TargetType < TrgTp_Unkn3) {
-            check_mouse_over_face(&point1, &point2, &point3, face4, 2);
-        }
+        screen_position_face_render_cb(&point1, &point2, &point3, face4, 2);
     }
 
     poly_line(&point4, &point3);
@@ -1536,12 +1515,7 @@ void draw_object_face4_deep_rdr(ushort face4)
 
     if ((p_face4->GFlags & FGFlg_Unkn04) != 0)
     {
-        PlayerInfo *p_locplayer;
-
-        p_locplayer = &players[local_player_no];
-        if (p_locplayer->TargetType < TrgTp_Unkn3) {
-            check_mouse_over_face(&point4, &point3, &point2, face4, 3);
-        }
+        screen_position_face_render_cb(&point4, &point3, &point2, face4, 3);
     }
 }
 
@@ -1599,12 +1573,7 @@ void draw_object_face3_deep_rdr(ushort face)
 
     if ((p_face->GFlags & FGFlg_Unkn04) != 0)
     {
-        PlayerInfo *p_locplayer;
-
-        p_locplayer = &players[local_player_no];
-        if (p_locplayer->TargetType < TrgTp_Unkn3) {
-            check_mouse_over_face(&point1, &point2, &point3, face, 1);
-        }
+        screen_position_face_render_cb(&point1, &point2, &point3, face, 1);
     }
 }
 
@@ -1789,6 +1758,8 @@ void draw_drawitem_2(ushort dihead)
     struct DrawItem *itm;
     ushort iidx;
     ushort i;
+
+    assert(screen_position_face_render_cb != NULL);
 
     i = 0;
     for (iidx = dihead; iidx != 0; iidx = itm->Child)
