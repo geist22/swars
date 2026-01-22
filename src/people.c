@@ -26,13 +26,14 @@
 #include "bfutility.h"
 #include "ssampply.h"
 
+#include "engincolour.h"
+#include "drawtext.h"
+
 #include "bmbang.h"
 #include "bigmap.h"
 #include "building.h"
 #include "command.h"
-#include "display.h"
 #include "drawtext_wrp.h"
-#include "drawtext.h"
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"
 #include "engintrns.h"

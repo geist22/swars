@@ -26,6 +26,7 @@
 #include "bigmap.h"
 #include "display.h"
 #include "enginbckt.h"
+#include "engincolour.h"
 #include "engindrwlstx.h"
 #include "enginfloor.h"
 #include "enginsngobjs.h"

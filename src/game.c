@@ -40,6 +40,7 @@
 #include "bftringl.h"
 #include "bfscd.h"
 
+#include "engincolour.h"
 #include "enginprops.h"
 #include "engintxtrmap.h"
 
@@ -179,7 +180,6 @@ ulong stored_l3d_next_floor_texture;
 ulong stored_l3d_next_local_mat;
 ulong stored_level3d_inuse;
 
-extern unsigned char *display_palette;
 extern int data_1c8428;
 const char *primvehobj_fname = "qdata/primveh.obj";
 

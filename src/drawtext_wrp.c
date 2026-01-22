@@ -25,10 +25,10 @@
 
 #include "drawtext.h"
 #include "drawshape.h"
+#include "engincolour.h"
 #include "engintrns.h"
 
 #include "bigmap.h"
-#include "display.h"
 #include "swlog.h"
 /******************************************************************************/
 

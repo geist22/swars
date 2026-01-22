@@ -17725,7 +17725,7 @@ GLOBAL_FUNC (ASM_setup_color_lookups)	/* 0x4113C */
 		mov    display_palette,%eax
 		xor    %ecx,%ecx
 		xor    %ebx,%ebx
-		mov    %edx,EXPORT_SYMBOL(dword_1AA270)
+		mov    %edx,EXPORT_SYMBOL(colour_lookup_lock)
 		xor    %edx,%edx
 		call   ac_LbPaletteFindColour
 		mov    $0x3f,%ecx
@@ -17794,7 +17794,7 @@ GLOBAL_FUNC (ASM_setup_color_lookups)	/* 0x4113C */
 		mov    %ecx,EXPORT_SYMBOL(unkn_changing_color_counter1)
 		xor    %ebx,%ebx
 		mov    EXPORT_SYMBOL(unkn_changing_color_counter1),%ah
-		mov    %ebx,EXPORT_SYMBOL(dword_1AA270)
+		mov    %ebx,EXPORT_SYMBOL(colour_lookup_lock)
 		test   $0x1,%ah
 		je     jump_41276
 		mov    EXPORT_SYMBOL(colour_lookup)+0x05,%al
@@ -181568,7 +181568,7 @@ data_1aa21e:
 		.fill   0x4e
 GLOBAL (unkn_changing_color_counter1)	/* 0x1AA26C */
 		.long	0x0
-GLOBAL (dword_1AA270)	/* 0x1AA270 */
+GLOBAL (colour_lookup_lock)	/* 0x1AA270 */
 		.long	0x0
 
 GLOBAL (data_1aa330)	/* 0x1aa330 */

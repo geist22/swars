@@ -32,6 +32,7 @@
 #include "display.h"
 #include "drawtext.h"
 #include "enginbckt.h"
+#include "engincolour.h"
 #include "engindrwlstm.h"
 #include "enginfexpl.h"
 #include "enginfloor.h"

@@ -20,11 +20,13 @@ syndwarsfx_SOURCES = \
 	../swrendersoft/include/drawtext.h \
 	../swrendersoft/src/enginbckt.c \
 	../swrendersoft/include/enginbckt.h \
+	../swrendersoft/src/engincolour.c \
+	../swrendersoft/include/engincolour.h \
 	../swrendersoft/src/enginfloor.c \
+	../swrendersoft/include/enginfloor.h \
 	../swrendersoft/src/engindrwlstx_fac.c \
 	../swrendersoft/src/engindrwlstx_spr.c \
 	../swrendersoft/include/engindrwlstx.h \
-	../swrendersoft/include/enginfloor.h \
 	../swrendersoft/src/enginlights.c \
 	../swrendersoft/include/enginlights.h \
 	../swrendersoft/src/enginpeff.c \

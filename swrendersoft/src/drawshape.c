@@ -22,9 +22,11 @@
 #include "bfline.h"
 #include "bfscreen.h"
 
-#include "display.h"
+#include "engincolour.h"
 #include "engintrns.h"
 #include "privrdlog.h"
+
+#include "display.h"
 /******************************************************************************/
 
 void draw_line_transformed_col(int x1, int y1, int z1, int x2, int y2, int z2, TbPixel colour)

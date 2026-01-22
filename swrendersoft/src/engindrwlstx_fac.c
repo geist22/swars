@@ -24,7 +24,7 @@
 #include "bfgentab.h"
 #include "poly.h"
 
-#include "display.h"
+#include "engincolour.h"
 #include "enginfexpl.h"
 #include "enginprops.h"
 #include "enginsngobjs.h"

@@ -27,8 +27,8 @@
 #include "bfsprite.h"
 #include "insspr.h"
 
-#include "display.h"
 #include "drawtext.h"
+#include "engincolour.h"
 #include "engindrwlstm.h"
 #include "enginshrapn.h"
 #include "enginzoom.h"

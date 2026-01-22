@@ -24,6 +24,11 @@
 #include "bfmath.h"
 #include "bfmemut.h"
 
+#include "drawtext.h"
+#include "engincolour.h"
+#include "enginfexpl.h"
+#include "enginlights.h"
+
 #include "bat.h"
 #include "triangls.h"
 #include "trpoints.h"
@@ -33,9 +38,6 @@
 #include "campaign.h"
 #include "command.h"
 #include "display.h"
-#include "drawtext.h"
-#include "enginfexpl.h"
-#include "enginlights.h"
 #include "enginpriobjs.h"
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"

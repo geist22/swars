@@ -8,7 +8,7 @@
  * @par Comment:
  *     Just a header file - #defines, typedefs, function prototypes etc.
  * @author   Tomasz Lis
- * @date     19 Apr 2022 - 27 Aug 2023
+ * @date     19 Apr 2022 - 20 Jan 2026
  * @par  Copying and copyrights:
  *     This program is free software; you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
