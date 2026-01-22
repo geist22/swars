@@ -1735,6 +1735,26 @@ void screen_position_face_render_callback(
     }
 }
 
+void screen_sorted_sprite_1a_render_callback(ushort sspr)
+{
+    struct Thing *p_thing;
+    PlayerInfo *p_locplayer;
+
+    p_locplayer = &players[local_player_no];
+    p_thing = game_sort_sprites[sspr].PThing;
+    if ((p_locplayer->TargetType <= TrgTp_DroppedTng) && (p_thing->Type == SmTT_DROPPED_ITEM)) {
+        check_mouse_overlap_item(sspr);
+    }
+
+    if ((p_locplayer->TargetType < TrgTp_Unkn6) && (p_thing->Type == TT_MINE))
+    {
+        if ((p_thing->SubType == 7) || (p_thing->SubType == 3))
+            check_mouse_overlap_item(sspr);
+        else if (p_thing->SubType == 48)
+            check_mouse_overlap(sspr);
+    }
+}
+
 void process_engine_unk3(void)
 {
     PlayerInfo *p_locplayer;
@@ -1743,6 +1763,7 @@ void process_engine_unk3(void)
 
     reset_drawlist();
     screen_position_face_render_cb = screen_position_face_render_callback;
+    screen_sorted_sprite_render_cb = screen_sorted_sprite_1a_render_callback;
     player_target_clear(local_player_no);
     mech_unkn_dw_1DC880 = mech_unkn_tile_x1;
     mech_unkn_dw_1DC884 = mech_unkn_tile_y1;

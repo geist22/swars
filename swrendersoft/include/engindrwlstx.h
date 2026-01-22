@@ -70,6 +70,7 @@ typedef void (*ScreenTriangleRenderCallback)(
   struct PolyPoint *p_pt2,
   struct PolyPoint *p_pt3,
   ushort face, ubyte type);
+typedef void (*ScreenSortSpriteRenderCallback)(ushort sspr);
 
 #pragma pack()
 /******************************************************************************/
@@ -97,6 +98,7 @@ extern ushort next_special_face4;
 extern ubyte engine_render_lights;
 
 extern ScreenTriangleRenderCallback screen_position_face_render_cb;
+extern ScreenSortSpriteRenderCallback screen_sorted_sprite_render_cb;
 
 /******************************************************************************/
 

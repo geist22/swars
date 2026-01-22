@@ -55,6 +55,9 @@ extern struct TbSprite *unkn1_spr;
 
 extern struct TbSprite *m_sprites;
 extern struct TbSprite *m_sprites_end;
+
+ScreenSortSpriteRenderCallback screen_sorted_sprite_render_cb = NULL;
+
 /******************************************************************************/
 
 void draw_sort_line(struct SortLine *p_sline)

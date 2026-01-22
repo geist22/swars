@@ -44,7 +44,6 @@
 #include "enginshrapn.h"
 #include "engintrns.h"
 #include "frame_sprani.h"
-#include "game_data.h"
 #include "game_options.h"
 #include "game_speed.h"
 #include "game_sprts.h"
@@ -363,7 +362,6 @@ ubyte check_mouse_overlap(ushort sspr)
     struct ScreenBoxBase box;
     struct SortSprite *p_sspr;
     struct Frame *p_frm;
-    PlayerInfo *p_locplayer;
 
     p_sspr = &game_sort_sprites[sspr];
     box.X = p_sspr->X + ((overall_scale * word_1A5834) >> 8);
@@ -373,19 +371,20 @@ ubyte check_mouse_overlap(ushort sspr)
     box.Width = (overall_scale * p_frm->SWidth) >> 9;
     box.Height = (overall_scale * p_frm->SHeight) >> 9;
 
-    p_locplayer = &players[local_player_no];
     if (box.Width < 16)
     {
-        box.X -= ((17 - box.Width) >> 1);
+        box.X -= ((16 + 1 - box.Width) >> 1);
         box.Width = 16;
     }
     if (box.Height < 20) {
-        box.Y -= ((21 - box.Height) >> 1);
+        box.Y -= ((20 + 1 - box.Height) >> 1);
         box.Height = 20;
     }
 
     if (in_box(lbDisplay.MMouseX, lbDisplay.MMouseY, box.X, box.Y, box.Width, box.Height))
     {
+        PlayerInfo *p_locplayer;
+        p_locplayer = &players[local_player_no];
         p_locplayer->Target = p_sspr->PThing->ThingOffset;
         p_locplayer->TargetType = TrgTp_Unkn7;
         return 1;
@@ -521,26 +520,6 @@ ubyte check_mouse_over_unkn2(ushort sspr, struct Thing *p_thing)
     return 0;
 }
 
-void draw_sort_sprite1a_callback(ushort sspr)
-{
-    struct Thing *p_thing;
-    PlayerInfo *p_locplayer;
-
-    p_locplayer = &players[local_player_no];
-    p_thing = game_sort_sprites[sspr].PThing;
-    if ((p_locplayer->TargetType <= TrgTp_DroppedTng) && (p_thing->Type == SmTT_DROPPED_ITEM)) {
-        check_mouse_overlap_item(sspr);
-    }
-
-    if ((p_locplayer->TargetType < TrgTp_Unkn6) && (p_thing->Type == TT_MINE))
-    {
-        if ((p_thing->SubType == 7) || (p_thing->SubType == 3))
-            check_mouse_overlap_item(sspr);
-        else if (p_thing->SubType == 48)
-            check_mouse_overlap(sspr);
-    }
-}
-
 void draw_sort_sprite1a(ushort sspr)
 {
 #if 0
@@ -556,7 +535,7 @@ void draw_sort_sprite1a(ushort sspr)
     word_1A5834 = 120;
     word_1A5836 = 120;
     draw_sorted_sprite1a(p_sspr->Frame, p_sspr->X, p_sspr->Y, p_sspr->Brightness);
-    draw_sort_sprite1a_callback(sspr);
+    screen_sorted_sprite_render_cb(sspr);
 }
 
 void draw_floor_tile1a(ushort tl)
@@ -1760,6 +1739,7 @@ void draw_drawitem_2(ushort dihead)
     ushort i;
 
     assert(screen_position_face_render_cb != NULL);
+    assert(screen_sorted_sprite_render_cb != NULL);
 
     i = 0;
     for (iidx = dihead; iidx != 0; iidx = itm->Child)
