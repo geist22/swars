@@ -105,6 +105,10 @@ extern ScreenSortSpriteRenderCallback screen_sorted_sprite_render_cb;
 void draw_unkn1_scaled_alpha_sprite(ushort fr, int scr_x, int scr_y,
   ushort scale, ushort alpha);
 void draw_sorted_sprite1a(ushort frm, short x, short y, ubyte csel);
+void draw_sort_sprite1a(ushort sspr);
+
+void draw_floor_tile1a(ushort tl);
+void draw_floor_tile1b(ushort tl);
 
 uint cummulate_shade_from_quick_lights(ushort light_first);
 

@@ -423,6 +423,24 @@ void draw_sort_sprite1c(ushort sspr)
     draw_sort_sprite1c_sub(p_sspr->Frame, p_sspr->X, p_sspr->Y, p_sspr->Brightness, p_sspr->Scale);
 }
 
+void draw_sort_sprite1a(ushort sspr)
+{
+#if 0
+    asm volatile (
+      "call ASM_draw_sort_sprite1a\n"
+        : : "a" (a1));
+    return;
+#endif
+    struct SortSprite *p_sspr;
+
+    p_sspr = &game_sort_sprites[sspr];
+
+    word_1A5834 = 120;
+    word_1A5836 = 120;
+    draw_sorted_sprite1a(p_sspr->Frame, p_sspr->X, p_sspr->Y, p_sspr->Brightness);
+    screen_sorted_sprite_render_cb(sspr);
+}
+
 /**
  * Draw smoke cloud sprite.
  *

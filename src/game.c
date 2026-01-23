@@ -1309,6 +1309,10 @@ void change_current_map(ushort mapno)
     init_things();
     load_mad_pc(mapno);
     fill_floor_textures();
+    if (current_map == 11) // map011 Orbital Station
+        render_floor_flags |= RendFlrF_NonPlanetary;
+    else
+        render_floor_flags &= ~RendFlrF_NonPlanetary;
 }
 
 void traffic_unkn_func_01(void)
