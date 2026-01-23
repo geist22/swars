@@ -2544,6 +2544,12 @@ TbBool person_init_specific_command(struct Thing *p_person, ushort cmd)
     StateChRes res;
     short othertng;
 
+    if ((debug_log_things & 0x01) != 0) {
+        LOGSYNC("%s %d inits %s %d",
+          thing_type_name(p_person->Type, p_person->SubType),
+          (int)p_person->ThingOffset, command_codename(cmd), (int)cmd);
+    }
+
     p_cmd = &game_commands[cmd];
     switch (p_cmd->Type)
     {
