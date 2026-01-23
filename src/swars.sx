@@ -18564,7 +18564,7 @@ GLOBAL_FUNC(ASM_obj_face4_create_normal)	/* 0x420f8 */
 	jump_4211f:
 		mov    %esp,%edx
 		and    $0xffff,%eax
-		call   calc_normal4
+		call   ac_calc_normal4
 		mov    EXPORT_SYMBOL(next_normal),%cx
 		xor    %eax,%eax
 		mov    %cx,%ax
@@ -23258,7 +23258,7 @@ GLOBAL_FUNC (ASM_calc_normal)	/* 0x045B84 */
 
 
 /*----------------------------------------------------------------*/
-calc_normal4:	/* 0x045DD4 */
+GLOBAL_FUNC(ASM_calc_normal4)	/* 0x045DD4 */
 /*----------------------------------------------------------------*/
 		push   %ebx
 		push   %ecx

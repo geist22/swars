@@ -2517,10 +2517,12 @@ void camera_track_thing(short thing, TbBool revert)
     {
         ThingIdx dcthing;
         dcthing = players[local_player_no].DirectControl[0];
+        LOGDBG("Revert track to dcthing offs=%d", (int)dcthing);
         ingame.TrackThing = 0;
         game_set_cam_track_thing_xz(dcthing);
         return;
     }
+    LOGDBG("Begin track thing offs=%d", (int)thing);
     ingame.TrackThing = thing;
 }
 
