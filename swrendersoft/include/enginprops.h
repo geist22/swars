@@ -29,6 +29,7 @@ extern "C" {
 
 enum RenderFloorFlags {
   RendFlrF_NonPlanetary = 0x01,
+  RendFlrF_WobblyTerrain = 0x02,
 };
 
 #pragma pack()

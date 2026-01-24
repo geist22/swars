@@ -1309,10 +1309,16 @@ void change_current_map(ushort mapno)
     init_things();
     load_mad_pc(mapno);
     fill_floor_textures();
+
     if (current_map == 11) // map011 Orbital Station
         render_floor_flags |= RendFlrF_NonPlanetary;
     else
         render_floor_flags &= ~RendFlrF_NonPlanetary;
+
+    if (current_map == 9) // map009 Singapore on-water map
+        render_floor_flags |= RendFlrF_WobblyTerrain;
+    else
+        render_floor_flags &= ~RendFlrF_WobblyTerrain;
 }
 
 void traffic_unkn_func_01(void)

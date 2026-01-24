@@ -25,6 +25,8 @@
 #include "insspr.h"
 #include <assert.h>
 
+#include "enginfloor.h"
+#include "enginpeff.h"
 #include "enginprops.h"
 #include "render_gpoly.h"
 
@@ -34,10 +36,7 @@
 #include "enginbckt.h"
 #include "engincolour.h"
 #include "engindrwlstm.h"
-#include "enginfexpl.h"
-#include "enginfloor.h"
 #include "enginlights.h"
-#include "enginpeff.h"
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"
 #include "enginshadws.h"
