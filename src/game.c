@@ -201,9 +201,6 @@ extern long gamep_unknval_14;
 extern long gamep_unknval_15;
 extern long gamep_unknval_16;
 
-ushort netgame_agent_pos_x[8][4];
-ushort netgame_agent_pos_z[8][4];
-
 extern long dword_155010;
 extern long dword_155014;
 extern long dword_155018;
@@ -3145,14 +3142,6 @@ ushort make_group_into_players(ushort group, ushort plyr, ushort max_agent, shor
         players[plyr].MyAgent[plagent] = &things[0];
 
     return n;
-}
-
-int place_default_player(ushort player_id, TbBool replace)
-{
-    int ret;
-    asm volatile ("call ASM_place_default_player\n"
-        : "=r" (ret) : "a" (player_id), "d" (replace));
-    return ret;
 }
 
 void place_single_player(void)

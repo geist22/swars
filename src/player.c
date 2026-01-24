@@ -22,6 +22,7 @@
 #include "bfutility.h"
 #include "ssampply.h"
 
+#include "bigmap.h"
 #include "display.h"
 #include "game.h"
 #include "game_options.h"
@@ -39,6 +40,9 @@ ubyte default_agent_tiles_x[8] = {
 ubyte default_agent_tiles_z[8] = {
     46, 44, 60, 60, 30, 30, 70, 70,
 };
+
+ushort netgame_agent_pos_x[PLAYERS_LIMIT][4];
+ushort netgame_agent_pos_z[PLAYERS_LIMIT][4];
 
 ubyte playable_agents;
 /******************************************************************************/
@@ -515,6 +519,168 @@ void player_update_thermal(PlayerIdx plyr)
         ingame.Flags &= ~GamF_ThermalView;
         change_brightness(0);
     }
+}
+
+struct Thing *replace_thing_given_thing_idx(int x, int y, int z, ubyte owner, ThingIdx pv_thing)
+{
+    struct Thing *p_pv_thing;
+    struct Thing *p_nx_thing;
+
+    p_pv_thing = &things[pv_thing];
+    if (on_mapwho(p_pv_thing))
+        delete_node(p_pv_thing);
+    unkn01_thing_idx = pv_thing;
+    p_nx_thing = new_sim_person(x, y, z, 101u);
+    p_nx_thing->State = 0;
+    p_nx_thing->Owner = owner;
+    return p_nx_thing;
+}
+
+int place_default_player(ushort player_id, TbBool replace)
+{
+#if 0
+    int ret;
+    asm volatile ("call ASM_place_default_player\n"
+        : "=r" (ret) : "a" (player_id), "d" (replace));
+    return ret;
+#endif
+    PlayerInfo *p_plyr;
+    int dblmode;
+    int grptype;
+    int cor_x, cor_z;
+    short nagents, agent_no;
+    ubyte net_plyr_id;
+
+    grptype = -1;
+
+    p_plyr = &players[player_id];
+    if (p_plyr->DoubleMode != 0)
+        nagents = p_plyr->DoubleMode + 1;
+    else
+        nagents = 4;
+    if (p_plyr->MissionAgents < (1 << nagents) - 1)
+    {
+        switch (p_plyr->MissionAgents)
+        {
+        case 1:
+            nagents = 1;
+            break;
+        case 3:
+            nagents = 2;
+            break;
+        case 7:
+            nagents = 3;
+            break;
+        }
+    }
+    if (in_network_game)
+        nagents = 4;
+
+    cor_x = TILE_TO_MAPCOORD(default_agent_tiles_x[player_id], 0);
+    cor_z = TILE_TO_MAPCOORD(default_agent_tiles_z[player_id], 0);
+
+    net_plyr_id = player_id;
+    if (in_network_game)
+    {
+        if ((net_game_play_flags & NGPF_Unkn20) != 0)
+            net_plyr_id = LbRandomAnyShort() & 7;
+    }
+
+    for (agent_no = 0; agent_no < nagents; agent_no++)
+    {
+        struct Thing *p_pv_agent;
+        struct Thing *p_agent;
+
+        if (in_network_game) {
+            cor_x = netgame_agent_pos_x[net_plyr_id][agent_no];
+            cor_z = netgame_agent_pos_z[net_plyr_id][agent_no];
+        }
+        p_pv_agent = p_plyr->MyAgent[agent_no];
+        if ((p_pv_agent == NULL) || ((p_pv_agent->Flag & 0x02) != 0) || (replace))
+        {
+            short health;
+            ubyte grp;
+
+            p_agent = replace_thing_given_thing_idx(cor_x, 0, cor_z, 1, p_pv_agent->ThingOffset);
+            p_plyr->MyAgent[agent_no] = p_agent;
+
+            health = 3 * p_agent->Health;
+            p_agent->Health = health;
+            p_agent->U.UPerson.MaxHealth = health;
+
+            grp = level_def.PlayableGroups[player_id];
+            p_agent->Flag = TngF_PlayerAgent;
+            p_agent->U.UPerson.Group = grp;
+            p_agent->U.UPerson.EffectiveGroup = grp;
+
+            dblmode = p_plyr->DoubleMode;
+            if (dblmode < agent_no)
+            {
+                if (in_network_game && dblmode)
+                {
+                    p_agent->State = 13;
+                    p_agent->Flag |= TngF_Unkn02000000 | TngF_Destroyed;
+                }
+                p_plyr->DirectControl[agent_no] = 0;
+            }
+            else
+            {
+                p_plyr->DirectControl[agent_no] = p_agent->ThingOffset;
+                p_agent->Flag |= 0x1000;
+                if ((local_player_no == player_id) && (agent_no == 0))
+                {
+                    ingame.TrackX = PRCCOORD_TO_MAPCOORD(p_agent->X);
+                    ingame.TrackZ = PRCCOORD_TO_MAPCOORD(p_agent->Z);
+                }
+            }
+            lbDisplay.RightButton = 0;
+            lbDisplay.LeftButton = 0;
+
+            p_agent->State = 0;
+            p_agent->U.UPerson.Mood = 0;
+            p_agent->U.UPerson.ComHead = 0;
+            p_agent->U.UPerson.Target2 = 0;
+            p_agent->PTarget = 0;
+            p_agent->U.UPerson.ComCur = agent_no + (player_id << 2);
+            p_agent->OldTarget = 0;
+            p_agent->U.UPerson.WeaponsCarried = p_plyr->Weapons[agent_no] | 0x400000;
+            p_agent->U.UPerson.UMod = p_plyr->Mods[agent_no];
+            p_agent->U.UPerson.CurrentWeapon = WEP_NULL;
+            if (in_network_game)
+            {
+                grptype = group_types[player_id];
+                do_weapon_quantities_net_to_player(p_agent);
+            }
+            else
+            {
+                player_agent_set_weapon_quantities_max(p_agent);
+            }
+
+            switch (grptype)
+            {
+            case 0:
+                p_agent->SubType = SubTT_PERS_AGENT;
+                reset_person_frame(p_agent);
+                break;
+            case 1:
+                p_agent->SubType = SubTT_PERS_ZEALOT;
+                reset_person_frame(p_agent);
+                break;
+            case 2:
+                p_agent->SubType = SubTT_PERS_PUNK_M;
+                reset_person_frame(p_agent);
+                break;
+            default:
+                break;
+            }
+            switch_person_anim_mode(p_agent, 0);
+        }
+        cor_x += 256;
+    }
+    playable_agents = 4;
+    player_agents_init_prev_weapon(player_id);
+    player_agents_clear_weapon_delays(player_id);
+    return 0;
 }
 
 /******************************************************************************/
