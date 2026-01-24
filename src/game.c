@@ -2985,6 +2985,7 @@ void init_player(void)
     gamep_unknval_12 = 0;
     nav_stats__ThisTurn = 0;
     ingame.Flags &= ~GamF_Unkn0100;
+    ingame.Flags &= ~GamF_ThermalView;
     gamep_unknval_16 = 0;
     init_level_3d(0);
     init_level();
