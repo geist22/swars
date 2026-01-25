@@ -26,6 +26,7 @@
 #include "thing.h"
 #include "game.h"
 #include "game_options.h"
+#include "agent_cosmetics.h"
 /******************************************************************************/
 
 short find_unused_group_id(TbBool largest)
@@ -618,17 +619,17 @@ void reset_group_member_player_agent(PlayerIdx plyr, ushort plagent, ushort high
     }
 
     // Set FrameId for Agents' heads
-    if (p_person->SubType == SubTT_PERS_AGENT) {
-        p_person->U.UPerson.FrameId.Version[0] = PlayerAgentHeads[plagent];
+    if (p_agent->SubType == SubTT_PERS_AGENT) {
+        p_agent->U.UPerson.FrameId.Version[0] = PlayerAgentHeads[plagent];
     }
     else {
-        p_person->U.UPerson.FrameId.Version[0] = 0;
+        p_agent->U.UPerson.FrameId.Version[0] = 0;
     }
 
     // Set High Priest Robes if enabled
-    if ((p_person->SubType == SubTT_PERS_ZEALOT) && (PlayerZealotIsHighPriest[plagent] == true)) {
+    if ((p_agent->SubType == SubTT_PERS_ZEALOT) && (PlayerZealotIsHighPriest[plagent] == true)) {
         // TODO this is a bad, temporary workaround - needs a proper implementation by changing animations instead
-        p_person->SubType = SubTT_PERS_HIGH_PRIEST;
+        p_agent->SubType = SubTT_PERS_HIGH_PRIEST;
     }
 
     if (p_agent->U.UPerson.CurrentWeapon == 0)
