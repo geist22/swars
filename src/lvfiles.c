@@ -25,6 +25,7 @@
 #include "bfmemut.h"
 
 #include "drawtext.h"
+#include "engincam.h"
 #include "engincolour.h"
 #include "enginfexpl.h"
 #include "enginlights.h"
@@ -37,7 +38,6 @@
 #include "bigmap.h"
 #include "campaign.h"
 #include "command.h"
-#include "display.h"
 #include "enginpriobjs.h"
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"

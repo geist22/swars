@@ -26,6 +26,7 @@
 #include "bigmap.h"
 #include "display.h"
 #include "enginbckt.h"
+#include "engincam.h"
 #include "engintrns.h"
 #include "engindrwlstm.h"
 #include "engindrwlstx.h"

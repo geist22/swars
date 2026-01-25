@@ -40,6 +40,7 @@
 #include "bftringl.h"
 #include "bfscd.h"
 
+#include "engincam.h"
 #include "engincolour.h"
 #include "enginprops.h"
 #include "engintxtrmap.h"
