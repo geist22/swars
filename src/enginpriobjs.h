@@ -50,7 +50,7 @@ extern ushort unkn2_pos_z;
 
 void read_primveh_obj(const char *fname, int a2);
 
-void copy_prim_obj_to_game_object(short tx, short tz, short a3, short ty);
+ushort copy_prim_obj_to_game_object(short tx, short tz, short a3, short ty);
 /******************************************************************************/
 #ifdef __cplusplus
 }
