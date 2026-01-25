@@ -19,6 +19,7 @@
 #include "enginpriobjs.h"
 
 #include "bffile.h"
+#include "bfmemut.h"
 
 #include "enginpritxtr.h"
 #include "enginsngobjs.h"
@@ -193,7 +194,7 @@ ushort obj_face3_create_normal(short face)
         }
         nrml = next_normal++;
         p_nnrml = &game_normals[nrml];
-        memcpy(p_nnrml, &loc_nrml, sizeof(struct Normal));
+        LbMemoryCopy(p_nnrml, &loc_nrml, sizeof(struct Normal));
         i = nrml;
     }
     return i;
@@ -225,7 +226,7 @@ ushort obj_face4_create_normal(short face)
         }
         nrml = next_normal++;
         p_nnrml = &game_normals[nrml];
-        memcpy(p_nnrml, &loc_nrml, sizeof(struct Normal));
+        LbMemoryCopy(p_nnrml, &loc_nrml, sizeof(struct Normal));
         i = nrml;
     }
     return i;
@@ -257,7 +258,7 @@ void update_texture_from_anim_tmap(ushort ani_tmap)
             new_txtr = next_floor_texture++;
             p_nftextr = &game_textures[new_txtr];
             p_pftextr = &game_textures[prv_txtr];
-            memcpy(p_nftextr, p_pftextr, sizeof(struct SingleFloorTexture));
+            LbMemoryCopy(p_nftextr, p_pftextr, sizeof(struct SingleFloorTexture));
             p_panitmap->TMap[i] = new_txtr;
         }
     }
@@ -331,7 +332,7 @@ void copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty)
         p_psngpt = &prim_object_points[pt];
         p_nsngpt = &game_object_points[new_pt];
 
-        memcpy(p_nsngpt, p_psngpt, sizeof(struct SinglePoint));
+        LbMemoryCopy(p_nsngpt, p_psngpt, sizeof(struct SinglePoint));
 
         point_unkn_func_03(p_nsngpt);
         if (ingame.LowerMemoryUse == 3)
@@ -370,7 +371,7 @@ void copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty)
                     return;
                 new_txtr = next_face_texture++;
                 p_nstxtr = &game_face_textures[new_txtr];
-                memcpy(p_nstxtr, p_pstxtr, sizeof(struct SingleTexture));
+                LbMemoryCopy(p_nstxtr, p_pstxtr, sizeof(struct SingleTexture));
             }
             p_nface->Texture = new_txtr;
             if (ingame.LowerMemoryUse == 3)
@@ -433,7 +434,7 @@ void copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty)
                 new_anitmap = next_anim_tmap++;
                 p_nanitmap = &game_anim_tmaps[new_anitmap];
                 p_panitmap = &game_anim_tmaps[p_pface->Texture + 1];
-                memcpy(p_nanitmap, p_panitmap, sizeof(struct AnimTmap));
+                LbMemoryCopy(p_nanitmap, p_panitmap, sizeof(struct AnimTmap));
                 update_texture_from_anim_tmap(new_anitmap);
 
                 if (next_floor_texture + 1 > mem_game[1].N)
@@ -463,7 +464,7 @@ void copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty)
                     return;
                 new_txtr = next_floor_texture++;
                 p_nftxtr = &game_textures[new_txtr];
-                memcpy(p_nftxtr, p_pftxtr, sizeof(struct SingleFloorTexture));
+                LbMemoryCopy(p_nftxtr, p_pftxtr, sizeof(struct SingleFloorTexture));
             }
             p_nface->Texture = new_txtr;
             if (ingame.LowerMemoryUse == 3)

@@ -111499,7 +111499,7 @@ GLOBAL_FUNC(ASM_show_audio_tracks_box)	/* 0x094844 */
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC(ASM_show_netgame_unkn1)	/* 0x094990 */
+GLOBAL_FUNC(ASM_show_options_visual_main_box)	/* 0x094990 */
 /*----------------------------------------------------------------*/
 		push   %ebx
 		push   %ecx
