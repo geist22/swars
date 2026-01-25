@@ -30,6 +30,8 @@
 #include "bfscd.h"
 #include "ssampply.h"
 
+#include "engincolour.h"
+
 #include "bflib_joyst.h"
 #include "campaign.h"
 #include "display.h"

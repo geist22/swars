@@ -253,8 +253,6 @@ extern long mech_unkn_dw_1DC894;
 extern char *people_credits_desc[];
 extern char *people_credits_groups[];
 
-extern ubyte playable_agents;
-
 extern char *mission_briefing_text;
 #define mission_briefing_text_len 16384
 
@@ -356,7 +354,6 @@ int xdo_prev_frame(ubyte anislot);
 void flic_unkn03(ubyte a1);
 
 void my_preprocess_text(char *text);
-ushort my_count_lines(const char *text);
 
 TbBool player_try_spend_money(long cost);
 void campaign_new_game_prepare(void);

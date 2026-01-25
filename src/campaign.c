@@ -31,6 +31,7 @@
 #include "lvfiles.h"
 #include "lvobjctv.h"
 #include "misstat.h"
+#include "mydraw.h"
 #include "wadfile.h"
 #include "swlog.h"
 /******************************************************************************/

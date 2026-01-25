@@ -35,12 +35,6 @@ ushort my_font_flags = MyFF_NONE;
 
 ubyte my_char_to_upper(ubyte c)
 {
-#if 0
-    ubyte ret;
-    asm volatile ("call ASM_my_char_to_upper\n"
-        : "=r" (ret) : "a" (c));
-    return ret;
-#endif
     return fontchrtoupper(c);
 }
 
@@ -176,12 +170,6 @@ ubyte my_char_width(uchar c)
 
 u32 my_string_width(const char *text)
 {
-#if 0
-    int ret;
-    asm volatile ("call ASM_my_string_width\n"
-        : "=r" (ret) : "a" (text));
-    return ret;
-#endif
     const char *p_chr;
     u32 str_w;
     ubyte c;
@@ -201,6 +189,14 @@ u32 my_string_width(const char *text)
         }
     }
     return str_w;
+}
+
+ushort my_count_lines(const char *text)
+{
+    ushort ret;
+    asm volatile ("call ASM_my_count_lines\n"
+        : "=r" (ret) : "a" (text));
+    return ret;
 }
 
 /** Parse control char from given string, return num bytes recognized.

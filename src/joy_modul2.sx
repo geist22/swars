@@ -173,7 +173,7 @@ GLOBAL_FUNC(ASM_joy_func_081)	/* 0x0F3948 */
 
 
 /*----------------------------------------------------------------*/
-vfx1_unkn_func_13:	/* 0x0F3A6B */
+GLOBAL_FUNC(ASM_vfx1_unkn_func_13)	/* 0x0F3A6B */
 /*----------------------------------------------------------------*/
 		push   %ebp
 		mov    %esp,%ebp
@@ -903,7 +903,7 @@ GLOBAL_FUNC(ASM_vfx1_unkn_func_12)	/* 0x0F4980 */
 		mov    %eax,%ebx
 		mov    %edx,%eax
 		cwtl
-		call   vfx1_unkn_func_13
+		call   ac_vfx1_unkn_func_13
 		movswl %ax,%ecx
 		xor    %edx,%edx
 		cmp    $0xffffffff,%ecx
