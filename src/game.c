@@ -2655,8 +2655,8 @@ void init_level(void)
         ingame.DetailLevel = 1;
         for (plyr_no = 0; plyr_no < PLAYERS_LIMIT; plyr_no++)
         {
-            player_unkn0C9[plyr_no] = 0;
-            player_unknCC9[plyr_no][0] =  '\0';
+            player_message_timer[plyr_no] = 0;
+            player_message_text[plyr_no][0] =  '\0';
         }
     }
     else
@@ -5340,12 +5340,12 @@ ubyte do_user_interface(void)
         {
             clear_key_pressed(KC_RETURN);
             if ((p_locplayer->PanelState[mouser] != PANEL_STATE_SEND_MESSAGE)
-              && (player_unkn0C9[local_player_no] <= 140))
+              && (player_message_timer[local_player_no] <= 140))
             {
                 p_locplayer->PanelState[mouser] = PANEL_STATE_SEND_MESSAGE;
                 reset_buffered_keys();
-                player_unknCC9[local_player_no][0] = '\0';
-                player_unkn0C9[local_player_no] = 0;
+                player_message_text[local_player_no][0] = '\0';
+                player_message_timer[local_player_no] = 0;
                 scanner_unkn370 = 0;
                 scanner_unkn3CC = 0;
                 did_inp |= GINPUT_DIRECT;
