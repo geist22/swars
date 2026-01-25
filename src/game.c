@@ -6623,37 +6623,16 @@ void draw_mission_concluded(void)
     }
     else
     {
-        const char *text_time;
         uint tm_h, tm_m, tm_s;
 
         tm_h = tm / 3600;
         tm_m = tm / 60;
         tm_s = tm % 60;
-        switch (language_3str[0])
-        {
-        case 'e':
-        default:
-            text_time = "Time";
-            break;
-        case 'f':
-            text_time = "Heure";
-            break;
-        case 'g':
-            text_time = "Zeit";
-            break;
-        case 'i':
-            text_time = "Tempo";
-            break;
-        case 's':
-            if (language_3str[1] == 'p')
-                text_time = "Tiempo";
-            else
-                text_time = "Tid";
-            break;
-        }
+
         sprintf(unknmsg_str, "%s %s %s %s %02d:%02d:%02d", gui_strings[GSTR_CHK_MISSION_STA_PRE],
           gui_strings[GSTR_ENM_MISSION_STATUS + 1 + ingame.MissionStatus],
-          gui_strings[GSTR_CHK_MISSION_STA_SUF_KEYS], text_time, tm_h, tm_m % 60, tm_s);
+          gui_strings[GSTR_CHK_MISSION_STA_SUF_KEYS], gui_strings[GSTR_CHK_MISSION_STA_TIME],
+          tm_h, tm_m % 60, tm_s);
         data_15319c = unknmsg_str;
         scroll_text = unknmsg_str;
         LbStringToUpper(unknmsg_str);
