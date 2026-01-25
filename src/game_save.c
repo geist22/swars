@@ -272,7 +272,7 @@ void read_user_settings(void)
 
     if (fh == INVALID_FILE)
     {
-        LOGSYNC("Build-in defaults used, as could not open \"%s\" file", fname);
+        LOGSYNC_F("Build-in defaults used, as could not open \"%s\" file", fname);
         set_default_user_settings();
         read_mortal_salt_backup = true;
     } else
