@@ -446,7 +446,6 @@ TbBool group_has_no_less_members_persuaded_by_person(ushort group, ThingIdx ownt
 void reset_default_player_agent(PlayerIdx plyr, short plagent, struct Thing *p_agent, short new_type)
 {
     PlayerInfo *p_player;
-    short health;
     ubyte grp;
 
     p_player = &players[plyr];
@@ -454,18 +453,13 @@ void reset_default_player_agent(PlayerIdx plyr, short plagent, struct Thing *p_a
     p_player->MyAgent[plagent] = p_agent;
     p_agent->Flag = TngF_PlayerAgent;
 
-    health = 3 * p_agent->Health;
-    p_agent->Health = health;
-    p_agent->U.UPerson.MaxHealth = health;
-
     grp = level_def.PlayableGroups[plyr];
     p_agent->U.UPerson.Group = grp;
     p_agent->U.UPerson.EffectiveGroup = grp;
 
     if (plagent > p_player->DoubleMode)
     {
-        if (in_network_game && p_player->DoubleMode)
-        {
+        if (in_network_game && p_player->DoubleMode) {
             p_agent->State = PerSt_DEAD;
             p_agent->Flag |= TngF_Unkn02000000 | TngF_Destroyed;
         }
@@ -475,30 +469,36 @@ void reset_default_player_agent(PlayerIdx plyr, short plagent, struct Thing *p_a
     {
         p_player->DirectControl[plagent] = p_agent->ThingOffset;
         p_agent->Flag |= TngF_Unkn1000;
-        if ((local_player_no == plyr) && (plagent == 0))
-        {
+        if ((local_player_no == plyr) && (plagent == 0)) {
             game_set_cam_track_thing_xz(p_agent->ThingOffset);
         }
     }
 
-    p_agent->State = 0;
+    p_agent->State = PerSt_NONE;
+    { // Why are we tripling the health?
+        uint health;
+        health = 3 * p_agent->Health;
+        if (health > PERSON_MAX_HEALTH_LIMIT)
+            health = PERSON_MAX_HEALTH_LIMIT;
+        p_agent->Health = health;
+        p_agent->U.UPerson.MaxHealth = health;
+    }
     p_agent->U.UPerson.Mood = 0;
     p_agent->U.UPerson.ComHead = 0;
     p_agent->U.UPerson.Target2 = 0;
     p_agent->PTarget = NULL;
     p_agent->U.UPerson.ComCur = (plyr << 2) + plagent;
     p_agent->OldTarget = 0;
-    p_agent->U.UPerson.WeaponsCarried = p_player->Weapons[plagent] | (1 << (WEP_ENERGYSHLD-1));
-    p_agent->U.UPerson.UMod = p_player->Mods[plagent];
-    p_agent->U.UPerson.CurrentWeapon = WEP_NULL;
+
+    {
+        p_agent->U.UPerson.WeaponsCarried = p_player->Weapons[plagent] | (1 << (WEP_ENERGYSHLD-1));
+        p_agent->U.UPerson.UMod = p_player->Mods[plagent];
+        p_agent->U.UPerson.CurrentWeapon = WEP_NULL;
+    }
     if (in_network_game)
-    {
         do_weapon_quantities_net_to_player(p_agent);
-    }
     else
-    {
         player_agent_set_weapon_quantities_max(p_agent);
-    }
 
     switch (new_type)
     {
@@ -526,6 +526,9 @@ void reset_group_member_player_agent(PlayerIdx plyr, ushort plagent, ushort high
 
     p_player = &players[plyr];
 
+    p_player->MyAgent[plagent] = p_agent;
+    p_agent->Flag |= TngF_PlayerAgent;
+
     if (plagent > p_player->DoubleMode)
     {
         if (in_network_game && p_player->DoubleMode) {
@@ -542,17 +545,9 @@ void reset_group_member_player_agent(PlayerIdx plyr, ushort plagent, ushort high
             game_set_cam_track_thing_xz(p_agent->ThingOffset);
         }
     }
-    players[plyr].MyAgent[plagent] = p_agent;
-    p_agent->Flag |= TngF_PlayerAgent;
-#if 0 // This no longer makes sense - campaign is given with mission number
-    if (!cmdln_param_bcg)
-    {
-        if (p_agent->SubType == SubTT_PERS_ZEALOT)
-            background_type = 1;
-    }
-#endif
+
     if (in_network_game)
-        set_person_stats_type(p_agent, 1);
+        set_person_stats_type(p_agent, SubTT_PERS_AGENT);
 
     if (ingame.GameMode != GamM_Unkn2)
     {
