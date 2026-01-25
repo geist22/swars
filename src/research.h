@@ -54,6 +54,7 @@ struct ResearchInfo
 #pragma pack()
 /******************************************************************************/
 extern struct ResearchInfo research;
+extern TbBool use_classic_research;
 extern char scientist_lost_reason[60];
 extern short daily_scientist_death_chance_permil;
 extern short scientists_per_group;
