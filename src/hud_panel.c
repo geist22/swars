@@ -32,6 +32,7 @@
 #include "bfutility.h"
 #include "ssampply.h"
 
+#include "engincolour.h"
 #include "engintxtrmap.h"
 #include "render_gpoly.h"
 
@@ -297,16 +298,16 @@ void draw_players_chat_talk(int x, int y)
     {
         char *plname;
 
-        if (player_unkn0C9[plyr] == 0)
+        if (player_message_timer[plyr] == 0)
             continue;
 
         plname = unkn2_names[plyr];
-        if (player_unknCC9[plyr][0] != '\0')
+        if (player_message_text[plyr][0] != '\0')
         {
             if (plname[0] != '\0')
-                sprintf(locstr, "%s: %s", plname, player_unknCC9[plyr]);
+                sprintf(locstr, "%s: %s", plname, player_message_text[plyr]);
             else
-                sprintf(locstr, "%s", player_unknCC9[plyr]);
+                sprintf(locstr, "%s", player_message_text[plyr]);
         }
         else
         {
@@ -317,19 +318,15 @@ void draw_players_chat_talk(int x, int y)
         lbDisplay.DrawColour = net_player_colours[plyr];
         AppTextDrawMissionChatMessage(base_x, &pos_y, plyr, locstr);
 
-        if ( !--player_unkn0C9[plyr] ) {
-            player_unknCC9[plyr][0] = '\0';
+        player_message_timer[plyr]--;
+        if (player_message_timer[plyr] == 0) {
+            player_message_text[plyr][0] = '\0';
         }
     }
 }
 
 void SCANNER_draw_objective_info(int x, int y, int width)
 {
-#if 0
-    asm volatile (
-      "call ASM_SCANNER_draw_objective_info\n"
-        : : "a" (x), "d" (y), "b" (width));
-#endif
     int v48;
     int end_pos;
     struct TbAnyWindow bkpwnd;

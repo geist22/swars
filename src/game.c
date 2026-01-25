@@ -40,6 +40,7 @@
 #include "bftringl.h"
 #include "bfscd.h"
 
+#include "engincolour.h"
 #include "enginprops.h"
 #include "engintxtrmap.h"
 
@@ -133,14 +134,13 @@
 #include "scandraw.h"
 #include "thing.h"
 #include "thing_search.h"
+#include "thing_onface.h"
 #include "tngcolisn.h"
 #include "tngobjdrw.h"
 #include "vehicle.h"
 #include "wadfile.h"
 #include "weapon.h"
 #include "wrcities.h"
-
-#include "timer.h"
 
 /** Expected sizes for font DAT/TAB files for resolution 320x200.
  * Each file has 205 sprites, TAB has 6 bytes per entry, DAT varies to use empirical value.
@@ -171,17 +171,16 @@ ushort word_1531E0 = 1;
 
 ushort next_mission = 1;
 
-extern ulong stored_l3d_next_object[1];
-extern ulong stored_l3d_next_object_face[1];
-extern ulong stored_l3d_next_object_face4[1];
-extern ulong stored_l3d_next_object_point[1];
-extern ulong stored_l3d_next_normal[1];
-extern ulong stored_l3d_next_face_texture[1];
-extern ulong stored_l3d_next_floor_texture[1];
-extern ulong stored_l3d_next_local_mat[1];
-extern ulong stored_level3d_inuse;
+ulong stored_l3d_next_object;
+ulong stored_l3d_next_object_face;
+ulong stored_l3d_next_object_face4;
+ulong stored_l3d_next_object_point;
+ulong stored_l3d_next_normal;
+ulong stored_l3d_next_face_texture;
+ulong stored_l3d_next_floor_texture;
+ulong stored_l3d_next_local_mat;
+ulong stored_level3d_inuse;
 
-extern unsigned char *display_palette;
 extern int data_1c8428;
 const char *primvehobj_fname = "qdata/primveh.obj";
 
@@ -201,9 +200,6 @@ extern long nav_stats__ThisTurn;
 extern long gamep_unknval_14;
 extern long gamep_unknval_15;
 extern long gamep_unknval_16;
-
-extern ushort netgame_agent_pos_x[8][4];
-extern ushort netgame_agent_pos_z[8][4];
 
 extern long dword_155010;
 extern long dword_155014;
@@ -406,14 +402,6 @@ void load_texturemaps(void)
 void test_open(int num)
 {
     // Empty for production version
-}
-
-ushort my_count_lines(const char *text)
-{
-    ushort ret;
-    asm volatile ("call ASM_my_count_lines\n"
-        : "=r" (ret) : "a" (text));
-    return ret;
 }
 
 void load_prim_quad(void)
@@ -1318,6 +1306,16 @@ void change_current_map(ushort mapno)
     init_things();
     load_mad_pc(mapno);
     fill_floor_textures();
+
+    if (current_map == 11) // map011 Orbital Station
+        render_floor_flags |= RendFlrF_NonPlanetary;
+    else
+        render_floor_flags &= ~RendFlrF_NonPlanetary;
+
+    if (current_map == 9) // map009 Singapore on-water map
+        render_floor_flags |= RendFlrF_WobblyTerrain;
+    else
+        render_floor_flags &= ~RendFlrF_WobblyTerrain;
 }
 
 void traffic_unkn_func_01(void)
@@ -1730,6 +1728,40 @@ ubyte get_engine_inputs(void)
     return did_inp;
 }
 
+void screen_position_face_render_callback(
+  struct PolyPoint *p_pt1,
+  struct PolyPoint *p_pt2,
+  struct PolyPoint *p_pt3,
+  ushort face, ubyte type)
+{
+    PlayerInfo *p_locplayer;
+
+    p_locplayer = &players[local_player_no];
+    if (p_locplayer->TargetType < TrgTp_Unkn3) {
+        check_mouse_over_face(p_pt1, p_pt2, p_pt3, face, type);
+    }
+}
+
+void screen_sorted_sprite_1a_render_callback(ushort sspr)
+{
+    struct Thing *p_thing;
+    PlayerInfo *p_locplayer;
+
+    p_locplayer = &players[local_player_no];
+    p_thing = game_sort_sprites[sspr].PThing;
+    if ((p_locplayer->TargetType <= TrgTp_DroppedTng) && (p_thing->Type == SmTT_DROPPED_ITEM)) {
+        check_mouse_overlap_item(sspr);
+    }
+
+    if ((p_locplayer->TargetType < TrgTp_Unkn6) && (p_thing->Type == TT_MINE))
+    {
+        if ((p_thing->SubType == 7) || (p_thing->SubType == 3))
+            check_mouse_overlap_item(sspr);
+        else if (p_thing->SubType == 48)
+            check_mouse_overlap(sspr);
+    }
+}
+
 void process_engine_unk3(void)
 {
     PlayerInfo *p_locplayer;
@@ -1737,6 +1769,8 @@ void process_engine_unk3(void)
     get_engine_inputs();
 
     reset_drawlist();
+    screen_position_face_render_cb = screen_position_face_render_callback;
+    screen_sorted_sprite_render_cb = screen_sorted_sprite_1a_render_callback;
     player_target_clear(local_player_no);
     mech_unkn_dw_1DC880 = mech_unkn_tile_x1;
     mech_unkn_dw_1DC884 = mech_unkn_tile_y1;
@@ -2621,8 +2655,8 @@ void init_level(void)
         ingame.DetailLevel = 1;
         for (plyr_no = 0; plyr_no < PLAYERS_LIMIT; plyr_no++)
         {
-            player_unkn0C9[plyr_no] = 0;
-            player_unknCC9[plyr_no][0] =  '\0';
+            player_message_timer[plyr_no] = 0;
+            player_message_text[plyr_no][0] =  '\0';
         }
     }
     else
@@ -2710,8 +2744,47 @@ void init_level(void)
 
 void init_level_3d(ubyte flag)
 {
+#if 0
     asm volatile ("call ASM_init_level_3d\n"
         : : "a" (flag));
+#endif
+    ushort i;
+
+    if (flag)
+    {
+        next_object = stored_l3d_next_object;
+        next_object_face = stored_l3d_next_object_face;
+        next_object_face4 = stored_l3d_next_object_face4;
+        next_object_point = stored_l3d_next_object_point;
+        next_normal = stored_l3d_next_normal;
+        next_face_texture = stored_l3d_next_face_texture;
+        next_floor_texture = stored_l3d_next_floor_texture;
+        next_local_mat = stored_l3d_next_local_mat;
+        stored_level3d_inuse = 0;
+    }
+    else
+    {
+        stored_l3d_next_object = next_object;
+        stored_l3d_next_object_face = next_object_face;
+        stored_l3d_next_object_face4 = next_object_face4;
+        stored_l3d_next_object_point = next_object_point;
+        stored_l3d_next_normal = next_normal;
+        stored_l3d_next_face_texture = next_face_texture;
+        stored_l3d_next_floor_texture = next_floor_texture;
+        stored_l3d_next_local_mat = next_local_mat;
+        stored_level3d_inuse = 1;
+
+        // Prepare objects for rockets
+        for (i = 0; i < WEP_ROCKETS_FIRED_LIMIT; i++)
+        {
+            copy_prim_obj_to_game_object(0, 0, -prim_unknprop01 - 20, 0);
+            unkn_object_shift_03(next_object - 1);
+            ingame.Rocket1[i] = next_object - 1;
+        }
+        unkn2_pos_x = 64;
+        unkn2_pos_y = 64;
+        unkn2_pos_z = 64;
+    }
 }
 
 void unkn1_handle_agent_groups(void)
@@ -2909,6 +2982,7 @@ void init_player(void)
     gamep_unknval_12 = 0;
     nav_stats__ThisTurn = 0;
     ingame.Flags &= ~GamF_Unkn0100;
+    ingame.Flags &= ~GamF_ThermalView;
     gamep_unknval_16 = 0;
     init_level_3d(0);
     init_level();
@@ -2935,209 +3009,6 @@ void init_player(void)
 
     init_game_controls();
     preprogress_game_turns();
-}
-
-ushort make_group_into_players(ushort group, ushort plyr, ushort max_agent, short new_type)
-{
-    struct Thing *p_person;
-    PlayerInfo *p_player;
-    ushort plagent, high_tier;
-    ulong n;
-
-    p_player = &players[plyr];
-    p_person = NULL;
-    plagent = 0;
-    high_tier = 0;
-    for (n = things_used_head; n != 0; n = p_person->LinkChild)
-    {
-        p_person = &things[n];
-        if ((p_person->U.UPerson.Group != group) || (p_person->Type != TT_PERSON))
-            continue;
-
-        if (plagent > p_player->DoubleMode)
-        {
-            if (in_network_game && p_player->DoubleMode) {
-                p_person->State = PerSt_DEAD;
-                p_person->Flag |= TngF_Unkn02000000 | TngF_Destroyed;
-            }
-            p_player->DirectControl[plagent] = 0;
-        }
-        else
-        {
-            p_player->DirectControl[plagent] = p_person->ThingOffset;
-            p_person->Flag |= TngF_Unkn1000;
-            if ((plyr == local_player_no) && (plagent == 0)) {
-                game_set_cam_track_thing_xz(p_person->ThingOffset);
-            }
-        }
-        players[plyr].MyAgent[plagent] = p_person;
-        p_person->Flag |= TngF_PlayerAgent;
-#if 0 // This no longer makes sense - campaign is given with mission number
-        if (!cmdln_param_bcg)
-        {
-            if (p_person->SubType == SubTT_PERS_ZEALOT)
-                background_type = 1;
-        }
-#endif
-        if (in_network_game)
-            set_person_stats_type(p_person, 1);
-
-        if (ingame.GameMode != GamM_Unkn2)
-        {
-            if ((p_person->SubType == SubTT_PERS_AGENT) || (p_person->SubType == SubTT_PERS_ZEALOT))
-            {
-                p_person->U.UPerson.WeaponsCarried = p_player->Weapons[high_tier] | (1 << (WEP_ENERGYSHLD-1));
-                p_person->U.UPerson.UMod.Mods = p_player->Mods[high_tier].Mods;
-            }
-            p_person->U.UPerson.CurrentWeapon = 0;
-        }
-
-        person_init_preplay_command(p_person);
-
-        // Player agents can go with default loadout for the level, but usually we want them to
-        // use either the equipment selected by the player (either local one or from the net).
-        // Setting command to player control is required to properly update weapons
-        p_person->U.UPerson.ComCur = (plyr << 2) + plagent;
-        if (ingame.GameMode == GamM_Unkn3)
-            player_agent_set_weapon_quantities_proper(p_person);
-        else
-            player_agent_set_weapon_quantities_max(p_person);
-
-        // Using any commands other than preplay on player agents requires explicit marking
-        // in form of use of EXECUTE_COMS.
-        if ((p_person->U.UPerson.ComHead != 0) &&
-            (game_commands[p_person->U.UPerson.ComHead].Type == PCmd_EXECUTE_COMS))
-        {
-            // Now we can re-set current command to the real command
-            p_person->U.UPerson.ComCur = p_person->U.UPerson.ComHead;
-            person_start_executing_commands(p_person);
-        }
-        else
-        {
-            p_person->U.UPerson.ComCur = (plyr << 2) + plagent;
-            p_person->U.UPerson.ComHead = 0;
-        }
-
-        {
-            short cor_x, cor_z;
-            get_thing_position_mapcoords(&cor_x, NULL, &cor_z, p_person->ThingOffset);
-            netgame_agent_pos_x[plyr][plagent] = cor_x;
-            netgame_agent_pos_z[plyr][plagent] = cor_z;
-        }
-        p_person->State = PerSt_NONE;
-        { // Why are we tripling the health?
-            uint health;
-            health = 3 * p_person->Health;
-            if (health > PERSON_MAX_HEALTH_LIMIT)
-                health = PERSON_MAX_HEALTH_LIMIT;
-            p_person->Health = health;
-            p_person->U.UPerson.MaxHealth = health;
-        }
-
-        switch (new_type)
-        {
-        case 0:
-            p_person->SubType = SubTT_PERS_AGENT;
-            reset_person_frame(p_person);
-            break;
-        case 1:
-            p_person->SubType = SubTT_PERS_ZEALOT;
-            reset_person_frame(p_person);
-            break;
-        case 2:
-            p_person->SubType = SubTT_PERS_PUNK_M;
-            reset_person_frame(p_person);
-            break;
-        }
-        p_person->U.UPerson.FrameId.Version[0] = 0;
-        if (p_person->U.UPerson.CurrentWeapon == 0)
-        {
-            switch_person_anim_mode(p_person, ANIM_PERS_IDLE);
-        }
-
-        if ((p_person->SubType == SubTT_PERS_AGENT) || (p_person->SubType == SubTT_PERS_ZEALOT))
-            high_tier++;
-
-        if (++plagent == max_agent)
-            break;
-    }
-    // At this point, plagent is a count of filled agents
-    n = plagent;
-    // Fill the rest of agents array, to avoid using leftovers
-    for (; plagent < AGENTS_SQUAD_MAX_COUNT; plagent++)
-        players[plyr].MyAgent[plagent] = &things[0];
-
-    return n;
-}
-
-int place_default_player(ushort player_id, TbBool replace)
-{
-    int ret;
-    asm volatile ("call ASM_place_default_player\n"
-        : "=r" (ret) : "a" (player_id), "d" (replace));
-    return ret;
-}
-
-void place_single_player(void)
-{
-    PlayerInfo *p_locplayer;
-    ulong n;
-    ushort nagents, pl_agents, pl_group;
-
-    p_locplayer = &players[local_player_no];
-
-    // Figure out how many agents are attending the mission
-    if (p_locplayer->DoubleMode)
-        nagents = p_locplayer->DoubleMode + 1;
-    else
-        nagents = 4;
-    if (p_locplayer->MissionAgents < (1 << nagents) - 1)
-    {
-        switch (p_locplayer->MissionAgents)
-        {
-        case 1:
-            nagents = 1;
-            break;
-        case 3:
-            nagents = 2;
-            break;
-        case 7:
-            nagents = 3;
-            break;
-        }
-    }
-
-    pl_group = level_def.PlayableGroups[0];
-    pl_agents = make_group_into_players(pl_group, local_player_no, nagents, -1);
-    if (pl_agents == 0) {
-        struct Thing *p_person;
-        LOGERR("Player %d group %d playable agents not found amongst %d things",
-          (int)local_player_no, (int)pl_group, (int)things_used_head);
-        p_person = new_sim_person(513, 1, 513, SubTT_PERS_AGENT);
-        p_person->U.UPerson.Group = pl_group;
-        p_person->U.UPerson.EffectiveGroup = pl_group;
-        pl_agents = make_group_into_players(pl_group, local_player_no, 1, -1);
-    } else {
-        LOGSYNC("Player %d group %d playable agents found %d expected %d",
-          (int)local_player_no, (int)pl_group, (int)pl_agents, (int)nagents);
-    }
-
-    n = things_used_head;
-    while (n != 0)
-    {
-        struct Thing *p_thing;
-
-        p_thing = &things[n];
-        n = p_thing->LinkChild;
-        if ((p_thing->U.UPerson.Group == pl_group) && (p_thing->Type == TT_PERSON) && !(p_thing->Flag & TngF_PlayerAgent))
-        {
-            remove_thing(p_thing->ThingOffset);
-            delete_node(p_thing);
-        }
-    }
-    playable_agents = pl_agents;
-    if (pl_agents == 0)
-      place_default_player(0, 1);
 }
 
 /** Macro for returning given array of elements in random order.
@@ -5469,12 +5340,12 @@ ubyte do_user_interface(void)
         {
             clear_key_pressed(KC_RETURN);
             if ((p_locplayer->PanelState[mouser] != PANEL_STATE_SEND_MESSAGE)
-              && (player_unkn0C9[local_player_no] <= 140))
+              && (player_message_timer[local_player_no] <= 140))
             {
                 p_locplayer->PanelState[mouser] = PANEL_STATE_SEND_MESSAGE;
                 reset_buffered_keys();
-                player_unknCC9[local_player_no][0] = '\0';
-                player_unkn0C9[local_player_no] = 0;
+                player_message_text[local_player_no][0] = '\0';
+                player_message_timer[local_player_no] = 0;
                 scanner_unkn370 = 0;
                 scanner_unkn3CC = 0;
                 did_inp |= GINPUT_DIRECT;
@@ -6752,37 +6623,16 @@ void draw_mission_concluded(void)
     }
     else
     {
-        const char *text_time;
         uint tm_h, tm_m, tm_s;
 
         tm_h = tm / 3600;
         tm_m = tm / 60;
         tm_s = tm % 60;
-        switch (language_3str[0])
-        {
-        case 'e':
-        default:
-            text_time = "Time";
-            break;
-        case 'f':
-            text_time = "Heure";
-            break;
-        case 'g':
-            text_time = "Zeit";
-            break;
-        case 'i':
-            text_time = "Tempo";
-            break;
-        case 's':
-            if (language_3str[1] == 'p')
-                text_time = "Tiempo";
-            else
-                text_time = "Tid";
-            break;
-        }
+
         sprintf(unknmsg_str, "%s %s %s %s %02d:%02d:%02d", gui_strings[GSTR_CHK_MISSION_STA_PRE],
           gui_strings[GSTR_ENM_MISSION_STATUS + 1 + ingame.MissionStatus],
-          gui_strings[GSTR_CHK_MISSION_STA_SUF_KEYS], text_time, tm_h, tm_m % 60, tm_s);
+          gui_strings[GSTR_CHK_MISSION_STA_SUF_KEYS], gui_strings[GSTR_CHK_MISSION_STA_TIME],
+          tm_h, tm_m % 60, tm_s);
         data_15319c = unknmsg_str;
         scroll_text = unknmsg_str;
         LbStringToUpper(unknmsg_str);

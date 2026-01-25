@@ -76,30 +76,107 @@ int vfx1_unkn_func_03(void)
     return ret;
 }
 
-int vfx1_unkn_func_12(struct UnkVFXStruct1 *a1, short a2)
+short vfx1_unkn_func_13(short a1)
 {
+    short ret;
+    asm volatile (
+      "call ASM_vfx1_unkn_func_13\n"
+        : "=r" (ret) : "a" (a1));
+    return ret;
+}
+
+int vfx1_unkn_func_12(struct UnkVFXStruct1 *p_uvfx1, short a2)
+{
+#if 0
     int ret;
     asm volatile (
       "call ASM_vfx1_unkn_func_12\n"
-        : "=r" (ret) : "a" (a1), "d" (a2));
+        : "=r" (ret) : "a" (p_uvfx1), "d" (a2));
     return ret;
+#endif
+    short ret, half;
+
+    ret = vfx1_unkn_func_13(a2);
+    if (ret == -1)
+        return -1;
+    half = ret >> 1;
+    p_uvfx1->field_4 = half;
+    p_uvfx1->field_0 = half >> 10;
+    p_uvfx1->field_2 = (half >> 8) & 3;
+    return 0;
 }
 
 int joy_func_251(int val, int acen, int amin, int amax)
 {
+#if 0
     int ret;
     asm volatile (
       "call ASM_joy_func_251\n"
         : "=r" (ret) : "a" (val), "d" (acen), "b" (amin), "c" (amax));
     return ret;
+#endif
+    int dt1, dt2, dt3;
+    int result, dist;
+
+    dt1 = val - acen;
+    if (dt1 < 0)
+    {
+        dt2 = amin - acen;
+        dt3 = dt1 - (dt2 >> 3);
+        dist = dt2 - 2 * (dt2 >> 3);
+        if (dt3 > 0) {
+            return 0;
+        }
+        if (dist == 0)
+            dist = 1;
+
+        result = -32767 * dt3 / dist;
+        if (result < -32767)
+            result = -32767;
+    }
+    else
+    {
+        dt2 = amax - acen;
+        dt3 = dt1 - (dt2 >> 3);
+        dist = dt2 - 2 * (dt2 >> 3);
+        if (dt3 < 0) {
+            return 0;
+        }
+        if (dist == 0)
+            dist = 1;
+
+        result = 32767 * dt3 / dist;
+        if (result > 32767)
+            result = 32767;
+    }
+    return result;
 }
 
 int joy_func_063(char *textbuf)
 {
+#if 0
     int ret;
     asm volatile ("call ASM_joy_func_063\n"
         : "=r" (ret) : "a" (textbuf));
     return ret;
+#endif
+    ubyte *p_buf;
+    char c;
+
+    if (InputHandler == NULL) {
+        return Lb_FAIL;
+    }
+    p_buf = InputHandler->field_4;
+    do
+    {
+        c = *p_buf;
+        *textbuf = c;
+        p_buf++;
+        textbuf++;
+    }
+    while (c != 0);
+
+    return Lb_SUCCESS;
 }
 
 void joy_func_065_lab93(struct DevInput *dinp, short ipos)
