@@ -150,7 +150,8 @@ TbBool player_agent_has_weapon(PlayerIdx plyr, ushort plagent, WeaponType wtype)
 short player_agent_weapon_delay(PlayerIdx plyr, ushort plagent, WeaponType wtype);
 void player_agent_set_weapon_delay(PlayerIdx plyr, ushort plagent, WeaponType wtype, short delay_turns);
 void player_agents_clear_weapon_delays(PlayerIdx plyr);
-int place_default_player(ushort player_id, TbBool replace);
+int place_default_player(PlayerIdx plyr, TbBool replace);
+void place_single_player(void);
 
 TbBool player_can_toggle_thermal(PlayerIdx plyr);
 void player_toggle_thermal(PlayerIdx plyr);

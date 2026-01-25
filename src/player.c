@@ -29,6 +29,7 @@
 #include "guitext.h"
 #include "hud_panel.h"
 #include "people.h"
+#include "pepgroup.h"
 #include "sound.h"
 #include "thing.h"
 #include "weapon.h"
@@ -521,46 +522,22 @@ void player_update_thermal(PlayerIdx plyr)
     }
 }
 
-struct Thing *replace_thing_given_thing_idx(int x, int y, int z, ubyte owner, ThingIdx pv_thing)
+/** Figure out how many agents are attending the mission.
+ */
+ushort player_agents_place_in_mission_count(PlayerIdx plyr)
 {
-    struct Thing *p_pv_thing;
-    struct Thing *p_nx_thing;
+    PlayerInfo *p_player;
+    ushort nagents;
 
-    p_pv_thing = &things[pv_thing];
-    if (on_mapwho(p_pv_thing))
-        delete_node(p_pv_thing);
-    unkn01_thing_idx = pv_thing;
-    p_nx_thing = new_sim_person(x, y, z, 101u);
-    p_nx_thing->State = 0;
-    p_nx_thing->Owner = owner;
-    return p_nx_thing;
-}
-
-int place_default_player(ushort player_id, TbBool replace)
-{
-#if 0
-    int ret;
-    asm volatile ("call ASM_place_default_player\n"
-        : "=r" (ret) : "a" (player_id), "d" (replace));
-    return ret;
-#endif
-    PlayerInfo *p_plyr;
-    int dblmode;
-    int grptype;
-    int cor_x, cor_z;
-    short nagents, agent_no;
-    ubyte net_plyr_id;
-
-    grptype = -1;
-
-    p_plyr = &players[player_id];
-    if (p_plyr->DoubleMode != 0)
-        nagents = p_plyr->DoubleMode + 1;
+    p_player = &players[plyr];
+    if (p_player->DoubleMode)
+        nagents = p_player->DoubleMode + 1;
     else
         nagents = 4;
-    if (p_plyr->MissionAgents < (1 << nagents) - 1)
+
+    if (p_player->MissionAgents < (1 << nagents) - 1)
     {
-        switch (p_plyr->MissionAgents)
+        switch (p_player->MissionAgents)
         {
         case 1:
             nagents = 1;
@@ -573,114 +550,115 @@ int place_default_player(ushort player_id, TbBool replace)
             break;
         }
     }
+    return nagents;
+}
+
+int place_default_player(PlayerIdx plyr, TbBool replace)
+{
+#if 0
+    int ret;
+    asm volatile ("call ASM_place_default_player\n"
+        : "=r" (ret) : "a" (plyr), "d" (replace));
+    return ret;
+#endif
+    PlayerInfo *p_player;
+    int cor_x, cor_z;
+    ushort nagents, plagent;
+    short new_type;
+    ubyte net_plyr_id;
+
+    nagents = player_agents_place_in_mission_count(plyr);
     if (in_network_game)
         nagents = 4;
 
-    cor_x = TILE_TO_MAPCOORD(default_agent_tiles_x[player_id], 0);
-    cor_z = TILE_TO_MAPCOORD(default_agent_tiles_z[player_id], 0);
+    cor_x = TILE_TO_MAPCOORD(default_agent_tiles_x[plyr], 0);
+    cor_z = TILE_TO_MAPCOORD(default_agent_tiles_z[plyr], 0);
 
-    net_plyr_id = player_id;
+    net_plyr_id = plyr;
     if (in_network_game)
     {
         if ((net_game_play_flags & NGPF_Unkn20) != 0)
             net_plyr_id = LbRandomAnyShort() & 7;
     }
 
-    for (agent_no = 0; agent_no < nagents; agent_no++)
+    p_player = &players[plyr];
+    if (in_network_game)
+        new_type = group_types[plyr];
+    else
+        new_type = -1;
+
+    for (plagent = 0; plagent < nagents; plagent++)
     {
         struct Thing *p_pv_agent;
         struct Thing *p_agent;
 
         if (in_network_game) {
-            cor_x = netgame_agent_pos_x[net_plyr_id][agent_no];
-            cor_z = netgame_agent_pos_z[net_plyr_id][agent_no];
+            cor_x = netgame_agent_pos_x[net_plyr_id][plagent];
+            cor_z = netgame_agent_pos_z[net_plyr_id][plagent];
         }
-        p_pv_agent = p_plyr->MyAgent[agent_no];
-        if ((p_pv_agent == NULL) || ((p_pv_agent->Flag & 0x02) != 0) || (replace))
+        p_pv_agent = p_player->MyAgent[plagent];
+        if ((p_pv_agent == NULL) || ((p_pv_agent->Flag & TngF_Destroyed) != 0) || (replace))
         {
-            short health;
-            ubyte grp;
+            ThingIdx pv_agent;
 
-            p_agent = replace_thing_given_thing_idx(cor_x, 0, cor_z, 1, p_pv_agent->ThingOffset);
-            p_plyr->MyAgent[agent_no] = p_agent;
-
-            health = 3 * p_agent->Health;
-            p_agent->Health = health;
-            p_agent->U.UPerson.MaxHealth = health;
-
-            grp = level_def.PlayableGroups[player_id];
-            p_agent->Flag = TngF_PlayerAgent;
-            p_agent->U.UPerson.Group = grp;
-            p_agent->U.UPerson.EffectiveGroup = grp;
-
-            dblmode = p_plyr->DoubleMode;
-            if (dblmode < agent_no)
-            {
-                if (in_network_game && dblmode)
-                {
-                    p_agent->State = 13;
-                    p_agent->Flag |= TngF_Unkn02000000 | TngF_Destroyed;
-                }
-                p_plyr->DirectControl[agent_no] = 0;
-            }
+            if (p_pv_agent != NULL)
+                pv_agent = p_pv_agent->ThingOffset;
             else
-            {
-                p_plyr->DirectControl[agent_no] = p_agent->ThingOffset;
-                p_agent->Flag |= 0x1000;
-                if ((local_player_no == player_id) && (agent_no == 0))
-                {
-                    ingame.TrackX = PRCCOORD_TO_MAPCOORD(p_agent->X);
-                    ingame.TrackZ = PRCCOORD_TO_MAPCOORD(p_agent->Z);
-                }
-            }
-            lbDisplay.RightButton = 0;
-            lbDisplay.LeftButton = 0;
-
-            p_agent->State = 0;
-            p_agent->U.UPerson.Mood = 0;
-            p_agent->U.UPerson.ComHead = 0;
-            p_agent->U.UPerson.Target2 = 0;
-            p_agent->PTarget = 0;
-            p_agent->U.UPerson.ComCur = agent_no + (player_id << 2);
-            p_agent->OldTarget = 0;
-            p_agent->U.UPerson.WeaponsCarried = p_plyr->Weapons[agent_no] | 0x400000;
-            p_agent->U.UPerson.UMod = p_plyr->Mods[agent_no];
-            p_agent->U.UPerson.CurrentWeapon = WEP_NULL;
-            if (in_network_game)
-            {
-                grptype = group_types[player_id];
-                do_weapon_quantities_net_to_player(p_agent);
-            }
-            else
-            {
-                player_agent_set_weapon_quantities_max(p_agent);
-            }
-
-            switch (grptype)
-            {
-            case 0:
-                p_agent->SubType = SubTT_PERS_AGENT;
-                reset_person_frame(p_agent);
-                break;
-            case 1:
-                p_agent->SubType = SubTT_PERS_ZEALOT;
-                reset_person_frame(p_agent);
-                break;
-            case 2:
-                p_agent->SubType = SubTT_PERS_PUNK_M;
-                reset_person_frame(p_agent);
-                break;
-            default:
-                break;
-            }
-            switch_person_anim_mode(p_agent, 0);
+                pv_agent = 0;
+            p_agent = replace_thing_given_thing_idx(cor_x, 0, cor_z, 1, pv_agent);
+            reset_default_player_agent(plyr, plagent, p_agent, new_type);
         }
         cor_x += 256;
     }
-    playable_agents = 4;
-    player_agents_init_prev_weapon(player_id);
-    player_agents_clear_weapon_delays(player_id);
+    // Fill the rest of agents array, to avoid using leftovers
+    for (; plagent < AGENTS_SQUAD_MAX_COUNT; plagent++)
+        p_player->MyAgent[plagent] = &things[0];
+
+    playable_agents = AGENTS_SQUAD_MAX_COUNT;
+    player_agents_init_prev_weapon(plyr);
+    player_agents_clear_weapon_delays(plyr);
     return 0;
+}
+
+void place_single_player(void)
+{
+    ulong n;
+    ushort nagents, pl_agents, pl_group;
+
+    nagents = player_agents_place_in_mission_count(local_player_no);
+
+    pl_group = level_def.PlayableGroups[0];
+    pl_agents = make_group_into_players(pl_group, local_player_no, nagents, -1);
+    if (pl_agents == 0) {
+        struct Thing *p_person;
+        LOGERR("Player %d group %d playable agents not found amongst %d things",
+          (int)local_player_no, (int)pl_group, (int)things_used_head);
+        p_person = new_sim_person(513, 1, 513, SubTT_PERS_AGENT);
+        p_person->U.UPerson.Group = pl_group;
+        p_person->U.UPerson.EffectiveGroup = pl_group;
+        pl_agents = make_group_into_players(pl_group, local_player_no, 1, -1);
+    } else {
+        LOGSYNC("Player %d group %d playable agents found %d expected %d",
+          (int)local_player_no, (int)pl_group, (int)pl_agents, (int)nagents);
+    }
+
+    n = things_used_head;
+    while (n != 0)
+    {
+        struct Thing *p_thing;
+
+        p_thing = &things[n];
+        n = p_thing->LinkChild;
+        if ((p_thing->U.UPerson.Group == pl_group) && (p_thing->Type == TT_PERSON)
+          && !(p_thing->Flag & TngF_PlayerAgent))
+        {
+            remove_thing(p_thing->ThingOffset);
+            delete_node(p_thing);
+        }
+    }
+    playable_agents = pl_agents;
+    if (pl_agents == 0)
+      place_default_player(0, 1);
 }
 
 /******************************************************************************/
