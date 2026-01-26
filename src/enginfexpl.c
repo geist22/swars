@@ -207,7 +207,8 @@ void FIRE_new(int x, int y, int z, ubyte type)
     short sib_tl_x, sib_tl_z;
     ubyte flame_count;
 
-    if ((x > 0x800000) || (z > 0x800000)) {
+    if ((PRCCOORD_TO_MAPCOORD(x) >= MAP_COORD_WIDTH)
+      || (PRCCOORD_TO_MAPCOORD(z) >= MAP_COORD_HEIGHT)) {
         return;
     }
     if (word_1E08B8 == 0) {
