@@ -113,117 +113,19 @@ void FIRE_new(int x, int y, int z, ubyte type)
         : : "a" (x), "d" (y), "b" (z), "c" (type));
 #endif
     struct SimpleThing *p_fire;
+    struct MyMapElement *p_mapel;
     struct FireFlame *p_fflame;
     int cor_x, cor_z;
     int cor_y;
     ThingIdx firetng;
     short flame_x, flame_z;
-    ushort fflame;
+    ushort fflame, nxflame;
     short flame_fvel;
     ushort flame_life;
-    ushort i28;
-    ushort i31;
-    ushort i29;
-    ushort i30;
-    ushort n;
-    ushort ii;
-    ubyte v46;
-    ushort jj;
-    ushort kk;
-    short v61;
-    ushort mm;
-    ushort nn;
-    ushort i1;
-    ushort i2;
-    char v81;
-    ushort i3;
-    ushort i4;
-    ushort i5;
-    char v106;
-    ushort i6;
-    ushort i7;
-    ushort i8;
-    ushort i9;
-    ushort i10;
-    ushort i11;
-    ushort i24;
-    ushort v172;
-    ushort i25;
-    unsigned int v176;
-    int v177;
-    struct MyMapElement *v178;
-    unsigned int v179;
-    unsigned int v180;
-    struct MyMapElement *v181;
-    ubyte v182;
-    unsigned int v183;
-    struct MyMapElement *v184;
-    ubyte v185;
-    int v186;
-    unsigned int v187;
-    struct MyMapElement *v188;
-    ubyte v189;
-    int v190;
-    struct MyMapElement *v191;
-    ubyte v192;
-    unsigned int v193;
-    int v194;
-    struct MyMapElement *v195;
-    ubyte v196;
-    unsigned int v197;
-    struct MyMapElement *v198;
-    ubyte v199;
-    unsigned int v200;
-    int v201;
-    struct MyMapElement *v202;
-    ubyte v203;
-    unsigned int v204;
-    unsigned int v205;
-    struct MyMapElement *v206;
-    ubyte v207;
-    ushort i12;
-    ushort i13;
-    ushort i14;
-    ushort i15;
-    ushort i16;
-    ushort i17;
-    ushort i18;
-    ushort i19;
-    ushort i20;
-    ushort i21;
-    ushort i22;
-    ushort next;
-    ushort i23;
-    struct MyMapElement *v329;
-    ubyte v369;
-    ubyte v377;
-    ubyte v383;
-    ubyte v391;
-    ubyte v396;
-    ubyte v398;
-    ubyte v401;
-    ubyte v410;
-    ubyte v411;
-    ubyte v412;
-    ubyte v413;
-    ubyte v414;
-    ubyte v417;
-    ubyte v418;
-    ubyte v423;
-    ubyte v427;
-    ubyte v429;
-    ubyte v430;
-    ubyte v432;
-    ubyte v434;
-    ubyte v435;
-    ubyte v443;
-    ubyte v446;
-    ubyte v448;
-    ubyte v449;
-    ubyte v451;
-    ubyte v454;
-    ubyte v456;
-    ubyte v463;
+    short tile_x, tile_z;
+    short sib_tl_x, sib_tl_z;
+    ubyte flame_count;
+    ushort frm;
 
     if ((x > 0x800000) || (z > 0x800000)) {
         return;
@@ -252,7 +154,7 @@ void FIRE_new(int x, int y, int z, ubyte type)
     switch (type)
     {
     case 1u:
-        v410 = 18 + (LbRandomAnyShort() & 0xF);
+        flame_count = 18 + (LbRandomAnyShort() & 0xF);
         flame_life = 43 + (LbRandomAnyShort() & 0xF);
         flame_z = cor_z + (LbRandomAnyShort() & 0x3F) - 31;
         flame_x = cor_x + (LbRandomAnyShort() & 0x3F) - 31;
@@ -273,20 +175,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 100;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i28 = nstart_ani[923]; ; i28 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[923]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i28;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v410;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v411 = (LbRandomAnyShort() & 0xF) + 18;
+        flame_count = (LbRandomAnyShort() & 0xF) + 18;
         flame_life = (LbRandomAnyShort() & 0xF) + 43;
         flame_z = cor_z + (LbRandomAnyShort() & 0x3F) - 31;
         flame_x = cor_x + (LbRandomAnyShort() & 0x3F) - 31;
@@ -307,20 +209,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 100;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i31 = nstart_ani[923]; ; i31 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[923]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i31;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v411;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v412 = (LbRandomAnyShort() & 0xF) + 18;
+        flame_count = (LbRandomAnyShort() & 0xF) + 18;
         flame_life = (LbRandomAnyShort() & 0xF) + 43;
         flame_z = cor_z + (LbRandomAnyShort() & 0x3F) - 31;
         flame_x = cor_x + (LbRandomAnyShort() & 0x3F) - 31;
@@ -341,20 +243,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 100;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i29 = nstart_ani[923]; ; i29 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[923]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i29;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v412;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v413 = (LbRandomAnyShort() & 0xF) + 18;
+        flame_count = (LbRandomAnyShort() & 0xF) + 18;
         flame_life = (LbRandomAnyShort() & 0xF) + 43;
         flame_z = cor_z + (LbRandomAnyShort() & 0x3F) - 31;
         flame_x = cor_x + (LbRandomAnyShort() & 0x3F) - 31;
@@ -375,20 +277,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 100;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i30 = nstart_ani[923]; ; i30 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[923]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i30;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v413;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v463 = (LbRandomAnyShort() & 0xF) + 18;
+        flame_count = (LbRandomAnyShort() & 0xF) + 18;
         flame_life = (LbRandomAnyShort() & 0xF) + 43;
         flame_z = cor_z + (LbRandomAnyShort() & 0xFF) - 127;
         flame_x = cor_x + (LbRandomAnyShort() & 0xFF) - 127;
@@ -409,20 +311,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 30;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( n = nstart_ani[923]; ; n = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[923]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = n;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v463;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v414 = (LbRandomAnyShort() & 0xF) + 18;
+        flame_count = (LbRandomAnyShort() & 0xF) + 18;
         flame_life = (LbRandomAnyShort() & 0xF) + 43;
         flame_z = cor_z + (LbRandomAnyShort() & 0xFF) - 127;
         flame_x = cor_x + (LbRandomAnyShort() & 0xFF) - 127;
@@ -443,20 +345,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 30;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( ii = nstart_ani[923]; ; ii = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[923]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = ii;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v414;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v46 = (LbRandomAnyShort() & 0xF) + 18;
+        flame_count = (LbRandomAnyShort() & 0xF) + 18;
         flame_life = (LbRandomAnyShort() & 0xF) + 43;
         flame_z = cor_z + (LbRandomAnyShort() & 0xFF) - 127;
         flame_x = cor_x + (LbRandomAnyShort() & 0xFF) - 127;
@@ -477,20 +379,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 30;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( jj = nstart_ani[923]; ; jj = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[923]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = jj;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
-          p_fflame->count = v46;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->life = flame_life;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v369 = (LbRandomAnyShort() & 0xF) + 18;
+        flame_count = (LbRandomAnyShort() & 0xF) + 18;
         flame_life = (LbRandomAnyShort() & 0xF) + 43;
         flame_z = cor_z + (LbRandomAnyShort() & 0xFF) - 127;
         flame_x = cor_x + (LbRandomAnyShort() & 0xFF) - 127;
@@ -511,54 +413,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 30;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( kk = nstart_ani[923]; ; kk = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[923]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = kk;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v369;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v443 = (LbRandomAnyShort() & 0xF) + 24;
-        flame_life = (LbRandomAnyShort() & 0xF) + 53;
-        flame_z = cor_z + (LbRandomAnyShort() & 0xFF) - 127;
-        v61 = cor_x + (LbRandomAnyShort() & 0xFF) - 127;
-        flame_fvel = (LbRandomAnyShort() & 0x3F) + 50;
-        fflame = word_1E08B8;
-        if (fflame != 0)
-        {
-          word_1E08B8 = FIRE_flame[word_1E08B8].next;
-          ++dword_1E08BC;
-        }
-        if ( fflame )
-        {
-          p_fflame = &FIRE_flame[fflame];
-          p_fflame->x = v61;
-          p_fflame->z = flame_z;
-          p_fflame->y = cor_y;
-          p_fflame->type = 5;
-          p_fflame->big = 100;
-          p_fflame->dbig = 0;
-          p_fflame->ddbig = -1;
-          for ( mm = nstart_ani[924]; ; mm = frame[p_fflame->frame].Next )
-          {
-            p_fflame->frame = mm;
-            if ( (LbRandomAnyShort() & 3) == 0 )
-              break;
-          }
-          p_fflame->life = flame_life;
-          p_fflame->count = v443;
-          p_fflame->fvel = flame_fvel;
-          p_fflame->fcount = LbRandomAnyShort() & 0x7F;
-        }
-        FIRE_add_flame(firetng, fflame);
-
-        v417 = (LbRandomAnyShort() & 0xF) + 24;
+        flame_count = (LbRandomAnyShort() & 0xF) + 24;
         flame_life = (LbRandomAnyShort() & 0xF) + 53;
         flame_z = cor_z + (LbRandomAnyShort() & 0xFF) - 127;
         flame_x = cor_x + (LbRandomAnyShort() & 0xFF) - 127;
@@ -579,20 +447,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 100;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( nn = nstart_ani[924]; ; nn = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[924]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = nn;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v417;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v418 = (LbRandomAnyShort() & 0xF) + 24;
+        flame_count = (LbRandomAnyShort() & 0xF) + 24;
         flame_life = (LbRandomAnyShort() & 0xF) + 53;
         flame_z = cor_z + (LbRandomAnyShort() & 0xFF) - 127;
         flame_x = cor_x + (LbRandomAnyShort() & 0xFF) - 127;
@@ -613,20 +481,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 100;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i1 = nstart_ani[924]; ; i1 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[924]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i1;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v418;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v446 = (LbRandomAnyShort() & 0xF) + 24;
+        flame_count = (LbRandomAnyShort() & 0xF) + 24;
         flame_life = (LbRandomAnyShort() & 0xF) + 53;
         flame_z = cor_z + (LbRandomAnyShort() & 0xFF) - 127;
         flame_x = cor_x + (LbRandomAnyShort() & 0xFF) - 127;
@@ -647,20 +515,54 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 100;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i2 = nstart_ani[924]; ; i2 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[924]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i2;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v446;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v81 = (LbRandomAnyShort() & 0xF) + 24;
+        flame_count = (LbRandomAnyShort() & 0xF) + 24;
+        flame_life = (LbRandomAnyShort() & 0xF) + 53;
+        flame_z = cor_z + (LbRandomAnyShort() & 0xFF) - 127;
+        flame_x = cor_x + (LbRandomAnyShort() & 0xFF) - 127;
+        flame_fvel = (LbRandomAnyShort() & 0x3F) + 50;
+        fflame = word_1E08B8;
+        if (fflame != 0)
+        {
+          word_1E08B8 = FIRE_flame[word_1E08B8].next;
+          ++dword_1E08BC;
+        }
+        if ( fflame )
+        {
+          p_fflame = &FIRE_flame[fflame];
+          p_fflame->x = flame_x;
+          p_fflame->z = flame_z;
+          p_fflame->y = cor_y;
+          p_fflame->type = 5;
+          p_fflame->big = 100;
+          p_fflame->dbig = 0;
+          p_fflame->ddbig = -1;
+          for (frm = nstart_ani[924]; ; frm = frame[p_fflame->frame].Next)
+          {
+            p_fflame->frame = frm;
+            if ( (LbRandomAnyShort() & 3) == 0 )
+              break;
+          }
+          p_fflame->life = flame_life;
+          p_fflame->count = flame_count;
+          p_fflame->fvel = flame_fvel;
+          p_fflame->fcount = LbRandomAnyShort() & 0x7F;
+        }
+        FIRE_add_flame(firetng, fflame);
+
+        flame_count = (LbRandomAnyShort() & 0xF) + 24;
         flame_life = (LbRandomAnyShort() & 0xF) + 53;
         flame_z = cor_z + (LbRandomAnyShort() & 0x1FF) - 255;
         flame_x = cor_x + (LbRandomAnyShort() & 0x1FF) - 255;
@@ -681,20 +583,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 30;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i3 = nstart_ani[924]; ; i3 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[924]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i3;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v81;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v377 = (LbRandomAnyShort() & 0xF) + 24;
+        flame_count = (LbRandomAnyShort() & 0xF) + 24;
         flame_life = (LbRandomAnyShort() & 0xF) + 53;
         flame_z = cor_z + (LbRandomAnyShort() & 0x1FF) - 255;
         flame_x = cor_x + (LbRandomAnyShort() & 0x1FF) - 255;
@@ -715,20 +617,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 30;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i4 = nstart_ani[924]; ; i4 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[924]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i4;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v377;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v383 = (LbRandomAnyShort() & 0xF) + 24;
+        flame_count = (LbRandomAnyShort() & 0xF) + 24;
         flame_life = (LbRandomAnyShort() & 0xF) + 53;
         flame_z = cor_z + (LbRandomAnyShort() & 0x1FF) - 255;
         flame_x = cor_x + (LbRandomAnyShort() & 0x1FF) - 255;
@@ -749,20 +651,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 30;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i5 = nstart_ani[924]; ; i5 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[924]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i5;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v383;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v106 = (LbRandomAnyShort() & 0xF) + 24;
+        flame_count = (LbRandomAnyShort() & 0xF) + 24;
         flame_life = (LbRandomAnyShort() & 0xF) + 53;
         flame_z = cor_z + (LbRandomAnyShort() & 0x1FF) - 255;
         flame_x = cor_x + (LbRandomAnyShort() & 0x1FF) - 255;
@@ -783,20 +685,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 30;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i6 = nstart_ani[924]; ; i6 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[924]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i6;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v106;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v391 = (LbRandomAnyShort() & 0xF) + 24;
+        flame_count = (LbRandomAnyShort() & 0xF) + 24;
         flame_life = (LbRandomAnyShort() & 0xF) + 53;
         flame_z = cor_z + (LbRandomAnyShort() & 0x1FF) - 255;
         flame_x = cor_x + (LbRandomAnyShort() & 0x1FF) - 255;
@@ -817,20 +719,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 30;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i7 = nstart_ani[924]; ; i7 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[924]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i7;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v391;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v396 = (LbRandomAnyShort() & 0xF) + 24;
+        flame_count = (LbRandomAnyShort() & 0xF) + 24;
         flame_life = (LbRandomAnyShort() & 0xF) + 53;
         flame_z = cor_z + (LbRandomAnyShort() & 0x1FF) - 255;
         flame_x = cor_x + (LbRandomAnyShort() & 0x1FF) - 255;
@@ -851,20 +753,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 30;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i8 = nstart_ani[924]; ; i8 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[924]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i8;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v396;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v423 = (LbRandomAnyShort() & 0xF) + 24;
+        flame_count = (LbRandomAnyShort() & 0xF) + 24;
         flame_life = (LbRandomAnyShort() & 0xF) + 53;
         flame_z = cor_z + (LbRandomAnyShort() & 0x1FF) - 255;
         flame_x = cor_x + (LbRandomAnyShort() & 0x1FF) - 255;
@@ -885,20 +787,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 30;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i9 = nstart_ani[924]; ; i9 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[924]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i9;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v423;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v398 = (LbRandomAnyShort() & 0xF) + 24;
+        flame_count = (LbRandomAnyShort() & 0xF) + 24;
         flame_life = (LbRandomAnyShort() & 0xF) + 53;
         flame_z = cor_z + (LbRandomAnyShort() & 0x1FF) - 255;
         flame_x = cor_x + (LbRandomAnyShort() & 0x1FF) - 255;
@@ -919,20 +821,21 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 30;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i10 = nstart_ani[924]; ; i10 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[924]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i10;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v398;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
           FIRE_add_flame(firetng, fflame);
         }
         break;
     case 2u:
+        flame_count = 2;
         flame_life = (LbRandomAnyShort() & 0xF) + 53;
         flame_z = cor_z + (LbRandomAnyShort() & 0x3F) - 31;
         flame_x = cor_x + (LbRandomAnyShort() & 0x3F) - 31;
@@ -953,96 +856,87 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 30;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i11 = nstart_ani[923]; ; i11 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[923]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i11;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = 2;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
         break;
     case 3u:
-        v176 = z >> 16;
-        v177 = cor_x >> 8;
-        v178 = &game_my_big_map[128 * (z >> 16) + (cor_x >> 8)];
-        v329 = game_my_big_map;
-        v178->Flags2 &= ~0x80u;
-        v179 = (cor_z >> 8) - 1;
-        v180 = (cor_x >> 8) - 1;
-        if ( v180 <= 0x7F && v179 <= 0x7F )
+        tile_z = cor_z >> 8;
+        tile_x = cor_x >> 8;
+        p_mapel = &game_my_big_map[128 * (z >> 16) + (cor_x >> 8)];
+        p_mapel->Flags2 &= ~0x80;
+
+        sib_tl_z = tile_z - 1;
+        sib_tl_x = tile_x - 1;
+        if ( sib_tl_x <= 0x7F && sib_tl_z <= 0x7F )
         {
-          v181 = &v329[128 * v179 + v180];
-          v182 = v181->Flags2 & 0xF;
-          v181->Flags2 = v182;
-          v181->Flags2 = v182 | 0x70;
+          p_mapel = &game_my_big_map[128 * sib_tl_z + sib_tl_x];
+          p_mapel->Flags2 &= 0xF;
+          p_mapel->Flags2 |= 0x70;
         }
-        v183 = v176 - 1;
-        if ( v177 <= 0x7F && v183 <= 0x7F )
+        sib_tl_z = tile_z - 1;
+        if ( tile_x <= 0x7F && sib_tl_z <= 0x7F )
         {
-          v184 = &game_my_big_map[128 * v183 + v177];
-          v185 = v184->Flags2 & 0xF;
-          v184->Flags2 = v185;
-          v184->Flags2 = v185 | 0x50;
+          p_mapel = &game_my_big_map[128 * sib_tl_z + tile_x];
+          p_mapel->Flags2 &= 0xF;
+          p_mapel->Flags2 |= 0x50;
         }
-        v186 = v177 + 1;
-        v187 = v176 - 1;
-        if ( (v177 + 1) >= 0 && v186 <= 127 && v187 <= 0x7F )
+        sib_tl_x = tile_x + 1;
+        sib_tl_z = tile_z - 1;
+        if ( (tile_x + 1) >= 0 && sib_tl_x <= 127 && sib_tl_z <= 0x7F )
         {
-          v188 = &game_my_big_map[128 * v187 + v186];
-          v189 = v188->Flags2 & 0xF;
-          v188->Flags2 = v189;
-          v188->Flags2 = v189 | 0x30;
+          p_mapel = &game_my_big_map[128 * sib_tl_z + sib_tl_x];
+          p_mapel->Flags2 &= 0xF;
+          p_mapel->Flags2 |= 0x30;
         }
-        v190 = v177 + 1;
-        if ( (v177 + 1) >= 0 && v190 <= 127 && v176 <= 0x7F )
+        sib_tl_x = tile_x + 1;
+        if ( (tile_x + 1) >= 0 && sib_tl_x <= 127 && tile_z <= 0x7F )
         {
-          v191 = &game_my_big_map[128 * v176 + v190];
-          v192 = v191->Flags2 & 0xF;
-          v191->Flags2 = v192;
-          v191->Flags2 = v192 | 0x10;
+          p_mapel = &game_my_big_map[128 * tile_z + sib_tl_x];
+          p_mapel->Flags2 &= 0xF;
+          p_mapel->Flags2 |= 0x10;
         }
-        v193 = v176 + 1;
-        v194 = v177 + 1;
-        if ( (v177 + 1) >= 0 && v194 <= 127 && v193 <= 0x7F )
+        sib_tl_z = tile_z + 1;
+        sib_tl_x = tile_x + 1;
+        if ( (tile_x + 1) >= 0 && sib_tl_x <= 127 && sib_tl_z <= 0x7F )
         {
-          v195 = &game_my_big_map[128 * v193 + v194];
-          v196 = v195->Flags2 & 0xF;
-          v195->Flags2 = v196;
-          v195->Flags2 = v196 | 0xF0;
+          p_mapel = &game_my_big_map[128 * sib_tl_z + sib_tl_x];
+          p_mapel->Flags2 &= 0xF;
+          p_mapel->Flags2 |= 0xF0;
         }
-        v197 = v176 + 1;
-        if ( v177 <= 0x7F && v197 <= 0x7F )
+        sib_tl_z = tile_z + 1;
+        if ( tile_x <= 0x7F && sib_tl_z <= 0x7F )
         {
-          v198 = &game_my_big_map[128 * v197 + v177];
-          v199 = v198->Flags2 & 0xF;
-          v198->Flags2 = v199;
-          v198->Flags2 = v199 | 0xD0;
+          p_mapel = &game_my_big_map[128 * sib_tl_z + tile_x];
+          p_mapel->Flags2 &= 0xF;
+          p_mapel->Flags2 |= 0xD0;
         }
-        v200 = v176 + 1;
-        v201 = v177 - 1;
-        if ( (v177 - 1) >= 0 && v201 <= 127 && v200 <= 0x7F )
+        sib_tl_z = tile_z + 1;
+        sib_tl_x = tile_x - 1;
+        if ( (tile_x - 1) >= 0 && sib_tl_x <= 127 && sib_tl_z <= 0x7F )
         {
-          v202 = &game_my_big_map[128 * v200 + v201];
-          v203 = v202->Flags2 & 0xF;
-          v202->Flags2 = v203;
-          v202->Flags2 = v203 | 0xB0;
+          p_mapel = &game_my_big_map[128 * sib_tl_z + sib_tl_x];
+          p_mapel->Flags2 &= 0xF;
+          p_mapel->Flags2 |= 0xB0;
         }
-        v204 = v177 - 1;
-        if ( v204 <= 0x7F && v176 <= 0x7F )
+        sib_tl_x = tile_x - 1;
+        if ( sib_tl_x <= 0x7F && tile_z <= 0x7F )
         {
-          v205 = (v176 << 7) + v204;
-          v206 = game_my_big_map;
-          v207 = game_my_big_map[v205].Flags2 & 0xF;
-          game_my_big_map[v205].Flags2 = v207;
-          v206[v205].Flags2 = v207 | 0x90;
+          p_mapel = &game_my_big_map[(tile_z << 7) + sib_tl_x];
+          p_mapel->Flags2 &= 0xF;
+          p_mapel->Flags2 |= 0x90;
         }
 
-        v448 = 43 - (LbRandomAnyShort() & 3);
+        flame_count = 43 - (LbRandomAnyShort() & 3);
         flame_life = (LbRandomAnyShort() & 0xF) + 43;
         flame_z = cor_z + (LbRandomAnyShort() & 0x3F) - 31;
         flame_x = cor_x + (LbRandomAnyShort() & 0x3F) - 31;
@@ -1063,20 +957,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 100;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i12 = nstart_ani[923]; ; i12 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[923]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i12;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v448;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v449 = 43 - (LbRandomAnyShort() & 3);
+        flame_count = 43 - (LbRandomAnyShort() & 3);
         flame_life = (LbRandomAnyShort() & 0xF) + 43;
         flame_z = cor_z + (LbRandomAnyShort() & 0x3F) - 31;
         flame_x = cor_x + (LbRandomAnyShort() & 0x3F) - 31;
@@ -1097,20 +991,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 100;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i13 = nstart_ani[923]; ; i13 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[923]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i13;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v449;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v427 = 43 - (LbRandomAnyShort() & 3);
+        flame_count = 43 - (LbRandomAnyShort() & 3);
         flame_life = (LbRandomAnyShort() & 0xF) + 43;
         flame_z = cor_z + (LbRandomAnyShort() & 0x3F) - 31;
         flame_x = cor_x + (LbRandomAnyShort() & 0x3F) - 31;
@@ -1131,20 +1025,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 100;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i14 = nstart_ani[923]; ; i14 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[923]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i14;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v427;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v451 = 43 - (LbRandomAnyShort() & 3);
+        flame_count = 43 - (LbRandomAnyShort() & 3);
         flame_life = (LbRandomAnyShort() & 0xF) + 43;
         flame_z = cor_z + (LbRandomAnyShort() & 0xFF) - 127;
         flame_x = cor_x + (LbRandomAnyShort() & 0xFF) - 127;
@@ -1165,20 +1059,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 30;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i15 = nstart_ani[923]; ; i15 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[923]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i15;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v451;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v429 = 43 - (LbRandomAnyShort() & 3);
+        flame_count = 43 - (LbRandomAnyShort() & 3);
         flame_life = (LbRandomAnyShort() & 0xF) + 43;
         flame_z = cor_z + (LbRandomAnyShort() & 0xFF) - 127;
         flame_x = cor_x + (LbRandomAnyShort() & 0xFF) - 127;
@@ -1199,20 +1093,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 30;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i16 = nstart_ani[923]; ; i16 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[923]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i16;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v429;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v430 = 43 - (LbRandomAnyShort() & 3);
+        flame_count = 43 - (LbRandomAnyShort() & 3);
         flame_life = (LbRandomAnyShort() & 0xF) + 43;
         flame_z = cor_z + (LbRandomAnyShort() & 0xFF) - 127;
         flame_x = cor_x + (LbRandomAnyShort() & 0xFF) - 127;
@@ -1233,20 +1127,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 30;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i17 = nstart_ani[923]; ; i17 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[923]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i17;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v430;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v454 = 53 - (LbRandomAnyShort() & 3);
+        flame_count = 53 - (LbRandomAnyShort() & 3);
         flame_life = (LbRandomAnyShort() & 0xF) + 53;
         flame_z = cor_z + (LbRandomAnyShort() & 0xFF) - 127;
         flame_x = cor_x + (LbRandomAnyShort() & 0xFF) - 127;
@@ -1267,20 +1161,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 100;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i18 = nstart_ani[924]; ; i18 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[924]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i18;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v454;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v432 = 53 - (LbRandomAnyShort() & 3);
+        flame_count = 53 - (LbRandomAnyShort() & 3);
         flame_life = (LbRandomAnyShort() & 0xF) + 53;
         flame_z = cor_z + (LbRandomAnyShort() & 0xFF) - 127;
         flame_x = cor_x + (LbRandomAnyShort() & 0xFF) - 127;
@@ -1301,20 +1195,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 100;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i19 = nstart_ani[924]; ; i19 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[924]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i19;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v432;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v456 = 53 - (LbRandomAnyShort() & 3);
+        flame_count = 53 - (LbRandomAnyShort() & 3);
         flame_life = (LbRandomAnyShort() & 0xF) + 53;
         flame_z = cor_z + (LbRandomAnyShort() & 0xFF) - 127;
         flame_x = cor_x + (LbRandomAnyShort() & 0xFF) - 127;
@@ -1335,20 +1229,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 100;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i20 = nstart_ani[924]; ; i20 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[924]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i20;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v456;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v434 = 53 - (LbRandomAnyShort() & 3);
+        flame_count = 53 - (LbRandomAnyShort() & 3);
         flame_life = (LbRandomAnyShort() & 0xF) + 53;
         flame_z = cor_z + (LbRandomAnyShort() & 0x1FF) - 255;
         flame_x = cor_x + (LbRandomAnyShort() & 0x1FF) - 255;
@@ -1369,20 +1263,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 30;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i21 = nstart_ani[924]; ; i21 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[924]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i21;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v434;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v435 = 53 - (LbRandomAnyShort() & 3);
+        flame_count = 53 - (LbRandomAnyShort() & 3);
         flame_life = (LbRandomAnyShort() & 0xF) + 53;
         flame_z = cor_z + (LbRandomAnyShort() & 0x1FF) - 255;
         flame_x = cor_x + (LbRandomAnyShort() & 0x1FF) - 255;
@@ -1403,20 +1297,20 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 30;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i22 = nstart_ani[924]; ; i22 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[924]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i22;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v435;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
 
-        v401 = 53 - (LbRandomAnyShort() & 3);
+        flame_count = 53 - (LbRandomAnyShort() & 3);
         flame_life = (LbRandomAnyShort() & 0xF) + 53;
         flame_z = (LbRandomAnyShort() & 0x1FF) + cor_z - 255;
         flame_x = cor_x + (LbRandomAnyShort() & 0x1FF) - 255;
@@ -1424,9 +1318,9 @@ void FIRE_new(int x, int y, int z, ubyte type)
         fflame = word_1E08B8;
         if (fflame != 0)
         {
-          next = FIRE_flame[word_1E08B8].next;
+          nxflame = FIRE_flame[word_1E08B8].next;
           ++dword_1E08BC;
-          word_1E08B8 = next;
+          word_1E08B8 = nxflame;
         }
         if ( fflame )
         {
@@ -1438,20 +1332,21 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 30;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i23 = nstart_ani[924]; ; i23 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[924]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i23;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = v401;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
         FIRE_add_flame(firetng, fflame);
         break;
     case 4u:
+        flame_count = 6;
         flame_life = (LbRandomAnyShort() & 0xF) + 53;
         flame_z = cor_z + (LbRandomAnyShort() & 0x3F) - 31;
         flame_x = cor_x + (LbRandomAnyShort() & 0x3F) - 31;
@@ -1472,14 +1367,14 @@ void FIRE_new(int x, int y, int z, ubyte type)
           p_fflame->big = 30;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i24 = nstart_ani[923]; ; i24 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[923]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i24;
+            p_fflame->frame = frm;
             if ( (LbRandomAnyShort() & 3) == 0 )
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = 6;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
@@ -1487,6 +1382,7 @@ void FIRE_new(int x, int y, int z, ubyte type)
         goto LABEL_184;
     case 5u:
 LABEL_184:
+        flame_count = 12;
         flame_life = (LbRandomAnyShort() & 0xF) + 53;
         flame_z = (LbRandomAnyShort() & 0x3F) + cor_z - 31;
         flame_x = (LbRandomAnyShort() & 0x3F) + cor_x - 31;
@@ -1494,9 +1390,9 @@ LABEL_184:
         fflame = word_1E08B8;
         if (fflame != 0)
         {
-          v172 = FIRE_flame[word_1E08B8].next;
+          nxflame = FIRE_flame[word_1E08B8].next;
           ++dword_1E08BC;
-          word_1E08B8 = v172;
+          word_1E08B8 = nxflame;
         }
         if ( fflame )
         {
@@ -1508,14 +1404,14 @@ LABEL_184:
           p_fflame->big = 30;
           p_fflame->dbig = 0;
           p_fflame->ddbig = -1;
-          for ( i25 = nstart_ani[923]; ; i25 = frame[p_fflame->frame].Next )
+          for (frm = nstart_ani[923]; ; frm = frame[p_fflame->frame].Next)
           {
-            p_fflame->frame = i25;
+            p_fflame->frame = frm;
             if ((LbRandomAnyShort() & 3) == 0)
               break;
           }
           p_fflame->life = flame_life;
-          p_fflame->count = 12;
+          p_fflame->count = flame_count;
           p_fflame->fvel = flame_fvel;
           p_fflame->fcount = LbRandomAnyShort() & 0x7F;
         }
