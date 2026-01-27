@@ -2815,8 +2815,13 @@ void unkn1_handle_agent_groups(void)
 
 void init_game_controls(void)
 {
+#if 0
     asm volatile ("call ASM_init_game_controls\n"
         :  :  : "eax" );
+#endif
+    reset_user_input();
+
+    init_user_input_local_controls();
 }
 
 void simulated_level(void)
@@ -4698,14 +4703,6 @@ void init_screen_boxes(void)
     init_equip_screen_shapes();
 }
 
-void players_init_control_mode(void)
-{
-    PlayerIdx plyr;
-    for (plyr = 0; plyr < PLAYERS_LIMIT; plyr++) {
-      players[plyr].UserInput[0].ControlMode = UInpCtr_Mouse;
-    }
-}
-
 void move_camera(int x, int y, int z)
 {
     asm volatile (
@@ -5745,7 +5742,7 @@ void show_menu_screen_st0(void)
     lbInkeyToAscii[KC_OEM_102] = '\\';
     lbInkeyToAsciiShift[KC_OEM_102] = '|';
 
-    players_init_control_mode();
+    players_init_default_control_mode();
 
     login_control__State = LognCt_Unkn6;
     sprintf(net_unkn2_text, "01234567890");
