@@ -6,7 +6,6 @@
 
 #include "bffile.h"
 #include "bfflic.h"
-#include "globals.h"
 #include "people.h"
 #include "guiboxes.h"
 
@@ -138,6 +137,14 @@ struct LevelDef {
   ubyte field_2A;
   ubyte field_2B;
 };
+
+struct UnkPlayerGroup {
+    ubyte AgentWeapons[4];
+    short AgentOwners[4];
+    short AgentMoods[4];
+    ubyte GroupActive;
+};
+
 
 #pragma pack()
 

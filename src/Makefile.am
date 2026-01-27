@@ -175,7 +175,6 @@ syndwarsfx_SOURCES = \
 	game_sprts.c \
 	game_sprts.h \
 	game.h \
-	globals.h \
 	hud_panecfg.c \
 	hud_panecfg.h \
 	hud_panel.c \

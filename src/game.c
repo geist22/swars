@@ -1,10 +1,21 @@
-#include <assert.h>
-#include <errno.h>
-#include <limits.h>
-#include <stdio.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
+/******************************************************************************/
+// Syndicate Wars Fan Expansion, source port of the classic game from Bullfrog.
+/******************************************************************************/
+/** @file game.c
+ *     Game loop and high level functions.
+ * @par Purpose:
+ *     Implement functions for high level flows of the game application.
+ * @par Comment:
+ *     None.
+ * @author   Tomasz Lis
+ * @date     22 Apr 2023 - 22 Oct 2023
+ * @par  Copying and copyrights:
+ *     This program is free software; you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation; either version 2 of the License, or
+ *     (at your option) any later version.
+ */
+/******************************************************************************/
 #include "bfconfig.h"
 #include "bfcircle.h"
 #include "bfdata.h"
@@ -39,6 +50,13 @@
 #include "bfsmack.h"
 #include "bftringl.h"
 #include "bfscd.h"
+#include <assert.h>
+#include <errno.h>
+#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include "engincam.h"
 #include "engincolour.h"
@@ -2798,8 +2816,13 @@ void unkn1_handle_agent_groups(void)
 
 void init_game_controls(void)
 {
+#if 0
     asm volatile ("call ASM_init_game_controls\n"
         :  :  : "eax" );
+#endif
+    reset_user_input();
+
+    init_user_input_local_controls();
 }
 
 void simulated_level(void)
@@ -4682,14 +4705,6 @@ void init_screen_boxes(void)
     init_equip_screen_shapes();
 }
 
-void players_init_control_mode(void)
-{
-    PlayerIdx plyr;
-    for (plyr = 0; plyr < PLAYERS_LIMIT; plyr++) {
-      players[plyr].UserInput[0].ControlMode = UInpCtr_Mouse;
-    }
-}
-
 void move_camera(int x, int y, int z)
 {
     asm volatile (
@@ -5737,7 +5752,7 @@ void show_menu_screen_st0(void)
     lbInkeyToAscii[KC_OEM_102] = '\\';
     lbInkeyToAsciiShift[KC_OEM_102] = '|';
 
-    players_init_control_mode();
+    players_init_default_control_mode();
 
     login_control__State = LognCt_Unkn6;
     sprintf(net_unkn2_text, "01234567890");
@@ -6954,3 +6969,4 @@ void game_reset(void)
     LbDataFreeAll(missionspr_load_files);
 }
 
+/******************************************************************************/
