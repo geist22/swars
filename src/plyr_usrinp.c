@@ -100,6 +100,23 @@ void reset_user_input(void)
             unkn_player_groups[plyr][plgroup].GroupActive = 0;
         }
     }
+
+    for (plyr = 0; plyr < PLAYERS_LIMIT; plyr++)
+    {
+        PlayerInfo *p_player;
+        struct SpecialUserInput *p_usrinp;
+        ushort dmuser;
+
+        p_player = &players[plyr];
+
+        for (dmuser = 0; dmuser < LOCAL_USERS_MAX_COUNT; dmuser++) {
+            p_player->State[dmuser] = 0;
+            p_player->SubState[dmuser] = 0;
+
+            p_usrinp = &p_player->UserInput[dmuser];
+            do_user_input_bits_control_clear_all(p_usrinp);
+        }
+    }
 }
 
 void init_user_input_local_controls(void)
