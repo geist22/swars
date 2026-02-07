@@ -27,6 +27,8 @@ extern "C" {
 /******************************************************************************/
 #pragma pack(1)
 
+#define MAX_WALKABLE_STEEPNESS (21 * LbFPMath_PI / 180)
+
 enum RenderFloorFlags {
   RendFlrF_NonPlanetary = 0x01,
   RendFlrF_WobblyTerrain = 0x02,
@@ -46,6 +48,14 @@ enum RenderFloorFlags {
  * the game code.
  */
 extern u32 render_anim_turn;
+
+/** Animation speed limiter.
+ *
+ * Lowering this will speed up animation. Increasing will only have effect
+ * to some point, as values have in-code limits. TODO - maybe turn this into
+ * just speed, not a limit?
+ */
+extern u32 render_anim_speed;
 
 /** Floor rendering flags.
  *
@@ -81,11 +91,70 @@ extern s32 game_textures_limit;
  */
 extern s32 face_textures_limit;
 
+/** Amount of available animated texture maps.
+ *
+ * This variable is used while creating, altering or making a copy of 3D primitive.
+ * It needs to be set by the app based on memory allocation.
+ */
+extern s32 game_anim_tmaps_limit;
+
+/** Amount of available points/vertices for game objects, making up faces.
+ *
+ * This variable is used while creating, altering or making a copy of 3D primitive.
+ * It needs to be set by the app based on memory allocation.
+ */
+extern s32 game_object_points_limit;
+
+/** Amount of available triangular faces for game objects.
+ *
+ * This variable is used while creating, altering or making a copy of 3D primitive.
+ * It needs to be set by the app based on memory allocation.
+ */
+extern s32 game_object_faces_limit;
+
+/** Amount of available quadrangular faces for game objects.
+ *
+ * This variable is used while creating, altering or making a copy of 3D primitive.
+ * It needs to be set by the app based on memory allocation.
+ */
+extern s32 game_object_faces4_limit;
+
+/** Amount of available normal vectors, to be linked to both tri and quad faces.
+ *
+ * This variable is used while creating, altering or making a copy of 3D primitive.
+ * It needs to be set by the app based on memory allocation.
+ */
+extern s32 game_normals_limit;
+
+/** Amount of available game objects, representing the whole 3D primitives.
+ *
+ * This variable is used while creating, altering or making a copy of 3D primitive.
+ * It needs to be set by the app based on memory allocation.
+ */
+extern s32 game_objects_limit;
+
+/** Amount of available triangular faces for primitives objects.
+ *
+ * This variable is used while creating, altering or making a copy of 3D primitive.
+ * It needs to be set by the app based on memory allocation.
+ */
+extern s32 prim_object_faces_limit;
+
+/** Amount of available quadrangular faces for primitives objects.
+ *
+ * This variable is used while creating, altering or making a copy of 3D primitive.
+ * It needs to be set by the app based on memory allocation.
+ */
+extern s32 prim_object_faces4_limit;
+
 /** Extra buffer, used as texture or mapping data if flags demand.
  * Declared and controlled by the app.
  */
 extern ubyte *scratch_buf1;
 
+/** Callback for debug of 3D objects primitives.
+ */
+extern void (*prim_obj_mem_debug)(ubyte itm_kind, int itm_beg, int itm_end);
 /******************************************************************************/
 #ifdef __cplusplus
 }

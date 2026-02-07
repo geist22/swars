@@ -14271,8 +14271,8 @@ GLOBAL_FUNC (ASM_do_rotate_map)	/* 0x036480 */
 		push   %edx
 		push   %esi
 		push   %edi
-		mov    EXPORT_SYMBOL(dword_152EEC),%ebx
-		mov    EXPORT_SYMBOL(dword_176D54),%ecx
+		mov    EXPORT_SYMBOL(cam_tilt),%ebx
+		mov    EXPORT_SYMBOL(cam_rotation_velocity),%ecx
 		xor    %eax,%eax
 		mov    EXPORT_SYMBOL(kbkeys)+8,%ax
 		mov    EXPORT_SYMBOL(lbKeyOn)(%eax),%al
@@ -14367,7 +14367,7 @@ GLOBAL_FUNC (ASM_do_rotate_map)	/* 0x036480 */
 		xor    %edi,%edi
 		test   %edx,%edx
 		jne    jump_365ff
-		mov    EXPORT_SYMBOL(jskeys)+6,%dx
+		mov    EXPORT_SYMBOL(jskeys)+12,%edx
 		mov    EXPORT_SYMBOL(joy)+0x900,%esi # joy.Buttons
 		and    %edx,%esi
 		cmp    %edx,%esi
@@ -14376,7 +14376,7 @@ GLOBAL_FUNC (ASM_do_rotate_map)	/* 0x036480 */
 	jump_365e9:
 		xor    %edx,%edx
 		mov    EXPORT_SYMBOL(joy)+0x900,%esi # joy.Buttons
-		mov    EXPORT_SYMBOL(jskeys)+8,%dx
+		mov    EXPORT_SYMBOL(jskeys)+16,%edx
 		and    %edx,%esi
 		cmp    %edx,%esi
 		jne    jump_365ff
@@ -14393,11 +14393,11 @@ GLOBAL_FUNC (ASM_do_rotate_map)	/* 0x036480 */
 		sbb    %edx,%eax
 		sar    $0x2,%eax
 		mov    %eax,%ecx
-		mov    %eax,EXPORT_SYMBOL(dword_176D54)
+		mov    %eax,EXPORT_SYMBOL(cam_rotation_velocity)
 		movswl %di,%eax
 		shl    $0x3,%eax
 		add    %eax,%ebx
-		mov    %ebx,EXPORT_SYMBOL(dword_152EEC)
+		mov    %ebx,EXPORT_SYMBOL(cam_tilt)
 		pop    %edi
 		pop    %esi
 		pop    %edx
@@ -17062,7 +17062,7 @@ GLOBAL_FUNC (ASM_joy_input)	/* 0x3DC68 */
 		push   %ebp
 		mov    $EXPORT_SYMBOL(joy)+0,%eax # joy.Yaw
 		xor    %edx,%edx
-		call   ac_joy_func_065
+		call   ac_joy_update_inputs
 		mov    EXPORT_SYMBOL(local_player_no),%dl
 		lea    0x0(,%edx,8),%eax
 		add    %edx,%eax
@@ -17121,8 +17121,8 @@ GLOBAL_FUNC (ASM_joy_input)	/* 0x3DC68 */
 		je     jump_3dd5e
 		xor    %esi,%esi
 		xor    %ecx,%ecx
-		mov    EXPORT_SYMBOL(jskeys)+6,%si
-		mov    EXPORT_SYMBOL(jskeys)+8,%cx
+		mov    EXPORT_SYMBOL(jskeys)+12,%esi
+		mov    EXPORT_SYMBOL(jskeys)+16,%ecx
 		mov    EXPORT_SYMBOL(joy)+0x900(%ebx),%edi # joy.Buttons
 		or     %esi,%ecx
 		mov    EXPORT_SYMBOL(joy)+0x900,%ebp # joy.Buttons
@@ -28138,7 +28138,7 @@ GLOBAL_FUNC(ASM_person_hit_razor_wire)	/* 0x049294 */
 		mov    0x18(%edi),%eax
 		sar    $0x8,%ebx
 		sar    $0x8,%eax
-		call   init_spark
+		call   ac_init_spark
 		test   %eax,%eax
 		je     jump_4965b
 		mov    0x2c(%eax),%dx
@@ -53794,7 +53794,7 @@ do_fvect_colide:	/* 0x05C054 */
 
 
 /*----------------------------------------------------------------*/
-bul_path_end:	/* 0x05C1C0 */
+GLOBAL_FUNC(ASM_bul_path_end)	/* 0x05C1C0 */
 /*----------------------------------------------------------------*/
 		push   %esi
 		push   %edi
@@ -75546,7 +75546,7 @@ GLOBAL_FUNC (ASM_gproc3_unknsub2)	/* 0x73798 */
 		mov    EXPORT_SYMBOL(engn_zc),%eax
 		mov    EXPORT_SYMBOL(engn_anglexz),%edi
 		mov    %eax,0x14(%esp)
-		mov    EXPORT_SYMBOL(dword_152EEC),%eax
+		mov    EXPORT_SYMBOL(cam_tilt),%eax
 		xor    %esi,%esi
 		mov    %eax,0x4(%esp)
 		xor    %eax,%eax
@@ -75706,7 +75706,7 @@ GLOBAL_FUNC (ASM_gproc3_unknsub2)	/* 0x73798 */
 		mov    %ebx,EXPORT_SYMBOL(dword_155014)
 	jump_73a5a:
 		mov    EXPORT_SYMBOL(dword_1AAB78),%eax
-		mov    %eax,EXPORT_SYMBOL(dword_152EEC)
+		mov    %eax,EXPORT_SYMBOL(cam_tilt)
 		mov    EXPORT_SYMBOL(dword_155010),%eax
 		mov    %eax,EXPORT_SYMBOL(engn_xc)
 		mov    EXPORT_SYMBOL(dword_155018),%eax
@@ -75763,7 +75763,7 @@ GLOBAL_FUNC (ASM_gproc3_unknsub2)	/* 0x73798 */
 		mov    %eax,EXPORT_SYMBOL(engn_zc)
 		mov    0x4(%esp),%eax
 		mov    %ebp,EXPORT_SYMBOL(ingame)+0x92F # ingame.Flags+0
-		mov    %eax,EXPORT_SYMBOL(dword_152EEC)
+		mov    %eax,EXPORT_SYMBOL(cam_tilt)
 		mov    0x18(%esp),%eax
 		mov    %si,EXPORT_SYMBOL(render_area_a)
 		mov    %eax,EXPORT_SYMBOL(engn_yc)
@@ -115004,7 +115004,7 @@ GLOBAL_FUNC(ASM_show_controls_joystick_box)	/* 0x09BBE4 */
 		cmp    $0x11,%eax
 		jne    jump_9be71
 		mov    %esp,%eax
-		call   ac_joy_func_063
+		call   ac_joy_get_device_name
 		cmp    $0xffffffff,%eax
 		je     jump_9beb1
 		mov    back_buffer,%edi
@@ -115144,7 +115144,7 @@ GLOBAL_FUNC(ASM_show_controls_joystick_box)	/* 0x09BBE4 */
 		cmpb   $0x0,EXPORT_SYMBOL(ctl_joystick_type)
 		je     jump_9bfaa
 		mov    $EXPORT_SYMBOL(joy)+0,%eax # joy.Yaw
-		call   ac_joy_func_066
+		call   ac_joy_refresh_devices
 	jump_9bfaa:
 		xor    %cl,%cl
 		mov    %cl,EXPORT_SYMBOL(lbDisplay)+103 # lbDisplay.LeftButton
@@ -115173,7 +115173,7 @@ GLOBAL_FUNC(ASM_show_controls_joystick_box)	/* 0x09BBE4 */
 		cmpb   $0x0,unkn01_maskarr(%edx)
 		je     jump_9c00b
 		mov    %esi,%eax
-		call   ac_joy_func_067
+		call   ac_joy_setup_device
 	jump_9c00b:
 		xor    %edx,%edx
 		mov    %cl,%dl
@@ -146984,7 +146984,7 @@ GLOBAL_FUNC(ASM_init_shoot_recoil)	/* 0x0C19F0 */
 
 
 /*----------------------------------------------------------------*/
-weapon_sweep:	/* 0x0C1AC8 */
+GLOBAL_FUNC(ASM_weapon_sweep)	/* 0x0C1AC8 */
 /*----------------------------------------------------------------*/
 		push   %esi
 		push   %edi
@@ -147223,7 +147223,7 @@ GLOBAL_FUNC(ASM_init_uzi)	/* 0x0C1C0C */
 		push   %eax
 		mov    %ebp,%edx
 		mov    %edi,%eax
-		call   bul_path_end
+		call   ac_bul_path_end
 		mov    (%esp),%edx
 		mov    0x4(%esp),%ebx
 		mov    0x8(%esp),%ecx
@@ -147466,7 +147466,7 @@ GLOBAL_FUNC(ASM_init_uzi)	/* 0x0C1C0C */
 		mov    0x8(%esp),%ebx
 		mov    0x4(%esp),%edx
 		mov    (%esp),%eax
-		call   init_spark
+		call   ac_init_spark
 		test   %eax,%eax
 		jne    jump_c2028
 	jump_c206d:
@@ -147585,7 +147585,7 @@ GLOBAL_FUNC(ASM_init_long_range)	/* 0x0C2078 */
 		mov    %eax,0x28(%esp)
 		mov    %eax,%edx
 		mov    %ebp,%eax
-		call   bul_path_end
+		call   ac_bul_path_end
 		mov    (%esp),%ebx
 		mov    0x4(%esp),%ecx
 		sub    %ebp,%ebx
@@ -147831,7 +147831,7 @@ GLOBAL_FUNC(ASM_init_long_range)	/* 0x0C2078 */
 		mov    0x8(%esp),%ebx
 		mov    0x4(%esp),%edx
 		mov    (%esp),%eax
-		call   init_spark
+		call   ac_init_spark
 		test   %eax,%eax
 		jne    jump_c2472
 	jump_c24b7:
@@ -147935,7 +147935,7 @@ GLOBAL_FUNC(ASM_init_minigun)	/* 0x0C24C4 */
 		lea    0x4(%esp),%ebx
 		mov    %esp,%edx
 		mov    %esi,%eax
-		call   weapon_sweep
+		call   ac_weapon_sweep
 		lea    0x28(%esp),%eax
 		push   %eax
 		sar    $0x8,%ebp
@@ -147954,7 +147954,7 @@ GLOBAL_FUNC(ASM_init_minigun)	/* 0x0C24C4 */
 		sar    $0x8,%eax
 		mov    %ebp,%edx
 		mov    %eax,0x24(%esp)
-		call   bul_path_end
+		call   ac_bul_path_end
 		mov    (%esp),%ecx
 		mov    0x10(%esp),%edx
 		mov    0x4(%esp),%ebx
@@ -148206,7 +148206,7 @@ GLOBAL_FUNC(ASM_init_minigun)	/* 0x0C24C4 */
 		mov    0x8(%esp),%ebx
 		mov    0x4(%esp),%edx
 		mov    (%esp),%eax
-		call   init_spark
+		call   ac_init_spark
 		test   %eax,%eax
 		jne    jump_c28e3
 	jump_c2928:
@@ -148486,7 +148486,7 @@ GLOBAL_FUNC(ASM_init_time_gun)	/* 0x0C2AE0 */
 		mov    %edi,%eax
 		sar    $0x8,%edx
 		sar    $0x8,%eax
-		call   bul_path_end
+		call   ac_bul_path_end
 		mov    0x6(%esp),%ebx
 		mov    0x4(%esp),%edx
 		mov    -0x2(%esp),%eax
@@ -148675,7 +148675,7 @@ GLOBAL_FUNC(ASM_init_stasis_gun)	/* 0x0C2C6C */
 		mov    %ecx,0x18(%esp)
 		mov    %edi,%eax
 		lea    0x14(%esp),%ecx
-		call   bul_path_end
+		call   ac_bul_path_end
 		mov    0x6(%esp),%ebx
 		mov    0x4(%esp),%edi
 		mov    -0x2(%esp),%eax
@@ -153349,7 +153349,7 @@ GLOBAL_FUNC(ASM_process_mech_weapon)	/* 0x0C63AC */
 
 
 /*----------------------------------------------------------------*/
-process_mushroom:	/* 0x0C65E0 */
+GLOBAL_FUNC(ASM_process_mushroom)	/* 0x0C65E0 */
 /*----------------------------------------------------------------*/
 		push   %ebx
 		push   %ecx
@@ -154083,7 +154083,7 @@ GLOBAL_FUNC(ASM_process_smoke_generator)	/* 0x0C6D4C */
 
 
 /*----------------------------------------------------------------*/
-process_special_drift_smoke:	/* 0x0C6E5C */
+GLOBAL_FUNC(ASM_process_special_drift_smoke)	/* 0x0C6E5C */
 /*----------------------------------------------------------------*/
 		push   %ebx
 		push   %ecx
@@ -154378,7 +154378,7 @@ vtable_c7194:
 
 
 /*----------------------------------------------------------------*/
-process_drift_smoke:	/* 0x0C71CC */
+GLOBAL_FUNC(ASM_process_drift_smoke)	/* 0x0C71CC */
 /*----------------------------------------------------------------*/
 		push   %ebx
 		push   %ecx
@@ -154790,7 +154790,7 @@ vtable_c7640:
 
 
 /*----------------------------------------------------------------*/
-process_napalm_flame:	/* 0x0C7678 */
+GLOBAL_FUNC(ASM_process_napalm_flame)	/* 0x0C7678 */
 /*----------------------------------------------------------------*/
 		push   %ebx
 		push   %ecx
@@ -155139,7 +155139,7 @@ vtable_c7a48:
 
 
 /*----------------------------------------------------------------*/
-process_flame1:	/* 0x0C7A80 */
+GLOBAL_FUNC(ASM_process_flame1)	/* 0x0C7A80 */
 /*----------------------------------------------------------------*/
 		push   %ebx
 		push   %ecx
@@ -155363,7 +155363,7 @@ func_c7c56:
 
 
 /*----------------------------------------------------------------*/
-process_splash:	/* 0x0C7D44 */
+GLOBAL_FUNC(ASM_process_splash)	/* 0x0C7D44 */
 /*----------------------------------------------------------------*/
 		push   %ebx
 		push   %ecx
@@ -155463,7 +155463,7 @@ GLOBAL_FUNC(ASM_process_scale_effect)	/* 0x0C7E1C */
 	jump_c7e46:
 		movswl %dx,%edx
 		mov    %ebx,%eax
-		call   process_special_drift_smoke
+		call   ac_process_special_drift_smoke
 		pop    %ebx
 		ret
 	jump_c7e52:
@@ -155477,24 +155477,24 @@ GLOBAL_FUNC(ASM_process_scale_effect)	/* 0x0C7E1C */
 	jump_c7e6d:
 		movswl %dx,%edx
 		mov    %ebx,%eax
-		call   process_drift_smoke
+		call   ac_process_drift_smoke
 		pop    %ebx
 		ret
 	jump_c7e79:
 		movswl %dx,%edx
 		mov    %ebx,%eax
-		call   process_napalm_flame
+		call   ac_process_napalm_flame
 		pop    %ebx
 		ret
 	jump_c7e85:
 		movswl %dx,%edx
 		mov    %ebx,%eax
-		call   process_mushroom
+		call   ac_process_mushroom
 		pop    %ebx
 		ret
 	jump_c7e91:
 		mov    %ebx,%eax
-		call   process_flame1
+		call   ac_process_flame1
 		pop    %ebx
 		ret
 	jump_c7e9a:
@@ -155518,7 +155518,7 @@ GLOBAL_FUNC(ASM_process_scale_effect)	/* 0x0C7E1C */
 		ret
 	jump_c7ed1:
 		mov    %ebx,%eax
-		call   process_splash
+		call   ac_process_splash
 		pop    %ebx
 		ret
 	jump_c7eda:
@@ -155538,7 +155538,7 @@ GLOBAL_FUNC(ASM_process_scale_effect)	/* 0x0C7E1C */
 		jbe    jump_c7e46
 		movswl %dx,%edx
 		mov    %ebx,%eax
-		call   process_drift_smoke
+		call   ac_process_drift_smoke
 		pop    %ebx
 		ret
 	jump_c7f06:
@@ -156198,7 +156198,7 @@ GLOBAL_FUNC(ASM_init_grenade)	/* 0x0C84D0 */
 
 
 /*----------------------------------------------------------------*/
-init_spark:	/* 0x0C867C */
+GLOBAL_FUNC(ASM_init_spark)	/* 0x0C867C */
 /*----------------------------------------------------------------*/
 		push   %ecx
 		push   %esi
@@ -156780,7 +156780,7 @@ GLOBAL_FUNC(ASM_process_laser)	/* 0x0C8D2C */
 		mov    0x2c(%ebx),%ecx
 		mov    %eax,%ebx
 		mov    %ecx,%eax
-		call   init_spark
+		call   ac_init_spark
 		pop    %edx
 		pop    %ecx
 		pop    %ebx
@@ -156977,7 +156977,7 @@ GLOBAL_FUNC(ASM_process_laser_elec)	/* 0x0C8F78 */
 		mov    0x34(%ecx),%ebx
 		mov    0x30(%ecx),%edx
 		mov    0x2c(%ecx),%eax
-		call   init_spark
+		call   ac_init_spark
 		test   %eax,%eax
 		je     jump_c8fe9
 		xor    %dh,%dh
@@ -160890,7 +160890,7 @@ GLOBAL_FUNC (ASM_traffic_unkn_func_01)	/* 0x0CB738 */
 		and    $0x7ff,%esi
 		mov    %ebx,data_1dd914
 		mov    %esi,data_1dd90c
-		mov    %esi,EXPORT_SYMBOL(dword_152EEC)
+		mov    %esi,EXPORT_SYMBOL(cam_tilt)
 		add    $0x7c,%esp
 		pop    %ebp
 		pop    %edi
@@ -179653,7 +179653,7 @@ GLOBAL (engn_zc)	/* 0x152EE8 */
 		.ascii  "\x80\x32"
 		.short  0x0
 
-GLOBAL (dword_152EEC)	/* 0x152EEC */
+GLOBAL (cam_tilt)	/* 0x152EEC */
 		.ascii  "\x54\xff\xff\xff"
 
 GLOBAL (female_peep)	/* 0x1531A4 */
@@ -180627,7 +180627,7 @@ GLOBAL (dword_176D4C)	/* 0x176D4C */
 		.long	0x0
 GLOBAL (engn_yc)
 		.long	0x0
-GLOBAL (dword_176D54)	/* 0x176D54 */
+GLOBAL (cam_rotation_velocity)	/* 0x176D54 */
 		.long	0x0
 GLOBAL (engn_anglexz)	/* 0x176D58 */
 		.fill   0xc
@@ -180831,10 +180831,6 @@ data_17fa52:
 
 GLOBAL (word_17FA58)	/* 0x17FA58 */
 		.fill   0x320
-/* struct DevInput joy; */
-GLOBAL (joy)	/* 0x17FD78 */
-		.fill   0x0a5C
-
 
 GLOBAL (ingame)	/* 0x1807D4 */
 		.fill   0x9A5

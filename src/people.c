@@ -637,7 +637,7 @@ TbBool person_only_affected_by_adv_persuader(ThingIdx person)
 
     p_person = &things[person];
 
-    if ((p_person->Flag2 & TgF2_Unkn00400000) != 0)
+    if ((p_person->Flag2 & TgF2_AlteredSubType) != 0)
         ptype = p_person->U.UPerson.OldSubType;
     else
         ptype = p_person->SubType;
@@ -1142,9 +1142,9 @@ TbBool can_i_enter_vehicle(struct Thing *p_me, struct Thing *p_vehicle)
         return true;
     p_thing = &things[thing];
 
-    tngroup = p_thing->U.UObject.EffectiveGroup;
-    mygroup = p_me->U.UObject.EffectiveGroup;
-    if (tngroup == mygroup)
+    tngroup = p_thing->U.UObject.EffectiveGroup & 0x7F;
+    mygroup = p_me->U.UObject.EffectiveGroup & 0x7F;
+    if (thing_group_equal(tngroup, mygroup))
         return true;
     if (thing_group_have_truce(tngroup, mygroup) || thing_group_have_truce(mygroup, tngroup))
         return true;
@@ -1174,7 +1174,7 @@ void set_person_persuaded(struct Thing *p_person, struct Thing *p_attacker, usho
 
     p_person->Flag |= TngF_Unkn40000000 | TngF_Unkn0004;
     p_person->Owner = p_attacker->ThingOffset;
-    p_person->Flag &= ~(TngF_Unkn00800000|TngF_Unkn00040000|TngF_Unkn00020000|TngF_Unkn0800|TngF_Unkn0080);
+    p_person->Flag &= ~(TngF_Unkn00800000|TngF_Unkn00040000|TngF_Unkn00020000|TngF_TriggerUse|TngF_Unkn0080);
 
     set_person_animmode_walk(p_person);
     p_person->U.UPerson.ComTimer = -1;
@@ -1366,14 +1366,82 @@ short check_for_other_people(int x, int y, int z, struct Thing *p_person)
 
 void check_persons_target(struct Thing *p_person)
 {
+#if 0
     asm volatile ("call ASM_check_persons_target\n"
         : : "a" (p_person));
+#endif
+    struct Thing *p_target;
+    int dist, range;
+
+    range = get_weapon_range(p_person) + 256;
+    if (range < 1024) {
+        return;
+    }
+
+    p_target = p_person->PTarget;
+
+    if ((p_target == NULL) || ((p_target->Flag & TngF_Destroyed) != 0))
+    {
+        if (p_person->Type == TT_MINE)
+            p_person->PTarget = NULL;
+        if ((p_person->Flag & TngF_Unkn1000) == 0)
+            p_person->Flag &= ~TngF_TriggerUse;
+        return;
+    }
+
+    if (things_check_same_group(p_person->ThingOffset, p_target->ThingOffset))
+    {
+        p_person->PTarget = NULL;
+        p_person->Flag &= ~TngF_TriggerUse;
+        return;
+    }
+
+    dist = get_things_distance_mapcoords_fast(p_person->ThingOffset, p_target->ThingOffset);
+
+    if (dist > range + p_target->Radius)
+    {
+        if (p_person->Type == TT_MINE)
+            p_person->PTarget = NULL;
+        p_person->Flag &= ~TngF_TriggerUse;
+        p_person->U.UPerson.Flag3 |= 0x40;
+    }
 }
 
 void check_persons_target2(struct Thing *p_person)
 {
+#if 0
     asm volatile ("call ASM_check_persons_target2\n"
         : : "a" (p_person));
+#endif
+    struct Thing *p_target;
+    int dist, range;
+
+    range = get_weapon_range(p_person) + 128;
+    if (range < 1024) {
+        return;
+    }
+
+    p_target = &things[p_person->U.UPerson.Target2];
+
+    if ((p_target == NULL) || ((p_target->Flag & TngF_Destroyed) != 0)) {
+        p_person->Flag &= ~TngF_TriggerUse;
+        return;
+    }
+
+    if (things_check_same_group(p_person->ThingOffset, p_target->ThingOffset))
+    {
+        p_person->U.UPerson.Target2 = 0;
+        p_person->Flag &= ~TngF_TriggerUse;
+        return;
+    }
+
+    dist = get_things_distance_mapcoords_fast(p_person->ThingOffset, p_target->ThingOffset);
+
+    if (dist > range + p_target->Radius)
+    {
+        p_person->Flag &= ~TngF_TriggerUse;
+        p_person->U.UPerson.Flag3 |= 0x40;
+    }
 }
 
 void process_stamina(struct Thing *p_person)
@@ -1932,14 +2000,14 @@ StateChRes person_init_go_to_person(struct Thing *p_person, short target,
     return StCh_ACCEPTED;
 }
 
-StateChRes person_init_kill_person(struct Thing *p_person, short target)
+StateChRes person_init_kill_person(struct Thing *p_person, short targetng)
 {
     int weapon_range;
 
     p_person->Flag2 &= ~TgF2_IgnoreEnemies;
-    p_person->GotoThingIndex = target;
+    p_person->GotoThingIndex = targetng;
     // Command to kill target 0 is equivalent to taking out weapon
-    if (target == 0)
+    if (targetng == 0)
     {
         get_weapon_out(p_person);
         p_person->State = PerSt_NONE;
@@ -1947,7 +2015,7 @@ StateChRes person_init_kill_person(struct Thing *p_person, short target)
     }
     check_weapon(p_person, 1280);
     p_person->State = PerSt_KILL_PERSON;
-    p_person->PTarget = &things[target];
+    p_person->PTarget = &things[targetng];
     p_person->U.UPerson.ComTimer = -1;
     p_person->SubState = 0;
 
@@ -1977,17 +2045,17 @@ short person_get_command_range_for_persuade(struct Thing *p_person)
     return cmd_range;
 }
 
-StateChRes person_init_persuade_person(struct Thing *p_person, short target)
+StateChRes person_init_persuade_person(struct Thing *p_person, short targetng)
 {
-    if (target == 0)
+    if (targetng == 0)
     {
         p_person->State = PerSt_NONE;
         return StCh_UNATTAIN;
     }
-    p_person->GotoThingIndex = target;
+    p_person->GotoThingIndex = targetng;
     p_person->State = PerSt_PERSUADE_PERSON;
     p_person->U.UPerson.ComTimer = -1;
-    p_person->PTarget = &things[target];
+    p_person->PTarget = &things[targetng];
 
     p_person->U.UPerson.ComRange = person_get_command_range_for_persuade(p_person);
     p_person->SubState = 0;
@@ -1997,17 +2065,17 @@ StateChRes person_init_persuade_person(struct Thing *p_person, short target)
     return StCh_ACCEPTED;
 }
 
-StateChRes person_init_block_person(struct Thing *p_person, short target)
+StateChRes person_init_block_person(struct Thing *p_person, short targetng)
 {
-    if (target == 0)
+    if (targetng == 0)
     {
         p_person->State = PerSt_NONE;
         return StCh_UNATTAIN;
     }
-    p_person->GotoThingIndex = target;
+    p_person->GotoThingIndex = targetng;
     p_person->State = PerSt_BLOCK_PERSON;
     p_person->U.UPerson.ComTimer = -1;
-    p_person->PTarget = &things[target];
+    p_person->PTarget = &things[targetng];
     p_person->U.UPerson.ComRange = 2;
     p_person->U.UPerson.Timer2 = 20;
     p_person->U.UPerson.StartTimer2 = 20;
@@ -2015,18 +2083,18 @@ StateChRes person_init_block_person(struct Thing *p_person, short target)
     return StCh_ACCEPTED;
 }
 
-StateChRes person_init_scare_person(struct Thing *p_person, short target)
+StateChRes person_init_scare_person(struct Thing *p_person, short targetng)
 {
-    if (target == 0)
+    if (targetng == 0)
     {
         get_weapon_out(p_person);
         p_person->State = PerSt_NONE;
         return StCh_UNATTAIN;
     }
-    p_person->GotoThingIndex = target;
+    p_person->GotoThingIndex = targetng;
     p_person->State = PerSt_SCARE_PERSON;
     p_person->U.UPerson.ComTimer = -1;
-    p_person->PTarget = &things[target];
+    p_person->PTarget = &things[targetng];
     p_person->U.UPerson.ComRange = 2;
     p_person->U.UPerson.Timer2 = 50;
     p_person->U.UPerson.StartTimer2 = 50;
@@ -2042,15 +2110,15 @@ void person_init_follow_person(struct Thing *p_person, struct Thing *p_other)
         : : "a" (p_person), "d" (p_other));
 }
 
-StateChRes person_init_cmd_follow_person(struct Thing *p_person, short target)
+StateChRes person_init_cmd_follow_person(struct Thing *p_person, short targetng)
 {
     //TODO it would probably make sense to reuse person_init_follow_person() here
-    if (target == 0)
+    if (targetng == 0)
     {
         p_person->State = PerSt_NONE;
         return StCh_UNATTAIN;
     }
-    p_person->GotoThingIndex = target;
+    p_person->GotoThingIndex = targetng;
     p_person->State = PerSt_FOLLOW_PERSON;
     p_person->U.UPerson.ComTimer = -1;
     p_person->U.UPerson.ComRange = 1;
@@ -2060,14 +2128,14 @@ StateChRes person_init_cmd_follow_person(struct Thing *p_person, short target)
     return StCh_ACCEPTED;
 }
 
-StateChRes person_init_support_person(struct Thing *p_person, short target)
+StateChRes person_init_support_person(struct Thing *p_person, short targetng)
 {
-    if (target == 0)
+    if (targetng == 0)
     {
         p_person->State = PerSt_NONE;
         return StCh_UNATTAIN;
     }
-    p_person->GotoThingIndex = target;
+    p_person->GotoThingIndex = targetng;
     p_person->State = PerSt_SUPPORT_PERSON;
     p_person->U.UPerson.ComTimer = -1;
     p_person->U.UPerson.ComRange = 3;
@@ -2077,14 +2145,14 @@ StateChRes person_init_support_person(struct Thing *p_person, short target)
     return StCh_ACCEPTED;
 }
 
-StateChRes person_init_protect_person(struct Thing *p_person, short target, TbBool one_target)
+StateChRes person_init_protect_person(struct Thing *p_person, short targetng, TbBool one_target)
 {
-    if ((target == 0) && one_target)
+    if ((targetng == 0) && one_target)
     {
         p_person->State = PerSt_NONE;
         return StCh_UNATTAIN;
     }
-    p_person->GotoThingIndex = target;
+    p_person->GotoThingIndex = targetng;
     p_person->State = PerSt_PROTECT_PERSON;
     p_person->U.UPerson.ComTimer = -1;
     p_person->U.UPerson.ComRange = 8;
@@ -2092,7 +2160,7 @@ StateChRes person_init_protect_person(struct Thing *p_person, short target, TbBo
     p_person->U.UPerson.StartTimer2 = 50;
     p_person->SubState = 0;
     if (one_target)
-        p_person->Owner = target;
+        p_person->Owner = targetng;
     return StCh_ACCEPTED;
 }
 
@@ -2108,18 +2176,18 @@ void person_init_get_item_fast(struct Thing *p_person, short item, ushort plyr)
         : : "a" (p_person), "d" (item), "b" (plyr));
 }
 
-StateChRes person_init_cmd_get_item(struct Thing *p_person, short target)
+StateChRes person_init_cmd_get_item(struct Thing *p_person, short targetng)
 {
     short tgtng_x, tgtng_z;
 
     //TODO it would probably make sense to reuse person_init_get_item() here
-    if (target == 0)
+    if (targetng == 0)
     {
         p_person->State = PerSt_NONE;
         return StCh_UNATTAIN;
     }
-    get_thing_position_mapcoords(&tgtng_x, NULL, &tgtng_z, target);
-    p_person->GotoThingIndex = target;
+    get_thing_position_mapcoords(&tgtng_x, NULL, &tgtng_z, targetng);
+    p_person->GotoThingIndex = targetng;
     p_person->State = PerSt_GET_ITEM;
     p_person->U.UPerson.GotoX = tgtng_x;
     p_person->U.UPerson.GotoZ = tgtng_z;
@@ -2147,7 +2215,7 @@ StateChRes person_init_cmd_use_weapon(struct Thing *p_person, short x, short y,
     p_person->U.UPerson.WeaponDir = 32 * p_person->U.UPerson.Angle;
     thing_shoot_at_point(p_person, x, y, z, 0);
     process_weapon(p_person);
-    p_person->Flag &= ~TngF_Unkn0800;
+    p_person->Flag &= ~TngF_TriggerUse;
     return StCh_ACCEPTED;
 }
 
@@ -2165,14 +2233,14 @@ StateChRes person_init_wand_avoid_group(struct Thing *p_person, ushort group, ub
     return StCh_ACCEPTED;
 }
 
-StateChRes person_init_destroy_building(struct Thing *p_person, short x, short z, short target)
+StateChRes person_init_destroy_building(struct Thing *p_person, short x, short z, short targetng)
 {
     int weapon_range;
 
-    p_person->GotoThingIndex = target;
+    p_person->GotoThingIndex = targetng;
     p_person->State = PerSt_DESTROY_BUILDING;
     p_person->U.UPerson.ComTimer = -1;
-    p_person->PTarget = &things[target];
+    p_person->PTarget = &things[targetng];
     p_person->SubState = 0;
 
     p_person->U.UPerson.Timer2 = 10;
@@ -2296,7 +2364,7 @@ StateChRes person_lock_building(struct Thing *p_person, short bldng)
         return StCh_UNATTAIN;
     }
     p_building = &things[bldng];
-    p_building->Flag |= TngF_Unkn0800;
+    p_building->Flag |= TngF_PassageLocked;
     p_person->State = PerSt_NONE;
     return StCh_ACCEPTED;
 }
@@ -2311,7 +2379,7 @@ StateChRes person_unlock_building(struct Thing *p_person, short bldng)
         return StCh_UNATTAIN;
     }
     p_building = &things[bldng];
-    p_building->Flag &= ~TngF_Unkn0800;
+    p_building->Flag &= ~TngF_PassageLocked;
     p_person->State = PerSt_NONE;
     return StCh_ACCEPTED;
 }
@@ -2514,10 +2582,14 @@ StateChRes person_cmd_play_sample(struct Thing *p_person, short smptbl_id,
 
 void camera_track_thing(short thing, TbBool revert)
 {
+    PlayerInfo *p_locplayer;
+
+    p_locplayer = &players[local_player_no];
+
     if (revert)
     {
         ThingIdx dcthing;
-        dcthing = players[local_player_no].DirectControl[0];
+        dcthing = p_locplayer->DirectControl[0];
         LOGDBG("Revert track to dcthing offs=%d", (int)dcthing);
         ingame.TrackThing = 0;
         game_set_cam_track_thing_xz(dcthing);
@@ -2525,6 +2597,8 @@ void camera_track_thing(short thing, TbBool revert)
     }
     LOGDBG("Begin track thing offs=%d", (int)thing);
     ingame.TrackThing = thing;
+    // Disallow camera movement being blocked by user modes like goto point
+    reset_user_input();
 }
 
 void camera_rotate_view(short ang1, short ang2, TbBool revert)
@@ -2931,7 +3005,7 @@ void person_init_command(struct Thing *p_person, ushort from)
 
     for (cmd = p_person->U.UPerson.ComCur; 1; )
     {
-        p_person->Flag &= ~TngF_Unkn0800;
+        p_person->Flag &= ~TngF_TriggerUse;
         p_person->U.UPerson.Target2 = 0;
 
         p_cmd = &game_commands[cmd];
@@ -3177,7 +3251,7 @@ TbBool persons_have_truce(struct Thing *p_person1, struct Thing *p_person2)
         return false;
     }
 
-    pers1grp = p_person1->U.UPerson.EffectiveGroup;
+    pers1grp = p_person1->U.UPerson.EffectiveGroup & 0x7F;
     pers2grp = p_person2->U.UPerson.EffectiveGroup & 0x7F;
 
     return thing_group_have_truce(pers1grp, pers2grp);
@@ -3195,7 +3269,7 @@ void persons_set_groups_kill_on_sight(struct Thing *p_attacker, struct Thing *p_
         return;
     }
 
-    attack_grp = p_attacker->U.UPerson.EffectiveGroup;
+    attack_grp = p_attacker->U.UPerson.EffectiveGroup & 0x7F;
     victim_grp = p_victim->U.UPerson.EffectiveGroup & 0x7F;
 
     if (p_victim->SubType == SubTT_PERS_BRIEFCASE_M || p_victim->SubType == SubTT_PERS_WHITE_BRUN_F ||
@@ -3616,7 +3690,7 @@ void person_go_sleep(struct Thing *p_person)
         p_person->Timer1 = 48;
         p_person->StartTimer1 = 48;
         p_person->U.UPerson.BumpCount = 150;
-        p_person->Flag &= ~(TngF_Unkn0800|TngF_WepRecoil);
+        p_person->Flag &= ~(TngF_TriggerUse|TngF_WepRecoil);
         p_person->Flag2 |= TgF2_KnockedOut;
     }
 }
@@ -4089,7 +4163,7 @@ void thing_shoot_at_point(struct Thing *p_thing, short x, short y, short z, uint
         y = (height >> 8) + 20;
     }
 
-    p_thing->Flag |= TngF_Unkn0800;
+    p_thing->Flag |= TngF_TriggerUse;
     if ((p_thing->Flag & TngF_InVehicle) != 0) {
         struct Thing *p_vehicle;
         p_vehicle = &things[p_thing->U.UPerson.Vehicle];
@@ -4112,8 +4186,8 @@ void thing_shoot_at_point(struct Thing *p_thing, short x, short y, short z, uint
       PRCCOORD_TO_MAPCOORD(p_thing->Z), x, z);
     change_player_angle(p_thing, (((angle + 128) >> 8) + 8) & 7);
 
-    p_thing->PTarget = 0;
-    p_thing->Flag |= TngF_Unkn20000000|TngF_Unkn0800;
+    p_thing->PTarget = NULL;
+    p_thing->Flag |= TngF_Unkn20000000|TngF_TriggerUse;
 
     plyr = p_thing->U.UPerson.ComCur >> 2;
     plagent = p_thing->U.UPerson.ComCur & 3;
@@ -4453,7 +4527,7 @@ void person_scare_person(struct Thing *p_person)
         range = get_weapon_range(p_person);
         if (can_i_see_thing(p_person, p_person->PTarget, range, 0) > 0)
         {
-            p_person->Flag |= TngF_Unkn0800;
+            p_person->Flag |= TngF_TriggerUse;
             if ((p_person->Flag & TngF_InVehicle) != 0)
             {
                 struct Thing *p_vehicle;
@@ -4483,7 +4557,7 @@ void person_block_person(struct Thing *p_person)
         range = get_weapon_range(p_person);
         if (can_i_see_thing(p_person, p_person->PTarget, range * range, 0) > 0)
         {
-            p_person->Flag |= TngF_Unkn0800;
+            p_person->Flag |= TngF_TriggerUse;
             if ((p_person->Flag & TngF_InVehicle) != 0)
             {
                 struct Thing *p_vehicle;
@@ -4504,7 +4578,7 @@ void process_stationary_shot(struct Thing *p_person)
 {
     if (p_person->U.UPerson.WeaponTurn == 0)
     {
-        if ((p_person->Flag & TngF_Unkn0800) == 0)
+        if ((p_person->Flag & TngF_TriggerUse) == 0)
             p_person->Flag &= ~TngF_StationrSht;
     }
 }
@@ -4775,9 +4849,9 @@ void person_persuade_person(struct Thing *p_person)
     else
         weapon_range = get_hand_weapon_range(p_person, WEP_PERSUADRTRN);
 
-    if (((p_person->Flag & (TngF_Unkn0800|TngF_WepCharging)) != 0) &&
+    if (((p_person->Flag & (TngF_TriggerUse|TngF_WepCharging)) != 0) &&
       (p_person->U.UPerson.WeaponTimer > 5)) {
-        p_person->Flag &= ~TngF_Unkn0800;
+        p_person->Flag &= ~TngF_TriggerUse;
     }
 
     p_target = &things[p_person->GotoThingIndex];
@@ -4824,13 +4898,13 @@ void person_persuade_person(struct Thing *p_person)
     }
     if (p_person->State == 0) {
         p_person->State = PerSt_PERSUADE_PERSON;
-        p_person->Flag &= ~TngF_Unkn0800;
+        p_person->Flag &= ~TngF_TriggerUse;
     }
 
     p_target = p_person->PTarget;
     if ((p_target != NULL) && ((p_target->Flag & TngF_Destroyed) != 0)) {
         p_person->State = PerSt_NONE;
-        p_person->Flag &= ~TngF_Unkn0800;
+        p_person->Flag &= ~TngF_TriggerUse;
     }
 }
 
@@ -4910,9 +4984,9 @@ void person_destroy_building(struct Thing *p_person)
     struct Thing *p_target;
     TbBool in_range;
 
-    if (((p_person->Flag & (TngF_Unkn0800|TngF_WepCharging)) != 0) &&
+    if (((p_person->Flag & (TngF_TriggerUse|TngF_WepCharging)) != 0) &&
       (p_person->U.UPerson.WeaponTimer > 5))
-        p_person->Flag &= ~TngF_Unkn0800;
+        p_person->Flag &= ~TngF_TriggerUse;
 
     {
         int dist_x, dist_z, range;
@@ -4933,7 +5007,7 @@ void person_destroy_building(struct Thing *p_person)
     if (p_target == NULL)
     {
         p_person->State = PerSt_NONE;
-        p_person->Flag &= ~TngF_Unkn0800;
+        p_person->Flag &= ~TngF_TriggerUse;
         return;
     }
 
@@ -4946,12 +5020,12 @@ void person_destroy_building(struct Thing *p_person)
         if (can_i_see_building(p_person, p_building, weapon_range * weapon_range, 1) <= 0)
         {
             in_range = 0;
-            p_person->Flag &= ~TngF_Unkn0800;
+            p_person->Flag &= ~TngF_TriggerUse;
         }
         else
         {
-            p_person->Flag &= ~(TngF_Unkn00200000|TngF_Unkn0800|TngF_PersSupShld);
-            p_person->Flag |= TngF_Unkn0800;
+            p_person->Flag &= ~(TngF_Unkn00200000|TngF_TriggerUse|TngF_PersSupShld);
+            p_person->Flag |= TngF_TriggerUse;
             if ((p_person->Flag & TngF_InVehicle) != 0) {
                 struct Thing *p_vehicle;
                 p_vehicle = &things[p_person->U.UPerson.Vehicle];
@@ -4973,12 +5047,12 @@ void person_destroy_building(struct Thing *p_person)
     if (p_person->State == PerSt_NONE)
     {
         p_person->State = PerSt_DESTROY_BUILDING;
-        p_person->Flag &= ~TngF_Unkn0800;
+        p_person->Flag &= ~TngF_TriggerUse;
     }
     if ((p_target->Flag & TngF_Destroyed) != 0)
     {
         p_person->State = PerSt_NONE;
-        p_person->Flag &= ~TngF_Unkn0800;
+        p_person->Flag &= ~TngF_TriggerUse;
     }
 }
 
@@ -5790,7 +5864,7 @@ void process_person(struct Thing *p_person)
 
         if ((p_person->Flag & TngF_StationrSht) != 0)
         {
-          if ((p_person->U.UPerson.WeaponTurn == 0) && ((p_person->Flag & TngF_Unkn0800) == 0))
+          if ((p_person->U.UPerson.WeaponTurn == 0) && ((p_person->Flag & TngF_TriggerUse) == 0))
           {
               p_person->Flag &= ~TngF_StationrSht;
           }
@@ -5841,7 +5915,7 @@ void process_person(struct Thing *p_person)
     }
 
     if ((p_person->Flag & (TngF_Unkn40000000|TngF_Destroyed)) != 0)
-        p_person->Flag &= ~TngF_Unkn0800;
+        p_person->Flag &= ~TngF_TriggerUse;
     else
         process_weapon(p_person);
 

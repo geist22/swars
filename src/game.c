@@ -69,7 +69,7 @@
 #include "svesa.h"
 #include "swlog.h"
 #include "bflib_vidraw.h"
-#include "bflib_joyst.h"
+#include "bfjoyst.h"
 #include "ssampply.h"
 #include "matrix.h"
 #include "dos.h"
@@ -174,6 +174,15 @@
 /** How many game turns should pass before intro is replayed.
  */
 #define INTRO_REPLAY_TURNS 1100
+
+/** details on how much and how fast to rotate/tilt/zoom the camera.
+ */
+#define CAMERA_TILT_MIN -192
+#define CAMERA_TILT_MAX -152
+#define CAMERA_ZOOM_MIN 120
+#define CAMERA_ZOOM_MAX 256
+#define CAMERA_ROTATION_INPUT_MULTIPLIER 256
+#define CAMERA_TILT_INPUT_MULTIPLIER 4
 
 enum PostRenderAction {
     PRend_NONE = 0,
@@ -2541,7 +2550,7 @@ void init_level_unknsub01_person(struct Thing *p_person)
 
 void init_level_unknsub01_building(struct Thing *p_buildng)
 {
-    p_buildng->Flag &= TngF_Unkn0800;
+    p_buildng->Flag &= TngF_TriggerUse;
     if (p_buildng->SubType == SubTT_BLD_MGUN)
     {
         p_buildng->PTarget = NULL;
@@ -2715,7 +2724,7 @@ void init_level(void)
     set_user_selected_brightness();
     ingame.Flags &= ~TngF_Unkn8000;
     if (!in_network_game)
-        ingame.InNetGame_UNSURE = 1;
+        ingame.InNetGame_UNSURE = (1 << 0);
     word_1531DA = 1;
     shield_frames_init();
     ingame.fld_unkCB7 = 0;
@@ -2827,6 +2836,7 @@ void init_game_controls(void)
     asm volatile ("call ASM_init_game_controls\n"
         :  :  : "eax" );
 #endif
+    reset_user_groups();
     reset_user_input();
 
     init_user_input_local_controls();
@@ -3631,7 +3641,7 @@ void gproc3_unknsub2(void)
     int bkp_ingame_flags;
     int long bkp_engn_anglexz;
     ushort bkp_render_area_a, bkp_render_area_b;
-    long bkp_dword_152EEC;
+    long bkp_cam_tilt;
     ubyte bkp_unkn_flags_01;
     ushort bkp_overall_scale;
     s32 bkp_engn_xc, bkp_engn_yc, bkp_engn_zc;
@@ -3654,7 +3664,7 @@ void gproc3_unknsub2(void)
     bkp_engn_zc = engn_zc;
     bkp_engn_anglexz = engn_anglexz;
     bkp_ingame_flags = ingame.Flags;
-    bkp_dword_152EEC = dword_152EEC;
+    bkp_cam_tilt = cam_tilt;
     bkp_unkn_flags_01 = unkn_flags_01;
 
     render_area_a = 24;
@@ -3699,7 +3709,7 @@ void gproc3_unknsub2(void)
     if (dword_155014 > 0x8000)
         dword_155014 = 0;
 
-    dword_152EEC = dword_1AAB78;
+    cam_tilt = dword_1AAB78;
     engn_xc = dword_155010;
     engn_yc = dword_155018;
     engn_zc = dword_155014;
@@ -3730,7 +3740,7 @@ void gproc3_unknsub2(void)
     engn_zc = bkp_engn_zc;
     engn_anglexz = bkp_engn_anglexz;
     ingame.Flags = bkp_ingame_flags;
-    dword_152EEC = bkp_dword_152EEC;
+    cam_tilt = bkp_cam_tilt;
     unkn_flags_01 = bkp_unkn_flags_01;
 
     process_engine_unk1();
@@ -4961,7 +4971,6 @@ ubyte weapon_select_input(void)
         }
     }
 
-#ifdef MORE_GAME_KEYS
     if (is_gamekey_pressed(GKey_SUPERSHIELD))
     {
         clear_gamekey_pressed(GKey_SUPERSHIELD);
@@ -4981,7 +4990,6 @@ ubyte weapon_select_input(void)
             return GINPUT_PACKET;
         }
     }
-#endif
 
     assert(sizeof(sel_weapon_gkeys)/sizeof(sel_weapon_gkeys[0]) <= WEAPONS_CARRIED_MAX_COUNT);
 
@@ -5021,8 +5029,79 @@ ubyte weapon_select_input(void)
 
 void do_rotate_map(void)
 {
+#if 0
     asm volatile ("call ASM_do_rotate_map\n"
         :  :  : "eax" );
+    return;
+#endif
+
+    short rotate_input = 0;
+    if (is_gamekey_pressed(GKey_VIEW_SPIN_R))
+        rotate_input++;
+    if (is_gamekey_pressed(GKey_VIEW_SPIN_L))
+        rotate_input--;
+
+    if (rotate_input == 0) {
+#ifdef MORE_GAME_KEYS
+        // these keys are used for rotation only here, but since
+        // at the same time they are also used for moving the
+        // viewport (GKey_LEFT/GKey_LEFT), the result is panning
+        if (is_gamekey_pressed(GKey_VIEW_PAN_R))
+            rotate_input++;
+        if (is_gamekey_pressed(GKey_VIEW_PAN_L))
+            rotate_input--;
+#else
+        if (is_key_pressed(kbkeys[GKey_RIGHT], KMod_SHIFT))
+            rotate_input++;
+        if (is_key_pressed(kbkeys[GKey_LEFT], KMod_SHIFT))
+            rotate_input--;
+#endif
+    }
+
+    short zoom_input = 0;
+    if (is_gamekey_pressed(GKey_ZOOM_IN))
+        zoom_input++;
+    if (is_gamekey_pressed(GKey_ZOOM_OUT))
+        zoom_input--;
+
+    // Update zoom level
+    if (zoom_input != 0)
+    {
+        short new_zoom = ingame.UserZoom + (zoom_input * 8);
+
+        if (new_zoom < CAMERA_ZOOM_MIN) {
+            if (pktrec_mode != PktR_PLAYBACK) {
+                new_zoom = CAMERA_ZOOM_MIN;
+            }
+        }
+        else if (new_zoom > CAMERA_ZOOM_MAX) {
+            new_zoom = CAMERA_ZOOM_MAX;
+        }
+
+        ingame.UserZoom = new_zoom;
+    }
+
+    short tilt_input = 0;
+    if (is_gamekey_pressed(GKey_VIEW_TILT_U))
+        tilt_input++;
+    if (is_gamekey_pressed(GKey_VIEW_TILT_D))
+        tilt_input--;
+
+    if (tilt_input != 0)
+    {
+        long new_cam_tilt = cam_tilt + (tilt_input * CAMERA_TILT_INPUT_MULTIPLIER);
+        if (new_cam_tilt < CAMERA_TILT_MIN) {
+            new_cam_tilt = CAMERA_TILT_MIN;
+        }
+        else if (new_cam_tilt > CAMERA_TILT_MAX) {
+            new_cam_tilt = CAMERA_TILT_MAX;
+        }
+        cam_tilt = new_cam_tilt;
+    }
+
+    long new_cam_rotation_velocity = cam_rotation_velocity + (rotate_input * CAMERA_ROTATION_INPUT_MULTIPLIER);
+    new_cam_rotation_velocity = (3 * new_cam_rotation_velocity) / 4;
+    cam_rotation_velocity = new_cam_rotation_velocity;
 }
 
 ubyte process_mouse_inputs(void)
@@ -6727,7 +6806,7 @@ void load_packet(void)
     if (PacketRecord_IsPlayback()) // packet replay controls
     {
         if (!in_network_game)
-            PacketRecord_Read(p_pckt);
+            PacketRecord_Read(p_pckt, p_locplayer->DoubleMode);
         input_packet_playback();
         ingame.MissionStatus = test_missions(0);
         return;
@@ -6834,15 +6913,54 @@ void load_packet(void)
 
         if (PacketRecord_IsRecord() && !in_network_game)
         {
-            PacketRecord_Write(p_pckt);
+            PacketRecord_Write(p_pckt, p_locplayer->DoubleMode);
         }
     }
 }
 
 void joy_input(void)
 {
+#if 0
     asm volatile ("call ASM_joy_input\n"
         :  :  : "eax" );
+    return;
+#endif
+    joy_update_inputs(&joy);
+
+    PlayerInfo *p_locplayer = &players[local_player_no];
+
+    if (p_locplayer->DoubleMode && ingame.DisplayMode != DpM_PURPLEMNU)
+    {
+        if (ingame.DisplayMode == DpM_ENGINEPLY)
+        {
+            for (int i = 0; i < joy.NumberOfDevices; i++)
+            {
+                if (!joy.Init[i])
+                    continue;
+
+                JoyButtonSet rotate_btns = jskeys[GKey_VIEW_SPIN_R] | jskeys[GKey_VIEW_SPIN_L]
+                                        | jskeys[GKey_VIEW_TILT_U] | jskeys[GKey_VIEW_TILT_D] 
+                                        | jskeys[GKey_ZOOM_IN] | jskeys[GKey_ZOOM_OUT]
+                                        #if defined MORE_GAME_KEYS
+                                        | jskeys[GKey_VIEW_PAN_R] | jskeys[GKey_VIEW_PAN_L]
+                                        #endif
+                                           ;
+                joy.Buttons[0] |= (joy.Buttons[i] & rotate_btns);
+            }
+        }
+    }
+    else
+    {
+        for (int i = 0; i < joy.NumberOfDevices; i++)
+        {
+            if (!joy.Init[i])
+                continue;
+
+            joy.Buttons[0] |= joy.Buttons[i];
+            joy.DigitalX[0] |= joy.DigitalX[i];
+            joy.DigitalY[0] |= joy.DigitalY[i];
+        }
+    }
 }
 
 /** Orbital station explosion code.

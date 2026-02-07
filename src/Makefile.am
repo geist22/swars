@@ -33,8 +33,12 @@ syndwarsfx_SOURCES = \
 	../swrendersoft/include/enginlights.h \
 	../swrendersoft/src/enginpeff.c \
 	../swrendersoft/include/enginpeff.h \
+	../swrendersoft/src/enginpriobjs.c \
+	../swrendersoft/include/enginpriobjs.h \
 	../swrendersoft/src/enginpritxtr.c \
 	../swrendersoft/include/enginpritxtr.h \
+	../swrendersoft/src/enginsngobjs.c \
+	../swrendersoft/include/enginsngobjs.h \
 	../swrendersoft/src/engintxtrmap.c \
 	../swrendersoft/include/engintxtrmap.h \
 	../swrendersoft/src/enginprops.c \
@@ -48,9 +52,6 @@ syndwarsfx_SOURCES = \
 	../swrendersoft/include/render_gpoly.h \
 	../swrendersoft/src/render_gpoly.c \
 	../swrendersoft/include/privrdlog.h \
-	bflib_joyst.c \
-	bflib_joyst.h \
-	bflib_joyst_s.sx \
 	bflib_snd_mss_s.sx \
 	bflib_vidraw.c \
 	bflib_vidraw.h \
@@ -110,12 +111,8 @@ syndwarsfx_SOURCES = \
 	engindrwlstx_tng.h \
 	enginfexpl.c \
 	enginfexpl.h \
-	enginpriobjs.c \
-	enginpriobjs.h \
 	enginshrapn.c \
 	enginshrapn.h \
-	enginsngobjs.c \
-	enginsngobjs.h \
 	enginshadws.c \
 	enginshadws.h \
 	engintext.c \
@@ -181,8 +178,6 @@ syndwarsfx_SOURCES = \
 	hud_panel.h \
 	hud_target.c \
 	hud_target.h \
-	joy_modul1.sx \
-	joy_modul2.sx \
 	keyboard.c \
 	keyboard.h \
 	lvdraw3d.c \

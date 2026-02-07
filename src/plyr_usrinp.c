@@ -21,7 +21,7 @@
 
 #include <assert.h>
 #include "bfkeybd.h"
-#include "bflib_joyst.h"
+#include "bfjoyst.h"
 #include "ssampply.h"
 
 #include "engincam.h"
@@ -88,7 +88,7 @@ void do_user_input_bits_control_clear_nonmove(struct SpecialUserInput *p_usrinp)
     p_usrinp->Bits &= ~SpUIn_AllNonMoveBits;
 }
 
-void reset_user_input(void)
+void reset_user_groups(void)
 {
     PlayerIdx plyr;
 
@@ -100,6 +100,11 @@ void reset_user_input(void)
             unkn_player_groups[plyr][plgroup].GroupActive = 0;
         }
     }
+}
+
+void reset_user_input(void)
+{
+    PlayerIdx plyr;
 
     for (plyr = 0; plyr < PLAYERS_LIMIT; plyr++)
     {
@@ -191,7 +196,7 @@ void do_user_input_bits_direction_from_joy(struct SpecialUserInput *p_usrinp, ub
         set_agent_move_direction_delta_x(p_usrinp, dt);
     }
     if (get_agent_move_direction_delta_z(p_usrinp) == 0) {
-        dt = joy.DigitalY[channel];
+        dt = -joy.DigitalY[channel];
         set_agent_move_direction_delta_z(p_usrinp, dt);
     }
 }

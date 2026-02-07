@@ -108,7 +108,7 @@ enum ThingFlags {
     TngF_VehUnkn0100  = 0x0100,
     TngF_StationrSht  = 0x0200,
     TngF_WepCharging  = 0x0400,
-    TngF_Unkn0800     = 0x0800,
+    TngF_TriggerUse   = 0x0800,
     TngF_Unkn1000     = 0x1000,
     TngF_PlayerAgent  = 0x2000,
     TngF_Unkn4000     = 0x4000,
@@ -147,6 +147,11 @@ enum ThingFlags {
  */
 #define TngF_StandOnVehicle TngF_Unkn01000000
 
+/** Thing object is locked and cannot be entered or passed.
+ * The flag has this meaning for buildings, different meaning for other things.
+ */
+#define TngF_PassageLocked TngF_TriggerUse
+
 enum ThingFlags2 {
     TgF2_Unkn0001     = 0x0001,
     TgF2_Unkn0002     = 0x0002,
@@ -170,7 +175,13 @@ enum ThingFlags2 {
     TgF2_Unkn00080000 = 0x00080000,
     TgF2_Unkn00100000 = 0x00100000,
     TgF2_Unkn00200000 = 0x00200000,
-    TgF2_Unkn00400000 = 0x00400000,
+    /** The thing has sub-type temporarely altered from original.
+     *
+     * If set, the thing is affected by clone shield or from other reasons
+     * has SubTyper property altered from real value. The original value
+     * is stored in OldSubType property.
+     */
+    TgF2_AlteredSubType = 0x00400000,
     TgF2_Unkn00800000 = 0x00800000,
     /** The thing is not added to map content lists and is invisible.
      *
@@ -557,6 +568,8 @@ struct SimpleThing
     short State;
     ulong Flag;
     short LinkSame;
+    /** Object index, or range.
+     */
     short Object;
     short Radius;
     ThingIdx ThingOffset;
@@ -1077,7 +1090,7 @@ TbBool thing_intersects_circle(ThingIdx thing, short X, short Z, ushort R);
  */
 TbBool thing_intersects_cylinder(ThingIdx thing, short X, short Y, short Z, ushort R, ushort H);
 
-struct SimpleThing *create_scale_effect(int x, int y, int z, ushort frame, int timer);
+struct SimpleThing *create_scale_effect(int x, int y, int z, ushort frame, short timer);
 
 struct SimpleThing *create_sound_effect(int x, int y, int z, ushort sample, int vol, int loop);
 

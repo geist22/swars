@@ -19,14 +19,14 @@
 #include "enginpriobjs.h"
 
 #include "bffile.h"
+#include "bfmath.h"
 #include "bfmemut.h"
 
 #include "enginpritxtr.h"
+#include "enginprops.h"
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"
-#include "game_data.h"
-#include "game_options.h"
-#include "swlog.h"
+#include "privrdlog.h"
 /******************************************************************************/
 
 ushort prim_object_points_count = 1;
@@ -158,14 +158,149 @@ ushort find_normal(struct Normal *p_normal)
 
 void calc_normal(short face, struct Normal *p_normal)
 {
+#if 0
     asm volatile ("call ASM_calc_normal\n"
         : : "a" (face), "d" (p_normal));
+    return;
+#endif
+    struct SingleObjectFace3 *p_face;
+    struct SinglePoint *p_objpt1;
+    struct SinglePoint *p_objpt2;
+    struct SinglePoint *p_objpt3;
+    int fctB_x, fctB_y, fctB_z, fctB_len;
+    int fctC_x, fctC_y, fctC_z, fctC_len;
+    int fctD_x, fctD_y, fctD_z;
+    int fctE_a, fctE_b;
+    int dirvec_x, dirvec_y, dirvec_z, dirvec_len;
+    int nx, ny, nz;
+
+    p_face = &game_object_faces[face];
+    p_objpt1 = &game_object_points[p_face->PointNo[0]];
+    p_objpt2 = &game_object_points[p_face->PointNo[1]];
+    p_objpt3 = &game_object_points[p_face->PointNo[2]];
+
+    fctB_x = p_objpt2->X - p_objpt1->X;
+    fctB_y = p_objpt2->Y - p_objpt1->Y;
+    fctB_z = p_objpt2->Z - p_objpt1->Z;
+
+    fctC_x = p_objpt3->X - p_objpt2->X;
+    fctC_y = p_objpt3->Y - p_objpt2->Y;
+    fctC_z = p_objpt3->Z - p_objpt2->Z;
+
+    if (!(fctB_x || fctB_y || fctB_z) || !(fctC_x || fctC_y || fctC_z))
+    {
+        p_normal->NX = 0;
+        p_normal->NY = 255;
+        p_normal->NZ = 0;
+        return;
+    }
+
+    fctB_len = LbSqrL(fctB_x * fctB_x + fctB_y * fctB_y + fctB_z * fctB_z);
+    if (fctB_len == 0)
+        fctB_len = 1;
+
+    fctD_x = (fctB_x << 8) / fctB_len;
+    fctD_y = (fctB_y << 8) / fctB_len;
+    fctD_z = (fctB_z << 8) / fctB_len;
+
+    fctC_len = LbSqrL(fctC_x * fctC_x + fctC_y * fctC_y + fctC_z * fctC_z);
+    if (fctC_len == 0)
+        fctC_len = 1;
+
+    fctE_a = (fctC_x << 8) / fctC_len;
+    fctE_b = (fctC_y << 8) / fctC_len;
+
+    dirvec_x = ((fctC_z << 8) / fctC_len * fctD_y - fctD_z * fctE_b) >> 8;
+    dirvec_y = (fctE_a * fctD_z - fctD_x * ((fctC_z << 8) / fctC_len)) >> 8;
+    dirvec_z = (fctE_b * fctD_x - fctD_y * fctE_a) >> 8;
+
+    dirvec_len = LbSqrL(dirvec_y * dirvec_y + dirvec_x * dirvec_x + dirvec_z * dirvec_z);
+    if (dirvec_len == 0)
+        dirvec_len = 1;
+
+    nx = (dirvec_x << 8) / dirvec_len;
+    ny = (dirvec_y << 8) / dirvec_len;
+    nz = (dirvec_z << 8) / dirvec_len;
+    if (!nx && !ny && !nz)
+        ny = 255;
+
+    p_normal->NX = nx;
+    p_normal->NY = ny;
+    p_normal->NZ = nz;
 }
 
 void calc_normal4(short face, struct Normal *p_normal)
 {
+#if 0
     asm volatile ("call ASM_calc_normal4\n"
         : : "a" (face), "d" (p_normal));
+    return;
+#endif
+    struct SingleObjectFace4 *p_face;
+    struct SinglePoint *p_objpt1;
+    struct SinglePoint *p_objpt2;
+    struct SinglePoint *p_objpt3;
+    int fctB_x, fctB_y, fctB_z, fctB_len;
+    int fctC_x, fctC_y, fctC_z, fctC_len;
+    int fctD_x, fctD_y, fctD_z;
+    int fctE_a, fctE_b, fctE_c;
+    int dirvec_x, dirvec_y, dirvec_z, dirvec_len;
+    int nx, ny, nz;
+
+    p_face = &game_object_faces4[face];
+    p_objpt1 = &game_object_points[p_face->PointNo[0]];
+    p_objpt2 = &game_object_points[p_face->PointNo[1]];
+    p_objpt3 = &game_object_points[p_face->PointNo[2]];
+
+    fctB_x = p_objpt2->X - p_objpt1->X;
+    fctB_y = p_objpt2->Y - p_objpt1->Y;
+    fctB_z = p_objpt2->Z - p_objpt1->Z;
+
+    fctC_x = p_objpt3->X - p_objpt2->X;
+    fctC_y = p_objpt3->Y - p_objpt2->Y;
+    fctC_z = p_objpt3->Z - p_objpt2->Z;
+
+    if (!(fctB_x || fctB_y || fctB_z) || !(fctC_x || fctC_y || fctC_z))
+    {
+        p_normal->NX = 0;
+        p_normal->NY = 255;
+        p_normal->NZ = 0;
+        return;
+    }
+
+    fctB_len = LbSqrL(fctB_z * fctB_z + fctB_x * fctB_x + fctB_y * fctB_y);
+    if (fctB_len == 0)
+        fctB_len = 1;
+
+    fctD_x = (fctB_x << 8) / fctB_len;
+    fctD_y = (fctB_y << 8) / fctB_len;
+    fctD_z = (fctB_z << 8) / fctB_len;
+
+    fctC_len = LbSqrL(fctC_y * fctC_y + fctC_x * fctC_x + fctC_z * fctC_z);
+    if (fctC_len == 0)
+        fctC_len = 1;
+
+    fctE_a = (fctC_x << 8) / fctC_len;
+    fctE_b = (fctC_y << 8) / fctC_len;
+    fctE_c = (fctC_z << 8) / fctC_len;
+
+    dirvec_x = (fctD_y * fctE_c - fctE_b * fctD_z) >> 8;
+    dirvec_y = (fctE_a * fctD_z - fctD_x * fctE_c) >> 8;
+    dirvec_z = (fctE_b * fctD_x - fctE_a * fctD_y) >> 8;
+
+    dirvec_len = LbSqrL(dirvec_z * dirvec_z + dirvec_x * dirvec_x + dirvec_y * dirvec_y);
+    if ( !dirvec_len )
+      dirvec_len = 1;
+
+    nx = (dirvec_x << 8) / dirvec_len;
+    ny = (dirvec_y << 8) / dirvec_len;
+    nz = (dirvec_z << 8) / dirvec_len;
+
+    if ( !nx && !ny && !nz )
+        ny = 255;
+    p_normal->NX = nx;
+    p_normal->NY = ny;
+    p_normal->NZ = nz;
 }
 
 ushort obj_face3_create_normal(short face)
@@ -188,7 +323,7 @@ ushort obj_face3_create_normal(short face)
     {
         ushort nrml;
 
-        if (next_normal + 1 >= mem_game[8].N) {
+        if (next_normal + 1 >= game_normals_limit) {
             return 0;
         }
         nrml = next_normal++;
@@ -220,7 +355,7 @@ ushort obj_face4_create_normal(short face)
     {
         ushort nrml;
 
-        if (next_normal + 1 > mem_game[8].N) {
+        if (next_normal + 1 > game_normals_limit) {
             return 0;
         }
         nrml = next_normal++;
@@ -264,10 +399,6 @@ void update_texture_from_anim_tmap(ushort ani_tmap)
 #endif
 }
 
-void prim_obj_mem_debug(int itm_beg, int itm_end)
-{
-}
-
 ushort copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty)
 {
 #if 0
@@ -305,7 +436,7 @@ ushort copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty
     pt_beg = p_psngobj->StartPoint;
     pt_end = p_psngobj->EndPoint;
 
-    if (next_object > mem_game[5].N)
+    if (next_object > game_objects_limit)
         return 0;
     new_obj = next_object++;
     p_nsngobj = &game_objects[new_obj];
@@ -318,7 +449,7 @@ ushort copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty
     p_nsngobj->NumbFaces = 0;
     p_nsngobj->NumbFaces4 = 0;
 
-    if (next_object_point + (pt_end - pt_beg) > mem_game[3].N)
+    if (next_object_point + (pt_end - pt_beg) > game_object_points_limit)
         return new_obj;
 
     // All points/vertices (for all faces) used by the primitive
@@ -335,8 +466,8 @@ ushort copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty
         LbMemoryCopy(p_nsngpt, p_psngpt, sizeof(struct SinglePoint));
 
         point_unkn_func_03(p_nsngpt);
-        if (ingame.LowerMemoryUse == 3)
-            prim_obj_mem_debug(pt, pt+1);
+        if (prim_obj_mem_debug != NULL)
+            prim_obj_mem_debug(PriEl_PRIM_POINT, pt, pt+1);
     }
 
     p_nsngobj->StartFace = next_object_face;
@@ -348,11 +479,11 @@ ushort copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty
         struct SingleObjectFace3 *p_nface;
         ushort new_face;
 
-        if (ingame.LowerMemoryUse == 3)
-            prim_obj_mem_debug(face_beg, face_beg + face_dt);
+        if (prim_obj_mem_debug != NULL)
+            prim_obj_mem_debug(PriEl_PRIM_FACE3, face_beg + face_dt, face_beg + face_dt + 1);
 
         p_pface = &prim_object_faces[face_beg + face_dt];
-        if (next_object_face + 3 > mem_game[4].N) {
+        if (next_object_face + 3 > game_object_faces_limit) {
             p_nsngobj->NumbFaces = face_dt;
             return new_obj;
         }
@@ -365,6 +496,8 @@ ushort copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty
             ushort new_txtr;
 
             p_pstxtr = &prim_face_textures[p_pface->Texture];
+            if (prim_obj_mem_debug != NULL)
+                prim_obj_mem_debug(PriEl_PRIM_TEXTR3, p_pface->Texture, p_pface->Texture + 1);
             new_txtr = 0;
             if ((p_pface->GFlags & 0x10) == 0) // If disallow reuse of textures is not set
             {
@@ -372,7 +505,7 @@ ushort copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty
             }
             if (new_txtr == 0)
             {
-                if (next_face_texture + 2 > mem_game[2].N) {
+                if (next_face_texture + 2 > face_textures_limit) {
                     p_nsngobj->NumbFaces = face_dt;
                     return new_obj;
                 }
@@ -381,8 +514,8 @@ ushort copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty
                 LbMemoryCopy(p_nstxtr, p_pstxtr, sizeof(struct SingleTexture));
             }
             p_nface->Texture = new_txtr;
-            if (ingame.LowerMemoryUse == 3)
-              prim_obj_mem_debug(-next_face_texture, 0);
+            if (prim_obj_mem_debug != NULL)
+                prim_obj_mem_debug(PriEl_GAME_TEXTR3, new_txtr, new_txtr + 1);
         }
         p_nface->Flags = p_pface->Flags;
         p_nface->GFlags = p_pface->GFlags;
@@ -395,12 +528,14 @@ ushort copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty
         p_nface->Light0 = 0;
         p_nface->Light1 = 0;
         p_nface->Light2 = 0;
+        if (prim_obj_mem_debug != NULL)
+            prim_obj_mem_debug(PriEl_GAME_FACE3, new_face, new_face + 1);
     }
 
     p_psngobj = &prim_objects[prim_obj];
     face_num = p_psngobj->NumbFaces4;
     face_beg = p_psngobj->StartFace4;
-    if (face_beg > mem_game[22].N)
+    if (face_beg > prim_object_faces4_limit)
         return new_obj;
 
     p_nsngobj->StartFace4 = next_object_face4;
@@ -416,11 +551,11 @@ ushort copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty
         struct SingleObjectFace4 *p_nface;
         ushort new_face;
 
-        if (ingame.LowerMemoryUse == 3)
-            prim_obj_mem_debug(-face_beg, -(face_beg + face_dt));
+        if (prim_obj_mem_debug != NULL)
+            prim_obj_mem_debug(PriEl_PRIM_FACE4, face_beg, face_beg + face_dt);
 
         p_pface = &prim_object_faces4[face_beg + face_dt];
-        if (next_object_face4 + 2 > mem_game[9].N)
+        if (next_object_face4 + 2 > game_object_faces4_limit)
             return new_obj;
         new_face = next_object_face4++;
         p_nface = &game_object_faces4[new_face];
@@ -436,7 +571,7 @@ ushort copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty
                 struct AnimTmap *p_panitmap;
                 ushort new_anitmap;
 
-                if (next_anim_tmap > mem_game[10].N) {
+                if (next_anim_tmap > game_anim_tmaps_limit) {
                     p_nsngobj->NumbFaces4 = face_dt;
                     return new_obj;
                 }
@@ -446,7 +581,7 @@ ushort copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty
                 LbMemoryCopy(p_nanitmap, p_panitmap, sizeof(struct AnimTmap));
                 update_texture_from_anim_tmap(new_anitmap);
 
-                if (next_floor_texture + 1 > mem_game[1].N) {
+                if (next_floor_texture + 1 > game_textures_limit) {
                     p_nsngobj->NumbFaces4 = face_dt;
                     return new_obj;
                 }
@@ -464,6 +599,8 @@ ushort copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty
             ushort new_txtr;
 
             p_pftxtr = &prim4_textures[p_pface->Texture];
+            if (prim_obj_mem_debug != NULL)
+                prim_obj_mem_debug(PriEl_PRIM_TEXTR4, p_pface->Texture, p_pface->Texture + 1);
             new_txtr = 0;
             if ((p_pface->GFlags & 0x10) == 0)
             {
@@ -471,7 +608,7 @@ ushort copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty
             }
             if (new_txtr == 0)
             {
-                if (next_floor_texture + 1 > mem_game[1].N) {
+                if (next_floor_texture + 1 > game_textures_limit) {
                     p_nsngobj->NumbFaces4 = face_dt;
                     return new_obj;
                 }
@@ -480,8 +617,8 @@ ushort copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty
                 LbMemoryCopy(p_nftxtr, p_pftxtr, sizeof(struct SingleFloorTexture));
             }
             p_nface->Texture = new_txtr;
-            if (ingame.LowerMemoryUse == 3)
-                prim_obj_mem_debug(next_floor_texture, 0);
+            if (prim_obj_mem_debug != NULL)
+                prim_obj_mem_debug(PriEl_GAME_TEXTR4, new_txtr, new_txtr + 1);
         }
         p_nface->Flags = p_pface->Flags;
         p_nface->GFlags = p_pface->GFlags;
@@ -496,12 +633,12 @@ ushort copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty
         p_nface->Light1 = 0;
         p_nface->Light2 = 0;
         p_nface->Light3 = 0;
+        if (prim_obj_mem_debug != NULL)
+            prim_obj_mem_debug(PriEl_GAME_FACE4, new_face, new_face + 1);
     }
 
-    if (ingame.LowerMemoryUse == 3)
-        prim_obj_mem_debug(-10005, 0);
-    if (ingame.LowerMemoryUse == 3)
-        prim_obj_mem_debug(-10000, 0);
+    if (prim_obj_mem_debug != NULL)
+        prim_obj_mem_debug(PriEl_NONE, -10000, 0);
     return new_obj;
 #endif
 }
