@@ -35,6 +35,7 @@
 
 #include "engincam.h"
 #include "engincolour.h"
+#include "enginpeff.h"
 #include "engintxtrmap.h"
 #include "render_gpoly.h"
 
@@ -80,6 +81,7 @@ enum PanelMomentaryFlags {
 };
 
 struct GamePanel *game_panel;
+struct PanelStyle *game_panel_style;
 struct TbPoint *game_panel_shifts;
 
 TbBool panel_exists(short panel)
@@ -90,7 +92,15 @@ TbBool panel_exists(short panel)
     return (p_panel->Spr[0] != -1);
 }
 
-TbBool panel_for_speciifc_agent(short panel)
+TbBool panel_any_visible(void)
+{
+    if ((ingame.TrackThing != 0) && !game_cam_tracked_thing_is_player_agent())
+        return false;
+
+    return ((ingame.Flags & GamF_HUDPanel) != 0);
+}
+
+TbBool panel_for_specific_agent(short panel)
 {
     struct GamePanel *p_panel;
 
@@ -174,14 +184,129 @@ void update_dropped_item_under_agent_exists(short agent)
     }
 }
 
-void SCANNER_unkn_func_203(int a1, int a2, int a3, int a4, ubyte a5, int a6, int a7)
+/** Set scanner size to given panel size, but limit both to what the scanner supports.
+ */
+void srm_scanner_set_size_to_panel_with_limit(struct GamePanel *p_panel)
 {
+    short hlimit;
+
+    // Limit the height here, to make sure reduced rectangle is still put at bottom
+    hlimit = sizeof(ingame.Scanner.Width)/sizeof(ingame.Scanner.Width[0]);
+    if (p_panel->dyn.Height >= hlimit) {
+        short delta_d, delta_p;
+
+        delta_d = p_panel->dyn.Height - hlimit;
+        delta_p = p_panel->dyn.Y - p_panel->pos.Y;
+        p_panel->dyn.Y += delta_d;
+        p_panel->dyn.Height = hlimit - 1;
+        p_panel->pos.Y = p_panel->dyn.Y - delta_p;
+        p_panel->pos.Height -= delta_d;
+    }
+
+    SCANNER_set_screen_box(p_panel->dyn.X, p_panel->dyn.Y,
+        p_panel->dyn.Width, p_panel->dyn.Height, 24);
+}
+
+void srm_scanner_size_update(void)
+{
+    short panel;
+    struct GamePanel *p_panel;
+
+    for (panel = 0; panel < GAME_PANELS_LIMIT; panel++)
+    {
+        p_panel = &game_panel[panel];
+        if (p_panel->Type == PanT_Scanner)
+            break;
+    }
+
+    if (panel >= GAME_PANELS_LIMIT) {
+        SCANNER_set_screen_box(0, 0, 0, 0, 0);
+        return;
+    }
+
+    srm_scanner_set_size_to_panel_with_limit(p_panel);
+}
+
+void init_scanner_colour(void)
+{
+    SCANNER_set_colours(game_panel_style);
+    SCANNER_fill_in();
+}
+
+void init_scanner(void)
+{
+    LOGDBG("Begin");
+    init_scanner_colour();
+    dword_1AA5C4 = 0;
+    dword_1AA5C8 = 0;
+    ingame.Scanner.Brightness = 8;
+    ingame.Scanner.Contrast = 5;
+    SCANNER_width = ingame.Scanner.Width;
+    ingame.Scanner.Zoom = 128;
+    ingame.Scanner.Angle = 0;
+    srm_scanner_size_update();
+    SCANNER_init();
+}
+
+void SCANNER_unkn_func_203(int scr_x1, int scr_y1, int scr_x2, int scr_y2, ubyte col1, int a6, int base_bri)
+{
+#if 0
     asm volatile (
       "push %6\n"
       "push %5\n"
       "push %4\n"
       "call ASM_SCANNER_unkn_func_203\n"
-        : : "a" (a1), "d" (a2), "b" (a3), "c" (a4), "g" (a5), "g" (a6), "g" (a7));
+        : : "a" (scr_x1), "d" (scr_y1), "b" (scr_x2), "c" (scr_y2), "g" (col1), "g" (a6), "g" (base_bri));
+#endif
+    ubyte *o;
+    ubyte bri;
+
+    if (scr_y1 == scr_y2)
+    {
+        int x1, x2;
+        int k, k0;
+        int i;
+
+        if (scr_x2 < scr_x1) {
+            x1 = scr_x2;
+            x2 = scr_x1;
+        } else {
+            x1 = scr_x1;
+            x2 = scr_x2;
+        }
+        o = &lbDisplay.WScreen[scr_y1 * lbDisplay.PhysicalScreenWidth + x1];
+        k0 = (low_trans_grey_pal_bright[col1] >> 1) + base_bri;
+        for (i = 0; i <= x2 - x1; i++)
+        {
+            k = (low_trans_grey_pal_bright[*o] >> 1) + k0;
+            bri = low_trans_grey_bright_limit[k];
+            *o = pixmap.fade_table[256 * bri + col1];
+            o++;
+        }
+    }
+    else
+    {
+        int y1, y2;
+        int k, k0;
+        int i;
+
+        if (scr_y2 < scr_y1) {
+            y1 = scr_y2;
+            y2 = scr_y1;
+        } else {
+            y1 = scr_y1;
+            y2 = scr_y2;
+        }
+        o = &lbDisplay.WScreen[y1 * lbDisplay.PhysicalScreenWidth + scr_x1];
+        k0 = (low_trans_grey_pal_bright[col1] >> 1) + base_bri;
+        for (i = 0; i <= y2 - y1; i++)
+        {
+            k = (low_trans_grey_pal_bright[*o] >> 1) + k0;
+            bri = low_trans_grey_bright_limit[k];
+            *o = pixmap.fade_table[256 * bri + col1];
+            o += lbDisplay.PhysicalScreenWidth;
+        }
+    }
 }
 
 int SCANNER_text_draw(const char *text, int start_x, int height)
@@ -197,7 +322,7 @@ int SCANNER_text_draw(const char *text, int start_x, int height)
     height_base = 9 * fnt_height / 6;
     y = 0;
     str = (const ubyte *)text;
-    sel_c1 = SCANNER_colour[0];
+    sel_c1 = SCANNER_colour[ScnClr_Text];
     x = start_x;
     if (height != height_base)
     {
@@ -326,46 +451,50 @@ void draw_players_chat_talk(int x, int y)
     }
 }
 
-void SCANNER_draw_objective_info(int x, int y, int width)
+void draw_objective_info_background(int scr_x, int scr_y, int width, int height)
 {
-    int v48;
-    int end_pos;
-    struct TbAnyWindow bkpwnd;
-    int height;
+    int y;
     int i;
 
-    height = panel_get_objective_info_height(lbDisplay.GraphicsScreenHeight);
-    v48 = y;
+    y = scr_y;
     for (i = 0; i < height; i++)
     {
-        SCANNER_unkn_func_203(x, v48, x + width - 1, v48, SCANNER_colour[0],
+        SCANNER_unkn_func_203(scr_x, y, scr_x + width - 1, y, SCANNER_colour[ScnClr_Text],
           ingame.Scanner.Brightness, ingame.Scanner.Contrast);
-        ++v48;
+        ++y;
     }
+}
+
+void draw_objective_info_text(int scr_x, int scr_y, int width, int height)
+{
+    struct TbAnyWindow bkpwnd;
+    int end_pos;
 
     LbScreenStoreGraphicsWindow(&bkpwnd);
-    LbScreenSetGraphicsWindow(x + 1, y, width - 2, height);
+    LbScreenSetGraphicsWindow(scr_x + 1, scr_y, width - 2, height);
 
     end_pos = SCANNER_text_draw(scroll_text, scanner_unkn3CC, height);
 
-    SCANNER_move_objective_info(width, height, end_pos);
-
     LbScreenLoadGraphicsWindow(&bkpwnd);
 
-    // TODO it would make sense to move this to higher level function
-    if (in_network_game)
-    {
-        short x, y;
+    SCANNER_move_objective_info(width, height, end_pos);
+}
 
-        if (lbDisplay.GraphicsScreenHeight >= 400) {
-            x = 22;
-            y = 51;
-        } else {
-            x = 11;
-            y = 26;
-        }
-        draw_players_chat_talk(x, y);
+void draw_players_chat(void)
+{
+    short x, y;
+
+    if (!in_network_game)
+        return;
+
+    if (lbDisplay.GraphicsScreenHeight >= 400) {
+        x = 22;
+        y = 51;
+    } else {
+        x = 11;
+        y = 26;
     }
+    draw_players_chat_talk(x, y);
 }
 
 void SCANNER_unkn_func_205(void)
@@ -1112,7 +1241,8 @@ TbBool panel_update_weapon_current(PlayerIdx plyr, short nagent, ubyte flags)
 
     curwep = p_agent->U.UPerson.CurrentWeapon;
     prevwep = p_player->PrevWeapon[nagent];
-    if (curwep == 0 && prevwep == 0) {
+    if (curwep == WEP_NULL && prevwep == WEP_NULL) {
+        //TODO this is not a correct place to update this player property, move outside this function
         prevwep = find_nth_weapon_held(p_agent->ThingOffset, 1);
         p_player->PrevWeapon[nagent] = prevwep;
     }
@@ -1336,7 +1466,7 @@ void draw_panel_pickable_item(void)
         draw_panel_pickable_thing_player_targeted(p_locplayer);
 }
 
-TbBool func_1caf8(ubyte *panel_wep)
+TbBool draw_weapons_panel(ubyte *panel_wep)
 {
     TbBool ret;
     PlayerInfo *p_locplayer;
@@ -1840,21 +1970,30 @@ void draw_panel_thermal_button(short panel)
 
 /** Objective text, or net players list.
  */
-void draw_panel_objective_info(void)
+void draw_panel_objective_info(short panel)
 {
-    int x, y, w;
-    x = ingame.Scanner.X1 - 1;
-    if (x < 0)
-        x = 0;
-    y = lbDisplay.GraphicsScreenHeight - panel_get_objective_info_height(lbDisplay.GraphicsScreenHeight);
+    struct GamePanel *p_panel;
+    short bkgd_x, text_x;
+    short bkgd_w, text_w;
+
+    p_panel = &game_panel[panel];
+
     if (in_network_game) {
         SCANNER_unkn_func_205();
-        w = lbDisplay.GraphicsScreenWidth;
+        bkgd_x = 0;
+        text_x = bkgd_x + 1;
+        bkgd_w = lbDisplay.GraphicsScreenWidth;
+        text_w = bkgd_w - 2;
     } else {
         // original width 67 low res, 132 high res
-        w = ingame.Scanner.X2 - ingame.Scanner.X1 + 3;
+        bkgd_x = p_panel->pos.X;
+        text_x = p_panel->dyn.X;
+        bkgd_w = p_panel->pos.Width;
+        text_w = p_panel->dyn.Width;
     }
-    SCANNER_draw_objective_info(x, y, w);
+
+    draw_objective_info_background(bkgd_x, p_panel->pos.Y, bkgd_w, p_panel->pos.Height);
+    draw_objective_info_text(text_x, p_panel->dyn.Y, text_w, p_panel->dyn.Height);
 }
 
 void draw_weapon_energy_bar(short panel)
@@ -2025,9 +2164,9 @@ void draw_new_panel(void)
           break;
         lbDisplay.DrawFlags = 0;
 
-        if (!panel_for_speciifc_agent(panel))
+        if (!panel_for_specific_agent(panel))
         {
-            is_visible = (p_panel->Spr[0] != 0);
+            is_visible = (p_panel->Spr[0] != 0) || (p_panel->Type == PanT_Scanner) || (p_panel->Type == PanT_Objective);
             is_blinking = false;
             is_disabled = false;
             is_subordnt = false;
@@ -2234,16 +2373,25 @@ void draw_new_panel(void)
             draw_agent_grouping_bars(panel);
             draw_panel_thermal_button(panel);
             break;
+        case PanT_Scanner:
+            SCANNER_set_center_point(engn_xc, engn_zc, (2*LbFPMath_PI - 1) - ((engn_anglexz >> 5) & LbFPMath_AngleMask));
+            SCANNER_draw_new_transparent();
+            break;
+        case PanT_Objective:
+            draw_panel_objective_info(panel);
+            break;
         }
     }
+
+    draw_players_chat();
 
     lbDisplay.DrawFlags = 0;
 
     draw_panel_pickable_item();
 
-    if (!func_1caf8(panel_wep))
+    if (!draw_weapons_panel(panel_wep))
     {
-        if (ingame.Flags & GamF_Unkn0200) {
+        if ((ingame.Flags & GamF_NaviPerfInfo) != 0) {
             uint y;
             ushort ctlmode;
 
@@ -2254,13 +2402,6 @@ void draw_new_panel(void)
             }
         }
     }
-
-    ingame.Scanner.MX = engn_xc >> 7;
-    ingame.Scanner.MZ = engn_zc >> 7;
-    ingame.Scanner.Angle = (2*LbFPMath_PI - 1) - ((engn_anglexz >> 5) & LbFPMath_AngleMask);
-    SCANNER_draw_new_transparent();
-
-    draw_panel_objective_info();
 }
 
 TbBool process_panel_state_one_agent_weapon(ushort agent)

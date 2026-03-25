@@ -34,6 +34,10 @@ enum RenderFloorFlags {
   RendFlrF_WobblyTerrain = 0x02,
 };
 
+enum RenderFacesFlags {
+  RendFacF_Perspectv3SkipWireframe = 0x01,
+};
+
 #pragma pack()
 /******************************************************************************/
 /** Animation turn for the animations controlled within the render engine.
@@ -63,6 +67,12 @@ extern u32 render_anim_speed;
  */
 extern u32 render_floor_flags;
 
+/** Faces rendering flags.
+ *
+ * Affects how the faces are rendered.
+ */
+extern u32 render_faces_flags;
+
 /** Amount of available screen points, cached in render module to optimize speed.
  *
  * This variable is used many times while creating drawlist. It needs to be set
@@ -76,6 +86,27 @@ extern s32 screen_points_limit;
  * by the app based on memory allocation.
  */
 extern s32 draw_items_limit;
+
+/** Amount of available sort lines, cached in render module to optimize speed.
+ *
+ * This variable is used many times while creating drawlist. It needs to be set
+ * by the app based on memory allocation.
+ */
+extern s32 sort_lines_limit;
+
+/** Amount of available sort sprites, cached in render module to optimize speed.
+ *
+ * This variable is used many times while creating drawlist. It needs to be set
+ * by the app based on memory allocation.
+ */
+extern s32 sort_sprites_limit;
+
+/** Amount of available floor tiles, cached in render module to optimize speed.
+ *
+ * This variable is used many times while creating drawlist. It needs to be set
+ * by the app based on memory allocation.
+ */
+extern s32 floor_tiles_limit;
 
 /** Amount of available quadrangular game textures, cached in render module to optimize speed.
  *
@@ -110,7 +141,7 @@ extern s32 game_object_points_limit;
  * This variable is used while creating, altering or making a copy of 3D primitive.
  * It needs to be set by the app based on memory allocation.
  */
-extern s32 game_object_faces_limit;
+extern s32 game_object_faces3_limit;
 
 /** Amount of available quadrangular faces for game objects.
  *
@@ -133,12 +164,26 @@ extern s32 game_normals_limit;
  */
 extern s32 game_objects_limit;
 
+/** Amount of available triangular faces for game special objects.
+ *
+ * This variable is used while creating 3D primitives of special objects.
+ * It needs to be set by the app based on memory allocation.
+ */
+extern s32 game_special_obj_faces3_limit;
+
+/** Amount of available quadrangular faces for game special objects.
+ *
+ * This variable is used while creating 3D primitives of special objects.
+ * It needs to be set by the app based on memory allocation.
+ */
+extern s32 game_special_obj_faces4_limit;
+
 /** Amount of available triangular faces for primitives objects.
  *
  * This variable is used while creating, altering or making a copy of 3D primitive.
  * It needs to be set by the app based on memory allocation.
  */
-extern s32 prim_object_faces_limit;
+extern s32 prim_object_faces3_limit;
 
 /** Amount of available quadrangular faces for primitives objects.
  *
@@ -151,6 +196,10 @@ extern s32 prim_object_faces4_limit;
  * Declared and controlled by the app.
  */
 extern ubyte *scratch_buf1;
+
+/** Amount of faces for whom drawlist add was called, for statistics.
+ */
+extern u32 stat_drawlist_faces;
 
 /** Callback for debug of 3D objects primitives.
  */

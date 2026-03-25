@@ -193,8 +193,7 @@ void player_agent_weapon_switch(PlayerIdx plyr, ThingIdx person, short shift)
 
     p_person->U.UPerson.CurrentWeapon = select_new_weapon(person, shift);
     peep_change_weapon(p_person);
-    p_person->U.UPerson.AnimMode = gun_out_anim(p_person, 0);
-    reset_person_frame(p_person);
+    set_person_anim_mode(p_person, gun_out_anim(p_person, 0));
     p_person->Speed = calc_person_speed(p_person);
     p_person->U.UPerson.TempWeapon = p_person->U.UPerson.CurrentWeapon;
 
@@ -210,16 +209,19 @@ void player_agent_weapon_switch(PlayerIdx plyr, ThingIdx person, short shift)
     }
 }
 
-void player_agent_init_drop_item(PlayerIdx plyr, struct Thing *p_person, ushort weapon)
+StateChRes player_agent_init_drop_item(PlayerIdx plyr, struct Thing *p_person, ThingIdx item)
 {
-    if ((weapon == 0) || (weapon == p_person->U.UPerson.CurrentWeapon)) {
-        p_person->U.UPerson.AnimMode = ANIM_PERS_IDLE;
-        reset_person_frame(p_person);
+    StateChRes res;
+    if ((item == 0) || (item == p_person->U.UPerson.CurrentWeapon)) {
+        set_person_anim_mode(p_person, ANIM_PERS_IDLE);
     }
     if (p_person->State == PerSt_PROTECT_PERSON)
         p_person->Flag2 |= TgF2_Unkn10000000;
-    person_init_drop(p_person, weapon);
+
+    res = person_init_drop_item_where_standing(p_person, item);
+    //TODO we've just initiated the drop, the weapon is not subtracted yet; a bit early for speed recalc?
     p_person->Speed = calc_person_speed(p_person);
+    return res;
 }
 
 void person_grp_switch_to_specific_weapon(struct Thing *p_person, PlayerIdx plyr,
@@ -307,9 +309,7 @@ void person_give_all_weapons(struct Thing *p_person)
         p_person->U.UPerson.WeaponsCarried |= wepflg;
     }
     player_agent_set_weapon_quantities_max(p_person);
-    if ((p_person->Flag & TngF_PlayerAgent) != 0) {
-        player_agent_update_prev_weapon(p_person);
-    }
+    person_weapons_update_previous(p_person);
 }
 
 void mark_all_weapons_researched(void)
@@ -342,8 +342,11 @@ void resurrect_any_dead_agents(PlayerIdx plyr)
         p_agent = p_player->MyAgent[i];
         if (p_agent->Type != TT_PERSON)
             continue;
+
         if ((p_agent->Flag & TngF_Destroyed) != 0)
             person_resurrect(p_agent);
+        else if (p_agent->State == PerSt_PERSON_BURNING)
+            person_burning_stifle_fire(p_agent);
     }
 }
 
@@ -627,8 +630,7 @@ void player_agent_select_specific_weapon(PlayerIdx plyr, struct Thing *p_person,
 {
     thing_select_specific_weapon(p_person, wtype, flag);
     peep_change_weapon(p_person);
-    p_person->U.UPerson.AnimMode = gun_out_anim(p_person, 0);
-    reset_person_frame(p_person);
+    set_person_anim_mode(p_person, gun_out_anim(p_person, 0));
     p_person->Speed = calc_person_speed(p_person);
     p_person->U.UPerson.TempWeapon = p_person->U.UPerson.CurrentWeapon;
     if ((plyr == local_player_no) && (p_person->U.UPerson.CurrentWeapon != 0))
@@ -655,7 +657,7 @@ void process_packet(PlayerIdx plyr, struct Packet *p_pckt, ushort i)
     short result;
 
     result = PARes_EBADRQC;
-    switch (p_pckt->Action & 0x7FFF)
+    switch (p_pckt->Action & ~PActF_All)
     {
     case PAct_MISSN_ABORT:
         if (in_network_game) {
@@ -1389,10 +1391,20 @@ void process_packet(PlayerIdx plyr, struct Packet *p_pckt, ushort i)
         result = PARes_DONE;
         break;
     }
-    if (result > PARes_SUCCESS) {
-        LOGWARN("Player %d action %s: %s", (int)plyr,
-          get_packet_action_name(p_pckt->Action & 0x7FFF),
-          get_packet_action_result_text(result));
+    if ((debug_log_things & 0x02) != 0)
+    {
+        char locstr[192];
+
+        snprint_packet(locstr, sizeof(locstr), p_pckt);
+
+        if ((p_pckt->Action & ~PActF_All) == PAct_NONE)
+            ; // no logging for empty packet
+        else if (result <= PARes_SUCCESS)
+            LOGSYNC_F("Player %d packet %s: %s", (int)plyr,
+              locstr, get_packet_action_result_text(result));
+        else
+            LOGWARN("Player %d packet %s: %s", (int)plyr,
+              locstr, get_packet_action_result_text(result));
     }
 }
 
@@ -1422,7 +1434,7 @@ void process_packets(void)
 
             if (p_thing != INVALID_THING)
             {
-                if ((packet->Action & 0x8000) == 0)
+                if ((packet->Action & PActF_TriggerUse) == 0)
                     p_thing->Flag &= ~TngF_TriggerUse;
                 else
                     p_thing->Flag |= TngF_TriggerUse;

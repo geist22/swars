@@ -46,7 +46,7 @@ struct SortSprite {
     short Y;
     short Z;
     ushort Frame;
-    struct Thing *PThing;
+    intptr_t SrcItem;
     ubyte Brightness;
     ubyte Angle;
     short Scale;
@@ -60,6 +60,17 @@ struct SortLine {
     ubyte Col;
     ubyte Shade;
     ubyte Flags;
+};
+
+/** Map coordinates storage used when handling drawlists.
+ *
+ * The game should have its own types for map coordinates, this one is for
+ * the rendering only.
+ */
+struct SortMapPoint {
+    s32 X;
+    s32 Y;
+    s32 Z;
 };
 
 struct TbSprite;
@@ -78,6 +89,18 @@ extern struct DrawItem *game_draw_list;
 extern struct DrawItem *p_current_draw_item;
 extern ushort next_draw_item;
 
+/** Array of triangular faces valid only as part of drawlist for a single frame.
+ */
+extern struct SingleObjectFace3 *game_special_obj_faces3;
+extern ushort next_special_obj_face3;
+
+/** Array of rectangular faces valid only as part of drawlist for a single frame.
+ */
+extern struct SingleObjectFace4 *game_special_obj_faces4;
+extern ushort next_special_obj_face4;
+
+/** Array of points with items valid only as part of drawlist for a single frame.
+ */
 extern struct SpecialPoint *game_screen_point_pool;
 extern ushort next_screen_point;
 
@@ -89,28 +112,26 @@ extern struct SortLine *game_sort_lines;
 extern struct SortLine *p_current_sort_line;
 extern ushort next_sort_line;
 
-extern TbPixel deep_radar_surface_col;
-extern TbPixel deep_radar_line_col;
-
-extern ushort next_special_face;
-extern ushort next_special_face4;
+extern TbPixel face_transp_tinted_surface_col;
+extern TbPixel face_transp_tinted_line_col;
 
 extern ubyte engine_render_lights;
 
-extern ScreenTriangleRenderCallback screen_position_face_render_cb;
-extern ScreenSortSpriteRenderCallback screen_sorted_sprite_render_cb;
+extern short word_1A5834;
+extern short word_1A5836;
 
+extern ScreenTriangleRenderCallback screen_position_face_render_cb;
+extern ScreenSortSpriteRenderCallback screen_sorted_sprite_statc_render_cb;
+extern ScreenSortSpriteRenderCallback screen_sorted_sprite_persn_render_cb;
 /******************************************************************************/
 
-void draw_unkn1_scaled_alpha_sprite(ushort fr, int scr_x, int scr_y,
+void draw_frame_scaled_alpha(int scr_x, int scr_y, ushort frm,
   ushort scale, ushort alpha);
 void draw_sorted_sprite1a(ushort frm, short x, short y, ubyte csel);
 void draw_sort_sprite1a(ushort sspr);
 
 void draw_floor_tile1a(ushort tl);
 void draw_floor_tile1b(ushort tl);
-
-uint cummulate_shade_from_quick_lights(ushort light_first);
 
 void set_nuclear_shade_point(s32 x, s32 y, s32 z);
 void set_nuclear_shade_timer(ulong tmval);

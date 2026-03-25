@@ -20,6 +20,7 @@
 
 #include "bfgentab.h"
 #include "bfmath.h"
+#include "bfpalette.h"
 #include "bfscreen.h"
 #include "bfutility.h"
 
@@ -34,6 +35,7 @@
 #include "game.h"
 #include "game_options.h"
 #include "game_speed.h"
+#include "hud_panel.h"
 #include "lvobjctv.h"
 #include "scandraw.h"
 #include "swlog.h"
@@ -122,32 +124,16 @@ void SCANNER_init(void)
 #endif
 }
 
-void SCANNER_set_colour(ubyte col)
+void SCANNER_set_colours(struct PanelStyle *p_style)
 {
-#if 0
-    asm volatile ("call ASM_SCANNER_set_colour\n"
-        :  : "a" ((long)col));
-#endif
-    switch (col)
-    {
-    case 1:
-        SCANNER_colour[0] = 40;
-        SCANNER_colour[1] = 68;
-        SCANNER_colour[2] = pixmap.fade_table[10 * PALETTE_8b_COLORS + 20];
-        SCANNER_colour[4] = 40;
-        SCANNER_colour[3] = 32;
-        break;
-    case 2:
-        SCANNER_colour[0] = 20;
-        SCANNER_colour[1] = 68;
-        SCANNER_colour[2] = pixmap.fade_table[10 * PALETTE_8b_COLORS + 20];
-        SCANNER_colour[4] = 20;
-        SCANNER_colour[3] = colour_lookup[ColLU_CYAN];
-        break;
-    default:
-        break;
-    }
-    byte_1DB2E9 = col;
+    TbPixel bcol1;
+
+    bcol1 = p_style->Colours[PanColr_Liquid];
+    SCANNER_colour[ScnClr_Text] = p_style->Colours[PanColr_Text];
+    SCANNER_colour[ScnClr_Roadway] = p_style->Colours[PanColr_Roadway];
+    SCANNER_colour[ScnClr_LiquidDk] = pixmap.fade_table[10 * PALETTE_8b_COLORS + bcol1];
+    SCANNER_colour[ScnClr_Outline] = p_style->Colours[PanColr_Outline];
+    SCANNER_colour[ScnClr_Frame] = p_style->Colours[PanColr_Frame];
 }
 
 void SCANNER_fill_in(void)
@@ -186,7 +172,7 @@ void SCANNER_fill_in_a_little_bit(int x1, int z1, int x2, int z2)
             int alt1, alt2, alt3, alt4;
             int cor_x, cor_z;
             ushort sc_col;
-            short col2;
+            short bri;
             TbPixel col1;
 
             cor_x = tile_x << 7;
@@ -194,23 +180,23 @@ void SCANNER_fill_in_a_little_bit(int x1, int z1, int x2, int z2)
 
             sc_col = SCANNER_find_colour(cor_x, cor_z);
             if (sc_col == 0)
-                col1 = SCANNER_colour[0];
+                col1 = SCANNER_colour[ScnClr_Text];
             else if (sc_col == 1)
-                col1 = SCANNER_colour[1];
+                col1 = SCANNER_colour[ScnClr_Roadway];
             else if (sc_col == 2)
-                col1 = SCANNER_colour[2];
+                col1 = SCANNER_colour[ScnClr_LiquidDk];
 
             alt1 = alt_at_point(cor_z, cor_x + 128);
             alt2 = alt_at_point(cor_z, cor_x - 128);
             alt3 = alt_at_point(cor_z + 128, cor_x);
             alt4 = alt_at_point(cor_z - 128, cor_x);
-            col2 = ((alt1 - alt2) >> 9) + ((alt3 - alt4) >> 9) + 32;
-            if (col2 < 0)
-                col2 = 0;
-            if (col2 > 63)
-                col2 = 63;
+            bri = ((alt1 - alt2) >> 9) + ((alt3 - alt4) >> 9) + 32;
+            if (bri < 0)
+                bri = 0;
+            if (bri > 63)
+                bri = 63;
 
-            SCANNER_data[tile_x][tile_z] = pixmap.fade_table[256 * col2 + col1];
+            SCANNER_data[tile_x][tile_z] = pixmap.fade_table[256 * bri + col1];
         }
     }
 }
@@ -418,7 +404,7 @@ ushort do_group_near_thing_scanner(struct Objective *p_objectv, ushort next_sign
         }
         else
         {
-            if (((ingame.TrackThing == 0) || game_cam_tracked_thing_is_player_agent()) && (ingame.Flags & GamF_HUDPanel))
+            if (panel_any_visible())
                 SCANNER_init_arcpoint(Z2, X2, Z1, X1, 1);
         }
         SCANNER_keep_arcs = 1;
@@ -558,7 +544,7 @@ ushort do_thing_arrive_area_scanner(struct Objective *p_objectv, ushort next_sig
     }
     else
     {
-        if (((ingame.TrackThing == 0) || game_cam_tracked_thing_is_player_agent()) && (ingame.Flags & GamF_HUDPanel))
+        if (panel_any_visible())
             SCANNER_init_arcpoint(Z, X,
               MAPCOORD_TO_PRCCOORD(p_objectv->Z,0),
               MAPCOORD_TO_PRCCOORD(p_objectv->X,0), 1);
@@ -616,7 +602,7 @@ ushort do_thing_near_thing_scanner(struct Objective *p_objectv, ushort next_sign
     }
     else
     {
-        if (((ingame.TrackThing == 0) || game_cam_tracked_thing_is_player_agent()) && (ingame.Flags & GamF_HUDPanel))
+        if (panel_any_visible())
             SCANNER_init_arcpoint(Z2, X2, Z1, X1, 1);
     }
     SCANNER_keep_arcs = 1;

@@ -29,6 +29,7 @@
 #include "bigmap.h"
 #include "building.h"
 #include "bmbang.h"
+#include "command.h"
 #include "display.h"
 #include "engindrwlstx.h"
 #include "enginfexpl.h"
@@ -36,6 +37,7 @@
 #include "enginsngtxtr.h"
 #include "frame_sprani.h"
 #include "game.h"
+#include "game_data.h"
 #include "game_options.h"
 #include "game_speed.h"
 #include "matrix.h"
@@ -64,6 +66,7 @@ struct UnkFLight { // sizeof=0x0A
 
 ushort next_unkn_full_light = 1;
 extern struct UnkFLight unkn_full_lights[50];
+extern u32 things_init_times; // = 0;
 
 ubyte debug_log_things = 0;
 
@@ -170,6 +173,12 @@ TbBool thing_type_is_simple(short ttype)
      (ttype == SmTT_FIRE) ||
      (ttype == SmTT_SFX) ||
      (ttype == SmTT_TEMP_LIGHT);
+}
+
+TbBool thing_type_is_pickup_item(short ttype)
+{
+    return (ttype == SmTT_DROPPED_ITEM) ||
+      (ttype == SmTT_CARRIED_ITEM);
 }
 
 struct Thing *get_thing_safe(ThingIdx thing, ubyte ttype)
@@ -298,10 +307,33 @@ void move_mapwho(struct Thing *p_thing, int x, int y, int z)
         : : "a" (p_thing), "d" (x), "b" (y), "c" (z));
 }
 
+void init_just_things(void)
+{
+    asm volatile ("call ASM_init_just_things\n"
+        :  :  : "eax" );
+}
+
+uint sea_texture(int tex)
+{
+    uint ret;
+    asm volatile (
+      "call ASM_sea_texture\n"
+        : "=r" (ret) : "a" (tex));
+    return ret;
+}
+
 void init_things(void)
 {
+#if 0
     asm volatile ("call ASM_init_things\n"
         :  :  : "eax" );
+#endif
+    things_init_times++;
+    gameturn = 0;
+
+    init_things_memory_with_user_heap();
+    init_just_things();
+    init_commands();
 }
 
 void quick_light_unkn_func_04(short a1, int a2, short a3, short a4)
@@ -366,6 +398,7 @@ void unkn_update_lights(void)
 
 void process_rocket(struct Thing *p_rocket)
 {
+    //TODO modify to make the rocket disappear when falling into sludge
     asm volatile (
       "call ASM_process_rocket\n"
         : : "a" (p_rocket));
@@ -385,11 +418,151 @@ void process_mine(struct SimpleThing *p_mine)
         : : "a" (p_mine));
 }
 
+struct SimpleThing *init_nuclear_bomb(MapCoord x, MapCoord y, MapCoord z)
+{
+#if 0
+    struct SimpleThing *ret;
+    asm volatile (
+      "call ASM_init_nuclear_bomb\n"
+        : "=r" (ret) : "a" (x), "d" (y), "b" (z));
+    return ret;
+#endif
+    struct SimpleThing *p_sthing;
+    ThingIdx thing;
+
+    if (x < 0)
+        return NULL;
+    if (z < 0)
+        return NULL;
+    if (sthings_used > STHINGS_LIMIT - 5) {
+        return NULL;
+    }
+    thing = get_new_sthing();
+    if (thing == 0) {
+        return NULL;
+    }
+    if (thing <= -STHINGS_LIMIT-1) {
+        return NULL;
+    }
+
+    p_sthing = &sthings[thing];
+    p_sthing->Type = SmTT_NUCLEAR_BOMB;
+    p_sthing->Radius = 64;
+    p_sthing->X = MAPCOORD_TO_PRCCOORD(x, 0);
+    p_sthing->Z = MAPCOORD_TO_PRCCOORD(z, 0);
+    p_sthing->Y = MAPCOORD_TO_PRCCOORD(y, 0);
+    p_sthing->Timer1 = 0;
+    p_sthing->Flag = (TngF_InVehicle|TngF_Persuaded|TngF_Unkn0004);
+    add_node_sthing(thing);
+    set_nuclear_shade_point(x, y, z);
+
+    return p_sthing;
+}
+
 void process_grenade(struct Thing *p_grenade)
 {
+#if 0
     asm volatile (
       "call ASM_process_grenade\n"
         : : "a" (p_grenade));
+#endif
+    if (p_grenade->Timer1 == 0)
+    {
+        MapCoord cor_x, cor_y, cor_z;
+
+        cor_x = PRCCOORD_TO_MAPCOORD(p_grenade->X);
+        cor_z = PRCCOORD_TO_MAPCOORD(p_grenade->Z);
+        cor_y = PRCCOORD_TO_MAPCOORD(alt_at_point(cor_x, cor_z));
+
+        if (p_grenade->SubType == 3)
+        {
+            struct SimpleThing *p_bomb;
+            p_bomb = init_nuclear_bomb(cor_x, cor_y, cor_z);
+            if (p_bomb != NULL) {
+                p_bomb->Owner2 = p_grenade->Owner;
+                play_dist_ssample(p_bomb, 0x22u, 0x7Fu, 0x40u, 100, 0, 2);
+                play_dist_ssample(p_bomb, 1u, 0x7Fu, 0x40u, 100, 0, 3);
+            }
+        }
+        else if ((p_grenade->SubType == 4) || (p_grenade->SubType == 5))
+        {
+            struct SimpleThing *p_bomb;
+            p_bomb = init_nuclear_bomb(cor_x, cor_y, cor_z);
+            if (p_bomb != NULL) {
+                p_bomb->Type = SmTT_CANISTER;
+                p_bomb->SubType = p_grenade->SubType;
+                p_bomb->Owner2 = p_grenade->Owner;
+                play_dist_ssample(p_bomb, 0x22u, 0x7Fu, 0x40u, 100, 0, 2);
+                if (p_bomb->SubType == 4)
+                    play_dist_ssample(p_bomb, 0x20u, 0, 0x40u, 100, -1, 3);
+                else
+                    play_dist_ssample(p_bomb, 0x1Fu, 0, 0x40u, 100, -1, 3);
+            }
+        }
+
+        remove_thing(p_grenade->ThingOffset);
+        delete_node(p_grenade);
+        return;
+    }
+
+    short qbit;
+    int prc_x, prc_y, prc_z;
+
+    prc_x = p_grenade->X + MAPCOORD_TO_PRCCOORD(p_grenade->VX,0);
+    prc_y = p_grenade->Y + p_grenade->VY;
+    prc_z = p_grenade->Z + MAPCOORD_TO_PRCCOORD(p_grenade->VZ,0);
+    p_grenade->VY -= 500;
+    qbit = check_col_collision(PRCCOORD_TO_MAPCOORD(prc_x), PRCCOORD_TO_MAPCOORD(prc_y), PRCCOORD_TO_MAPCOORD(prc_z));
+    if (qbit == -1)
+    {
+        ushort txtr;
+        txtr = floor_texture_at_point(PRCCOORD_TO_MAPCOORD(prc_x), PRCCOORD_TO_MAPCOORD(prc_z));
+        if (sea_texture(txtr))
+        {
+            struct SimpleThing *p_effect;
+            MapCoord cor_x, cor_y, cor_z;
+
+            cor_x = PRCCOORD_TO_MAPCOORD(p_grenade->X);
+            cor_z = PRCCOORD_TO_MAPCOORD(p_grenade->Z);
+            cor_y = PRCCOORD_TO_MAPCOORD(alt_at_point(cor_x, cor_z));
+            p_effect = create_scale_effect(cor_x, cor_y, cor_z, 1087, 8);
+            if (p_effect != NULL) {
+                p_effect->SubType = 60;
+                p_effect->Object = 62 + (LbRandomAnyShort() & 0x7F);
+                create_sound_effect(cor_x, 0, cor_z, 3, 0, 0);
+            }
+            remove_thing(p_grenade->ThingOffset);
+            delete_node(p_grenade);
+            return;
+        }
+        if (map_floor_is_sludge(PRCCOORD_TO_MAPCOORD(prc_x), PRCCOORD_TO_MAPCOORD(prc_z)))
+        {
+            struct SimpleThing *p_effect;
+            MapCoord cor_x, cor_y, cor_z;
+
+            // Create sludge bulge effect
+            cor_x = PRCCOORD_TO_MAPCOORD(p_grenade->X);
+            cor_z = PRCCOORD_TO_MAPCOORD(p_grenade->Z);
+            cor_y = PRCCOORD_TO_MAPCOORD(alt_at_point(cor_x, cor_z));
+            p_effect = create_scale_effect(cor_x, cor_y, cor_z, 1091, 8);
+            if (p_effect != NULL) {
+                p_effect->Object = 62 + (LbRandomAnyShort() & 0x7F);
+                // Generic type which just plays animation until end
+                p_effect->SubType = 58;
+                create_sound_effect(cor_x, cor_y, cor_z, 25, 0, 0);
+            }
+            remove_thing(p_grenade->ThingOffset);
+            delete_node(p_grenade);
+            return;
+        }
+    }
+    if (qbit != 0) {
+        p_grenade->Timer1 = 0;
+    }
+    if ((PRCCOORD_TO_MAPCOORD(prc_x) < MAP_COORD_WIDTH) &&
+      (PRCCOORD_TO_MAPCOORD(prc_z) < MAP_COORD_HEIGHT)) {
+        move_mapwho(p_grenade, prc_x, prc_y, prc_z);
+    }
 }
 
 void process_laser_elec(struct Thing *p_elec)
@@ -403,46 +576,6 @@ void process_razor_wire(struct Thing *p_thing)
 {
     ;
 }
-
-struct SimpleThing *init_nuclear_bomb(MapCoord x, MapCoord y, MapCoord z)
-{
-#if 0
-    struct SimpleThing *ret;
-    asm volatile (
-      "call ASM_init_nuclear_bomb\n"
-        : "=r" (ret) : "a" (x), "d" (y), "b" (z));
-    return ret;
-#endif
-    struct SimpleThing *p_sthing;
-    ThingIdx new_sthing;
-
-    if (x < 0)
-        return 0;
-    if (z < 0)
-        return 0;
-    if (sthings_used > STHINGS_LIMIT - 5)
-        return 0;
-
-    new_sthing = get_new_sthing();
-    if (new_sthing == 0)
-        return 0;
-    if (new_sthing < -STHINGS_LIMIT)
-        return 0;
-
-    p_sthing = &sthings[new_sthing];
-    p_sthing->Type = SmTT_NUCLEAR_BOMB;
-    p_sthing->Radius = 64;
-    p_sthing->X = MAPCOORD_TO_PRCCOORD(x, 0);
-    p_sthing->Z = MAPCOORD_TO_PRCCOORD(z, 0);
-    p_sthing->Y = MAPCOORD_TO_PRCCOORD(y, 0);
-    p_sthing->Timer1 = 0;
-    p_sthing->Flag = (TngF_InVehicle|TngF_Persuaded|TngF_Unkn0004);
-    add_node_sthing(new_sthing);
-    set_nuclear_shade_point(x, y, z);
-
-    return p_sthing;
-}
-
 
 void process_air_strike(struct Thing *p_thing)
 {
@@ -1001,7 +1134,7 @@ void process_things(void)
     int i;
     ushort plyr;
 
-    for (plyr = 0; plyr < 8; plyr++)
+    for (plyr = 0; plyr < PLAYERS_LIMIT; plyr++)
     {
         PlayerInfo *p_player;
         struct Thing *p_dcthing;
@@ -1011,13 +1144,13 @@ void process_things(void)
         dcthing = p_player->DirectControl[0];
         p_dcthing = &things[dcthing];
         if (((1 << plyr) & ingame.InNetGame_UNSURE) != 0
-          && (p_dcthing->Flag & TngF_Unkn1000) == 0)
+          && (p_dcthing->Flag & TngF_SelectedAgent) == 0)
         {
 #if 0
             for (i = 0; i < playable_agents; i++)
               ;
 #endif
-            p_dcthing->Flag |= TngF_Unkn1000;
+            p_dcthing->Flag |= TngF_SelectedAgent;
         }
     }
 
@@ -1055,7 +1188,7 @@ void process_things(void)
 
     if (!execute_commands)
         return;
-    if ((ingame.Flags & GamF_StopThings) == 0)
+    if ((ingame.Flags & TngF_ProgressAction) == 0)
         return;
     monitor_all_samples();
 
@@ -1217,6 +1350,17 @@ TbBool thing_is_destroyed(ThingIdx thing)
     }
 }
 
+TbBool thing_is_pickup_item(ThingIdx thing)
+{
+    struct SimpleThing *p_sthing;
+
+    if (thing >= 0)
+        return false;
+
+    p_sthing = &sthings[thing];
+    return thing_type_is_pickup_item(p_sthing->Type);
+}
+
 TbResult delete_node(struct Thing *p_thing)
 {
     TbResult ret;
@@ -1288,14 +1432,17 @@ short add_static(int x, int y, int z, ushort frame, int timer)
 
     if (map_coords_limit(NULL, NULL, NULL, x, y, z))
         return 0;
-    if (sthings_used > STHINGS_LIMIT - 5)
+    if (sthings_used > STHINGS_LIMIT - 5) {
         return 0;
+    }
 
     thing = get_new_sthing();
-    if (thing == 0)
+    if (thing == 0) {
         return 0;
-    if (thing <= -STHINGS_LIMIT-1)
+    }
+    if (thing <= -STHINGS_LIMIT-1) {
         return 0;
+    }
     p_sthing = &sthings[thing];
     p_sthing->Z = MAPCOORD_TO_PRCCOORD(z,127);
     p_sthing->X = MAPCOORD_TO_PRCCOORD(x,127);
@@ -1564,7 +1711,7 @@ ThingIdx new_thing_building_clone(struct Thing *p_clthing, struct M33 *p_clmatx,
             memcpy(&local_mats[p_thing->U.UObject.MatrixIndex], p_clmatx, sizeof(struct M33));
         else
             matrix_identity_fill(&local_mats[p_thing->U.UObject.MatrixIndex]);
-        p_thing->Flag |=  TngF_Unkn1000;
+        p_thing->Flag |= TngF_SelectedAgent;
     }
     p_thing->SubState = p_clthing->SubState;
     p_thing->Timer1 = p_clthing->Timer1;
@@ -1758,6 +1905,16 @@ void refresh_old_thing_format(struct Thing *p_thing, struct ThingOldV9 *p_oldthi
     }
 }
 
+struct SimpleThing *create_item(int x, int y, int z, ushort frame, ubyte subtype)
+{
+    struct SimpleThing *ret;
+    asm volatile (
+      "push %5\n"
+      "call ASM_create_item\n"
+        : "=r" (ret) : "a" (x), "d" (y), "b" (z), "c" (frame), "g" (subtype));
+    return ret;
+}
+
 struct SimpleThing *create_scale_effect(int x, int y, int z, ushort frame, short timer)
 {
     struct SimpleThing *ret;
@@ -1777,6 +1934,55 @@ struct SimpleThing *create_sound_effect(int x, int y, int z, ushort sample, int 
       "call ASM_create_sound_effect\n"
         : "=r" (ret) : "a" (x), "d" (y), "b" (z), "c" (sample), "g" (vol), "g" (loop));
     return ret;
+}
+
+struct SimpleThing *create_stasis_pod(MapCoord x, MapCoord y, MapCoord z,
+  ushort timer, struct Thing *p_owner)
+{
+    struct SimpleThing *ret;
+    asm volatile (
+      "push %5\n"
+      "call ASM_create_stasis_pod\n"
+        : "=r" (ret) : "a" (x), "d" (y), "b" (z), "c" (timer), "g" (p_owner));
+    return ret;
+}
+
+struct SimpleThing *create_time_pod(MapCoord x, MapCoord y, MapCoord z,
+  ushort timer)
+{
+#if 0
+    struct SimpleThing *ret;
+    asm volatile (
+      "call ASM_create_time_pod\n"
+        : "=r" (ret) : "a" (x), "d" (y), "b" (z), "c" (timer));
+    return ret;
+#endif
+    struct SimpleThing *p_podtng;
+    ThingIdx thing;
+
+    if (sthings_used > STHINGS_LIMIT - 5) {
+        return NULL;
+    }
+    if ( x < 0 || z < 0 )
+        return NULL;
+    thing = get_new_sthing();
+    if (thing == 0) {
+        return NULL;
+    }
+    if (thing <= -STHINGS_LIMIT-1) {
+        return NULL;
+    }
+    p_podtng = &sthings[thing];
+    p_podtng->Radius = 0;
+    p_podtng->StartFrame = 0;
+    p_podtng->Type = 30;
+    p_podtng->State = 0;
+    p_podtng->X = MAPCOORD_TO_PRCCOORD(x, 0);
+    p_podtng->Z = MAPCOORD_TO_PRCCOORD(z, 0);
+    p_podtng->Y = MAPCOORD_TO_PRCCOORD(y, 0);
+    p_podtng->Timer1 = timer;
+    add_node_sthing(thing);
+    return p_podtng;
 }
 
 void mine_detonate(struct Thing *p_thing)

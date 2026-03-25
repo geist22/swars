@@ -106,6 +106,16 @@ enum PacketActions
     PAct_AGENT_SELF_DESTRUCT = 0xFF,
 };
 
+enum PacketActionFlags
+{
+    PActF_None = 0x0000,
+    PActF_TriggerUse = 0x8000,
+};
+
+/** All flags placed at top of action field.
+ */
+#define PActF_All (PActF_TriggerUse)
+
 enum PacketCheatAllAgents
 {
     PCheatAA_RESURRECT_AND_WEPAPN = 0,
@@ -190,6 +200,7 @@ extern ubyte packet_rec_use_levelno;
 
 const char * get_packet_action_name(ushort atype);
 const char * get_packet_action_result_text(short result);
+void snprint_packet(char *buf, ulong buflen, struct Packet *p_pckt);
 
 void build_packet(struct Packet *packet, ushort action, u32 param1, s32 x, s32 y, s32 z);
 void build_packet2(struct Packet *packet, ushort action, u32 param1, s32 x, s32 y, s32 z);

@@ -27,14 +27,16 @@
 #include "enginbckt.h"
 #include "engincam.h"
 #include "engincolour.h"
+#include "engindrwlstm.h"
 #include "enginfloor.h"
 #include "enginlights.h"
+#include "enginpeff.h"
 #include "engintrns.h"
 #include "engintxtrmap.h"
 #include "enginzoom.h"
 
 #include "bigmap.h"
-#include "engindrwlstm.h"
+#include "engindrwlstm_wrp.h"
 #include "engindrwlstx.h"
 #include "enginsngtxtr.h"
 #include "game.h"
@@ -65,7 +67,7 @@ extern long dword_176CC0;
 
 extern short word_19CC64;
 extern short word_19CC66;
-extern long nuclear_overexposure;
+TbBool nuclear_overexposure = false;
 
 
 int shpoint_compute_coord_y(struct ShEnginePoint *p_sp, struct MyMapElement *p_mapel, int elcr_x, int elcr_z, int mag)
@@ -477,8 +479,9 @@ void lvdraw_do_floor(void)
 
             ditype = (p_mapel->Texture & 0x4000) != 0 ? DrIT_Unkn6 : DrIT_Unkn4;
             p_floortl = draw_item_add_floor_tile(ditype, BUCKET_MID + depth + dpthalt);
-            if (p_floortl == NULL)
+            if (p_floortl == NULL) {
                 break;
+            }
 
             fill_floor_tile_pos_and_shade(p_floortl, p_mapel, 0, p_sqlight, p_spnx);
 
@@ -656,8 +659,9 @@ void lvdraw_do_floor_flyby(int cor_z_beg, int ranges_x_len, struct Range *smrang
 
             ditype = (p_mapel->Texture & 0x4000) != 0 ? DrIT_Unkn6 : DrIT_Unkn4;
             p_floortl = draw_item_add_floor_tile(ditype, BUCKET_MID + depth + dpthalt);
-            if (p_floortl == NULL)
+            if (p_floortl == NULL) {
                 break;
+            }
 
             fill_floor_tile_pos_and_shade_fading(p_floortl, p_mapel, p_spnx, 0, p_spnx);
 
@@ -720,6 +724,7 @@ void func_2e440(void)
     int cor_z_beg, ranges_x_len;
 
     reset_drawlist();
+    ingame.NextRocket = 0;
 
     slt_zmin = lvdraw_fill_bound_points(bound_pts);
 
@@ -751,6 +756,8 @@ void func_2e440(void)
 
     assert(vec_tmap[1] != NULL);
     vec_map = vec_tmap[1];
+    face_transp_tinted_surface_col = deep_radar_surface_col;
+    face_transp_tinted_line_col = deep_radar_line_col;
 
     draw_screen();
 }
@@ -854,6 +861,7 @@ void draw_screen(void)
     outp(0x3C9u, 0);
 #endif
     reset_drawlist();
+    ingame.NextRocket = 0;
 }
 
 /******************************************************************************/

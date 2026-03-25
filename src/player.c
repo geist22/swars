@@ -151,44 +151,65 @@ void players_sync_from_cryo(void)
     player_update_agents_from_cryo(p_locplayer);
 }
 
-void player_agents_init_prev_weapon(PlayerIdx plyr)
-{
-    PlayerInfo *p_locplayer;
-    ushort plagent;
-
-    p_locplayer = &players[local_player_no];
-    for (plagent = 0; plagent < playable_agents; plagent++)
-    {
-        struct Thing *p_agent;
-        WeaponType wtype;
-
-        p_agent = p_locplayer->MyAgent[plagent];
-        if (p_agent->Type == TT_PERSON)
-            wtype = find_nth_weapon_held(p_agent->ThingOffset, 1);
-        else
-            wtype = WEP_NULL;
-        p_locplayer->PrevWeapon[plagent] = wtype;
-    }
-    for (; plagent < AGENTS_SQUAD_MAX_COUNT; plagent++)
-    {
-        p_locplayer->PrevWeapon[plagent] = WEP_NULL;
-    }
-}
-
-void player_agent_update_prev_weapon(struct Thing *p_agent)
+void player_agent_reset_prev_weapon(PlayerIdx plyr, ushort plagent)
 {
     PlayerInfo *p_player;
-    PlayerIdx plyr;
+    struct Thing *p_agent;
+    WeaponType wtype;
+
+    p_player = &players[plyr];
+    p_agent = p_player->MyAgent[plagent];
+
+    if (plagent >= playable_agents)
+    {
+        wtype = WEP_NULL;
+    }
+    else if (p_agent->Type == TT_PERSON)
+    {
+        wtype = find_nth_weapon_held(p_agent->ThingOffset, 1);
+    }
+    else
+    {
+        wtype = WEP_NULL;
+    }
+    p_player->PrevWeapon[plagent] = wtype;
+}
+
+void player_agent_update_prev_weapon(PlayerIdx plyr, ushort plagent)
+{
+    PlayerInfo *p_player;
+    struct Thing *p_agent;
+    WeaponType wtype;
+
+    p_player = &players[plyr];
+    p_agent = p_player->MyAgent[plagent];
+
+    if (plagent >= playable_agents)
+    {
+        wtype = WEP_NULL;
+    }
+    else if (p_agent->Type == TT_PERSON)
+    {
+        if (p_agent->U.UPerson.CurrentWeapon != 0)
+            wtype = p_agent->U.UPerson.CurrentWeapon;
+        else
+            wtype = find_nth_weapon_held(p_agent->ThingOffset, 1);
+    }
+    else
+    {
+        wtype = WEP_NULL;
+    }
+    p_player->PrevWeapon[plagent] = wtype;
+}
+
+void player_agents_init_prev_weapon(PlayerIdx plyr)
+{
     ushort plagent;
 
-    plyr = p_agent->U.UPerson.ComCur >> 2;
-    plagent = p_agent->U.UPerson.ComCur & 3;
-    p_player = &players[plyr];
-
-    if (p_agent->U.UPerson.CurrentWeapon != 0)
-        p_player->PrevWeapon[plagent] = p_agent->U.UPerson.CurrentWeapon;
-    else
-        p_player->PrevWeapon[plagent] = find_nth_weapon_held(p_agent->ThingOffset, 1);
+    for (plagent = 0; plagent < AGENTS_SQUAD_MAX_COUNT; plagent++)
+    {
+        player_agent_reset_prev_weapon(plyr, plagent);
+    }
 }
 
 short player_agent_current_or_prev_weapon(PlayerIdx plyr, ushort plagent)
@@ -439,6 +460,30 @@ ThingIdx direct_control_thing_for_player(PlayerIdx plyr)
     return dcthing;
 }
 
+TbBool thing_is_player_agent_under_direct_control(ThingIdx thing)
+{
+    PlayerInfo *p_player;
+    struct Thing *p_person;
+    PlayerIdx plyr;
+    ushort dmuser;
+
+    if (thing <= 0)
+        return false;
+    p_person = &things[thing];
+    if ((p_person->Flag & TngF_PlayerAgent) == 0)
+        return false;
+
+    plyr = p_person->U.UPerson.ComCur >> 2;
+    p_player = &players[plyr];
+
+    for (dmuser = 0; dmuser < p_player->DoubleMode + 1; dmuser++)
+    {
+        if (thing == (ThingIdx)p_player->DirectControl[dmuser])
+            return true;
+    }
+    return false;
+}
+
 void players_init_default_control_mode(void)
 {
     PlayerIdx plyr;
@@ -472,6 +517,47 @@ void player_target_clear(PlayerIdx plyr)
     p_player->TargetType = TrgTp_NONE;
 }
 
+void player_set_user_vect(PlayerIdx plyr, short plagent,
+  short vx, short vy, short vz)
+{
+    PlayerInfo *p_player;
+
+    assert(plyr < PLAYERS_LIMIT);
+    assert(plagent >= 0);
+    assert(plagent < LOCAL_USERS_MAX_COUNT);
+
+    p_player = &players[plyr];
+    p_player->UserVX[plagent] = vx;
+    p_player->UserVY[plagent] = vy;
+    p_player->UserVZ[plagent] = vz;
+}
+
+void player_clear_user_vect(PlayerIdx plyr, short plagent)
+{
+    PlayerInfo *p_player;
+
+    assert(plyr < PLAYERS_LIMIT);
+    assert(plagent >= 0);
+    assert(plagent < LOCAL_USERS_MAX_COUNT);
+
+    p_player = &players[plyr];
+    p_player->UserVX[plagent] = 0;
+    p_player->UserVY[plagent] = 0;
+    p_player->UserVZ[plagent] = 0;
+}
+
+void player_clear_user_vect_y(PlayerIdx plyr, short plagent)
+{
+    PlayerInfo *p_player;
+
+    assert(plyr < PLAYERS_LIMIT);
+    assert(plagent >= 0);
+    assert(plagent < LOCAL_USERS_MAX_COUNT);
+
+    p_player = &players[plyr];
+    p_player->UserVY[plagent] = 0;
+}
+
 void kill_my_players(PlayerIdx plyr)
 {
 #if 0
@@ -494,7 +580,7 @@ void kill_my_players(PlayerIdx plyr)
             else
                 set_person_dead(p_agent, ANIM_PERS_Unkn12);
         }
-        p_agent->Flag &= ~(TngF_Unkn1000|TngF_PlayerAgent);
+        p_agent->Flag &= ~(TngF_SelectedAgent|TngF_PlayerAgent);
     }
 }
 

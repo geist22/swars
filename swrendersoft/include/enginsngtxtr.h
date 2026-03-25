@@ -70,16 +70,21 @@ struct AnimTmap { // sizeof=54
 #pragma pack()
 /******************************************************************************/
 extern struct SingleFloorTexture *game_textures;
-extern struct SingleTexture *game_face_textures;
-extern struct AnimTmap *game_anim_tmaps;
-
-extern ushort next_face_texture;
 extern ushort next_floor_texture;
-extern ushort next_anim_tmap;
-
 extern ushort tnext_floor_texture;
 
+extern struct SingleTexture *game_face_textures;
+extern ushort next_face_texture;
+
+extern struct AnimTmap *game_anim_tmaps;
+extern ushort next_anim_tmap;
+/******************************************************************************/
+
 ushort floor_texture_index(struct SingleFloorTexture *p_sftex);
+
+/** Checks whether texture with specified index is the only in use within given game texture.
+ */
+TbBool my_texture_is_only_using_index(short textr, int index);
 
 /** Maps content of old SingleFloorTexture struct to the current one.
  */

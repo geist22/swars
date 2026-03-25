@@ -673,6 +673,27 @@ void SCANNER_draw_new_transparent_map_line(int cu_x2, int cu_y2)
     }
 }
 
+void SCANNER_set_center_point(int cor_x, int cor_z, int angle)
+{
+    ingame.Scanner.MX = cor_x >> 7;
+    ingame.Scanner.MZ = cor_z >> 7;
+    ingame.Scanner.Angle = angle;
+}
+
+void SCANNER_shift_center_point(int dt_cor_x, int dt_cor_z)
+{
+    ingame.Scanner.MX += dt_cor_x >> 7;
+    ingame.Scanner.MZ += dt_cor_z >> 7;
+    if (ingame.Scanner.MX < 0)
+        ingame.Scanner.MX = 0;
+    if (ingame.Scanner.MZ < 0)
+        ingame.Scanner.MZ = 0;
+    if (ingame.Scanner.MX > 256)
+        ingame.Scanner.MX = 256;
+    if (ingame.Scanner.MZ > 256)
+        ingame.Scanner.MZ = 256;
+}
+
 void SCANNER_draw_new_transparent_map(void)
 {
 #if 0
@@ -1737,15 +1758,15 @@ void SCANNER_draw_things_dots(int pos_mx, int pos_mz, int sh_x, int sh_y, int po
 void SCANNER_draw_area_frame(void)
 {
     LbDrawLine(ingame.Scanner.X1 - 1, ingame.Scanner.Y1 - 1,
-      ingame.Scanner.X1 - 1, ingame.Scanner.Y2 + 1, SCANNER_colour[4]);
+      ingame.Scanner.X1 - 1, ingame.Scanner.Y2 + 1, SCANNER_colour[ScnClr_Frame]);
     LbDrawLine(ingame.Scanner.X1 - 1, ingame.Scanner.Y1 - 1,
-      ingame.Scanner.X2 - 24, ingame.Scanner.Y1 - 1, SCANNER_colour[4]);
+      ingame.Scanner.X2 - 24, ingame.Scanner.Y1 - 1, SCANNER_colour[ScnClr_Frame]);
     LbDrawLine(ingame.Scanner.X1 - 1, ingame.Scanner.Y2 + 1,
-      ingame.Scanner.X2, ingame.Scanner.Y2 + 1, SCANNER_colour[4]);
+      ingame.Scanner.X2, ingame.Scanner.Y2 + 1, SCANNER_colour[ScnClr_Frame]);
     LbDrawLine(ingame.Scanner.X2 - 24, ingame.Scanner.Y1 - 1,
-      ingame.Scanner.X2 + 1, ingame.Scanner.Y1 + 24, SCANNER_colour[4]);
+      ingame.Scanner.X2 + 1, ingame.Scanner.Y1 + 24, SCANNER_colour[ScnClr_Frame]);
     LbDrawLine(ingame.Scanner.X2 + 1, ingame.Scanner.Y1 + 24,
-      ingame.Scanner.X2 + 1, ingame.Scanner.Y2 + 1, SCANNER_colour[4]);
+      ingame.Scanner.X2 + 1, ingame.Scanner.Y2 + 1, SCANNER_colour[ScnClr_Frame]);
 }
 
 void SCANNER_draw_signals(void)

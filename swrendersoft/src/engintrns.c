@@ -18,16 +18,53 @@
 /******************************************************************************/
 #include "engintrns.h"
 
-#include "bigmap.h"
 #include "engincam.h"
-#include "engindrwlstm.h"
 #include "enginzoom.h"
-#include "game.h"
-#include "game_options.h"
-#include "swlog.h"
 /******************************************************************************/
 #define SCREEN_POINT_COORD_MIN (-MAX_SUPPORTED_SCREEN_WIDTH)
 #define SCREEN_POINT_COORD_MAX (2 * MAX_SUPPORTED_SCREEN_WIDTH)
+
+s32 cam_tilt = -172;
+
+s32 dword_176D0C;
+s32 dword_176D10;
+s32 dword_176D14;
+s32 dword_176D18;
+s32 dword_176D1C;
+s32 dword_176D3C;
+s32 dword_176D40;
+s32 dword_176D44;
+s32 dword_176D4C;
+s32 cam_rotation_velocity = 0;
+/******************************************************************************/
+
+/**
+ * Multiplication with shift and special quirks.
+ *
+ * Fills lower bits with sign, but that's not all - results are quite unique.
+ * Decompiler generates the following pseudo-C for it:
+ *    HIWORD(tmp) = (ar1 * ar2) >> 16;
+ *    LOWORD(tmp) = (ar1 * ar2) >> 32;
+ *    ret = bw_rotl32(tmp, 16);
+ * Needs testing whether something similar can really represent this ic C.
+ */
+s32 mul_shift16_sign_pad_lo(s32 ar1, s32 ar2)
+{
+#if 0
+    s32 tmp;
+    tmp = (ar1 * ar2) & 0xFFFF0000;
+    tmp |= ((ar1 * (s64)ar2) >> 32) & 0xFFFF;
+    return bw_rotl32(tmp, 16);
+#else
+    s32 ret;
+    asm volatile (
+      "imul   %%edx\n"
+      "mov    %%dx,%%ax\n"
+      "rol    $0x10,%%eax\n"
+        : "=r" (ret) : "a" (ar1), "d" (ar2));
+    return ret;
+#endif
+}
 
 short angle_between_points(int x1, int z1, int x2, int z2)
 {
@@ -36,11 +73,6 @@ short angle_between_points(int x1, int z1, int x2, int z2)
 
 void local_to_worldr(int *dx, int *dy, int *dz)
 {
-#if 0
-    asm volatile (
-      "call ASM_local_to_worldr\n"
-        : : "a" (dx), "d" (dy), "b" (dz));
-#endif
     int x, z;
 
     z = *dz;
@@ -51,11 +83,6 @@ void local_to_worldr(int *dx, int *dy, int *dz)
 
 void transform_point(struct EnginePoint *p_ep)
 {
-#if 0
-    asm volatile ("call ASM_transform_point\n"
-        :  : "a" (p_ep));
-    return;
-#endif
     int fctr_a, fctr_b, fctr_c;
     int scr_shx, scr_shy;
 
@@ -280,7 +307,6 @@ void process_engine_unk1(void)
     int angle;
 
     dword_176D4C = 0;
-    dword_176D64 = -70;
     dword_176D3C = vec_window_width / 2;
     dword_176D40 = vec_window_height / 2;
     engn_anglexz += cam_rotation_velocity;
@@ -292,46 +318,6 @@ void process_engine_unk1(void)
     angle = cam_tilt & LbFPMath_AngleMask;
     dword_176D18 = lbSinTable[angle];
     dword_176D1C = lbSinTable[angle + LbFPMath_PI/2];
-}
-
-void setup_engine_nullsub4(void)
-{
-}
-
-void calc_mouse_pos(void)
-{
-    int cor_dx, cor_dy, cor_dz;
-    int fctr_xz;
-    int chk_x, chk_y, chk_z;
-    short mag;
-    short i;
-
-    cor_dy = (dword_176D18 >> 8);
-    fctr_xz = (dword_176D1C >> 8);
-    cor_dx = (fctr_xz * dword_176D10) >> 16;
-    cor_dz = (fctr_xz * dword_176D14) >> 16;
-
-    chk_x = 200 * cor_dx + 16 * mouse_map_x;
-    chk_y = 200 * cor_dy;
-    chk_z = 200 * cor_dz + 16 * mouse_map_z;
-
-    mag = 0;
-    for (i = 0; i < 400; i++)
-    {
-        if ( chk_y >> 4 < PRCCOORD_TO_YCOORD(alt_at_point(chk_x >> 4, chk_z >> 4)))
-            mag = i;
-        chk_x -= cor_dx;
-        chk_y -= cor_dy;
-        chk_z -= cor_dz;
-    }
-
-    if (mag != 0)
-    {
-        mag -= 200;
-        mouse_map_x -= (mag * cor_dx) >> 4;
-        mouse_map_z -= (mag * cor_dz) >> 4;
-        mouse_map_y = alt_at_point(mouse_map_x, mouse_map_z) >> 8;
-    }
 }
 
 void transform_screen_to_map_isometric(int *dxc, int *dzc, int scr_x, int scr_y)
@@ -353,40 +339,6 @@ void transform_screen_to_map_isometric(int *dxc, int *dzc, int scr_x, int scr_y)
 
     *dxc =  ((dword_176D14 * fctr_a - dword_176D10 * fctr_b_part) >> 16);
     *dzc = -((dword_176D10 * fctr_a + dword_176D14 * fctr_b_part) >> 16);
-}
-
-void process_engine_unk2(void)
-{
-    short msx, msy;
-    int offs_y;
-    int scr_x, scr_y;
-    int map_dxc, map_dzc;
-
-    if (ingame.DisplayMode == DpM_ENGINEPLY)
-      offs_y = overall_scale * engn_yc >> 8;
-    else
-      offs_y = 0;
-    msx = lbDisplay.GraphicsScreenHeight < 400 ? 2 * lbDisplay.MMouseX : lbDisplay.MMouseX;
-    msy = lbDisplay.GraphicsScreenHeight < 400 ? 2 * lbDisplay.MMouseY : lbDisplay.MMouseY;
-
-    if (lbDisplay.GraphicsScreenHeight < 400)
-    {
-        scr_y = (msy >> 1) - offs_y;
-        scr_x = msx >> 1;
-    }
-    else
-    {
-        scr_y = msy - offs_y;
-        scr_x = msx;
-    }
-
-    transform_screen_to_map_isometric(&map_dxc, &map_dzc, scr_x, scr_y);
-
-    mouse_map_x = engn_xc + map_dxc;
-    mouse_map_z = engn_zc + map_dzc;
-    if (ingame.DisplayMode == DpM_ENGINEPLY)
-        calc_mouse_pos();
-    setup_engine_nullsub4();
 }
 
 /******************************************************************************/

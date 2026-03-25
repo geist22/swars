@@ -23,36 +23,20 @@
 #include "bfmath.h"
 #include "bfsprite.h"
 
-#include "bigmap.h"
-#include "display.h"
 #include "enginbckt.h"
 #include "engincam.h"
 #include "engintrns.h"
-#include "engindrwlstm.h"
 #include "engindrwlstx.h"
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"
 #include "engintxtrmap.h"
 #include "enginprops.h"
 #include "frame_sprani.h"
-#include "game.h"
-#include "game_data.h"
-#include "game_options.h"
-#include "game_sprts.h"
-#include "matrix.h"
 #include "render_gpoly.h"
-#include "thing.h"
-#include "swlog.h"
 /******************************************************************************/
-struct ShadowTexture {
-    ushort Width;
-    ushort Length;
-    ubyte X1;
-    ubyte Y1;
-    ubyte X2;
-    ubyte Y2;
-};
-
+//TODO load the shadow data from a config file
+/** Per-object-model shadow data.
+ */
 struct ShadowTexture shadowtexture[] = {
   {300, 450,   0, 230,  20, 254},
   {420, 700,  21, 225,  42, 254},
@@ -90,265 +74,141 @@ struct ShadowTexture shadowtexture[] = {
   {  0,   0,   0,   0,   0,   0},
 };
 
-extern const ubyte byte_154F2C[32];
-extern const ushort word_154F4C[14];
+const ushort word_154F4C[] = {
+  1, 33, 113, 241, 273, 161, 193, 721, 753, 321, 401, 433, 33,
+};
 
-extern ubyte sprshadow_EE90[24];
-extern ubyte sprshadow_EEA8[600];
-extern ubyte sprshadow_F100[24];
-extern ubyte sprshadow_F118[600];
-extern ubyte sprshadow_F370[24];
-extern ubyte sprshadow_F388[600];
-extern ubyte sprshadow_F5E0[24];
-extern ubyte sprshadow_F5F8[600];
-extern sbyte sprshadow_F850[512];
 
-int alt_at_point_under_height(int x, int z, int h)
+ubyte sprshadow_EE90[24];
+ubyte sprshadow_EEA8[600];
+ubyte sprshadow_F100[24];
+ubyte sprshadow_F118[600];
+ubyte sprshadow_F370[24];
+ubyte sprshadow_F388[600];
+ubyte sprshadow_F5E0[24];
+ubyte sprshadow_F5F8[600];
+sbyte sprshadow_F850[512];
+
+ushort shadow_tmap_page = 0;
+
+/******************************************************************************/
+
+void draw_person_shadow(short scr_x, short scr_y, ushort frm,
+  ushort shpak, ubyte shangl, ubyte angl, short strng)
 {
-#if 0
-    int ret;
-    asm volatile (
-      "call ASM_alt_at_point_under_height\n"
-        : "=r" (ret) : "a" (x), "d" (z), "b" (h));
-    return ret;
-#endif
-    short tile_x, tile_z;
-    ushort col;
-    ubyte quarter;
-
-    tile_x = MAPCOORD_TO_TILE(x);
-    tile_z = MAPCOORD_TO_TILE(z);
-
-    if ((tile_x < 0) || (tile_x >= MAP_TILE_WIDTH))
-        return 0;
-    if ((tile_z < 0) || (tile_z >= MAP_TILE_HEIGHT))
-        return 0;
-    {
-        struct MyMapElement *p_mapel;
-        p_mapel = &game_my_big_map[MAP_TILE_WIDTH * (tile_z) + (tile_x)];
-        col = p_mapel->ColumnHead & 0xFFF;
-        if ((x & 0x80) == 0)
-        {
-            if ((z & 0x80) == 0)
-                quarter = 0;
-            else
-                quarter = 3;
-        }
-        else
-        {
-            if ((z & 0x80) == 0)
-                quarter = 1;
-            else
-                quarter = 2;
-        }
-    }
-
-    int alt_curr, alt_best, h_max;
-
-    h_max = 8 * h;
-    alt_curr = 8 * alt_at_point(x, z);
-    alt_best = alt_curr;
-
-    if (col != 0)
-    {
-        struct ColColumn *p_col;
-        u32 mask;
-
-        p_col = &game_col_columns[col];
-
-        for (mask = 1; mask; mask *= 2)
-        {
-            if (alt_curr > h_max)
-                break;
-            if ((mask & p_col->QBits[quarter]) != 0)
-                alt_best = alt_curr;
-            alt_curr += 0x8000;
-        }
-    }
-    return alt_best;
-}
-
-void draw_person_shadow(ushort face)
-{
-#if 0
-    asm volatile (
-      "call ASM_draw_person_shadow\n"
-        : : "a" (face));
-    return;
-#endif
-    struct Thing *p_thing;
-    ushort fr, anmode;
-    ushort shpak;
-    int frgrp;
-    ubyte k;
     int ssh_y, ssh_x;
     int sh_x, sh_y;
     int sc_a, sc_b;
-    short strng;
+    int frgrp;
+    ubyte k;
 
-    struct SortSprite *sspr;
-    struct EnginePoint point4;
-    struct EnginePoint point2;
-    struct EnginePoint point1;
-    struct EnginePoint point3;
+    struct EnginePoint ep4;
+    struct EnginePoint ep2;
+    struct EnginePoint ep1;
+    struct EnginePoint ep3;
 
-    p_thing = game_sort_sprites[face].PThing;
     vec_mode = 10;
-    assert(vec_tmap[ingame.LastTmap] != NULL);
-    vec_map = vec_tmap[ingame.LastTmap];
+    assert(vec_tmap[shadow_tmap_page] != NULL);
+    vec_map = vec_tmap[shadow_tmap_page];
 
-    fr = p_thing->Frame - nstart_ani[p_thing->StartFrame + 1 + p_thing->U.UObject.Angle];
-    anmode = p_thing->U.UPerson.AnimMode;
-    if ((anmode == ANIM_PERS_WEPHEAVY_IDLE) || (anmode == ANIM_PERS_WEPHEAVY_Unkn15) || (anmode == ANIM_PERS_WEPHEAVY_Unkn07))
-        shpak = 12;
-    else if ((anmode == ANIM_PERS_WEPLIGHT_IDLE) || (anmode == ANIM_PERS_Unkn14) || (anmode == ANIM_PERS_Unkn06))
-        shpak = byte_154F2C[2 * p_thing->SubType + 1];
-    else
-        shpak = byte_154F2C[2 * p_thing->SubType + 0];
+    frgrp =  8 * shpak + (((shangl >> 5) - angl + 8) & 7);
+    ep3.pp.U = sprshadow_EE90[6 * frgrp + frm] << 16;
+    ep3.pp.V = sprshadow_F5E0[6 * frgrp + frm] << 16;
+    ep4.pp.U = sprshadow_F370[6 * frgrp + frm] << 16;
+    ep4.pp.V = ep3.pp.V;
+    ep1.pp.U = ep4.pp.U;
+    ep1.pp.V = sprshadow_F100[6 * frgrp + frm] << 16;
+    ep2.pp.U = ep3.pp.U;
+    ep2.pp.V = ep1.pp.V;
 
-    frgrp =  8 * shpak + (((p_thing->U.UPerson.Shadows[0] >> 5) - p_thing->U.UObject.Angle + 8) & 7);
-    point3.pp.U = sprshadow_EE90[6 * frgrp + fr] << 16;
-    point3.pp.V = sprshadow_F5E0[6 * frgrp + fr] << 16;
-    point4.pp.U = sprshadow_F370[6 * frgrp + fr] << 16;
-    point4.pp.V = point3.pp.V;
-    point1.pp.U = point4.pp.U;
-    point1.pp.V = sprshadow_F100[6 * frgrp + fr] << 16;
-    point2.pp.U = point3.pp.U;
-    point2.pp.V = point1.pp.V;
-
-    k = p_thing->U.UPerson.Shadows[0] - (engn_anglexz >> 8);
+    k = shangl - (engn_anglexz >> 8);
     ssh_x = sprshadow_F850[2 * k + 1];
     ssh_y = -sprshadow_F850[2 * k + 0];
     sh_y = (6 * ssh_y + 64) >> 7;
     sh_x = (6 * ssh_x + 64) >> 7; // We will reverse the sign later
     sh_x = (overall_scale * sh_x) >> 8;
     sh_y = (overall_scale * sh_y) >> 8;
-    strng = p_thing->U.UPerson.Shadows[1];
+
     if (strng > 128)
         strng = 128;
-    vec_colour = (strng >> 3) + 16;
+    vec_colour = 16 + (strng >> 3);
     sc_a = (strng * sh_y) >> 6;
     sc_b = (strng * sh_x) >> 6;
     sh_x = -sh_x;
 
-    sspr = &game_sort_sprites[face];
-    point3.pp.X = sspr->X - sh_x;
-    point3.pp.Y = sspr->Y - sh_y;
-    point4.pp.X = sspr->X + sh_x;
-    point4.pp.Y = sspr->Y + sh_y;
+    ep3.pp.X = scr_x - sh_x;
+    ep3.pp.Y = scr_y - sh_y;
+    ep4.pp.X = scr_x + sh_x;
+    ep4.pp.Y = scr_y + sh_y;
 
     if (strng > 64) {
         sh_x = (sh_x * strng) >> 6;
         sh_y = (sh_y * strng) >> 6;
     }
 
-    sspr = &game_sort_sprites[face];
-    point1.pp.X = 4 * sc_a + sspr->X + sh_x;
-    point1.pp.Y = 4 * sc_b + sspr->Y + sh_y;
-    point2.pp.X = 4 * sc_a + sspr->X - sh_x;
-    point2.pp.Y = 4 * sc_b + sspr->Y - sh_y;
+    ep1.pp.X = 4 * sc_a + scr_x + sh_x;
+    ep1.pp.Y = 4 * sc_b + scr_y + sh_y;
+    ep2.pp.X = 4 * sc_a + scr_x - sh_x;
+    ep2.pp.Y = 4 * sc_b + scr_y - sh_y;
 
     dword_176D4C++;
     if (vec_mode == 2)
         vec_mode = 27;
-    draw_trigpoly(&point1.pp, &point4.pp, &point3.pp);
+    draw_trigpoly(&ep1.pp, &ep4.pp, &ep3.pp);
     dword_176D4C++;
     if (vec_mode == 2)
         vec_mode = 27;
-    draw_trigpoly(&point2.pp, &point1.pp, &point3.pp);
+    draw_trigpoly(&ep2.pp, &ep1.pp, &ep3.pp);
 }
 
-void draw_vehicle_shadow(ushort veh, ushort sort)
+void draw_sort_sprite_person_shadow(ushort sspr)
+{
+    struct SortSprite *p_sspr;
+    ushort shpak;
+    short strng;
+    ubyte shangl;
+
+    p_sspr = &game_sort_sprites[sspr];
+
+    shpak = p_sspr->Z;
+    shangl = p_sspr->Brightness;
+    strng = p_sspr->Scale;
+    draw_person_shadow(p_sspr->X, p_sspr->Y, p_sspr->Frame,
+      shpak, shangl, p_sspr->Angle, strng);
+}
+
+ushort draw_shadow_at_coords(struct SortMapPoint *p_cor1,
+  struct SortMapPoint *p_cor2, struct SortMapPoint *p_cor3,
+  struct SortMapPoint *p_cor4, struct ShadowTexture *p_shtextr,
+  int bckt)
 {
     struct ShEnginePoint sp1, sp2, sp3, sp4;
-    struct M31 vec_inp;
-    struct M31 vec_rot;
-    struct Thing *p_vehicle;
-    struct ShadowTexture *p_shtextr;
     struct SingleObjectFace4 *p_face4;
     struct SingleFloorTexture *p_sftex;
     struct SpecialPoint *p_specpt;
-    int shd_w, shd_l;
-    short cor1_x, cor1_y, cor1_z;
-    short cor2_x, cor2_y, cor2_z;
-    short cor3_x, cor3_y, cor3_z;
-    short cor4_x, cor4_y, cor4_z;
     ushort face, pt;
     short sftex;
-    int bckt;
 
-    p_vehicle = &things[veh];
-    p_shtextr = &shadowtexture[p_vehicle->StartFrame];
-    if (p_shtextr->Width == 0)
-        return;
+    transform_shpoint(&sp1, p_cor1->X, p_cor1->Y - 8 * engn_yc, p_cor1->Z);
 
-    shd_w = p_shtextr->Width;
-    shd_l = p_shtextr->Length;
+    transform_shpoint(&sp2, p_cor2->X, p_cor2->Y - 8 * engn_yc, p_cor2->Z);
 
-    vec_inp.R[0] = -shd_w;
-    vec_inp.R[2] = -shd_l;
-    vec_inp.R[1] = 0;
-    assert(p_vehicle->U.UVehicle.MatrixIndex < next_local_mat);
-    matrix_transform(&vec_rot, &local_mats[p_vehicle->U.UVehicle.MatrixIndex], &vec_inp);
-    cor1_x = (p_vehicle->X >> 8) - engn_xc + (vec_rot.R[0] >> 15);
-    cor1_z = (p_vehicle->Z >> 8) - engn_zc + (vec_rot.R[2] >> 15);
+    transform_shpoint(&sp3, p_cor3->X, p_cor3->Y - 8 * engn_yc, p_cor3->Z);
 
-    vec_inp.R[1] = 0;
-    vec_inp.R[0] = shd_w;
-    vec_inp.R[2] = -shd_l;
-    assert(p_vehicle->U.UVehicle.MatrixIndex < next_local_mat);
-    matrix_transform(&vec_rot, &local_mats[p_vehicle->U.UVehicle.MatrixIndex], &vec_inp);
-    cor2_x = (p_vehicle->X >> 8) - engn_xc + (vec_rot.R[0] >> 15);
-    cor2_z = (p_vehicle->Z >> 8) - engn_zc + (vec_rot.R[2] >> 15);
+    transform_shpoint(&sp4, p_cor4->X, p_cor4->Y - 8 * engn_yc, p_cor4->Z);
 
-    vec_inp.R[0] = p_shtextr->Width;
-    vec_inp.R[1] = 0;
-    vec_inp.R[2] = shd_l;
-    assert(p_vehicle->U.UVehicle.MatrixIndex < next_local_mat);
-    matrix_transform(&vec_rot, &local_mats[p_vehicle->U.UVehicle.MatrixIndex], &vec_inp);
-    cor3_x = (p_vehicle->X >> 8) - engn_xc + (vec_rot.R[0] >> 15);
-    cor3_z = (p_vehicle->Z >> 8) - engn_zc + (vec_rot.R[2] >> 15);
-
-    vec_inp.R[0] = -p_shtextr->Width;
-    vec_inp.R[1] = 0;
-    vec_inp.R[2] = shd_l;
-    assert(p_vehicle->U.UVehicle.MatrixIndex < next_local_mat);
-    matrix_transform(&vec_rot, &local_mats[p_vehicle->U.UVehicle.MatrixIndex], &vec_inp);
-    cor4_x = (p_vehicle->X >> 8) - engn_xc + (vec_rot.R[0] >> 15);
-    cor4_z = (p_vehicle->Z >> 8) - engn_zc + (vec_rot.R[2] >> 15);
-
-    if (p_vehicle->SubType == 40) {
-        cor1_y = alt_at_point_under_height(engn_xc + cor1_x, engn_zc + cor1_z, p_vehicle->Y) >> 8;
-        cor2_y = alt_at_point_under_height(engn_xc + cor2_x, engn_zc + cor2_z, p_vehicle->Y) >> 8;
-        cor3_y = alt_at_point_under_height(engn_xc + cor3_x, engn_zc + cor3_z, p_vehicle->Y) >> 8;
-        cor4_y = alt_at_point_under_height(engn_xc + cor4_x, engn_zc + cor4_z, p_vehicle->Y) >> 8;
-    } else {
-        cor1_y = PRCCOORD_TO_YCOORD(alt_at_point(engn_xc + cor1_x, engn_zc + cor1_z));
-        cor2_y = PRCCOORD_TO_YCOORD(alt_at_point(engn_xc + cor2_x, engn_zc + cor2_z));
-        cor3_y = PRCCOORD_TO_YCOORD(alt_at_point(engn_xc + cor3_x, engn_zc + cor3_z));
-        cor4_y = PRCCOORD_TO_YCOORD(alt_at_point(engn_xc + cor4_x, engn_zc + cor4_z));
-    }
-
-    transform_shpoint(&sp1, cor1_x, cor1_y - 8 * engn_yc, cor1_z);
-
-    transform_shpoint(&sp2, cor2_x, cor2_y - 8 * engn_yc, cor2_z);
-
-    transform_shpoint(&sp3, cor3_x, cor3_y - 8 * engn_yc, cor3_z);
-
-    transform_shpoint(&sp4, cor4_x, cor4_y - 8 * engn_yc, cor4_z);
-
-    face = next_special_face4;
-    if (face + 1 > mem_game[25].N)
-        return;
+    face = next_special_obj_face4;
+    if (face + 1 > game_special_obj_faces4_limit)
+        return 0;
 
     pt = next_screen_point;
     if (pt + 4 > screen_points_limit)
-        return;
+        return 0;
 
-    next_special_face4++;
+    next_special_obj_face4++;
     next_screen_point += 4;
 
-    p_face4 = &game_special_object_faces4[face];
+    p_face4 = &game_special_obj_faces4[face];
     p_face4->Flags = 10;
     p_face4->GFlags = 0x01;
     p_face4->ExCol = 16;
@@ -390,8 +250,9 @@ void draw_vehicle_shadow(ushort veh, ushort sort)
     p_specpt->X = sp4.X;
     p_specpt->Y = sp4.Y;
 
-    bckt = sort + 1;
-    draw_item_add(DrIT_Unkn12, face, bckt);
+    bckt++;
+    draw_item_add(DrIT_SpObFace4, face, bckt);
+    return face;
 }
 
 void copy_from_screen_ani(ubyte *buf)
@@ -410,16 +271,8 @@ void copy_from_screen_ani(ubyte *buf)
     }
 }
 
-struct Element *element_unkn_func_05(ushort frm, short *x1, short *x2, short *y1, short *y2)
+void get_frame_bounds_05(ushort frm, short *x1, short *x2, short *y1, short *y2)
 {
-#if 0
-    struct Element *ret;
-    asm volatile (
-      "push %5\n"
-      "call ASM_element_unkn_func_05\n"
-        : "=r" (ret) : "a" (frm), "d" (x1), "b" (x2), "c" (y1), "g" (y2));
-    return ret;
-#endif
     struct Element *p_el;
     struct Frame *p_frm;
     ushort el;
@@ -461,37 +314,21 @@ struct Element *element_unkn_func_05(ushort frm, short *x1, short *x2, short *y1
                 *y1 = scr_beg_y;
         }
     }
-    return p_el;
 }
 
-/** Prepare buffer with sprite shadows.
- * Clear the wscreen buffer before this call. Also make sure m_sprites are loaded.
- */
-void generate_shadows_for_multicolor_sprites(void)
+void draw_shadows_for_multicolor_sprites(void)
 {
-#if 0
-    asm volatile ("call ASM_generate_shadows_for_multicolor_sprites\n"
-        :  :  : "eax" );
-    return;
-#endif
-    struct ScreenBufBkp bkp;
     int shpak;
     short v23mw;
     short v23hw;
     int v25a;
-    int i;
-
-    // TODO would be better to use some back buffer instead of normal screen buf
-    screen_switch_to_custom_buffer(&bkp, lbDisplay.WScreen,
-      lbDisplay.GraphicsScreenWidth, 256);
-    LbScreenClear(0);
 
     overall_scale = 256;
 
     v23hw = 0;
     v25a = 0;
     v23mw = 0;
-    for (shpak = 12; shpak > -1; shpak--)
+    for (shpak = 12; shpak >= 0; shpak--)
     {
         int base_idx;
         ushort spr;
@@ -510,7 +347,7 @@ void generate_shadows_for_multicolor_sprites(void)
                 ubyte val3a, val5a, val5b, val6a, val8a;
                 short v21;
 
-                element_unkn_func_05(fr, &a2b, &a3a, &v25b, &a5a);
+                get_frame_bounds_05(fr, &a2b, &a3a, &v25b, &a5a);
                 if (v23hw + a3a - a2b + 1 > 255)
                 {
                     v23hw = 0;
@@ -567,8 +404,11 @@ void generate_shadows_for_multicolor_sprites(void)
             }
         }
     }
+}
 
-    copy_from_screen_ani(vec_tmap[ingame.LastTmap]);
+void generate_shadows_angle_shifts(void)
+{
+    int i;
 
     for (i = 0; i < 256; i++)
     {
@@ -589,8 +429,6 @@ void generate_shadows_for_multicolor_sprites(void)
         sprshadow_F850[2 * i + 0] = x;
         sprshadow_F850[2 * i + 1] = y;
     }
-
-    screen_load_backup_buffer(&bkp);
 }
 
 /******************************************************************************/

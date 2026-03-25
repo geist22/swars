@@ -56,14 +56,11 @@ void draw_noise_box_purple_list(int x, int y, ulong width, ulong height);
 
 short get_text_box_lines_visible(struct ScreenTextBox *p_box);
 
-// Watcom calling convention - do not call from C
-ubyte ac_flashy_draw_purple_box(struct ScreenBox *p_box);
-ubyte ac_flashy_draw_purple_button(struct ScreenButton *p_button);
-ubyte ac_flashy_draw_purple_text_box(struct ScreenTextBox *p_box);
-ubyte ac_flashy_draw_purple_info_box(struct ScreenInfoBox *p_box);
-ubyte ac_button_text(struct ScreenButton *p_button);
-ubyte ac_label_text(struct ScreenButton *p_btn);
-ubyte ac_info_box_text(struct ScreenInfoBox *p_box);
+ubyte flashy_draw_purple_button(struct ScreenButton *p_button);
+ubyte flashy_draw_purple_info_box(struct ScreenInfoBox *p_box);
+ubyte button_text(struct ScreenButton *p_button);
+ubyte label_text(struct ScreenButton *p_btn);
+ubyte info_box_text(struct ScreenInfoBox *p_box);
 
 /******************************************************************************/
 #ifdef __cplusplus

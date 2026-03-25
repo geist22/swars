@@ -27,13 +27,37 @@ extern "C" {
 /******************************************************************************/
 #pragma pack(1)
 
+struct SortMapPoint;
+
+struct ShadowTexture {
+    ushort Width;
+    ushort Length;
+    ubyte X1;
+    ubyte Y1;
+    ubyte X2;
+    ubyte Y2;
+};
+
 #pragma pack()
 /******************************************************************************/
 
-void draw_person_shadow(ushort face);
-void draw_vehicle_shadow(ushort veh, ushort sort);
+/** Page index of the texture map which contains shadows.
+ */
+extern ushort shadow_tmap_page;
 
-void generate_shadows_for_multicolor_sprites(void);
+extern struct ShadowTexture shadowtexture[];
+/******************************************************************************/
+
+void draw_shadows_for_multicolor_sprites(void);
+void generate_shadows_angle_shifts(void);
+void copy_from_screen_ani(ubyte *buf);
+
+void draw_sort_sprite_person_shadow(ushort sspr);
+
+ushort draw_shadow_at_coords(struct SortMapPoint *p_cor1,
+  struct SortMapPoint *p_cor2, struct SortMapPoint *p_cor3,
+  struct SortMapPoint *p_cor4, struct ShadowTexture *p_shtextr,
+  int bckt);
 
 /******************************************************************************/
 #ifdef __cplusplus

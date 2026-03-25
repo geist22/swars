@@ -29,14 +29,14 @@
 #include "privrdlog.h"
 /******************************************************************************/
 
-ushort prim_object_points_count = 1;
-ushort prim_object_faces_count = 1;
-ushort prim_object_faces4_count = 1;
-ushort prim_objects_count = 1;
+ushort next_prim_object_point = 1;
+ushort next_prim_object_face3 = 1;
+ushort next_prim_object_face4 = 1;
+ushort next_prim_object = 1;
 
 extern ushort word_19CB58[66];
 
-ushort old_next_object, old_next_object_face, old_next_object_point,
+ushort old_next_object, old_next_object_face3, old_next_object_point,
   old_next_normal, old_next_face_texture;
 
 void read_primveh_obj(const char *fname, int a2)
@@ -50,17 +50,17 @@ void read_primveh_obj(const char *fname, int a2)
     LbFileRead(fh, &firstval, sizeof(long));
     if (firstval != 1)
     {
-      LbFileRead(fh, &prim_object_points_count, sizeof(ushort));
-      LbFileRead(fh, &prim_object_faces_count, sizeof(ushort));
-      LbFileRead(fh, &prim_object_faces4_count, sizeof(ushort));
-      LbFileRead(fh, &prim_objects_count, sizeof(ushort));
+      LbFileRead(fh, &next_prim_object_point, sizeof(ushort));
+      LbFileRead(fh, &next_prim_object_face3, sizeof(ushort));
+      LbFileRead(fh, &next_prim_object_face4, sizeof(ushort));
+      LbFileRead(fh, &next_prim_object, sizeof(ushort));
       LbFileRead(fh, &prim4_textures_count, sizeof(ushort));
       LbFileRead(fh, &prim_face_textures_count, sizeof(ushort));
       LbFileRead(fh, &prim_unknprop01, sizeof(ushort));
-      LbFileRead(fh, prim_object_points, sizeof(struct SinglePoint) * prim_object_points_count);
-      LbFileRead(fh, prim_object_faces, sizeof(struct SingleObjectFace3) * prim_object_faces_count);
-      LbFileRead(fh, prim_object_faces4, sizeof(struct SingleObjectFace4) * prim_object_faces4_count);
-      LbFileRead(fh, prim_objects, sizeof(struct SingleObject) * prim_objects_count);
+      LbFileRead(fh, prim_object_points, sizeof(struct SinglePoint) * next_prim_object_point);
+      LbFileRead(fh, prim_object_faces3, sizeof(struct SingleObjectFace3) * next_prim_object_face3);
+      LbFileRead(fh, prim_object_faces4, sizeof(struct SingleObjectFace4) * next_prim_object_face4);
+      LbFileRead(fh, prim_objects, sizeof(struct SingleObject) * next_prim_object);
       LbFileRead(fh, prim4_textures, sizeof(struct SingleFloorTexture) * prim4_textures_count);
       LbFileRead(fh, prim_face_textures, sizeof(struct SingleTexture) * prim_face_textures_count);
     }
@@ -158,11 +158,6 @@ ushort find_normal(struct Normal *p_normal)
 
 void calc_normal(short face, struct Normal *p_normal)
 {
-#if 0
-    asm volatile ("call ASM_calc_normal\n"
-        : : "a" (face), "d" (p_normal));
-    return;
-#endif
     struct SingleObjectFace3 *p_face;
     struct SinglePoint *p_objpt1;
     struct SinglePoint *p_objpt2;
@@ -174,7 +169,7 @@ void calc_normal(short face, struct Normal *p_normal)
     int dirvec_x, dirvec_y, dirvec_z, dirvec_len;
     int nx, ny, nz;
 
-    p_face = &game_object_faces[face];
+    p_face = &game_object_faces3[face];
     p_objpt1 = &game_object_points[p_face->PointNo[0]];
     p_objpt2 = &game_object_points[p_face->PointNo[1]];
     p_objpt3 = &game_object_points[p_face->PointNo[2]];
@@ -231,11 +226,6 @@ void calc_normal(short face, struct Normal *p_normal)
 
 void calc_normal4(short face, struct Normal *p_normal)
 {
-#if 0
-    asm volatile ("call ASM_calc_normal4\n"
-        : : "a" (face), "d" (p_normal));
-    return;
-#endif
     struct SingleObjectFace4 *p_face;
     struct SinglePoint *p_objpt1;
     struct SinglePoint *p_objpt2;
@@ -305,13 +295,6 @@ void calc_normal4(short face, struct Normal *p_normal)
 
 ushort obj_face3_create_normal(short face)
 {
-#if 0
-    ushort ret;
-    asm volatile (
-      "call ASM_obj_face3_create_normal\n"
-        : "=r" (ret) : "a" (face));
-    return ret;
-#else
     struct Normal loc_nrml;
     struct Normal *p_nnrml;
     ushort i;
@@ -332,18 +315,10 @@ ushort obj_face3_create_normal(short face)
         i = nrml;
     }
     return i;
-#endif
 }
 
 ushort obj_face4_create_normal(short face)
 {
-#if 0
-    int ret;
-    asm volatile (
-      "call ASM_obj_face4_create_normal\n"
-        : "=r" (ret) : "a" (a1));
-    return ret;
-#endif
     struct Normal loc_nrml;
     struct Normal *p_nnrml;
     int i;
@@ -368,11 +343,6 @@ ushort obj_face4_create_normal(short face)
 
 void update_texture_from_anim_tmap(ushort ani_tmap)
 {
-#if 0
-    asm volatile (
-      "call ASM_update_texture_from_anim_tmap\n"
-        :  : "a" (ani_tmap));
-#else
     struct AnimTmap *p_panitmap;
     ushort i;
 
@@ -396,15 +366,10 @@ void update_texture_from_anim_tmap(ushort ani_tmap)
             p_panitmap->TMap[i] = new_txtr;
         }
     }
-#endif
 }
 
 ushort copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty)
 {
-#if 0
-    asm volatile ("call ASM_copy_prim_obj_to_game_object\n"
-        : : "a" (tx), "d" (tz), "b" (prim_obj), "c" (ty));
-#else
     struct SingleObject *p_psngobj;
     struct SingleObject *p_nsngobj;
     ushort face_beg, face_num, face_dt;
@@ -421,7 +386,7 @@ ushort copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty
 #pragma GCC diagnostic pop
 
     old_next_object = next_object;
-    old_next_object_face = next_object_face;
+    old_next_object_face3 = next_object_face3;
     old_next_object_point = next_object_point;
     old_next_normal = next_normal;
     old_next_face_texture = next_face_texture;
@@ -470,7 +435,7 @@ ushort copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty
             prim_obj_mem_debug(PriEl_PRIM_POINT, pt, pt+1);
     }
 
-    p_nsngobj->StartFace = next_object_face;
+    p_nsngobj->StartFace = next_object_face3;
     p_nsngobj->NumbFaces = face_num;
 
     for (face_dt = 0; face_dt < face_num; face_dt++)
@@ -482,13 +447,13 @@ ushort copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty
         if (prim_obj_mem_debug != NULL)
             prim_obj_mem_debug(PriEl_PRIM_FACE3, face_beg + face_dt, face_beg + face_dt + 1);
 
-        p_pface = &prim_object_faces[face_beg + face_dt];
-        if (next_object_face + 3 > game_object_faces_limit) {
+        p_pface = &prim_object_faces3[face_beg + face_dt];
+        if (next_object_face3 + 3 > game_object_faces3_limit) {
             p_nsngobj->NumbFaces = face_dt;
             return new_obj;
         }
-        new_face = next_object_face++;
-        p_nface = &game_object_faces[new_face];
+        new_face = next_object_face3++;
+        p_nface = &game_object_faces3[new_face];
         if (p_pface->Texture != 0)
         {
             struct SingleTexture *p_nstxtr;
@@ -640,7 +605,6 @@ ushort copy_prim_obj_to_game_object(short tx, short tz, short prim_obj, short ty
     if (prim_obj_mem_debug != NULL)
         prim_obj_mem_debug(PriEl_NONE, -10000, 0);
     return new_obj;
-#endif
 }
 
 /******************************************************************************/

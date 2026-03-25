@@ -26,6 +26,7 @@
 #include "bfscrcopy.h"
 #include "ssampply.h"
 
+#include "bigmap.h"
 #include "campaign.h"
 #include "femail.h"
 #include "femain.h"
@@ -41,6 +42,7 @@
 #include "lvobjctv.h"
 #include "mydraw.h"
 #include "scanner.h"
+#include "scandraw.h"
 #include "sound.h"
 #include "wadfile.h"
 #include "wrcities.h"
@@ -80,8 +82,8 @@ short word_1C47E8 = 0;
 
 ubyte ac_brief_do_netscan_enhance(ubyte click);
 ubyte ac_show_brief_netscan_box(struct ScreenTextBox *box);
-ubyte ac_accept_mission(ubyte click);
-ubyte ac_do_unkn1_CANCEL(ubyte click);
+ubyte accept_mission(ubyte click);
+ubyte do_unkn1_CANCEL(ubyte click);
 void ac_purple_unkn2_data_to_screen(void);
 void ac_SCANNER_data_to_screen(void);
 void update_netscan_cost_button(ubyte city_id)
@@ -231,15 +233,11 @@ ubyte show_brief_netscan_box(struct ScreenTextBox *p_box)
             nlines += p_nsobv->TextLines;
         }
         if (cities[selected_city_id].Info < netscan_objectives_count) {
-            //drawn = brief_NETSCAN_button.DrawFn(&brief_NETSCAN_button); -- incompatible calling convention
-            asm volatile ("call *%2\n"
-                : "=r" (drawn) : "a" (&brief_NETSCAN_button), "g" (brief_NETSCAN_button.DrawFn));
+            drawn = brief_NETSCAN_button.DrawFn(&brief_NETSCAN_button);
         }
     }
     if (drawn) {
-        //brief_NETSCAN_COST_box.DrawFn(&brief_NETSCAN_COST_box); -- incompatible calling convention
-        asm volatile ("call *%2\n"
-          : "=r" (drawn) : "a" (&brief_NETSCAN_COST_box), "g" (brief_NETSCAN_COST_box.DrawFn));
+        drawn = brief_NETSCAN_COST_box.DrawFn(&brief_NETSCAN_COST_box);
     }
     return 0;
 }
@@ -359,8 +357,9 @@ ubyte input_citymap_city_selection(struct ScreenBox *p_box)
 
 ubyte input_citymap_scanner(struct ScreenBox *p_box)
 {
-    int dx, dy;
-    short sdx, sdy;
+    int dx, dz;
+    short sdx_s, sdx_c;
+    short sdz_s, sdz_c;
     ubyte ret;
 
     ret = 0;
@@ -403,7 +402,7 @@ ubyte input_citymap_scanner(struct ScreenBox *p_box)
             dword_1C47E0++;
     }
     dx = 0;
-    dy = 0;
+    dz = 0;
     ingame.Scanner.Angle = ((dword_1C47E0 >> 2) + ingame.Scanner.Angle) & 0x7FF;
     if (is_key_pressed(KC_RIGHT, KMod_DONTCARE)) {
         dx++;
@@ -414,26 +413,19 @@ ubyte input_citymap_scanner(struct ScreenBox *p_box)
         ret = 1;
     }
     if (is_key_pressed(KC_UP, KMod_DONTCARE)) {
-        dy--;
+        dz--;
         ret = 1;
     }
     if (is_key_pressed(KC_DOWN, KMod_DONTCARE)) {
-        dy++;
+        dz++;
         ret = 1;
     }
-    ingame.Scanner.MX += dx * lbSinTable[ingame.Scanner.Angle + LbFPMath_PI/2] >> 13;
-    ingame.Scanner.MX += dy * lbSinTable[ingame.Scanner.Angle] >> 13;
-    sdx = dx * lbSinTable[ingame.Scanner.Angle] >> 13;
-    sdy = dy * lbSinTable[ingame.Scanner.Angle + LbFPMath_PI/2] >> 13;
-    ingame.Scanner.MZ += sdx - sdy;
-    if (ingame.Scanner.MX < 0)
-        ingame.Scanner.MX = 0;
-    if (ingame.Scanner.MZ < 0)
-        ingame.Scanner.MZ = 0;
-    if (ingame.Scanner.MX > 256)
-        ingame.Scanner.MX = 256;
-    if (ingame.Scanner.MZ > 256)
-        ingame.Scanner.MZ = 256;
+    sdx_s = dz * lbSinTable[ingame.Scanner.Angle] >> 6;
+    sdx_c = dx * lbSinTable[ingame.Scanner.Angle + LbFPMath_PI/2] >> 6;
+    sdz_s = dx * lbSinTable[ingame.Scanner.Angle] >> 6;
+    sdz_c = dz * lbSinTable[ingame.Scanner.Angle + LbFPMath_PI/2] >> 6;
+    SCANNER_shift_center_point(sdx_s + sdx_c, sdz_s - sdz_c);
+
     return ret;
 }
 
@@ -669,26 +661,17 @@ ubyte show_mission_screen(void)
     if (drawn)
         drawn = draw_heading_box();
 
-    if (drawn)
-    {
-        //drawn = brief_mission_text_box.DrawFn(&brief_mission_text_box); -- incompatible calling convention
-        asm volatile ("call *%2\n"
-            : "=r" (drawn) : "a" (&brief_mission_text_box), "g" (brief_mission_text_box.DrawFn));
+    if (drawn) {
+        drawn = brief_mission_text_box.DrawFn(&brief_mission_text_box);
     }
 
-    if (drawn)
-    {
+    if (drawn) {
         input_brief_mission_text_box(&brief_mission_text_box);
-        //drawn = brief_graphical_box.DrawFn(&brief_graphical_box); -- incompatible calling convention
-        asm volatile ("call *%2\n"
-            : "=r" (drawn) : "a" (&brief_graphical_box), "g" (brief_graphical_box.DrawFn));
+        drawn = brief_graphical_box.DrawFn(&brief_graphical_box);
     }
 
-    if (drawn)
-    {
-        //drawn = brief_netscan_box.DrawFn(&brief_netscan_box); -- incompatible calling convention
-        asm volatile ("call *%2\n"
-            : "=r" (drawn) : "a" (&brief_netscan_box), "g" (brief_netscan_box.DrawFn));
+    if (drawn) {
+        drawn = brief_netscan_box.DrawFn(&brief_netscan_box);
     }
 
     return drawn;
@@ -696,9 +679,7 @@ ubyte show_mission_screen(void)
 
 void init_brief_screen_scanner(void)
 {
-    ingame.Scanner.MX = 127;
-    ingame.Scanner.MZ = 127;
-    ingame.Scanner.Angle = 0;
+    SCANNER_set_center_point(MAP_COORD_WIDTH/2, MAP_COORD_HEIGHT/2, 0);
     ingame.Scanner.Zoom = 256;
 
     SCANNER_set_screen_box(brief_graphical_box.X + 1, brief_graphical_box.Y + 1,
@@ -731,8 +712,8 @@ void init_brief_screen_boxes(void)
     init_screen_info_box(&brief_NETSCAN_COST_box, 12u, 405u, 213u,
       gui_strings[442], unkn39_text, 6, med_font, small_med_font, 1);
     brief_NETSCAN_COST_box.Text2 = brief_netscan_cost_text;
-    brief_NETSCAN_button.CallBackFn = ac_brief_do_netscan_enhance;
-    brief_netscan_box.DrawTextFn = ac_show_brief_netscan_box;
+    brief_NETSCAN_button.CallBackFn = brief_do_netscan_enhance;
+    brief_netscan_box.DrawTextFn = show_brief_netscan_box;
 
     init_screen_text_box(&brief_mission_text_box, 338u, 72u, 295u, 354, 6, small_font, 3);
     init_screen_button(&unkn1_ACCEPT_button, 343u, 405u,
@@ -742,8 +723,8 @@ void init_brief_screen_boxes(void)
     brief_mission_text_box.Buttons[0] = &unkn1_ACCEPT_button;
     brief_mission_text_box.Buttons[1] = &unkn1_CANCEL_button;
     brief_mission_text_box.Text = mission_briefing_text;
-    unkn1_ACCEPT_button.CallBackFn = ac_accept_mission;
-    unkn1_CANCEL_button.CallBackFn = ac_do_unkn1_CANCEL;
+    unkn1_ACCEPT_button.CallBackFn = accept_mission;
+    unkn1_CANCEL_button.CallBackFn = do_unkn1_CANCEL;
 
     init_screen_box(&brief_graphical_box, 7, 72, 322, 200, 6);
     brief_graphical_box.SpecialDrawFn = show_citymap_box;
@@ -798,7 +779,7 @@ void update_brief_screen_netscan_button(ushort text_id)
       brief_netscan_box.X + brief_netscan_box.Width - 17, brief_NETSCAN_COST_box.Y,
       text, 6, med2_font, 1, 0x80);
     brief_NETSCAN_COST_box.Width = brief_netscan_box.Width - 10 - brief_NETSCAN_button.Width - 17;
-    brief_NETSCAN_button.CallBackFn = ac_brief_do_netscan_enhance;
+    brief_NETSCAN_button.CallBackFn = brief_do_netscan_enhance;
 }
 
 void reset_brief_screen_player_state(void)

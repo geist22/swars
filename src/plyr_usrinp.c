@@ -432,7 +432,7 @@ ubyte input_user_control_agent(ushort plyr, short dmuser)
             else
             {
                 if ((debug_log_things & 0x01) != 0) {
-                    LOGSYNC("Person %s %d state %d.%d cannot enter %s %d state %d.%d",
+                    LOGSYNC_F("Person %s %d state %d.%d cannot enter %s %d state %d.%d",
                       person_type_name(p_dcthing->SubType), (int)p_dcthing->ThingOffset,
                       p_dcthing->State, p_dcthing->SubState,
                       vehicle_type_name(p_vehicle->SubType), (int)p_vehicle->ThingOffset,
@@ -525,9 +525,9 @@ ubyte input_user_control_agent(ushort plyr, short dmuser)
     {
         ushort flg;
         if ((p_player->UserInput[dmuser].Bits & SpUIn_DoTrigger) != 0)
-            flg = 0x8000;
+            flg = PActF_TriggerUse;
         else
-            flg = 0x0;
+            flg = PActF_None;
         loc_build_packet(p_pckt, PAct_NONE | flg, dcthing, dx, dy, dz);
         return GINPUT_PACKET;
     }
@@ -538,9 +538,9 @@ ubyte input_user_control_agent(ushort plyr, short dmuser)
     {
         ushort flg;
         if ((p_player->UserInput[dmuser].Bits & SpUIn_DoTrigger) != 0)
-            flg = 0x8000;
+            flg = PActF_TriggerUse;
         else
-            flg = 0x0;
+            flg = PActF_None;
         loc_build_packet(p_pckt, PAct_AGENT_GOTO_GND_PT_REL_FF | flg, dcthing, dx, dy, dz);
         return GINPUT_PACKET;
     }
@@ -548,9 +548,9 @@ ubyte input_user_control_agent(ushort plyr, short dmuser)
     {
         ushort flg;
         if ((p_player->UserInput[dmuser].Bits & SpUIn_DoTrigger) != 0)
-            flg = 0x8000;
+            flg = PActF_TriggerUse;
         else
-            flg = 0x0;
+            flg = PActF_None;
         loc_build_packet(p_pckt, PAct_AGENT_GOTO_GND_PT_REL | flg, dcthing, dx, dy, dz);
         return GINPUT_PACKET;
     }

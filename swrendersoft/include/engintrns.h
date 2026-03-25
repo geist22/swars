@@ -61,19 +61,21 @@ struct ShEnginePoint {
 
 #pragma pack()
 /******************************************************************************/
-extern long cam_tilt;
+extern s32 cam_tilt;
 
-extern long dword_176D0C;
-extern long dword_176D10;
-extern long dword_176D14;
-extern long dword_176D18;
-extern long dword_176D1C;
-extern long dword_176D3C;
-extern long dword_176D40;
-extern long dword_176D44;
-extern long dword_176D4C;
-extern long cam_rotation_velocity;
-extern long dword_176D64;
+extern s32 dword_176D0C;
+extern s32 dword_176D10;
+extern s32 dword_176D14;
+extern s32 dword_176D18;
+extern s32 dword_176D1C;
+extern s32 dword_176D3C;
+extern s32 dword_176D40;
+extern s32 dword_176D44;
+extern s32 dword_176D4C;
+extern s32 cam_rotation_velocity;
+
+/******************************************************************************/
+s32 mul_shift16_sign_pad_lo(s32 ar1, s32 ar2);
 
 short angle_between_points(int x1, int z1, int x2, int z2);
 
@@ -101,9 +103,9 @@ void transform_shpoint_fpv(struct ShEnginePoint *p_sp, int dxc, int dyc, int dzc
  */
 int transform_shpoint_y(int dxc, int dyc, int dzc);
 
+void transform_screen_to_map_isometric(int *dxc, int *dzc, int scr_x, int scr_y);
+
 void process_engine_unk1(void);
-void process_engine_unk2(void);
-void setup_engine_nullsub4(void);
 /******************************************************************************/
 #ifdef __cplusplus
 }

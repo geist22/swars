@@ -286,7 +286,7 @@ void count_fnavs(TbBool a1)
         word_1DC898++;
         return;
     }
-    if ((ingame.Flags & GamF_Unkn0200) != 0)
+    if ((ingame.Flags & GamF_NaviPerfInfo) != 0)
     {
         ushort i;
         TbPixel col;
@@ -316,7 +316,7 @@ void navi_onscreen_debug(TbBool a1)
         word_1DC8CE++;
         return;
     }
-    if ((ingame.Flags & GamF_Unkn0200) != 0)
+    if ((ingame.Flags & GamF_NaviPerfInfo) != 0)
     {
         ushort i;
 
@@ -876,7 +876,7 @@ void things_debug_hud(void)
         gtti_scr_y = scr_y + ln*3;
         draw_text(gtti_scr_x, gtti_scr_y, locstr, colour_lookup[ColLU_WHITE]);
 
-        if (p_track_thing->Flag & TngF_Unkn00040000)
+        if (p_track_thing->Flag & TngF_DangerFlee)
             draw_text(scr_x + 0, scr_y + ln*4, "Da", colour_lookup[ColLU_WHITE]);
         if (p_track_thing->Flag & TngF_WepRecoil)
             draw_text(scr_x + 20, scr_y + ln*4, "Re", colour_lookup[ColLU_WHITE]);
@@ -888,7 +888,7 @@ void things_debug_hud(void)
             draw_text(scr_x + 80, scr_y + ln*4, "Ch", colour_lookup[ColLU_WHITE]);
         if (p_track_thing->Flag & TngF_Unkn0040)
             draw_text(scr_x + 100, scr_y + ln*4, "CI", colour_lookup[ColLU_WHITE]);
-        if (p_track_thing->Flag & TngF_Unkn20000000)
+        if (p_track_thing->Flag & TngF_ShootAtPos)
             draw_text(scr_x + 120, scr_y + ln*4, "SAP", colour_lookup[ColLU_WHITE]);
         if (p_track_thing->Flag & TngF_StationrSht)
             draw_text(scr_x + 160, scr_y + ln*4, "Sta", colour_lookup[ColLU_RED]);

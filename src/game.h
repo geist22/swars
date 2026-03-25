@@ -121,10 +121,6 @@ enum MissionFMVPlay {
 
 struct Thing;
 
-struct ColColumn { // sizeof=16
-    uint QBits[4];
-};
-
 struct BezierPt { // sizeof=28
     ubyte field_0[26];
     ushort field_2A;
@@ -197,11 +193,6 @@ extern ubyte game_level_unkn2[40];
 
 extern ushort word_1531E0;
 
-extern struct ColColumn *game_col_columns;
-extern ushort next_col_column;
-extern struct SingleObjectFace3 *game_special_object_faces;
-extern struct SingleObjectFace4 *game_special_object_faces4;
-extern ubyte *game_user_heap;
 extern struct UnknBezEdit *bezier_pts;
 extern ushort next_bezier_pt;
 extern ubyte *spare_map_buffer;
@@ -369,7 +360,6 @@ void process_sound_heap(void);
 void update_danger_music(ubyte a1);
 
 void check_mouse_overvehicle(struct Thing *p_thing, ubyte target_assign);
-int mech_unkn_func_03(struct Thing *p_thing);
 
 void draw_new_panel(void);
 

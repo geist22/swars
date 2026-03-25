@@ -110,9 +110,9 @@ enum GameFlags {
     GamF_MortalGame   = 0x0010,
     GamF_Unkn0020     = 0x0020,
     GamF_RenderScene  = 0x0040,
-    GamF_StopThings   = 0x0080, /**< Do not process things, stopping ingame action. */
+    TngF_ProgressAction = 0x0080, /**< Process things states, enabling in-mission action. */
     GamF_Unkn0100     = 0x0100,
-    GamF_Unkn0200     = 0x0200,
+    GamF_NaviPerfInfo = 0x0200,
     GamF_DeepRadar    = 0x0400,
     GamF_Unkn0800     = 0x0800,
     GamF_Unkn1000     = 0x1000,
@@ -149,7 +149,7 @@ struct InGame {
     ulong fld_unkC4B;	// offset=0x477
     short MissionEndFade;
     short MissionStatus;
-    long Flags;
+    u32 Flags;
     ushort fld_unkC57;
     short fld_unkC59;
     short draw_unknprop_01;
@@ -180,7 +180,7 @@ struct InGame {
     ubyte fld_unkCAA;
     ubyte PalType;
     short FlameCount;
-    ubyte LastTmap;
+    ubyte LastTmap_UNUSED; // Replaced by shadow_tmap_page - for repurposing
     short SoundThing;
     ubyte fld_unkCB1;
     ubyte fld_unkCB2;
@@ -203,6 +203,8 @@ extern ubyte net_game_play_flags;
 /** User set in-game brightess. */
 extern short user_sel_brightness;
 
+extern TbPixel deep_radar_surface_col;
+extern TbPixel deep_radar_line_col;
 /******************************************************************************/
 
 /** Gives national text with description of the action.

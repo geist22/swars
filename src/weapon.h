@@ -58,6 +58,14 @@ extern "C" {
  */
 #define SHOT_ROCKED_SPEED 256
 
+/** Gravitational pull of throwable weapons, in map coords.
+ */
+#define SHOT_THROWN_GRAVITY 500
+
+/** Gravitational pull of throwable weapons, in map coords.
+ */
+#define SHOT_GRENADE_FLIGHT_GTURNS 16
+
 enum WeaponType
 {
   WEP_NULL = 0x0,
@@ -205,9 +213,19 @@ TbBool weapon_is_for_spreading_on_ground(WeaponType wtype);
  */
 TbBool weapon_is_deployed_at_wielder_pos(WeaponType wtype);
 
+/** Returns if the weapon is for restoring parameters (ie. health) rather than inflicting damage.
+ */
+TbBool weapon_is_for_restoration(WeaponType wtype);
+
 /** Returns if the weapon is targeted at / affects the wielding person.
  */
 TbBool weapon_is_self_affecting(WeaponType wtype);
+
+/** Returns if a weapon effects are not additive/stackable.
+ *
+ * Effects are unstackable if a single shot gives the same effect as multiple simultaneous shots.
+ */
+TbBool weapon_has_unstackable_effect(WeaponType wtype);
 
 /** Returns if a weapon has limited amount of uses before disappearing.
  */
@@ -223,6 +241,10 @@ TbBool weapon_can_be_charged(WeaponType wtype);
  * use the same resources and same player controls.
  */
 TbBool weapon_has_targetting(WeaponType wtype);
+
+/** Returns flags for whether leader shooting a weapon should cause follower shoot his weapon as well.
+ */
+ubyte weapon_simultaneous_fire_in_group(WeaponType lead_wtype, WeaponType follwr_wtype);
 
 /** Returns panel sprite index to be used to represent the weapon.
  */
@@ -254,10 +276,6 @@ TbBool weapons_remove_one_from_npc(ulong *p_weapons, WeaponType wtype);
 TbBool weapons_remove_one(ulong *p_weapons,
   struct WeaponsFourPack *p_fourpacks, WeaponType wtype);
 
-/** Reset previously selected weapon visible in the players panel.
- */
-void person_weapons_reset_previous(struct Thing *p_person);
-
 /** Remove one weapon from player-controlled person in-game.
  * Player struct contains dumb own array rather than uniform WeaponsFourPack, so it requires
  * this special function.
@@ -265,6 +283,8 @@ void person_weapons_reset_previous(struct Thing *p_person);
  */
 TbBool weapons_remove_one_for_player(ulong *p_weapons,
   ubyte p_plfourpacks[][4], ushort plagent, WeaponType wtype);
+
+void give_take_me_weapon(struct Thing *p_person, int item, int giveortake, short id);
 
 TbBool weapons_add_one(ulong *p_weapons,
   struct WeaponsFourPack *p_fourpacks, WeaponType wtype);
@@ -320,6 +340,8 @@ void process_weapon(struct Thing *p_person);
 short process_persuadertron(struct Thing *p_person, ubyte target_select, ushort *energy_reqd);
 void process_weapon_wind_down(struct Thing *p_person);
 int gun_out_anim(struct Thing *p_person, ubyte shoot_flag);
+
+ushort set_player_weapon_turn(struct Thing *p_person, ushort delay_turns);
 
 s32 laser_hit_at(s32 x1, s32 y1, s32 z1, s32 *x2, s32 *y2, s32 *z2, struct Thing *p_shot);
 void finalise_razor_wire(struct Thing *p_person);

@@ -21,6 +21,7 @@
 #include "bfkeybd.h"
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "enginbckt.h"
 #include "engincam.h"
@@ -29,11 +30,14 @@
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"
 #include "engintrns.h"
+#include "engintxtrmap.h"
 #include "enginzoom.h"
 
 #include "bigmap.h"
 #include "building.h"
+#include "display.h"
 #include "engindrwlstm.h"
+#include "engindrwlstm_wrp.h"
 #include "engindrwlstx.h"
 #include "frame_sprani.h"
 #include "game.h"
@@ -47,6 +51,12 @@
 #include "vehicle.h"
 /******************************************************************************/
 extern ubyte byte_1C83E4;
+
+/** Callback for setting height of shadow corners.
+ */
+s32 (*get_flat_surface_height_below_point_cb)(struct SortMapPoint *p_cor) = NULL;
+
+/******************************************************************************/
 
 void do_car_glare(struct Thing *p_car)
 {
@@ -91,10 +101,145 @@ void process_child_object(struct Thing *p_vehicle)
       p_sobj, p_mgun);
 }
 
+/** Prepare buffer with sprite shadows.
+ * Clear the wscreen buffer before this call. Also make sure m_sprites are loaded.
+ */
+void generate_shadows_for_multicolor_sprites(void)
+{
+    struct ScreenBufBkp bkp;
+
+    // TODO would be better to use some back buffer instead of normal screen buf
+    screen_switch_to_custom_buffer(&bkp, lbDisplay.WScreen,
+      lbDisplay.GraphicsScreenWidth, 256);
+    LbScreenClear(0);
+
+    draw_shadows_for_multicolor_sprites();
+
+    copy_from_screen_ani(vec_tmap[shadow_tmap_page]);
+
+    generate_shadows_angle_shifts();
+
+    screen_load_backup_buffer(&bkp);
+}
+
+void get_object_shadow_bound_points_xz(struct SortMapPoint *p_cor1,
+  struct SortMapPoint *p_cor2, struct SortMapPoint *p_cor3,
+  struct SortMapPoint *p_cor4, const struct SortMapPoint *p_tngcor,
+  const struct ShadowTexture *p_shtextr, short matx)
+{
+    struct M31 vec_inp;
+    struct M31 vec_rot;
+    int shd_w, shd_l;
+
+    shd_w = p_shtextr->Width;
+    shd_l = p_shtextr->Length;
+
+    vec_inp.R[0] = -shd_w;
+    vec_inp.R[2] = -shd_l;
+    vec_inp.R[1] = 0;
+    assert(matx < next_local_mat);
+    matrix_transform(&vec_rot, &local_mats[matx], &vec_inp);
+    p_cor1->X = p_tngcor->X - engn_xc + (vec_rot.R[0] >> 15);
+    p_cor1->Z = p_tngcor->Z - engn_zc + (vec_rot.R[2] >> 15);
+
+    vec_inp.R[1] = 0;
+    vec_inp.R[0] = shd_w;
+    vec_inp.R[2] = -shd_l;
+    assert(matx < next_local_mat);
+    matrix_transform(&vec_rot, &local_mats[matx], &vec_inp);
+    p_cor2->X = p_tngcor->X - engn_xc + (vec_rot.R[0] >> 15);
+    p_cor2->Z = p_tngcor->Z - engn_zc + (vec_rot.R[2] >> 15);
+
+    vec_inp.R[0] = p_shtextr->Width;
+    vec_inp.R[1] = 0;
+    vec_inp.R[2] = shd_l;
+    assert(matx < next_local_mat);
+    matrix_transform(&vec_rot, &local_mats[matx], &vec_inp);
+    p_cor3->X = p_tngcor->X - engn_xc + (vec_rot.R[0] >> 15);
+    p_cor3->Z = p_tngcor->Z - engn_zc + (vec_rot.R[2] >> 15);
+
+    vec_inp.R[0] = -p_shtextr->Width;
+    vec_inp.R[1] = 0;
+    vec_inp.R[2] = shd_l;
+    assert(matx < next_local_mat);
+    matrix_transform(&vec_rot, &local_mats[matx], &vec_inp);
+    p_cor4->X = p_tngcor->X - engn_xc + (vec_rot.R[0] >> 15);
+    p_cor4->Z = p_tngcor->Z - engn_zc + (vec_rot.R[2] >> 15);
+}
+
+void get_object_shadow_bound_points_y(struct SortMapPoint *p_cor1,
+  struct SortMapPoint *p_cor2, struct SortMapPoint *p_cor3,
+  struct SortMapPoint *p_cor4, struct SortMapPoint *p_tngcor)
+{
+    p_cor1->Y = p_cor2->Y = p_cor3->Y = p_cor4->Y = p_tngcor->Y;
+    if (get_flat_surface_height_below_point_cb == NULL) {
+        return;
+    }
+    p_cor1->Y = get_flat_surface_height_below_point_cb(p_cor1);
+    p_cor2->Y = get_flat_surface_height_below_point_cb(p_cor2);
+    p_cor3->Y = get_flat_surface_height_below_point_cb(p_cor3);
+    p_cor4->Y = get_flat_surface_height_below_point_cb(p_cor4);
+}
+
+void draw_object_model_shadow(struct SortMapPoint *p_tngcor, ushort obmodl,
+  short matx, int bckt)
+{
+    struct SortMapPoint cor1, cor2, cor3, cor4;
+    struct ShadowTexture *p_shtextr;
+
+    p_shtextr = &shadowtexture[obmodl];
+    if (p_shtextr->Width == 0)
+        return;
+
+    get_object_shadow_bound_points_xz(&cor1, &cor2, &cor3, &cor4,
+      p_tngcor, p_shtextr, matx);
+
+    get_object_shadow_bound_points_y(&cor1, &cor2, &cor3, &cor4,
+      p_tngcor);
+
+    draw_shadow_at_coords(&cor1, &cor2, &cor3, &cor4, p_shtextr, bckt);
+}
+
+s32 get_flat_surface_height_at_ground_callback(struct SortMapPoint *p_cor)
+{
+    return PRCCOORD_TO_YCOORD(alt_at_point(
+      engn_xc + p_cor->X, engn_zc + p_cor->Z));
+}
+
+s32 get_flat_surface_height_below_real_pos_callback(struct SortMapPoint *p_cor)
+{
+    return PRCCOORD_TO_MAPCOORD(alt_at_point_under_height(
+      engn_xc + p_cor->X, engn_zc + p_cor->Z,
+      MAPCOORD_TO_PRCCOORD(p_cor->Y,0)));
+}
+
+
+void draw_vehicle_shadow(ushort veh, int bckt)
+{
+    struct SortMapPoint tngcor;
+    struct Thing *p_vehicle;
+    short matx;
+    ushort obmodl;
+
+    p_vehicle = &things[veh];
+
+    matx = p_vehicle->U.UVehicle.MatrixIndex;
+    obmodl = p_vehicle->StartFrame;
+    tngcor.X = PRCCOORD_TO_MAPCOORD(p_vehicle->X);
+    tngcor.Y = PRCCOORD_TO_MAPCOORD(p_vehicle->Y);
+    tngcor.Z = PRCCOORD_TO_MAPCOORD(p_vehicle->Z);
+    if (p_vehicle->SubType == SubTT_VEH_GROUND)
+        get_flat_surface_height_below_point_cb = get_flat_surface_height_below_real_pos_callback;
+    else
+        get_flat_surface_height_below_point_cb = get_flat_surface_height_at_ground_callback;
+
+    draw_object_model_shadow(&tngcor, obmodl, matx, bckt);
+}
+
 void build_vehicle(struct Thing *p_thing)
 {
     PlayerInfo *p_locplayer;
-    int i;
+    int bckt;
 
     if (((p_thing->Flag2 & TgF2_ExistsOffMap) != 0) && (byte_1C83E4 & 0x01) != 0)
         return;
@@ -107,26 +252,27 @@ void build_vehicle(struct Thing *p_thing)
         check_mouse_overvehicle(p_thing, TrgTp_Unkn4);
     if (p_thing->SubType == SubTT_VEH_MECH)
     {
-        if ((p_thing->Flag & TngF_Destroyed) == 0)
+        if ((p_thing->Flag & TngF_Destroyed) == 0) {
             mech_unkn_func_03(p_thing);
-        i = 0;
+        }
+        bckt = 10; //TODO get proper bucket from object draw calls
     }
     else
     {
         struct SingleObject *p_sobj;
 
         p_sobj = &game_objects[p_thing->U.UVehicle.Object];
-        i = draw_rot_object(
+        bckt = draw_rot_object(
              PRCCOORD_TO_MAPCOORD(p_thing->X) - engn_xc,
              PRCCOORD_TO_YCOORD(p_thing->Y),
              PRCCOORD_TO_MAPCOORD(p_thing->Z) - engn_zc,
              p_sobj, p_thing);
     }
     if (p_thing->SubType != SubTT_VEH_TRAIN)
-        draw_vehicle_shadow(p_thing->ThingOffset, i);
+        draw_vehicle_shadow(p_thing->ThingOffset, bckt);
 
     if (p_thing->Health < p_thing->U.UVehicle.MaxHealth)
-        draw_vehicle_health(p_thing);
+        draw_vehicle_health(p_thing, bckt);
 
     if ((p_thing->U.UVehicle.SubThing != 0) && (p_thing->SubType == SubTT_VEH_TANK))
         process_child_object(p_thing);
@@ -147,6 +293,8 @@ void build_vehicle(struct Thing *p_thing)
 void build_person(struct Thing *p_thing)
 {
     ushort frame, bri;
+    int cor_dx, cor_dy, cor_dz;
+    char locstr[12];
 
     if (p_thing->State == PerSt_BEING_PERSUADED)
     {
@@ -186,11 +334,31 @@ void build_person(struct Thing *p_thing)
         bri = p_thing->U.UPerson.Brightness;
     }
 
-    draw_pers_e_graphic(p_thing,
-      PRCCOORD_TO_MAPCOORD(p_thing->X) - engn_xc,
-      PRCCOORD_TO_YCOORD(p_thing->Y) >> 3,
-      PRCCOORD_TO_MAPCOORD(p_thing->Z) - engn_zc,
+    cor_dx = PRCCOORD_TO_MAPCOORD(p_thing->X) - engn_xc;
+    cor_dy = PRCCOORD_TO_YCOORD(p_thing->Y) >> 3;
+    cor_dz = PRCCOORD_TO_MAPCOORD(p_thing->Z) - engn_zc;
+
+    draw_pers_e_graphic(p_thing, cor_dx, cor_dy, cor_dz,
       frame, p_thing->Radius, bri);
+
+    if (debug_hud_collision) {
+        enlist_draw_number(cor_dx, cor_dy, cor_dz,
+          0, 37, p_thing->U.UPerson.RecoilTimer,
+          p_thing->Radius - 1, colour_lookup[ColLU_RED]);
+    }
+
+    locstr[0] = '\0';
+
+    if ((p_thing->Flag2 & TgF2_ExistsOffMap) != 0) {
+        strcat(locstr, "E");
+    }
+    if ((ingame.DisplayMode != 50) && ((p_thing->Flag2 & TgF2_InsideBuilding) != 0)) {
+        strcat(locstr, "B");
+    }
+    if (locstr[0] != '\0') {
+        enlist_draw_text(cor_dx, cor_dy, cor_dz, -8, 37, locstr,
+          p_thing->Radius - 1, colour_lookup[ColLU_RED]);
+    }
 }
 
 /** Build rendering drawlist items for a rocket.
@@ -284,15 +452,16 @@ void build_building(struct Thing *p_thing)
     {
         PlayerInfo *p_locplayer;
         short tng_x, tng_y, tng_z;
+        int bckt;
 
         p_locplayer = &players[local_player_no];
         if (p_locplayer->TargetType < TrgTp_Unkn2)
             check_mouse_overvehicle(p_thing, TrgTp_Unkn2);
         p_sobj = &game_objects[p_thing->U.UObject.Object];
         get_thing_position_mapcoords(&tng_x, &tng_y, &tng_z, p_thing->ThingOffset);
-        draw_rot_object2(tng_x - engn_xc, tng_y, tng_z - engn_zc, p_sobj, p_thing);
+        bckt = draw_rot_object2(tng_x - engn_xc, tng_y, tng_z - engn_zc, p_sobj, p_thing);
         if (p_thing->Health < p_thing->U.UMGun.MaxHealth)
-            draw_vehicle_health(p_thing);
+            draw_vehicle_health(p_thing, bckt);
     }
     else
     {
@@ -314,7 +483,7 @@ void build_laser11(struct Thing *p_thing)
     short owtng_x, owtng_y, owtng_z;
     TbPixel colour;
 
-    if ((p_thing->Flag & TngF_Unkn1000) != 0)
+    if ((p_thing->Flag & TngF_SelectedAgent) != 0)
         colour = colour_lookup[ColLU_BLUE];
     else
         colour = colour_lookup[ColLU_RED];
@@ -336,8 +505,8 @@ void build_grenade(struct Thing *p_thing)
     p_mapel = &game_my_big_map[128 * (p_thing->Z >> 16) + (p_thing->X >> 16)];
     get_thing_position_mapcoords(&tng_x, &tng_y, &tng_z, p_thing->ThingOffset);
 
-    draw_e_graphic(tng_x - engn_xc, tng_y >> 3, tng_z - engn_zc,
-      frame, p_thing->Radius, p_mapel->ShadeR, p_thing);
+    draw_thing_e_graphic(p_thing, tng_x - engn_xc, tng_y >> 3, tng_z - engn_zc,
+      frame, p_thing->Radius, p_mapel->ShadeR);
 }
 
 void build_static(struct SimpleThing *p_sthing)
@@ -350,11 +519,11 @@ void build_static(struct SimpleThing *p_sthing)
         return;
     p_mapel = &game_my_big_map[128 * (p_sthing->Z >> 16) + (p_sthing->X >> 16)];
 
-    draw_e_graphic(
+    draw_thing_e_graphic((struct Thing *)p_sthing,
       PRCCOORD_TO_MAPCOORD(p_sthing->X) - engn_xc,
       PRCCOORD_TO_YCOORD(p_sthing->Y) >> 3,
       PRCCOORD_TO_MAPCOORD(p_sthing->Z) - engn_zc,
-      frame, p_sthing->Radius, p_mapel->ShadeR, (struct Thing *)p_sthing);
+      frame, p_sthing->Radius, p_mapel->ShadeR);
 }
 
 void build_laser_guided_piece(struct Thing *p_laser)
@@ -371,16 +540,16 @@ void build_dropped_item(struct SimpleThing *p_sthing)
     frame = p_sthing->Frame;
     p_mapel = &game_my_big_map[128 * (p_sthing->Z >> 16) + (p_sthing->X >> 16)];
 
-    draw_e_graphic(
+    draw_thing_e_graphic((struct Thing *)p_sthing,
       PRCCOORD_TO_MAPCOORD(p_sthing->X) - engn_xc,
       PRCCOORD_TO_YCOORD(p_sthing->Y) >> 3,
       PRCCOORD_TO_MAPCOORD(p_sthing->Z) - engn_zc,
-      frame, p_sthing->Radius, p_mapel->ShadeR, (struct Thing *)p_sthing);
+      frame, p_sthing->Radius, p_mapel->ShadeR);
 }
 
 void build_spark(struct SimpleThing *p_sthing)
 {
-    draw_mapwho_vect_len(
+    enlist_draw_mapwho_vect_len(
       PRCCOORD_TO_MAPCOORD(p_sthing->X) - engn_xc,
       PRCCOORD_TO_YCOORD(p_sthing->Y) >> 3,
       PRCCOORD_TO_MAPCOORD(p_sthing->Z) - engn_zc,
@@ -392,11 +561,11 @@ void build_spark(struct SimpleThing *p_sthing)
 
 void build_unkn18(struct Thing *p_thing)
 {
-    draw_e_graphic(
+    draw_thing_e_graphic(p_thing,
       PRCCOORD_TO_MAPCOORD(p_thing->X) - engn_xc,
       PRCCOORD_TO_YCOORD(p_thing->Y) >> 3,
       PRCCOORD_TO_MAPCOORD(p_thing->Z) - engn_zc,
-      nstart_ani[900], p_thing->Radius, 63, p_thing);
+      nstart_ani[900], p_thing->Radius, 63);
 }
 
 void build_electricity(int x1, int y1, int z1, int x2, int y2, int z2, int itime, struct Thing *p_owner)
@@ -443,11 +612,12 @@ void build_scale_effect(struct SimpleThing *p_sthing)
     ushort frame;
 
     frame = p_sthing->Frame;
-    draw_e_graphic_scale(
+    enlist_draw_frame_graphic_scale(
       PRCCOORD_TO_MAPCOORD(p_sthing->X) - engn_xc,
       PRCCOORD_TO_YCOORD(p_sthing->Y) >> 3,
       PRCCOORD_TO_MAPCOORD(p_sthing->Z) - engn_zc,
-      frame, p_sthing->Radius, 32, p_sthing->Object);
+      frame, p_sthing->Radius, 32, p_sthing->Object,
+      (intptr_t)p_sthing);
 }
 
 void build_nuclear_bomb(struct SimpleThing *p_sthing)

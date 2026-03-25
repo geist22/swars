@@ -22,18 +22,23 @@
 #include "bfmemut.h"
 
 #include "enginprops.h"
+#include "engintxtrmap.h"
 #include "privrdlog.h"
 /******************************************************************************/
 
-ushort next_anim_tmap = 10;
-
+struct SingleTexture *game_face_textures = NULL;
 ushort next_face_texture = 1;
 
+struct SingleFloorTexture *game_textures = NULL;
 ushort next_floor_texture = 1;
+ushort tnext_floor_texture;
+
+struct AnimTmap *game_anim_tmaps = NULL;
+ushort next_anim_tmap = 10;
 
 /* Texture walking data.
  */
-extern ubyte textwalk_data[640];
+ubyte textwalk_data[VEC_TMAP_LIMIT * 64];
 
 /******************************************************************************/
 
@@ -90,6 +95,14 @@ TbBool floor_texture_is_only_using_index(struct SingleFloorTexture *p_fltextr, i
         return false;
 
     return true;
+}
+
+TbBool my_texture_is_only_using_index(short textr, int index)
+{
+    struct SingleFloorTexture *p_fltextr;
+
+    p_fltextr = &game_textures[textr];
+    return floor_texture_is_only_using_index(p_fltextr, index);
 }
 
 /** Checks whether specified index is the lowest texture in use within given SingleFloorTexture.
@@ -378,26 +391,19 @@ TbResult read_textwalk(void)
     if (handle == INVALID_FILE) {
         return Lb_FAIL;
     }
-    LbFileRead(handle, textwalk_data, 640);
+    LbFileRead(handle, textwalk_data, VEC_TMAP_LIMIT * 8 * 8);
     LbFileClose(handle);
     return Lb_SUCCESS;
 }
 
-ubyte get_my_texture_bits(short tex)
+ubyte get_my_texture_bits(short textr)
 {
-#if 0
-    ubyte ret;
-    asm volatile (
-      "call ASM_get_my_texture_bits\n"
-        : "=r" (ret) : "a" (tex));
-    return ret;
-#endif
     struct SingleFloorTexture *p_fltextr;
     int tmapX_min, tmapY_min, tmapX_max, tmapY_max;
     ubyte v7;
     ubyte flags1, flags2, flags3, flags4;
 
-    p_fltextr = &game_textures[tex];
+    p_fltextr = &game_textures[textr];
 
     tmapX_min = p_fltextr->TMapX1;
     if (tmapX_min > p_fltextr->TMapX2)
@@ -493,11 +499,6 @@ static void animate_texture(ushort tmap)
 
 void animate_textures(void)
 {
-#if 0
-    asm volatile ("call ASM_animate_textures\n"
-        :  :  : "eax" );
-    return;
-#endif
     ushort i, k;
     short dt;
 

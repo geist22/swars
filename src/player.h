@@ -142,16 +142,25 @@ void remove_agent(ubyte cryo_no);
 void add_agent(ulong weapons, ushort mods);
 
 void player_mission_agents_reset(PlayerIdx plyr);
+
+void player_agent_reset_prev_weapon(PlayerIdx plyr, ushort plagent);
+void player_agent_update_prev_weapon(PlayerIdx plyr, ushort plagent);
 void player_agents_init_prev_weapon(PlayerIdx plyr);
+
 void player_agents_add_random_epidermises(PlayerInfo *p_player);
-void player_agent_update_prev_weapon(struct Thing *p_agent);
 short player_agent_current_or_prev_weapon(PlayerIdx plyr, ushort plagent);
 TbBool player_agent_has_weapon(PlayerIdx plyr, ushort plagent, WeaponType wtype);
+TbBool thing_is_player_agent_under_direct_control(ThingIdx thing);
 short player_agent_weapon_delay(PlayerIdx plyr, ushort plagent, WeaponType wtype);
 void player_agent_set_weapon_delay(PlayerIdx plyr, ushort plagent, WeaponType wtype, short delay_turns);
 void player_agents_clear_weapon_delays(PlayerIdx plyr);
 int place_default_player(PlayerIdx plyr, TbBool replace);
 void place_single_player(void);
+
+void player_set_user_vect(PlayerIdx plyr, short plagent,
+  short vx, short vy, short vz);
+void player_clear_user_vect(PlayerIdx plyr, short plagent);
+void player_clear_user_vect_y(PlayerIdx plyr, short plagent);
 
 TbBool player_can_toggle_thermal(PlayerIdx plyr);
 void player_toggle_thermal(PlayerIdx plyr);

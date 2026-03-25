@@ -19,12 +19,39 @@
 #include "enginlights.h"
 
 #include "bfmemut.h"
+
 #include "privrdlog.h"
 /******************************************************************************/
 
+struct QuickLight *game_quick_lights = NULL;
 ushort next_quick_light = 1;
+
+struct FullLight *game_full_lights = NULL;
 ushort next_full_light = 1;
+
+struct LightCommand *game_light_commands = NULL;
 ushort next_light_command = 1;
+
+uint cummulate_shade_from_quick_lights(ushort light_first)
+{
+        struct QuickLight *p_qlight;
+        ushort light;
+        uint shade;
+        short i;
+
+        shade = 0;
+        for (light = light_first, i = 0; light != 0; light = p_qlight->NextQuick, i++)
+        {
+            short intens;
+
+            if (i > MAX_LIGHTS_AFFECTING_FACE)
+                break;
+            p_qlight = &game_quick_lights[light];
+            intens = game_full_lights[p_qlight->Light].Intensity;
+            shade += intens * p_qlight->Ratio;
+        }
+        return shade;
+}
 
 void refresh_old_full_light_format(struct FullLight *p_fulight,
   struct FullLightOldV12 *p_oldfulight, u32 fmtver)

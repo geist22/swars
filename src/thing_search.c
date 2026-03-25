@@ -1024,7 +1024,7 @@ struct Thing *check_for_radius_hit_person(int prc_x, int prc_y, int prc_z,
                   group = 99;
               if ((p_thing->U.UPerson.EffectiveGroup != group) || (group >= 100))
               {
-                if (!thing_group_have_truce(group, p_thing->U.UPerson.EffectiveGroup)
+                if (!groups_have_truce(group, p_thing->U.UPerson.EffectiveGroup)
                   && (p_thing->Type == TT_PERSON) && (p_thing != p_owner))
                 {
                     if ((p_thing->State != PerSt_DEAD) && (p_thing->State != PerSt_PERSON_BURNING) && (p_thing->Flag & TngF_Destroyed) == 0)
@@ -1078,5 +1078,19 @@ struct Thing *check_for_radius_hit_person(int prc_x, int prc_y, int prc_z,
     return NULL;
 #endif
 }
+
+short find_nearest_person_min(int x, int y, int z,
+  int n_dist, int *a_dist, int angle1, u32 group_bits)
+{
+    short ret;
+    asm volatile (
+      "push %7\n"
+      "push %6\n"
+      "push %5\n"
+      "call ASM_find_nearest_person_min\n"
+        : "=r" (ret) : "a" (x), "d" (y), "b" (z), "c" (n_dist), "g" (a_dist), "g" (angle1), "g" (group_bits));
+    return ret;
+}
+
 
 /******************************************************************************/

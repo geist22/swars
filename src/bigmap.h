@@ -118,6 +118,10 @@ struct MapOffset {
   short both;
 };
 
+struct ColColumn { // sizeof=16
+    uint QBits[4];
+};
+
 struct Direction {
   short DiX;
   short DiY;
@@ -126,6 +130,9 @@ struct Direction {
 #pragma pack()
 /******************************************************************************/
 extern struct MyMapElement *game_my_big_map;
+
+extern struct ColColumn *game_col_columns;
+extern ushort next_col_column;
 
 extern struct MapOffset spiral_step[SPIRAL_STEPS_COUNT];
 extern ushort dist_tiles_to_spiral_step[MAP_TILE_WIDTH];
@@ -145,7 +152,11 @@ void refresh_old_my_big_map_format(struct MyMapElement *p_mapel,
 short get_mapwho_thing_index(short tile_x, short tile_z);
 void init_search_spiral(void);
 int alt_at_point(short x, short z);
+int alt_at_point_under_height(int cor_x, int cor_z, int h);
 ushort floor_texture_at_point(MapCoord cor_x, MapCoord cor_z);
+
+ubyte map_coord_to_collision_qbit_index(short x, short z);
+void set_mapel_col_columns(struct MyMapElement *p_mapel, short setbit, ushort qb);
 
 /** Computes length of vector defined by given 3 coordinates.
  * Uses some simplifications, but is fast. Requires the resulting
@@ -177,6 +188,9 @@ int alt_change_at_tile(short tile_x, short tile_z, int *change_xz);
 /** Sets some of the map elements flags based on other properties.
  */
 void update_map_flags(void);
+
+TbBool map_floor_is_water(MapCoord cor_x, MapCoord cor_z);
+TbBool map_floor_is_sludge(MapCoord cor_x, MapCoord cor_z);
 
 /** Checks if a tile should not be allowed to walk on due to terrain.
  *

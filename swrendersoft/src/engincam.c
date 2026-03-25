@@ -23,15 +23,29 @@
 #include "enginzoom.h"
 #include "privrdlog.h"
 /******************************************************************************/
+ushort overall_scale = 256;
+ubyte game_perspective = 0;
 
-extern long dword_176D70;
-extern long dword_176D74;
-extern long dword_176D78;
-extern long dword_176D7C;
-extern long dword_176D80;
-extern long dword_176D84;
-extern long dword_176D88;
-extern long dword_176D8C;
+s32 engn_xc = 0x3280;
+s32 engn_yc = 0;
+s32 engn_zc = 0x3280;
+
+s32 engn_anglexz = 0;
+
+s32 dword_176D70;
+s32 dword_176D74;
+s32 dword_176D78;
+s32 dword_176D7C;
+s32 dword_176D80;
+s32 dword_176D84;
+s32 dword_176D88;
+s32 dword_176D8C;
+
+ubyte byte_176D48;
+ubyte byte_176D49;
+ubyte byte_176D4A;
+ubyte byte_176D4B;
+/******************************************************************************/
 
 void camera_setup_view(int *p_pos_beg_x, int *p_pos_beg_z,
   int *p_rend_beg_x, int *p_rend_beg_z, int *p_tlcount_x, int *p_tlcount_z)

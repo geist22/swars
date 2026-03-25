@@ -100,7 +100,7 @@ struct ScreenBoxBase global_apps_bar_box = {3, 432, 634, 48};
 
 ubyte ac_main_do_my_quit(ubyte click);
 ubyte ac_main_do_login_1(ubyte click);
-ubyte ac_goto_savegame(ubyte click);
+ubyte goto_savegame(ubyte click);
 ubyte ac_main_do_map_editor(ubyte click);
 ubyte ac_alert_OK(ubyte click);
 ubyte ac_do_sysmnu_button(ubyte click);
@@ -301,15 +301,9 @@ void show_main_screen(void)
         clear_key_pressed(KC_SPACE);
         skip_flashy_draw_main_screen_boxes();
     }
-    //main_quit_button.DrawFn(&main_quit_button); -- incompatible calling convention
-    asm volatile ("call *%1\n"
-        : : "a" (&main_quit_button), "g" (main_quit_button.DrawFn));
-    //main_load_button.DrawFn(&main_load_button); -- incompatible calling convention
-    asm volatile ("call *%1\n"
-        : : "a" (&main_load_button), "g" (main_load_button.DrawFn));
-    //main_login_button.DrawFn(&main_login_button); -- incompatible calling convention
-    asm volatile ("call *%1\n"
-        : : "a" (&main_login_button), "g" (main_login_button.DrawFn));
+    main_quit_button.DrawFn(&main_quit_button);
+    main_load_button.DrawFn(&main_load_button);
+    main_login_button.DrawFn(&main_login_button);
 }
 
 void init_main_screen_boxes(void)
@@ -337,10 +331,10 @@ void init_main_screen_boxes(void)
     main_quit_button.Border = 3;
     main_load_button.Border = 3;
 
-    main_map_editor_button.CallBackFn = ac_main_do_map_editor;
-    main_login_button.CallBackFn = ac_main_do_login_1;
-    main_quit_button.CallBackFn = ac_main_do_my_quit;
-    main_load_button.CallBackFn = ac_goto_savegame;
+    main_map_editor_button.CallBackFn = main_do_map_editor;
+    main_login_button.CallBackFn = main_do_login_1;
+    main_quit_button.CallBackFn = main_do_my_quit;
+    main_load_button.CallBackFn = goto_savegame;
 
     main_login_button.AccelKey = KC_RETURN;
     main_quit_button.AccelKey = KC_ESCAPE;
@@ -390,9 +384,8 @@ void show_alert_box(void)
         alert_box.Y = alert_OK_button.Y - lnheight * nlines - 4;
         alert_box.Height = alert_OK_button.Height + 8 + lnheight * nlines;
     }
-    asm volatile ("call *%2\n"
-      : "=r" (drawn) : "a" (&alert_box), "g" (alert_box.DrawFn));
-    //drawn = alert_box.DrawFn(&alert_box);
+
+    drawn = alert_box.DrawFn(&alert_box);
     if (drawn == 3)
     {
         lbFontPtr = small_med_font;
@@ -400,9 +393,7 @@ void show_alert_box(void)
         lbDisplay.DrawFlags = Lb_TEXT_HALIGN_CENTER;
         flashy_draw_text(0, 0, alert_text, 3, 0, &alert_textpos, 0);
         lbDisplay.DrawFlags = 0;
-        asm volatile ("call *%2\n"
-          : "=r" (drawn) : "a" (&alert_OK_button), "g" (alert_OK_button.DrawFn));
-        //alert_OK_button.DrawFn(&alert_OK_button);
+        drawn = alert_OK_button.DrawFn(&alert_OK_button);
     }
 }
 
@@ -427,7 +418,7 @@ void init_alert_screen_boxes(void)
     init_screen_box(&alert_box, 219u, 189u, 200u, 100, 6);
     init_screen_button(&alert_OK_button, 10u, 269u,
       gui_strings[458], 6, med2_font, 1, 0);
-    alert_OK_button.CallBackFn = ac_alert_OK;
+    alert_OK_button.CallBackFn = alert_OK;
 
     alert_box.X = (scr_w - alert_box.Width) / 2 - 1;
     alert_OK_button.X = (scr_w - alert_OK_button.Width) / 2 - 1;
@@ -540,9 +531,7 @@ void show_sysmenu_screen(void)
         enter_game = 0;
     }
 
-    //drawn = unkn13_SYSTEM_button.DrawFn(&unkn13_SYSTEM_button); -- incompatible calling convention
-    asm volatile ("call *%2\n"
-        : "=r" (drawn) : "a" (&unkn13_SYSTEM_button), "g" (unkn13_SYSTEM_button.DrawFn));
+    drawn = unkn13_SYSTEM_button.DrawFn(&unkn13_SYSTEM_button);
     if (drawn)
     {
         for (i = 0; i < SYSMNU_BUTTONS_COUNT; i++)
@@ -551,9 +540,7 @@ void show_sysmenu_screen(void)
                 continue;
             if (restore_savegame && i < 5)
                 continue;
-            //drawn = sysmnu_buttons[i].DrawFn(&sysmnu_buttons[i]); -- incompatible calling convention
-            asm volatile ("call *%2\n"
-                : "=r" (drawn) : "a" (&sysmnu_buttons[i]), "g" (sysmnu_buttons[i].DrawFn));
+            drawn = sysmnu_buttons[i].DrawFn(&sysmnu_buttons[i]);
             if (!drawn)
                 v2 = 0;
             if (enter_game) {
@@ -665,7 +652,7 @@ void init_system_menu_boxes(void)
     x = 7;
     y = 25;
     init_screen_text_box(&heading_box, x, y, 640 - 2*7, 38, 6, big_font, 1);
-    heading_box.DrawTextFn = ac_show_title_box;
+    heading_box.DrawTextFn = show_title_box;
     heading_box.Text = options_title_text;
 
     start_x = (scr_w - heading_box.Width) / 2;
@@ -674,7 +661,7 @@ void init_system_menu_boxes(void)
     init_screen_text_box(&unkn13_SYSTEM_button, x, y, 197u, 38, 6,
       big_font, 1);
     unkn13_SYSTEM_button.Text = gui_strings[366];
-    unkn13_SYSTEM_button.DrawTextFn = ac_show_title_box;
+    unkn13_SYSTEM_button.DrawTextFn = show_title_box;
 
     val = 0;
     y += unkn13_SYSTEM_button.Height + 9;
@@ -684,7 +671,7 @@ void init_system_menu_boxes(void)
           gui_strings[378 + val], 6, med2_font, 1, 0);
         sysmnu_buttons[i].Width = unkn13_SYSTEM_button.Width;
         sysmnu_buttons[i].Height = 21;
-        sysmnu_buttons[i].CallBackFn = ac_do_sysmnu_button;
+        sysmnu_buttons[i].CallBackFn = do_sysmnu_button;
         sysmnu_buttons[i].Flags |= GBxFlg_Unkn0010;
         sysmnu_buttons[i].Border = 3;
         val++;
@@ -744,9 +731,7 @@ void skip_flashy_draw_heading_screen_boxes(void)
 ubyte draw_heading_box(void)
 {
     ubyte drawn = true;
-    //drawn = heading_box.DrawFn(&heading_box); -- incompatible calling convention
-    asm volatile ("call *%2\n"
-        : "=r" (drawn) : "a" (&heading_box), "g" (heading_box.DrawFn));
+    drawn = heading_box.DrawFn(&heading_box);
     return drawn;
 }
 
@@ -1112,9 +1097,7 @@ void show_mission_loading_screen(void)
             clear_key_pressed(KC_SPACE);
             skip_flashy_draw_loading_screen_boxes();
         }
-        //loading_INITIATING_box.DrawFn(&loading_INITIATING_box); -- incompatible calling convention
-        asm volatile ("call *%1\n"
-            : : "a" (&loading_INITIATING_box), "g" (loading_INITIATING_box.DrawFn));
+        loading_INITIATING_box.DrawFn(&loading_INITIATING_box);
         if ((loading_INITIATING_box.Flags & GBxFlg_TextCopied) != 0)
             finished++;
         draw_purple_screen();

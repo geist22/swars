@@ -26,6 +26,7 @@
 extern "C" {
 #endif
 /******************************************************************************/
+#pragma pack(1)
 
 /** Game turn number, used for in-game time computations. */
 typedef ulong GameTurn;
@@ -37,6 +38,10 @@ typedef long SGameTurn;
  * The value may refer to a Thing (if > 0) or SimpleThing (if < 0).
  */
 typedef short ThingIdx;
+
+/** Type which stores result of thing state change request.
+ */
+typedef ubyte StateChRes;
 
 /** Type which stores index/offset of a Player.
  *
@@ -72,6 +77,15 @@ typedef u32 JoyButtonSet;
  */
 typedef short MapCoord;
 
+/** Type which stores point position on the ingame map.
+ */
+struct MapCoords {
+    MapCoord X;
+    MapCoord Y;
+    MapCoord Z;
+};
+
+#pragma pack()
 /******************************************************************************/
 #ifdef __cplusplus
 }

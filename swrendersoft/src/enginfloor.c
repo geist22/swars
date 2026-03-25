@@ -18,12 +18,11 @@
 /******************************************************************************/
 #include "enginfloor.h"
 
-#include "bigmap.h"
-#include "display.h"
 #include "enginzoom.h"
 #include "privrdlog.h"
 /******************************************************************************/
 
+struct FloorTile *game_floor_tiles = NULL;
 short next_floor_tile = 1;
 
 /******************************************************************************/

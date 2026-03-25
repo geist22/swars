@@ -46,9 +46,9 @@ extern ubyte byte_1C4880[8];
 
 /******************************************************************************/
 
-ubyte ac_do_storage_NEW_MORTAL(ubyte click);
-ubyte ac_load_game_slot(ubyte click);
-ubyte ac_save_game_slot(ubyte click);
+ubyte do_storage_NEW_MORTAL(ubyte click);
+ubyte load_game_slot(ubyte click);
+ubyte save_game_slot(ubyte click);
 ubyte ac_show_menu_storage_slots_box(struct ScreenTextBox *p_box);
 
 int autosave_game(void)
@@ -234,17 +234,11 @@ ubyte show_menu_storage_slots_box(struct ScreenTextBox *p_box)
         draw_text_purple_list2(scr_x + 36, scr_y + 6, save_active_desc, 0);
     }
     lbDisplay.DrawFlags = 0;
-    //storage_LOAD_button.DrawFn(&storage_LOAD_button); -- incompatible calling convention
-    asm volatile ("call *%1\n"
-        :  : "a" (&storage_LOAD_button), "g" (storage_LOAD_button.DrawFn));
+    storage_LOAD_button.DrawFn(&storage_LOAD_button);
     if (!restore_savegame) {
-        //storage_SAVE_button.DrawFn(&storage_SAVE_button); -- incompatible calling convention
-        asm volatile ("call *%1\n"
-            :  : "a" (&storage_SAVE_button), "g" (storage_SAVE_button.DrawFn));
+        storage_SAVE_button.DrawFn(&storage_SAVE_button);
     }
-    //storage_NEW_MORTAL_button.DrawFn(&storage_NEW_MORTAL_button); -- incompatible calling convention
-    asm volatile ("call *%1\n"
-        :  : "a" (&storage_NEW_MORTAL_button), "g" (storage_NEW_MORTAL_button.DrawFn));
+    storage_NEW_MORTAL_button.DrawFn(&storage_NEW_MORTAL_button);
     return 0;
 }
 
@@ -252,9 +246,7 @@ ubyte show_storage_screen(void)
 {
     ubyte drawn;
 
-    //drawn = storage_slots_box.DrawFn(&storage_slots_box); -- incompatible calling convention
-    asm volatile ("call *%2\n"
-        : "=r" (drawn) : "a" (&storage_slots_box), "g" (storage_slots_box.DrawFn));
+    drawn = storage_slots_box.DrawFn(&storage_slots_box);
     return drawn;
 }
 
@@ -274,7 +266,7 @@ void init_storage_screen_boxes(void)
 #endif
 
     init_screen_text_box(&storage_slots_box, 213u, 72u, 420u, 354, 6, med2_font, 1);
-    storage_slots_box.DrawTextFn = ac_show_menu_storage_slots_box;
+    storage_slots_box.DrawTextFn = show_menu_storage_slots_box;
     storage_slots_box.ScrollWindowHeight = 208;
     storage_slots_box.Lines = 99;
     storage_slots_box.Flags |= (GBxFlg_RadioBtn | GBxFlg_IsMouseOver);
@@ -287,9 +279,9 @@ void init_storage_screen_boxes(void)
       gui_strings[439], 6, med2_font, 1, 0);
     init_screen_button(&storage_NEW_MORTAL_button, 627u, 405u,
       gui_strings[482], 6, med2_font, 1, 128);
-    storage_LOAD_button.CallBackFn = ac_load_game_slot;
-    storage_SAVE_button.CallBackFn = ac_save_game_slot;
-    storage_NEW_MORTAL_button.CallBackFn = ac_do_storage_NEW_MORTAL;
+    storage_LOAD_button.CallBackFn = load_game_slot;
+    storage_SAVE_button.CallBackFn = save_game_slot;
+    storage_NEW_MORTAL_button.CallBackFn = do_storage_NEW_MORTAL;
 
     // Reposition the components to current resolution
 

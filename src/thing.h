@@ -109,7 +109,7 @@ enum ThingFlags {
     TngF_StationrSht  = 0x0200,
     TngF_WepCharging  = 0x0400,
     TngF_TriggerUse   = 0x0800,
-    TngF_Unkn1000     = 0x1000,
+    TngF_SelectedAgent= 0x1000,
     TngF_PlayerAgent  = 0x2000,
     TngF_Unkn4000     = 0x4000,
     TngF_Unkn8000     = 0x8000,
@@ -126,7 +126,7 @@ enum ThingFlags {
     TngF_Unkn04000000 = 0x04000000,
     TngF_Unkn08000000 = 0x08000000,
     TngF_InVehicle    = 0x10000000,
-    TngF_Unkn20000000 = 0x20000000,
+    TngF_ShootAtPos   = 0x20000000,
     TngF_Unkn40000000 = 0x40000000,
 };
 
@@ -151,6 +151,10 @@ enum ThingFlags {
  * The flag has this meaning for buildings, different meaning for other things.
  */
 #define TngF_PassageLocked TngF_TriggerUse
+
+/** Person is during flee from danger.
+ */
+#define TngF_DangerFlee TngF_Unkn00040000
 
 enum ThingFlags2 {
     TgF2_Unkn0001     = 0x0001,
@@ -182,7 +186,9 @@ enum ThingFlags2 {
      * is stored in OldSubType property.
      */
     TgF2_AlteredSubType = 0x00400000,
-    TgF2_Unkn00800000 = 0x00800000,
+    /** When dropping an item, activate it (ie. arm the explosive).
+     */
+    TgF2_DroppedActivate = 0x00800000,
     /** The thing is not added to map content lists and is invisible.
      *
      * If set, the thing is invisible and on-map things cannot affect it.
@@ -207,8 +213,6 @@ enum StateChangeResult {
     StCh_DENIED,        /**< The current state of either target or other world elements prevents entering the state at this time. */
     StCh_UNATTAIN,      /**< The current state of the world elements makes it impossible to ever enter that state, ie. target does not exist. */
 };
-
-typedef ubyte StateChRes;
 
 struct M33;
 
@@ -480,6 +484,9 @@ struct Thing { // sizeof=168
     long Y;
     long Z;
     short Frame;
+    /** For things represented by a sprite, starting frame of animation.
+     * For objects, 3D model selection.
+     */
     ushort StartFrame;
     short Timer1;
     short StartTimer1;
@@ -499,7 +506,7 @@ struct Thing { // sizeof=168
     ubyte PathOffset;
     ubyte SubState;
     struct Thing *PTarget;
-    ulong Flag2;
+    u32 Flag2;
     ThingIdx GotoThingIndex;
     short OldTarget;
     union { // pos=76
@@ -551,7 +558,7 @@ struct STngUFire {
     short flame;
 };
 
-struct SimpleThing
+struct SimpleThing // sizeof=60
 {
     /** Index of some kind of entity which generated the thing.
      * Speciifics depend on thing type; often it's another thing index,
@@ -991,6 +998,10 @@ void snprint_sthing(char *buf, ulong buflen, struct SimpleThing *p_sthing);
  */
 TbBool thing_type_is_simple(short ttype);
 
+/** Returns if given type represents a thing which can be (or is) picked up by a person.
+ */
+TbBool thing_type_is_pickup_item(short ttype);
+
 /** Given thing index, sets its position in map coordinates to three variables.
  *
  * Different kinds of things have different quirks in regard to position on map.
@@ -1020,6 +1031,10 @@ void things_debug_hud(void);
 void navi_onscreen_debug(TbBool a1);
 
 TbBool thing_is_destroyed(ThingIdx thing);
+
+/** Returns if given thing can be (or is) picked up by a person.
+ */
+TbBool thing_is_pickup_item(ThingIdx thing);
 
 struct Thing *effective_owner_of_thing(struct Thing *p_thing);
 
@@ -1090,9 +1105,16 @@ TbBool thing_intersects_circle(ThingIdx thing, short X, short Z, ushort R);
  */
 TbBool thing_intersects_cylinder(ThingIdx thing, short X, short Y, short Z, ushort R, ushort H);
 
+struct SimpleThing *create_item(int x, int y, int z, ushort frame, ubyte subtype);
+
 struct SimpleThing *create_scale_effect(int x, int y, int z, ushort frame, short timer);
 
 struct SimpleThing *create_sound_effect(int x, int y, int z, ushort sample, int vol, int loop);
+
+struct SimpleThing *create_stasis_pod(MapCoord x, MapCoord y, MapCoord z,
+  ushort timer, struct Thing *p_owner);
+struct SimpleThing *create_time_pod(MapCoord x, MapCoord y, MapCoord z,
+  ushort timer);
 
 int mine_hit_by_bullet(struct Thing *p_thing, short hp,
   int vx, int vy, int vz, struct Thing *p_attacker, ushort type);

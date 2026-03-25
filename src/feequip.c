@@ -106,7 +106,7 @@ short agent_name_shape_points_y[] = {
 ubyte ac_display_weapon_info(struct ScreenTextBox *box);
 ubyte ac_show_weapon_name(struct ScreenTextBox *box);
 ubyte ac_show_weapon_list(struct ScreenTextBox *box);
-ubyte ac_do_equip_offer_buy(ubyte click);
+ubyte do_equip_offer_buy(ubyte click);
 ubyte ac_sell_equipment(ubyte click);
 ubyte ac_select_all_agents(ubyte click);
 void ac_weapon_flic_data_to_screen(void);
@@ -148,7 +148,7 @@ void update_equip_cost_text(void)
     }
 
     cost = 100 * weapon_defs[selected_weapon + 1].Cost;
-    if (equip_offer_buy_button.CallBackFn == ac_do_equip_offer_buy)
+    if (equip_offer_buy_button.CallBackFn == do_equip_offer_buy)
         sprintf(equip_cost_text, "%d", cost);
     else
         sprintf(equip_cost_text, "%d", cost >> 1);
@@ -465,12 +465,12 @@ void check_buy_sell_button(void)
     if (mode == 1)
     {
         equip_offer_buy_button.Text = gui_strings[436];
-        equip_offer_buy_button.CallBackFn = ac_do_equip_offer_buy;
+        equip_offer_buy_button.CallBackFn = do_equip_offer_buy;
     }
     else if (mode == 2)
     {
         equip_offer_buy_button.Text = gui_strings[407];
-        equip_offer_buy_button.CallBackFn = ac_sell_equipment;
+        equip_offer_buy_button.CallBackFn = sell_equipment;
     }
 
     // The functions below may check callback function to figure out mode
@@ -494,13 +494,13 @@ ubyte select_all_agents(ubyte click)
 void switch_equip_offer_to_buy(void)
 {
     equip_offer_buy_button.Text = gui_strings[436];
-    equip_offer_buy_button.CallBackFn = ac_do_equip_offer_buy;
+    equip_offer_buy_button.CallBackFn = do_equip_offer_buy;
 }
 
 void switch_equip_offer_to_sell(void)
 {
     equip_offer_buy_button.Text = gui_strings[407];
-    equip_offer_buy_button.CallBackFn = ac_sell_equipment;
+    equip_offer_buy_button.CallBackFn = sell_equipment;
 }
 
 void skip_flashy_draw_equipment_screen_boxes(void)
@@ -883,34 +883,19 @@ ubyte show_equipment_screen(void)
         drawn = boxes_drawn;
     }
 
-    if (drawn)
-    {
-        //drawn = equip_all_agents_button.DrawFn(&equip_all_agents_button); -- incompatible calling convention
-        asm volatile ("call *%2\n"
-            : "=r" (drawn) : "a" (&equip_all_agents_button), "g" (equip_all_agents_button.DrawFn));
-        //drawn = equip_list_head_box.DrawFn(&equip_list_head_box); -- incompatible calling convention
-        asm volatile ("call *%2\n"
-            : "=r" (drawn) : "a" (&equip_list_head_box), "g" (equip_list_head_box.DrawFn));
-        //drawn = weapon_slots.DrawFn(&weapon_slots); -- incompatible calling convention
-        asm volatile ("call *%2\n"
-            : "=r" (drawn) : "a" (&weapon_slots), "g" (weapon_slots.DrawFn));
+    if (drawn) {
+        drawn = equip_all_agents_button.DrawFn(&equip_all_agents_button);
+        drawn = equip_list_head_box.DrawFn(&equip_list_head_box);
+        drawn = weapon_slots.DrawFn(&weapon_slots);
     }
 
-    if (drawn)
-    {
-        //drawn = equip_list_box.DrawFn(&equip_list_box); -- incompatible calling convention
-        asm volatile ("call *%2\n"
-            : "=r" (drawn) : "a" (&equip_list_box), "g" (equip_list_box.DrawFn));
+    if (drawn) {
+        drawn = equip_list_box.DrawFn(&equip_list_box);
     }
 
-    if (drawn)
-    {
-        //drawn = equip_name_box.DrawFn(&equip_name_box); -- incompatible calling convention
-        asm volatile ("call *%2\n"
-            : "=r" (drawn) : "a" (&equip_name_box), "g" (equip_name_box.DrawFn));
-        //drawn = equip_display_box.DrawFn(&equip_display_box); -- incompatible calling convention
-        asm volatile ("call *%2\n"
-            : "=r" (drawn) : "a" (&equip_display_box), "g" (equip_display_box.DrawFn));
+    if (drawn) {
+        drawn = equip_name_box.DrawFn(&equip_name_box);
+        drawn = equip_display_box.DrawFn(&equip_display_box);
     }
 
     if (mo_weapon != -1)
@@ -1079,14 +1064,10 @@ ubyte display_weapon_info(struct ScreenTextBox *box)
 
     if (equip_offer_can_buy_or_sell(selected_weapon + 1))
     {
-        //equip_offer_buy_button.DrawFn(&equip_offer_buy_button); -- incompatible calling convention
-        asm volatile ("call *%1\n"
-            : : "a" (&equip_offer_buy_button), "g" (equip_offer_buy_button.DrawFn));
+        equip_offer_buy_button.DrawFn(&equip_offer_buy_button);
     }
 
-    //equip_cost_box.DrawFn(&equip_cost_box); -- incompatible calling convention
-    asm volatile ("call *%1\n"
-        : : "a" (&equip_cost_box), "g" (equip_cost_box.DrawFn));
+    equip_cost_box.DrawFn(&equip_cost_box);
 
     // Add control hotspot for the view / description switch
     draw_hotspot_purple_list(box->X + box->Width / 2, box->Y + 104);
@@ -1396,21 +1377,21 @@ void init_equip_screen_boxes(void)
     init_screen_info_box(&equip_cost_box, 504u, 404u, 124u,
       gui_strings[442], misc_text[0], 6, med_font, small_med_font, 1);
     weapon_slots.SpecialDrawFn = show_weapon_slots;
-    equip_name_box.DrawTextFn = ac_show_weapon_name;
+    equip_name_box.DrawTextFn = show_weapon_name;
     equip_name_box.Text = unkn41_text;
     equip_name_box.Font = med_font;
 
     equip_cost_box.Text2 = equip_cost_text;
-    equip_display_box.DrawTextFn = ac_display_weapon_info;
+    equip_display_box.DrawTextFn = display_weapon_info;
     equip_display_box.Flags |= (GBxFlg_RadioBtn|GBxFlg_IsMouseOver);
     equip_display_box.ScrollWindowHeight = 117;
 
-    equip_list_head_box.DrawTextFn = ac_show_title_box;
+    equip_list_head_box.DrawTextFn = show_title_box;
     equip_list_head_box.Text = gui_strings[408];
     equip_list_head_box.Font = med_font;
 
     equip_list_box.ScrollWindowOffset += 27;
-    equip_list_box.DrawTextFn = ac_show_weapon_list;
+    equip_list_box.DrawTextFn = show_weapon_list;
     equip_list_box.Flags |= (GBxFlg_RadioBtn|GBxFlg_IsMouseOver);
     equip_list_box.LineHeight = fepanel_sprites[15].SHeight + 3;
     equip_list_box.ScrollWindowHeight -= 27;
@@ -1421,7 +1402,7 @@ void init_equip_screen_boxes(void)
     else
         text = gui_strings[436];
     equip_offer_buy_button.Width = my_string_width(text) + 4;
-    equip_offer_buy_button.CallBackFn = ac_do_equip_offer_buy;
+    equip_offer_buy_button.CallBackFn = do_equip_offer_buy;
 
     init_screen_button(&equip_all_agents_button, 7u, 96u,
       gui_strings[534], 6, med2_font, 1, 0);
@@ -1488,7 +1469,7 @@ void switch_shared_equip_screen_buttons_to_equip(void)
     equip_cost_box.X = equip_display_box.X + equip_display_box.Width - (space_w - 1) - equip_cost_box.Width;
     equip_cost_box.Y = equip_display_box.Y + equip_display_box.Height - space_h - equip_cost_box.Height;
 
-    equip_all_agents_button.CallBackFn = ac_do_equip_all_agents_set;
+    equip_all_agents_button.CallBackFn = do_equip_all_agents_set;
 
     equip_display_box_redraw(&equip_display_box);
     equip_name_box_redraw(&equip_name_box);

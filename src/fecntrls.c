@@ -317,12 +317,7 @@ ubyte show_controls_joystick_box(struct ScreenBox *p_box)
     }
     lbDisplay.DrawFlags &= ~0x8000;
 
-    //controls_calibrate_button.DrawFn(&controls_calibrate_button); -- incompatible calling convention
-    {
-        ubyte drawn;
-        asm volatile ("call *%2\n"
-            : "=r" (drawn) : "a" (&controls_calibrate_button), "g" (controls_calibrate_button.DrawFn));
-    }
+    controls_calibrate_button.DrawFn(&controls_calibrate_button);
     return 0;
 }
 
@@ -835,14 +830,10 @@ ubyte show_options_controls_screen(void)
 {
     ubyte drawn;
 
-    //drawn = controls_list_box.DrawFn(&controls_list_box); -- incompatible calling convention
-    asm volatile ("call *%2\n"
-        : "=r" (drawn) : "a" (&controls_list_box), "g" (controls_list_box.DrawFn));
+    drawn = controls_list_box.DrawFn(&controls_list_box);
     if (drawn == 3) {
         update_settings_controls_alert(&controls_list_box);
-        //drawn = controls_joystick_box.DrawFn(&controls_joystick_box); -- incompatible calling convention
-        asm volatile ("call *%2\n"
-            : "=r" (drawn) : "a" (&controls_joystick_box), "g" (controls_joystick_box.DrawFn));
+        drawn = controls_joystick_box.DrawFn(&controls_joystick_box);
     }
     return drawn;
 }
@@ -866,7 +857,7 @@ void init_controls_screen_boxes(void)
 #endif
 
     init_screen_text_box(&controls_list_box, 213u, 72u, 420u, 354, 6, small_med_font, 1);
-    controls_list_box.DrawTextFn = ac_show_menu_controls_list_box;
+    controls_list_box.DrawTextFn = show_menu_controls_list_box;
     controls_list_box.ScrollWindowHeight = 296;
     controls_list_box.Lines = GKey_KEYS_COUNT;
     controls_list_box.Flags |= (GBxFlg_RadioBtn | GBxFlg_IsMouseOver);
@@ -874,10 +865,10 @@ void init_controls_screen_boxes(void)
     controls_list_box.ScrollWindowOffset += 27;
     init_screen_button(&controls_defaults_button, 219u, 405u,
       gui_strings[484], 6, med2_font, 1, 0);
-    controls_defaults_button.CallBackFn = ac_do_controls_defaults;
+    controls_defaults_button.CallBackFn = do_controls_defaults;
     init_screen_button(&controls_save_button, 627u, 405u,
       gui_strings[439], 6, med2_font, 1, 0x80);
-    controls_save_button.CallBackFn = ac_do_controls_save;
+    controls_save_button.CallBackFn = do_controls_save;
 
     controls_list_box.Buttons[0] = &controls_defaults_button;
     controls_list_box.Buttons[1] = &controls_save_button;
@@ -886,7 +877,7 @@ void init_controls_screen_boxes(void)
     controls_joystick_box.SpecialDrawFn = show_controls_joystick_box;
     init_screen_button(&controls_calibrate_button, 57u, 405u,
       gui_strings[485], 6, med2_font, 1, 0);
-    controls_calibrate_button.CallBackFn = ac_do_controls_calibrate;
+    controls_calibrate_button.CallBackFn = do_controls_calibrate;
 
     // Reposition the components to current resolution
 

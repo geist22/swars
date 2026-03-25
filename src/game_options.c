@@ -21,7 +21,7 @@
 #include <assert.h>
 
 #include "display.h"
-#include "engindrwlstm.h"
+#include "engincam.h"
 #include "engindrwlstx.h"
 #include "femain.h"
 #include "game.h"
@@ -31,6 +31,8 @@
 
 /******************************************************************************/
 
+TbPixel deep_radar_surface_col = 0xd8;
+TbPixel deep_radar_line_col = 0x64;
 
 /******************************************************************************/
 

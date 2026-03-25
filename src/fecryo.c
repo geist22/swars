@@ -85,7 +85,7 @@ ubyte ac_show_cryo_agent_list(struct ScreenTextBox *box);
 ubyte ac_show_cryo_cybmod_list_box(struct ScreenTextBox *box);
 ubyte ac_do_cryo_all_agents_set(ubyte click);
 void ac_weapon_flic_data_to_screen(void);
-ubyte ac_do_equip_offer_buy(ubyte click);
+ubyte do_equip_offer_buy(ubyte click);
 
 struct ScreenRect equip_blokey_rect[] = {
     {23,  0,  93, 197},
@@ -1609,15 +1609,9 @@ ubyte show_cryo_cybmod_list_box(struct ScreenTextBox *p_box)
         draw_display_box_content_mod(p_box);
         input_display_box_content_mod(p_box);
 
-        //equip_offer_buy_button.DrawFn(&equip_offer_buy_button); -- incompatible calling convention
-        asm volatile ("call *%1\n"
-            : : "a" (&equip_offer_buy_button), "g" (equip_offer_buy_button.DrawFn));
-        //cryo_offer_cancel_button.DrawFn(&cryo_offer_cancel_button); -- incompatible calling convention
-        asm volatile ("call *%1\n"
-            : : "a" (&cryo_offer_cancel_button), "g" (cryo_offer_cancel_button.DrawFn));
-        //equip_cost_box.DrawFn(&equip_cost_box); -- incompatible calling convention
-        asm volatile ("call *%1\n"
-            : : "a" (&equip_cost_box), "g" (equip_cost_box.DrawFn));
+        equip_offer_buy_button.DrawFn(&equip_offer_buy_button);
+        cryo_offer_cancel_button.DrawFn(&cryo_offer_cancel_button);
+        equip_cost_box.DrawFn(&equip_cost_box);
 
         if (selected_mod == -1)
         {
@@ -1864,31 +1858,18 @@ ubyte show_cryo_chamber_screen(void)
         drawn = boxes_drawn;
     }
 
-    if (drawn)
-    {
-        //drawn = equip_all_agents_button.DrawFn(&equip_all_agents_button); -- incompatible calling convention
-        asm volatile ("call *%2\n"
-            : "=r" (drawn) : "a" (&equip_all_agents_button), "g" (equip_all_agents_button.DrawFn));
-        //drawn = cryo_agent_list_box.DrawFn(&cryo_agent_list_box); -- incompatible calling convention
-        asm volatile ("call *%2\n"
-            : "=r" (drawn) : "a" (&cryo_agent_list_box), "g" (cryo_agent_list_box.DrawFn));
+    if (drawn) {
+        drawn = equip_all_agents_button.DrawFn(&equip_all_agents_button);
+        drawn = cryo_agent_list_box.DrawFn(&cryo_agent_list_box);
     }
 
-    if (drawn)
-    {
-        //drawn = cryo_blokey_box.DrawFn(&cryo_blokey_box); -- incompatible calling convention
-        asm volatile ("call *%2\n"
-            : "=r" (drawn) : "a" (&cryo_blokey_box), "g" (cryo_blokey_box.DrawFn));
+    if (drawn) {
+        drawn = cryo_blokey_box.DrawFn(&cryo_blokey_box);
     }
 
-    if (drawn)
-    {
-        //drawn = cryo_cybmod_list_box.DrawFn(&cryo_cybmod_list_box); -- incompatible calling convention
-        asm volatile ("call *%2\n"
-            : "=r" (drawn) : "a" (&cryo_cybmod_list_box), "g" (cryo_cybmod_list_box.DrawFn));
-        //drawn = equip_name_box.DrawFn(&equip_name_box); -- incompatible calling convention
-        asm volatile ("call *%2\n"
-            : "=r" (drawn) : "a" (&equip_name_box), "g" (equip_name_box.DrawFn));
+    if (drawn) {
+        drawn = cryo_cybmod_list_box.DrawFn(&cryo_cybmod_list_box);
+        drawn = equip_name_box.DrawFn(&equip_name_box);
     }
 
     return drawn;
@@ -1911,7 +1892,7 @@ void init_cryo_screen_boxes(void)
     init_screen_text_box(&cryo_agent_list_box, 7u, 122u, 196u, 303, 6,
         small_med_font, 1);
     cryo_agent_list_box.LineHeight = 25;
-    cryo_agent_list_box.DrawTextFn = ac_show_cryo_agent_list;
+    cryo_agent_list_box.DrawTextFn = show_cryo_agent_list;
     cryo_agent_list_box.ScrollWindowOffset += 27;
     cryo_agent_list_box.Flags |= (GBxFlg_RadioBtn|GBxFlg_IsMouseOver);
     cryo_agent_list_box.ScrollWindowHeight -= 27;
@@ -1921,7 +1902,7 @@ void init_cryo_screen_boxes(void)
 
     init_screen_text_box(&cryo_cybmod_list_box, 425u, 153u, 208u, 272,
       6, small_med_font, 1);
-    cryo_cybmod_list_box.DrawTextFn = ac_show_cryo_cybmod_list_box;
+    cryo_cybmod_list_box.DrawTextFn = show_cryo_cybmod_list_box;
     cryo_cybmod_list_box.Flags |= (GBxFlg_RadioBtn|GBxFlg_IsMouseOver);
     cryo_cybmod_list_box.ScrollWindowHeight = 117;
     // Re-use equip_name_box above cryo_cybmod_list_box
@@ -1929,7 +1910,7 @@ void init_cryo_screen_boxes(void)
 
     init_screen_button(&cryo_offer_cancel_button, 628u, 404u,
       gui_strings[437], 6, med2_font, 1, 0x80);
-    cryo_offer_cancel_button.CallBackFn = ac_do_cryo_offer_cancel;
+    cryo_offer_cancel_button.CallBackFn = do_cryo_offer_cancel;
 
     // Reposition the components to current resolution
 
@@ -1983,7 +1964,7 @@ void switch_shared_equip_screen_buttons_to_cybmod(void)
     equip_cost_box.Y = cryo_offer_cancel_button.Y - space_h - equip_cost_box.Height;
 
     equip_name_box.Text = cybmod_name_text;
-    equip_all_agents_button.CallBackFn = ac_do_cryo_all_agents_set;
+    equip_all_agents_button.CallBackFn = do_cryo_all_agents_set;
 
     update_cybmod_name_text();
     switch_equip_offer_to_buy();

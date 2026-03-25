@@ -24,6 +24,7 @@
 #include "ssampply.h"
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "bigmap.h"
 #include "bmbang.h"
@@ -909,7 +910,7 @@ void process_tank_turret(struct Thing *p_tank)
         return;
     }
     p_turret = &things[turret];
-    if ((p_tank->Flag & TngF_Unkn20000000) != 0)
+    if ((p_tank->Flag & TngF_ShootAtPos) != 0)
     {
         target_x = p_tank->U.UVehicle.TargetDX;
         target_y = p_tank->U.UVehicle.TargetDZ;

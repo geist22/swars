@@ -231,6 +231,7 @@ struct CommandDef command_defs[] = {
     {NULL,							NULL,				CmDF_None },
 };
 
+struct Command *game_commands = NULL;
 ushort next_command = 1;
 
 const char *command_codename(ushort cmd)
@@ -417,6 +418,11 @@ TbBool is_command_any_until(struct Command *p_cmd)
         return true;
     }
     return true;
+}
+
+void init_commands(void)
+{
+    next_command = 1;
 }
 
 ushort get_new_command(void)

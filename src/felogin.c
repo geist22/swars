@@ -232,18 +232,10 @@ ubyte show_login_screen(void)
         clear_key_pressed(KC_SPACE);
         skip_flashy_draw_login_screen_boxes();
     }
-    //drawn = login_name_box.DrawFn(&login_name_box); -- incompatible calling convention
-    asm volatile ("call *%2\n"
-        : "=r" (drawn) : "a" (&login_name_box), "g" (login_name_box.DrawFn));
-    //drawn = login_campaigns_box.DrawFn(&login_campaigns_box); -- incompatible calling convention
-    asm volatile ("call *%2\n"
-        : "=r" (drawn) : "a" (&login_campaigns_box), "g" (login_campaigns_box.DrawFn));
-    //drawn = login_continue_button.DrawFn(&login_continue_button); -- incompatible calling convention
-    asm volatile ("call *%2\n"
-        : "=r" (drawn) : "a" (&login_continue_button), "g" (login_continue_button.DrawFn));
-    //drawn = login_abort_button.DrawFn(&login_abort_button); -- incompatible calling convention
-    asm volatile ("call *%2\n"
-        : "=r" (drawn) : "a" (&login_abort_button), "g" (login_abort_button.DrawFn));
+    drawn = login_name_box.DrawFn(&login_name_box);
+    drawn = login_campaigns_box.DrawFn(&login_campaigns_box);
+    drawn = login_continue_button.DrawFn(&login_continue_button);
+    drawn = login_abort_button.DrawFn(&login_abort_button);
     return drawn;
 }
 
@@ -269,8 +261,8 @@ void init_login_screen_boxes(void)
     init_screen_button(&login_abort_button, 260u, 329u,
       gui_strings[388], 6, med2_font, 1, 0);
 
-    login_continue_button.CallBackFn = ac_do_login_2;
-    login_abort_button.CallBackFn = ac_do_abort_2;
+    login_continue_button.CallBackFn = do_login_2;
+    login_abort_button.CallBackFn = do_abort_2;
     login_campaigns_box.SpecialDrawFn = show_campaigns_list;
     login_name_box.SpecialDrawFn = show_login_name;
 

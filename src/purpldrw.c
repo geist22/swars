@@ -304,12 +304,6 @@ void flashy_draw_projector_vertical_lines(short box_x, short box_y, short box_w,
 
 ubyte flashy_draw_purple_box(struct ScreenBox *p_box)
 {
-#if 0
-    ubyte ret;
-    asm volatile ("call ASM_flashy_draw_purple_box\n"
-        : "=r" (ret) : "a" (p_box));
-    return ret;
-#endif
     short box_w, box_h;
 
     box_w = p_box->Width - 1;
@@ -537,9 +531,7 @@ ubyte flashy_draw_purple_text_box_text(struct ScreenTextBox *p_box)
     if (p_box->DrawTextFn != NULL)
     {
         ubyte drawn;
-        //drawn = p_box->DrawTextFn(p_box); -- incompatible calling convention
-        asm volatile ("call *%2\n"
-          : "=r" (drawn) : "a" (p_box), "g" (p_box->DrawTextFn));
+        drawn = p_box->DrawTextFn(p_box);
         text_drawn = text_drawn && drawn;
     }
     else if (p_box->Text != NULL)
@@ -573,17 +565,13 @@ ubyte flashy_draw_purple_text_box_children(struct ScreenTextBox *p_box)
         p_button = p_box->Buttons[i];
         if (p_button != NULL) {
             ubyte drawn;
-            //p_button->DrawFn(p_button); -- incompatible calling convention
-            asm volatile ("call *%2\n"
-                : "=r" (drawn) : "a" (p_button), "g" (p_button->DrawFn));
+            drawn = p_button->DrawFn(p_button);
             all_drawn = all_drawn && drawn;
         }
         p_info = p_box->Infos[i];
         if (p_info != NULL) {
             ubyte drawn;
-            //p_info->DrawFn(p_info); -- incompatible calling convention
-            asm volatile ("call *%2\n"
-                : "=r" (drawn) : "a" (p_info), "g" (p_info->DrawFn));
+            drawn = p_info->DrawFn(p_info);
             all_drawn = all_drawn && drawn;
         }
     }
@@ -777,12 +765,6 @@ void input_purple_text_box_wth_scroll(struct ScreenTextBox *p_box, struct Screen
 
 ubyte flashy_draw_purple_text_box(struct ScreenTextBox *p_box)
 {
-#if 0
-    ubyte ret;
-    asm volatile ("call ASM_flashy_draw_purple_text_box\n"
-        : "=r" (ret) : "a" (p_box));
-    return ret;
-#endif
     short box_w, box_h;
     short lines_visible;
     TbBool text_remains_dynamic; /**< text drawing callback never sets GBxFlg_TextCopied (maybe make this into a box flag?) */
@@ -1043,12 +1025,6 @@ ubyte flashy_draw_purple_text_box(struct ScreenTextBox *p_box)
 
 ubyte flashy_draw_purple_info_box(struct ScreenInfoBox *p_box)
 {
-#if 0
-    ubyte ret;
-    asm volatile ("call ASM_flashy_draw_purple_info_box\n"
-        : "=r" (ret) : "a" (p_box));
-    return ret;
-#endif
     short box_w, box_h;
 
     box_w = p_box->Width - 1;
@@ -1130,22 +1106,13 @@ ubyte flashy_draw_purple_info_box(struct ScreenInfoBox *p_box)
         }
     }
     if (p_box->DrawTextFn != NULL) {
-            ubyte drawn;
-            //p_box->DrawTextFn(p_box); -- incompatible calling convention
-            asm volatile ("call *%2\n"
-                : "=r" (drawn) : "a" (p_box), "g" (p_box->DrawTextFn));
+        p_box->DrawTextFn(p_box);
     }
     return 3;
 }
 
 ubyte flashy_draw_purple_button(struct ScreenButton *p_btn)
 {
-#if 0
-    ubyte ret;
-    asm volatile ("call ASM_flashy_draw_purple_button\n"
-        : "=r" (ret) : "a" (p_btn));
-    return ret;
-#else
     short box_w, box_h;
     TbKeyCode akey;
     TbBool mouse_over, event_from_key;
@@ -1357,9 +1324,7 @@ ubyte flashy_draw_purple_button(struct ScreenButton *p_btn)
                 if (p_btn->CallBackFn != NULL)
                 {
                     ubyte clicked;
-                    //p_btn->CallBackFn(0); -- incompatible calling convention
-                    asm volatile ("call *%2\n"
-                      : "=r" (clicked) : "a" (0), "g" (p_btn->CallBackFn));
+                    clicked = p_btn->CallBackFn(0);
                     if (clicked)
                         smpl_id = 111;
                     else
@@ -1398,9 +1363,7 @@ ubyte flashy_draw_purple_button(struct ScreenButton *p_btn)
                 if (p_btn->CallBackFn != NULL)
                 {
                     ubyte clicked;
-                    //clicked = p_btn->CallBackFn(1); -- incompatible calling convention
-                    asm volatile ("call *%2\n"
-                      : "=r" (clicked) : "a" (1), "g" (p_btn->CallBackFn));
+                    clicked = p_btn->CallBackFn(1);
                     if (clicked)
                         smpl_id = 111;
                     else
@@ -1474,14 +1437,10 @@ ubyte flashy_draw_purple_button(struct ScreenButton *p_btn)
           lbDisplay.DrawFlags |= Lb_TEXT_HALIGN_CENTER;
     }
     if (p_btn->DrawTextFn != NULL) {
-        ubyte drawn;
-        //p_btn->DrawTextFn(p_btn); -- incompatible calling convention
-        asm volatile ("call *%2\n"
-          : "=r" (drawn) : "a" (p_btn), "g" (p_btn->DrawTextFn));
+        p_btn->DrawTextFn(p_btn);
     }
     lbDisplay.DrawFlags = 0;
     return ret;
-#endif
 }
 
 ubyte label_text(struct ScreenButton *p_btn)

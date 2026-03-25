@@ -19,7 +19,10 @@
 #include "enginshrapn.h"
 
 #include "bfmemut.h"
-#include "swlog.h"
+#include "privrdlog.h"
 /******************************************************************************/
+struct Shrapnel shrapnel[512];
+struct Phwoar phwoar[1024];
+struct FireFlame FIRE_flame[512];
 
 /******************************************************************************/
