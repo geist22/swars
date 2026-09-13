@@ -27,6 +27,7 @@
 #include "bfmemory.h"
 #include "bfmemut.h"
 #include "bftime.h"
+#include "bfwindows.h"
 
 #include "display.h"
 #include "dos.h"
@@ -118,6 +119,10 @@ struct NetworkServiceInfo Network_Service_List[] = {
 };
 
 /******************************************************************************/
+
+// Timeout value adjuster; currently decreases timeouts as the network doesn't work anyway
+#define TIMEOUT_MSEC(s) (s / 100)
+
 TbResult LbNetworkSetSessionCreateFunction(void *func)
 {
     NetworkServicePtr.F.SessionCreate = func;
@@ -273,7 +278,7 @@ void ipx_update(void)
     if (start_time == 0)
         start_time = LbTimerClock();
     curr_time = LbTimerClock();
-    if (curr_time - start_time > 100)
+    if (curr_time - start_time > TIMEOUT_MSEC(10000))
     {
         start_time = curr_time;
         IPXPlayer.Header.field_2A = 1;
@@ -314,7 +319,7 @@ TbResult ipx_create_session(char *a1, const char *a2)
 {
     struct TbIPXHandler *ipxhndl;
     struct TbIPXPlayer *p_plyrdt;
-    ulong tm_start, tm_curr;
+    TbClockMSec start_time, curr_time;
     TbResult ret;
     int i;
 
@@ -324,10 +329,10 @@ TbResult ipx_create_session(char *a1, const char *a2)
         return Lb_FAIL;
     }
 
-    tm_start = dos_clock();
+    start_time = LbTimerClock();
     while (1)
     {
-        tm_curr = dos_clock();
+        curr_time = LbTimerClock();
 #if defined(DOS)||defined(GO32)
         CallIPX(1);
 #endif
@@ -356,8 +361,9 @@ TbResult ipx_create_session(char *a1, const char *a2)
           return ret;
         }
 
-        if (tm_curr - tm_start >= 30000 / DOS_CLOCKS_PER_SEC)
+        if (curr_time - start_time >= TIMEOUT_MSEC(30000))
             break;
+        LbDoMultitasking();
     }
 
     for (i = 0; i < 16; i++)
@@ -460,7 +466,7 @@ int ipx_session_list(struct IPXSessionList *sesslist, int listlen)
 int ipx_join_session(struct IPXSessionList *p_ipxsess, char *a2)
 {
     struct TbIPXPlayerHeader ipxhead;
-    ulong tm_start, tm_curr;
+    TbClockMSec start_time, curr_time;
     TbResult ret;
     ushort my_plyr;
     short i, k;
@@ -484,9 +490,10 @@ int ipx_join_session(struct IPXSessionList *p_ipxsess, char *a2)
     ipxhead.field_2 = IPXPlayer.Header.field_2;
     my_plyr = 0;
 
-    tm_start = dos_clock();
+    start_time = LbTimerClock();
     while ( 1 )
     {
+        curr_time = LbTimerClock();
         memcpy(IPXHandler->PlayerData, &ipxhead, sizeof(struct TbIPXPlayerHeader));
         IPXHandler->field_B = 45;
         memcpy(IPXHandler->field_12, &p_ipxsess->Session.Reserved[16], 6u);
@@ -521,7 +528,7 @@ int ipx_join_session(struct IPXSessionList *p_ipxsess, char *a2)
                 p_nplyr = &p_plyrdt->Data.Data3.players[k];
                 if (memcmp(p_nplyr->field_4, ipxhead.field_1C, 6) == 0)
                 {
-                    tm_start = 0;
+                    start_time = 0;
                     my_plyr = k;
                     ret = 1;
                     i = 31;
@@ -539,11 +546,9 @@ int ipx_join_session(struct IPXSessionList *p_ipxsess, char *a2)
             if (ret2 == -7)
                 return ret2;
         }
-        tm_curr = dos_clock();
-        if (tm_curr - tm_start > 50000 / DOS_CLOCKS_PER_SEC)
-        {
+        if (curr_time - start_time > TIMEOUT_MSEC(50000))
             break;
-        }
+        LbDoMultitasking();
     }
     if (ret != -1)
     {
@@ -1122,7 +1127,7 @@ int get_modem_response(struct TbSerialDev *p_serdev)
 {
     const struct ModemResponse *resp;
     char locstr[80];
-    TbClockMSec start_time;
+    TbClockMSec start_time, curr_time;
     int ret;
     int chr;
     ushort lspos, mrpos;
@@ -1136,8 +1141,8 @@ int get_modem_response(struct TbSerialDev *p_serdev)
     lspos = 0;
     while (!done)
     {
-        if (LbTimerClock() - start_time > 4000)
-            return -1;
+        curr_time = LbTimerClock();
+
         chr = read_char(p_serdev);
         if (mrpos >= strlen(ModemRequestString)) {
             mrpos = 0;
@@ -1183,6 +1188,10 @@ int get_modem_response(struct TbSerialDev *p_serdev)
             if (NetworkServicePtr.F.UsedSessionInit() == -7)
                 return -7;
         }
+
+        if (curr_time - start_time > TIMEOUT_MSEC(4000))
+            return -1;
+        LbDoMultitasking();
     }
     return ret;
 }
@@ -1684,15 +1693,14 @@ int unkn_exchange(struct TbUnknCommSt *p_a1, void *a2, intptr_t *params)
 
 int run_exchange_func()
 {
-    static uint32_t start_time[4];
-    uint32_t end_time;
-    int idx = 0;
+    static TbClockMSec start_time = 0;
+    TbClockMSec end_time;
 
-    end_time = dos_clock();
-    if ((end_time - start_time[idx]) < 1000 / DOS_CLOCKS_PER_SEC) {
+    end_time = LbTimerClock();
+    if (end_time - start_time < TIMEOUT_MSEC(1000)) {
         return 0;
     }
-    start_time[idx] = end_time;
+    start_time = end_time;
 
     if (NetworkServicePtr.F.SessionExchange == NULL) {
         return 0;
