@@ -72,7 +72,7 @@ struct NetworkPlayerUProgress {
   ubyte val_flags_08;
   ubyte GrPaintColour;
   ubyte SelectedUser;
-  long Expenditure;
+  s32 Expenditure;
 };
 
 struct NetworkPlayerUWepMod {
@@ -145,7 +145,7 @@ void net_player_scheduled_action_prepare_packet(void);
 void net_player_action_prepare(int plyr);
 void net_player_action_execute(int plyr, int netplyr);
 void net_player_update_from_progress_packet_hostonly(void);
-TbBool net_players_immediate_exchange(void);
+TbBool net_players_immediate_exchange(int plyr);
 
 void net_players_copy_equip_and_cryo(void);
 void net_players_copy_equip_and_cryo_now(void);

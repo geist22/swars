@@ -324,10 +324,10 @@ TbResult ipx_create_session(char *a1, const char *a2)
         return Lb_FAIL;
     }
 
-    tm_start = clock();
+    tm_start = dos_clock();
     while (1)
     {
-        tm_curr = clock();
+        tm_curr = dos_clock();
 #if defined(DOS)||defined(GO32)
         CallIPX(1);
 #endif
@@ -356,7 +356,7 @@ TbResult ipx_create_session(char *a1, const char *a2)
           return ret;
         }
 
-        if (tm_curr - tm_start >= 300)
+        if (tm_curr - tm_start >= 30000 / DOS_CLOCKS_PER_SEC)
             break;
     }
 
@@ -484,7 +484,7 @@ int ipx_join_session(struct IPXSessionList *p_ipxsess, char *a2)
     ipxhead.field_2 = IPXPlayer.Header.field_2;
     my_plyr = 0;
 
-    tm_start = clock();
+    tm_start = dos_clock();
     while ( 1 )
     {
         memcpy(IPXHandler->PlayerData, &ipxhead, sizeof(struct TbIPXPlayerHeader));
@@ -518,7 +518,7 @@ int ipx_join_session(struct IPXSessionList *p_ipxsess, char *a2)
             for (k = 0; k < NET_PLAYERS_COUNT; k++)
             {
                 struct TbIPXOnePlayer *p_nplyr;
-                p_nplyr = &p_plyrdt->Data.Data3.player[k];
+                p_nplyr = &p_plyrdt->Data.Data3.players[k];
                 if (memcmp(p_nplyr->field_4, ipxhead.field_1C, 6) == 0)
                 {
                     tm_start = 0;
@@ -539,8 +539,8 @@ int ipx_join_session(struct IPXSessionList *p_ipxsess, char *a2)
             if (ret2 == -7)
                 return ret2;
         }
-        tm_curr = clock();
-        if (tm_curr - tm_start > 500)
+        tm_curr = dos_clock();
+        if (tm_curr - tm_start > 50000 / DOS_CLOCKS_PER_SEC)
         {
             break;
         }
@@ -657,13 +657,12 @@ void ipx_openup_listeners(void)
     IPXHandler->SessionActive = 1;
 }
 
-int ipx_stop_network(void)
+void ipx_stop_network(int plyr)
 {
-    int ret;
     LOGDBG("Starting");
     asm volatile ("call ASM_ipx_stop_network\n"
-        : "=r" (ret) : );
-    return ret;
+        : : "a" (plyr) );
+    return;
 }
 
 TbResult ipx_get_player_name(char *name, int plyr)
@@ -680,10 +679,10 @@ TbResult ipx_get_player_name(char *name, int plyr)
         return Lb_FAIL;
     if (!IPXHandler->SessionActive)
         return Lb_FAIL;
-    if (!IPXPlayer.Data.Data3.player[plyr].field_1A)
+    if (!IPXPlayer.Data.Data3.players[plyr].field_1A)
         return Lb_FAIL;
 
-    strcpy(name, IPXPlayer.Data.Data3.player[plyr].name);
+    strcpy(name, IPXPlayer.Data.Data3.players[plyr].name);
     return Lb_SUCCESS;
 }
 
@@ -1690,7 +1689,7 @@ int run_exchange_func()
     int idx = 0;
 
     end_time = dos_clock();
-    if ((end_time - start_time[idx]) < 10) {
+    if ((end_time - start_time[idx]) < 1000 / DOS_CLOCKS_PER_SEC) {
         return 0;
     }
     start_time[idx] = end_time;
@@ -2360,7 +2359,7 @@ TbResult LbNetworkAnswer(void)
     return ret;
 }
 
-TbResult LbNetworkSessionStop(void)
+TbResult LbNetworkSessionStop(int plyr)
 {
     struct TbSerialDev *serhead;
     TbResult ret;
@@ -2369,7 +2368,7 @@ TbResult LbNetworkSessionStop(void)
     switch (NetworkServicePtr.I.Type)
     {
     case NetSvc_IPX:
-        ipx_stop_network();
+        ipx_stop_network(plyr);
         ret = Lb_SUCCESS;
         break;
     case NetSvc_COM1:

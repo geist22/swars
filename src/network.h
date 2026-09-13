@@ -206,7 +206,7 @@ struct TbIPXOnePlayer {
 };
 
 struct TbIPXPlayerData3 {
-    struct TbIPXOnePlayer player[NET_PLAYERS_COUNT]; // offset=45
+    struct TbIPXOnePlayer players[NET_PLAYERS_COUNT]; // offset=45
 };
 
 struct TbIPXPlayerData { // sizeof=226
@@ -317,7 +317,7 @@ TbResult LbNetworkReset(void);
 TbResult LbNetworkDial(const char *distr);
 TbResult LbNetworkAnswer(void);
 TbResult LbNetworkHangUp(void);
-TbResult LbNetworkSessionStop(void);
+TbResult LbNetworkSessionStop(int plyr);
 TbResult LbNetworkShutDownListeners(void);
 
 TbResult LbModemReadConfig(const char *fname);

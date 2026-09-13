@@ -58,7 +58,7 @@ void net_player_leave(PlayerIdx plyr)
         StopCD();
         StopAllSamples();
         SetMusicVolume(100, 0);
-        LbNetworkSessionStop();
+        LbNetworkSessionStop(local_player_no);
         if (nsvc.I.Type != NetSvc_IPX && byte_1C4A6F)
             LbNetworkHangUp();
     }
@@ -66,7 +66,7 @@ void net_player_leave(PlayerIdx plyr)
     {
         net_players_num--;
         player_message_fmt(plyr, "%s %s", unkn2_names[plyr], gui_strings[GSTR_NET_LEFT_GAME]);
-        LbNetworkSessionStop();
+        LbNetworkSessionStop(plyr);
         ingame.InNetGame_UNSURE &= ~(1 << plyr);
     }
 }

@@ -447,11 +447,11 @@ void net_player_action_prepare(int plyr)
     }
 }
 
-TbBool net_players_immediate_exchange(void)
+TbBool net_players_immediate_exchange(int plyr)
 {
     if (LbNetworkExchange(network_players, sizeof(struct NetworkPlayer)) != 1)
     {
-        LbNetworkSessionStop();
+        LbNetworkSessionStop(plyr);
         net_new_game_prepare();
         if (nsvc.I.Type != NetSvc_IPX)
         {
@@ -546,11 +546,12 @@ void net_player_action_execute(int plyr, int netplyr)
         break;
     case NPAct_PlyrEject:
         selected_net_user = -1;
+        i = p_netplyr->U.Progress.SelectedUser;
         reset_net_screen_EJECT_flags();
-        LbNetworkSessionStop();
+        LbNetworkSessionStop(i);
         if (nsvc.I.Type == NetSvc_IPX)
         {
-            if (p_netplyr->U.Progress.SelectedUser == netplyr)
+            if (i == netplyr)
             {
                 net_new_game_prepare();
                 if (screentype == SCRT_CRYO)
@@ -560,8 +561,8 @@ void net_player_action_execute(int plyr, int netplyr)
                 }
             }
         } else {
-            if (p_netplyr->U.Progress.SelectedUser != netplyr)
-                LbNetworkSessionStop();
+            if (i != netplyr)
+                LbNetworkSessionStop(netplyr);
             net_new_game_prepare();
             if (byte_1C4A6F)
                 LbNetworkHangUp();
@@ -570,18 +571,23 @@ void net_player_action_execute(int plyr, int netplyr)
         }
         break;
     case NPAct_PlyrLogOut:
-        LbNetworkSessionStop();
         if (nsvc.I.Type == NetSvc_IPX)
         {
             if (plyr == netplyr || net_host_player_no == plyr)
             {
+                LbNetworkSessionStop(netplyr);
                 net_new_game_prepare();
                 net_sessionlist_clear();
                 net_unkn2_names_clear();
             }
+            else
+            {
+                LbNetworkSessionStop(plyr);
+            }
         }
         else
         {
+            LbNetworkSessionStop(netplyr);
             net_new_game_prepare();
             net_unkn2_names_clear();
             if (byte_1C4A6F)
@@ -766,7 +772,7 @@ void net_unkn_func_33(void)
 
     net_player_action_prepare(player);
 
-    net_players_immediate_exchange();
+    net_players_immediate_exchange(player);
 
     for (i = 0; i < 8; i++)
     {
