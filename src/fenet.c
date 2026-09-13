@@ -370,8 +370,10 @@ ubyte net_unkn_func_32(void)
     TbBool modem_on_line;
 
     modem_on_line = 0;
-    if (LbNetworkSessionActive())
+    if (LbNetworkSessionActive()) {
+        LOGERR("Already have active session");
         return 0;
+    }
 
     if (nsvc.I.Type == NetSvc_IPX)
         goto skip_modem_init;
@@ -561,9 +563,11 @@ ubyte do_net_INITIATE(ubyte click)
     }
     if (login_control__State == LognCt_Unkn6)
     {
-        if (net_unkn_func_32())
-        {
+        if (net_unkn_func_32()) {
             netgame_state_enter_5();
+            LOGSYNC("Enter NetStarted from Unkn6, %s", "success");
+        } else {
+            LOGWARN("Enter NetStarted from Unkn6, %s", "fail");
         }
     }
     else if (login_control__State == LognCt_NetStarted)
@@ -580,6 +584,7 @@ ubyte do_net_INITIATE(ubyte click)
             selected_net_user = -1;
             selected_net_session = -1;
         }
+        LOGSYNC("In Unkn6, host=%d, local=%d", (int)net_host_player_no, (int)plyr);
     }
     return 1;
 }
