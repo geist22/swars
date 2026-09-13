@@ -3598,7 +3598,7 @@ void init_unkn6_adjustable_variables(void)
     login_control__City = 19; // Tokyo
     login_control__Team = 0;
 
-    reinit_unkn6_adjustable_variables();
+    reinit_unkn6_always_reset_variables();
 }
 
 void init_agents(void)
