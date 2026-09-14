@@ -298,6 +298,8 @@ ubyte edit_flag = 0;
 
 struct OutroHotChar outro_hot_chars[OUTRO_HOT_CHARS_COUNT];
 
+ubyte input_char;
+
 const char *miss_end_sta_names[] = {
   "undecided state",
   "ending success",

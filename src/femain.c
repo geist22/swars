@@ -71,6 +71,12 @@
 #define SYSMNU_BUTTONS_COUNT 6
 
 struct ScreenButton sysmnu_buttons[SYSMNU_BUTTONS_COUNT] = {0};
+
+/** Option title text buffer.
+ *
+ * To be used only if the title being set is not a global localized string.
+ * Global strings can be set directly as ScreenBox Text.
+ */
 char options_title_text[20];
 
 struct ScreenButton main_quit_button = {0};

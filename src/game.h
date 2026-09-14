@@ -147,7 +147,6 @@ extern ubyte login_control__Faction;
 extern ubyte login_control__Team;
 
 extern ubyte exit_game;
-extern ubyte input_char;
 
 extern ulong active_flags_general_unkn01;
 

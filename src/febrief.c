@@ -32,6 +32,7 @@
 #include "embedanim.h"
 #include "femail.h"
 #include "femain.h"
+#include "feworld.h"
 #include "game_data.h"
 #include "game_options.h"
 #include "guiboxes.h"

@@ -84,6 +84,9 @@
 .global EXPORT_SYMBOL(engn_yc);
 .global EXPORT_SYMBOL(shield_frm);			/* 0x1777B8 */
 .global EXPORT_SYMBOL(gamep_scene_effect_type);	/* 0x1777C8 */
+.global EXPORT_SYMBOL(word_17FA58);			/* 0x17FA58 */
+.global EXPORT_SYMBOL(ingame);				/* 0x1807D4 */
+.global EXPORT_SYMBOL(player_message_text);	/* 0x180CC9 */
 .global EXPORT_SYMBOL(tmaps_extra_buf);		/* 0x1810D1 */
 .global EXPORT_SYMBOL(tmaps_extra_len);		/* 0x1810D5 */
 .global EXPORT_SYMBOL(colour_mix_lookup);	/* 0x181136 */
@@ -131976,35 +131979,10 @@ data_17ee8a:
 GLOBAL (path_count)	/* 0x17EE8C */
 		.long	0x0
 
-GLOBAL (input_char)	/* 0x17FA50 */
+data_17fa52:	/* 0x17fa52 remove pending */
 		.short  0x0
-data_17fa52:
-		.short  0x0
-
-GLOBAL (word_17FA58)	/* 0x17FA58 */
-		.fill   0x320
-
-GLOBAL (ingame)	/* 0x1807D4 */
-		.fill   0x9A5
-
-
-GLOBAL (player_message_text)	/* 0x180CC9 */
-		.fill   0x80
-		.fill   0x80
-		.fill   0x80
-		.fill   0x80
-		.fill   0x80
-		.fill   0x80
-		.fill   0x80
-		.fill   0x80
-
-GLOBAL (player_message_timer)	/* 0x1810C9 */
-		.fill   0x8
 		.align	4
 
-GLOBAL (user_sel_brightness)	/* 0x1810DA */
-		.short  0x0
-		.fill   0x8
 GLOBAL (game_level_unique_id)	/* 0x1810E4 */
 		.short  0x0
 GLOBAL (game_level_unkn1)	/* 0x1810E6 */

@@ -80,8 +80,7 @@ extern ulong dword_1C4908[6];
 extern ulong dword_1C4920;
 extern ulong dword_1C4924;
 extern ulong dword_1C4930[6];
-/** whether the map screen was entered from mission brief */
-extern ubyte map_from_mission;
+
 extern ubyte byte_1C4888;
 extern short word_1C488A[6];
 extern short word_1C4896[6];
