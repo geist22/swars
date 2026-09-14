@@ -82,6 +82,7 @@
 .global EXPORT_SYMBOL(engn_cam_yaw);		/* 0x176D58 */
 .global EXPORT_SYMBOL(byte_176D49);			/* 0x176D49 */
 .global EXPORT_SYMBOL(engn_yc);
+.global EXPORT_SYMBOL(navi2_unkn_counter);	/* 0x177740 */
 .global EXPORT_SYMBOL(shield_frm);			/* 0x1777B8 */
 .global EXPORT_SYMBOL(gamep_scene_effect_type);	/* 0x1777C8 */
 .global EXPORT_SYMBOL(word_17FA58);			/* 0x17FA58 */
@@ -8895,15 +8896,15 @@ GLOBAL_FUNC (ASM_net_unkn_check_1)	/* 0x03FF04 */
 		mov    packets(%edx),%bx
 		mov    %bx,EXPORT_SYMBOL(shpackets)(%eax)
 		mov    EXPORT_SYMBOL(packets)+0x02(%edx),%bx # packets[].Data
-		mov    %bx,data_1aa216(%eax)
+		mov    %bx,EXPORT_SYMBOL(shpackets)+0x02(%eax)
 		mov    EXPORT_SYMBOL(packets)+0x04(%edx),%bx # packets[].X
-		mov    %bx,data_1aa218(%eax)
+		mov    %bx,EXPORT_SYMBOL(shpackets)+0x04(%eax)
 		mov    EXPORT_SYMBOL(packets)+0x06(%edx),%bx # packets[].Y
 		mov    EXPORT_SYMBOL(packets)+0x08(%edx),%dx # packets[].Z
-		mov    %bx,data_1aa21a(%eax)
-		mov    %dx,data_1aa21c(%eax)
+		mov    %bx,EXPORT_SYMBOL(shpackets)+0x06(%eax)
+		mov    %dx,EXPORT_SYMBOL(shpackets)+0x08(%eax)
 		mov    EXPORT_SYMBOL(ingame)+0x927,%dl # ingame.fld_unkC4B
-		mov    %dl,data_1aa21e(%eax)
+		mov    %dl,EXPORT_SYMBOL(shpackets)+0x0A(%eax)
 		mov    $0xb,%edx
 		mov    $EXPORT_SYMBOL(shpackets),%eax
 		xor    %esi,%esi
@@ -8922,16 +8923,16 @@ GLOBAL_FUNC (ASM_net_unkn_check_1)	/* 0x03FF04 */
 		mov    %si,EXPORT_SYMBOL(packets)+0x0A(%edx) # packets[].Action2
 		mov    %si,EXPORT_SYMBOL(packets)+0x14(%edx) # packets[].Action3
 		mov    %si,EXPORT_SYMBOL(packets)+0x1E(%edx) # packets[].Action4
-		mov    data_1aa216(%ebx),%cx
+		mov    EXPORT_SYMBOL(shpackets)+0x02(%ebx),%cx
 		mov    %cx,EXPORT_SYMBOL(packets)+0x02(%edx) # packets[].Data
-		mov    data_1aa218(%ebx),%cx
+		mov    EXPORT_SYMBOL(shpackets)+0x04(%ebx),%cx
 		mov    %cx,EXPORT_SYMBOL(packets)+0x04(%edx) # packets[].X
-		mov    data_1aa21a(%ebx),%cx
+		mov    EXPORT_SYMBOL(shpackets)+0x06(%ebx),%cx
 		mov    %cx,EXPORT_SYMBOL(packets)+0x06(%edx) # packets[].Y
-		mov    data_1aa21c(%ebx),%cx
+		mov    EXPORT_SYMBOL(shpackets)+0x08(%ebx),%cx
 		mov    %cx,EXPORT_SYMBOL(packets)+0x08(%edx) # packets[].Z
 		mov    EXPORT_SYMBOL(lbSeed),%ecx
-		mov    data_1aa21e(%ebx),%bl
+		mov    EXPORT_SYMBOL(shpackets)+0x0A(%ebx),%bl
 		mov    %ecx,EXPORT_SYMBOL(packets)+0x28(%edx) # packets[].D1Seed
 		and    $0xff,%ebx
 		inc    %eax
@@ -115123,7 +115124,7 @@ GLOBAL_FUNC(ASM_build_navigate_path_to_person)	/* 0x0BFD00 */
 		mov    0x80(%esi),%bh
 		mov    $g_nav_data,%eax
 		or     $0x10,%bh
-		mov    navi2_unkn_counter,%edi
+		mov    EXPORT_SYMBOL(navi2_unkn_counter),%edi
 		mov    %bh,0x80(%esi)
 		inc    %edi
 		mov    0x10(%esp),%ecx
@@ -115131,7 +115132,7 @@ GLOBAL_FUNC(ASM_build_navigate_path_to_person)	/* 0x0BFD00 */
 		mov    0x4(%esp),%edx
 		push   %ecx
 		mov    0x10(%esp),%ecx
-		mov    %edi,navi2_unkn_counter
+		mov    %edi,EXPORT_SYMBOL(navi2_unkn_counter)
 		call   ac_path_init8_unkn3
 		mov    %esi,%eax
 		call   ac_set_person_animmode_run
@@ -115139,11 +115140,11 @@ GLOBAL_FUNC(ASM_build_navigate_path_to_person)	/* 0x0BFD00 */
 	jump_c01ba:
 		push   $0xfffffffe
 		mov    0x80(%esi),%cl
-		mov    navi2_unkn_counter,%ebx
+		mov    EXPORT_SYMBOL(navi2_unkn_counter),%ebx
 		and    $0xef,%cl
 		inc    %ebx
 		mov    %cl,0x80(%esi)
-		mov    %ebx,navi2_unkn_counter
+		mov    %ebx,EXPORT_SYMBOL(navi2_unkn_counter)
 		mov    0x10(%esp),%ebp
 		mov    0xc(%esp),%eax
 		push   %ebp
@@ -131925,12 +131926,9 @@ data_177148:
 data_177150:
 		.fill   0x334
 
-GLOBAL (unknmsg_str)	/* 0x177484 */
-		.fill   0x64
-GLOBAL (word_1774E8)	/* 0x1774E8 */
+GLOBAL (word_1774E8)	/* 0x1774E8 no function - remove pending */
 		.fill   0x258
-GLOBAL (navi2_unkn_counter)	/* 0x177740 */
-		.long	0x0
+
 GLOBAL (engine_mem_alloc_ptr)	/* 0x177744 */
 		.long	0x0
 GLOBAL (scratch_malloc_mem)	/* 0x177748 */
@@ -132268,33 +132266,7 @@ data_1a7308:
 		.long	0x0
 bangdetailmask:	/* 0x1A730C */
 		.short  0x0
-data_1a730e:
 		.short  0x0
-
-GLOBAL (prev_tick_time)	/* 0x1A7318 */
-		.long	0x0
-GLOBAL (prev_gameturn)	/* 0x1A731C */
-		.long	0x0
-GLOBAL (curr_tick_time)	/* 0x1A7320 */
-		.long	0x0
-GLOBAL (active_flags_general_unkn01)	/* 0x1A7324 */
-		.long	0x0
-
-GLOBAL (navi2_unkn_counter_max)	/* 0x1A732C */
-		.long	0x0
-
-GLOBAL (shpackets)	/* 0x1aa214 */
-		.short  0x0
-data_1aa216:
-		.short  0x0
-data_1aa218:
-		.short  0x0
-data_1aa21a:
-		.short  0x0
-data_1aa21c:
-		.short  0x0
-data_1aa21e:
-		.fill   0x4e
 
 GLOBAL (data_1aa330)	/* 0x1aa330 */
 		.short  0x0

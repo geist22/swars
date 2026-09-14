@@ -31,6 +31,10 @@
 short frameskip = 0;
 
 GameTurn drawturn = 1;
+GameTurn prev_gameturn = 0;
+
+ulong curr_tick_time = 0;
+ulong prev_tick_time = 0;
 
 // TODO implement separate turns per second, when drawing frames will get separated from game loop
 ushort game_num_fps = 16;

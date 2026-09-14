@@ -148,8 +148,6 @@ extern ubyte login_control__Team;
 
 extern ubyte exit_game;
 
-extern ulong active_flags_general_unkn01;
-
 extern long unkn01_downcount;
 extern long unkn01_pos_x;
 extern long unkn01_pos_y;
@@ -159,9 +157,6 @@ extern short current_level;
 
 extern void *engine_mem_alloc_ptr;
 extern u32 engine_mem_alloc_size;
-
-extern long navi2_unkn_counter;
-extern long navi2_unkn_counter_max;
 
 extern ubyte *scratch_buf1;
 

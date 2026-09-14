@@ -249,6 +249,8 @@ const char *primvehobj_fname = "qdata/primveh.obj";
 
 extern s32 dword_152E38[5]; // = {-1, -1, -1, -1, -1,};
 
+u32 active_flags_general_unkn01 = 0;
+
 extern long dword_1DDECC;
 
 u32 engine_mem_alloc_size = 5900000;
@@ -280,10 +282,12 @@ int mouse_map_z = 0x3200;
 
 extern short last_map_for_lights_func_11;
 
-extern char unknmsg_str[100];
-extern short word_1774E8[2 * 150];
+char mission_status_text[100];
 
-char *data_15319c = unknmsg_str;
+char *data_15319c = mission_status_text;
+
+s32 navi2_unkn_counter = 0;
+s32 navi2_unkn_counter_max = 0;
 
 extern long dword_1AAB74;
 extern long dword_1AAB78;
@@ -2102,6 +2106,7 @@ void create_train_for_each_track(void)
     }
 }
 
+/* no function - delete pending
 void clear_word_1774E8(void)
 {
     short i;
@@ -2111,6 +2116,7 @@ void clear_word_1774E8(void)
         word_1774E8[2 * i + 0] = 0;
     }
 }
+*/
 
 void init_my_paths(void)
 {
@@ -2370,7 +2376,7 @@ void init_level(void)
     gamep_unknval_16 = 0;
     ingame.fld_unkCB1 = 1;
     ingame.fld_unkCB2 = 1;
-    clear_word_1774E8();
+    // clear_word_1774E8(); // no function - delete pending
     missions_clear_bank_tests();
     thing_groups_clear_all_actions();
     init_my_paths();
@@ -6558,9 +6564,9 @@ void draw_mission_concluded(void)
     tm = (dos_clock() - ingame.fld_unkC91) / 100;
     if (ingame.fld_unkCB5)
     {
-        sprintf(unknmsg_str, "%s %s: %s ", gui_strings[GSTR_CHK_MISSION_STA_PRE],
+        sprintf(mission_status_text, "%s %s: %s ", gui_strings[GSTR_CHK_MISSION_STA_PRE],
           gui_strings[GSTR_ENM_MISSION_STATUS + 1 + ingame.MissionStatus], scroll_text);
-        data_15319c = unknmsg_str;
+        data_15319c = mission_status_text;
     }
     else
     {
@@ -6570,13 +6576,13 @@ void draw_mission_concluded(void)
         tm_m = tm / 60;
         tm_s = tm % 60;
 
-        sprintf(unknmsg_str, "%s %s %s %s %02d:%02d:%02d", gui_strings[GSTR_CHK_MISSION_STA_PRE],
+        sprintf(mission_status_text, "%s %s %s %s %02d:%02d:%02d", gui_strings[GSTR_CHK_MISSION_STA_PRE],
           gui_strings[GSTR_ENM_MISSION_STATUS + 1 + ingame.MissionStatus],
           gui_strings[GSTR_CHK_MISSION_STA_SUF_KEYS], gui_strings[GSTR_CHK_MISSION_STA_TIME],
           tm_h, tm_m % 60, tm_s);
-        data_15319c = unknmsg_str;
-        scroll_text = unknmsg_str;
-        LbStringToUpper(unknmsg_str);
+        LbStringToUpper(mission_status_text);
+        data_15319c = mission_status_text;
+        scroll_text = mission_status_text;
     }
     {
         int scr_x, scr_y;
