@@ -60,6 +60,8 @@ extern ubyte game_projector_speed;
 
 extern ubyte show_alert;
 
+extern TbBool map_editor;
+
 /******************************************************************************/
 
 short get_fe_max_detail_for_screen_res(short screen_width, short screen_height);

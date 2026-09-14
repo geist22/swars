@@ -71,7 +71,7 @@
 #define SYSMNU_BUTTONS_COUNT 6
 
 struct ScreenButton sysmnu_buttons[SYSMNU_BUTTONS_COUNT] = {0};
-extern char options_title_text[];
+char options_title_text[20];
 
 struct ScreenButton main_quit_button = {0};
 struct ScreenButton main_login_button = {0};
@@ -95,6 +95,7 @@ extern ubyte research_curr_mod_daily_done;
 extern ubyte byte_1C497D;
 
 extern ubyte enter_game;
+TbBool map_editor = false;
 
 char alert_text[200];
 short alert_textpos = 0;

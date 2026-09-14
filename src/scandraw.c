@@ -397,7 +397,7 @@ const struct TbPoint circle_line_sz5[] = {
 };
 #define circle_line_sz5_count (sizeof(circle_line_sz5)/sizeof(circle_line_sz5[0]))
 
-extern long scanner_next_key_no;
+s32 scanner_next_key_no;
 
 extern long SCANNER_dw064;
 extern long SCANNER_dw068;

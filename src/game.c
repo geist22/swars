@@ -242,6 +242,8 @@ ulong stored_l3d_next_floor_texture;
 ulong stored_l3d_next_local_mat;
 ulong stored_level3d_inuse;
 
+TbPixel linear_vec_pal[PALETTE_8b_COLORS];
+
 extern int data_1c8428;
 const char *primvehobj_fname = "qdata/primveh.obj";
 
@@ -289,6 +291,8 @@ char *data_15319c = unknmsg_str;
 extern long dword_1AAB74;
 extern long dword_1AAB78;
 extern ushort word_1AABD0;
+
+ubyte unkn_flags_01 = 0;
 
 ubyte edit_flag = 0;
 
@@ -506,7 +510,6 @@ void colour_tables_ghost_fixup(void)
 
 TbBool game_setup_stuff(void)
 {
-    TbFileHandle fh;
     ushort i;
     TbBool ret;
 
@@ -514,14 +517,6 @@ TbBool game_setup_stuff(void)
     for (i = 0; i < PALETTE_8b_COLORS; i++)
         linear_vec_pal[i] = i;
     vec_pal = linear_vec_pal;
-
-    fh = LbFileOpen("data/nsta-0.ani", Lb_FILE_MODE_READ_ONLY);
-    if (fh != INVALID_FILE) {
-        nsta_size = LbFileSeek(fh, 0, Lb_FILE_SEEK_END);
-        LbFileClose(fh);
-    } else {
-        ret = false;
-    }
 
     if (display_palette != NULL) {
         colour_brown2 = LbPaletteFindColour(display_palette, 42, 37, 30);
@@ -6341,7 +6336,7 @@ void show_menu_screen(void)
 
     mouse_sprite_animate();
 
-    if ( start_into_mission || map_editor )
+    if (start_into_mission || map_editor)
     {
         show_load_and_prep_mission();
         data_1c498d = 2;

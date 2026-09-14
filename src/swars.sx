@@ -96,14 +96,18 @@
 
 .global EXPORT_SYMBOL(shrapnel_free);		/* 0x19714C */
 .global EXPORT_SYMBOL(phwoar_free);			/* 0x19714E */
+.global EXPORT_SYMBOL(bul_starts);			/* 0x19AB14 */
 
 .global EXPORT_SYMBOL(scratch_buf1)			/* 0x19CB54 */
+.global EXPORT_SYMBOL(pop1_sprites);		/* 0x19CBDC */
 .global EXPORT_SYMBOL(colour_grey1);		/* 0x19CC5C */
 .global EXPORT_SYMBOL(colour_grey2);		/* 0x19CC5D */
 .global EXPORT_SYMBOL(colour_brown2);		/* 0x19CC5E */
-.global EXPORT_SYMBOL(pop1_sprites);		/* 0x19CBDC */
+.global EXPORT_SYMBOL(word_19CC64);			/* 0x19CC64 */
+.global EXPORT_SYMBOL(word_19CC66);			/* 0x19CC66 */
 .global EXPORT_SYMBOL(engine_render_lights);/* 0x19ec6f */
 .global EXPORT_SYMBOL(game_perspective);	/* 0x19EC71 */
+.global EXPORT_SYMBOL(unkn_flags_01);		/* 0x19EC72 */
 .global EXPORT_SYMBOL(nuclear_overexposure);	/* 0x19F4F8 */
 .global EXPORT_SYMBOL(engn_nuclear_shade_timer);	/* 0x19F4FC */
 .global EXPORT_SYMBOL(engn_nuclear_shade_x); /* 0x19F500 */
@@ -1042,7 +1046,7 @@ GLOBAL_FUNC(ASM_simulated_level)	/* 0x0116A4 */
 		xor    %edx,%edx
 	jump_116b3:
 		add    $0x28,%eax
-		mov    %edx,data_19ec70(%eax)
+		mov    %edx,EXPORT_SYMBOL(war_flags)-0x28(%eax)
 		mov    %bl,EXPORT_SYMBOL(war_flags)-0x18(%eax)
 		mov    %dl,EXPORT_SYMBOL(war_flags)-0x17(%eax)
 		cmp    $0x4d8,%eax
@@ -48432,20 +48436,20 @@ calc_bul_offsets:	/* 0x060FD4 */
 		mov    %al,EXPORT_SYMBOL(bul_starts)(,%ebp,2)
 		mov    0x4(%edx),%al
 		add    0x5(%ebx),%al
-		mov    %al,data_19ab15(,%ebp,2)
+		mov    %al,EXPORT_SYMBOL(bul_starts)+0x01(,%ebp,2)
 	jump_61060:
 		xor    %eax,%eax
 		mov    %di,%ax
 		add    %eax,%eax
-		mov    data_19ab11(%eax),%edx
+		mov    EXPORT_SYMBOL(bul_starts)-0x03(%eax),%edx
 		sar    $0x18,%edx
 		test   %edx,%edx
 		jne    jump_61088
-		mov    data_19ab12(%eax),%edx
+		mov    EXPORT_SYMBOL(bul_starts)-0x02(%eax),%edx
 		sar    $0x18,%edx
 		test   %edx,%edx
 		jne    jump_61088
-		movb   $0xe2,data_19ab15(%eax)
+		movb   $0xe2,EXPORT_SYMBOL(bul_starts)+0x01(%eax)
 	jump_61088:
 		inc    %edi
 	jump_61089:
@@ -48463,7 +48467,7 @@ calc_bul_offsets:	/* 0x060FD4 */
 		mov    EXPORT_SYMBOL(frame),%ebx
 		movb   $0x0,EXPORT_SYMBOL(bul_starts)(,%eax,2)
 		and    $0xffff,%edx
-		movb   $0x0,data_19ab15(,%eax,2)
+		movb   $0x0,EXPORT_SYMBOL(bul_starts)+0x01(,%eax,2)
 		xor    %eax,%eax
 		mov    (%ebx,%edx,8),%ax
 		imul   $0xa,%eax,%eax
@@ -56403,7 +56407,7 @@ GLOBAL_FUNC(ASM_build_electricity)	/* 0x068D1C */
 		and    $0x7,%eax
 		mov    0x26(%edi),%dx
 		add    %eax,%edx
-		mov    data_19ab13(,%edx,2),%esi
+		mov    EXPORT_SYMBOL(bul_starts)-0x01(,%edx,2),%esi
 		mov    EXPORT_SYMBOL(overall_scale)-2,%eax
 		sar    $0x18,%esi
 		sar    $0x10,%eax
@@ -56950,7 +56954,7 @@ GLOBAL_FUNC(ASM_build_laser_beam)	/* 0x069A34 */
 		mov    0x26(%ebx),%ax
 		add    %edx,%eax
 		lea    0x0(,%eax,2),%edx
-		mov    data_19ab13(%edx),%ebx
+		mov    EXPORT_SYMBOL(bul_starts)-0x01(%edx),%ebx
 		mov    EXPORT_SYMBOL(overall_scale)-2,%eax
 		sar    $0x18,%ebx
 		sar    $0x10,%eax
@@ -57598,7 +57602,7 @@ GLOBAL_FUNC(ASM_build_laser_beam_q)	/* 0x06A2E0 */
 		and    $0x7,%eax
 		mov    0x26(%ebx),%dx
 		add    %edx,%eax
-		mov    data_19ab13(,%eax,2),%ebx
+		mov    EXPORT_SYMBOL(bul_starts)-0x01(,%eax,2),%ebx
 		mov    EXPORT_SYMBOL(overall_scale)-2,%edx
 		sar    $0x18,%ebx
 		sar    $0x10,%edx
@@ -62971,7 +62975,7 @@ GLOBAL_FUNC (ASM_gproc3_unknsub2)	/* 0x73798 */
 		mov    %eax,0x4(%esp)
 		xor    %eax,%eax
 		mov    EXPORT_SYMBOL(render_area_a),%si
-		mov    unkn_flags_01,%al
+		mov    EXPORT_SYMBOL(unkn_flags_01),%al
 		mov    %dx,EXPORT_SYMBOL(render_area_a)
 		mov    %eax,0xc(%esp)
 		xor    %eax,%eax
@@ -63147,7 +63151,7 @@ GLOBAL_FUNC (ASM_gproc3_unknsub2)	/* 0x73798 */
 		mov    $0x1,%bl
 		mov    EXPORT_SYMBOL(vec_tmap)+20,%eax
 		xor    %edx,%edx
-		mov    %bl,unkn_flags_01
+		mov    %bl,EXPORT_SYMBOL(unkn_flags_01)
 		mov    $0x4000,%ebx
 		mov    %cx,EXPORT_SYMBOL(overall_scale)
 		call   ac_memset
@@ -63189,7 +63193,7 @@ GLOBAL_FUNC (ASM_gproc3_unknsub2)	/* 0x73798 */
 		mov    %eax,EXPORT_SYMBOL(engn_yc)
 		mov    0xc(%esp),%al
 		mov    %edi,EXPORT_SYMBOL(engn_cam_yaw)
-		mov    %al,unkn_flags_01
+		mov    %al,EXPORT_SYMBOL(unkn_flags_01)
 		call   ac_prepare_drawlist
 		add    $0x1c,%esp
 		pop    %ebp
@@ -100202,7 +100206,7 @@ GLOBAL_FUNC (ASM_SCANNER_init)	/* 0x0ABA1C */
 		idiv   %ecx
 		inc    %ebx
 		add    %ecx,%esi
-		mov    %al,data_1cab63(%ebx)
+		mov    %al,EXPORT_SYMBOL(low_trans_grey_pal_bright)-1(%ebx)
 		cmp    $0x100,%ebx
 		jge    jump_aba95
 	jump_aba73:
@@ -100468,7 +100472,7 @@ SCANNER_scanconvert:	/* 0x0ABBBC */
 	jump_abdb6:
 		add    $0x100,%eax
 		inc    %edx
-		mov    %bl,SCANNER_map(%eax)
+		mov    %bl,EXPORT_SYMBOL(SCANNER_map)(%eax)
 		cmp    %ecx,%edx
 		jl     jump_abdb6
 	jump_abdc6:
@@ -100516,7 +100520,7 @@ SCANNER_scanconvert:	/* 0x0ABBBC */
 	jump_abe39:
 		add    $0x100,%eax
 		inc    %edx
-		mov    %bl,SCANNER_map(%eax)
+		mov    %bl,EXPORT_SYMBOL(SCANNER_map)(%eax)
 		cmp    %ecx,%edx
 		jl     jump_abe39
 	jump_abe49:
@@ -100547,7 +100551,7 @@ SCANNER_scanconvert:	/* 0x0ABBBC */
 	jump_abe83:
 		add    $0x100,%eax
 		inc    %edx
-		mov    %bl,SCANNER_map(%eax)
+		mov    %bl,EXPORT_SYMBOL(SCANNER_map)(%eax)
 		cmp    %ecx,%edx
 		jl     jump_abe83
 	jump_abe93:
@@ -100594,7 +100598,7 @@ SCANNER_scanconvert:	/* 0x0ABBBC */
 	jump_abf06:
 		add    $0x100,%eax
 		inc    %edx
-		mov    %bl,SCANNER_map(%eax)
+		mov    %bl,EXPORT_SYMBOL(SCANNER_map)(%eax)
 		cmp    %ecx,%edx
 		jl     jump_abf06
 	jump_abf16:
@@ -101157,20 +101161,20 @@ SCANNER_outline:	/* 0x0AC57C */
 		jne    jump_ac650
 		cmp    EXPORT_SYMBOL(SCANNER_data)+257(%eax),%bh
 		jne    jump_ac650
-		cmp    SCANNER_map(%eax),%bh
+		cmp    EXPORT_SYMBOL(SCANNER_map)(%eax),%bh
 		jne    jump_ac650
 		cmp    EXPORT_SYMBOL(SCANNER_data)+1(%eax),%bh
 		jne    jump_ac650
 		cmp    EXPORT_SYMBOL(SCANNER_cont)(%eax),%bh
 		jne    jump_ac650
 		mov    (%esp,%edx,1),%bl
-		mov    %bl,SCANNER_map(%eax)
+		mov    %bl,EXPORT_SYMBOL(SCANNER_map)(%eax)
 		mov    EXPORT_SYMBOL(SCANNER_colour),%bl
 		mov    %bl,(%esp,%edx,1)
 		jmp    jump_ac60a
 	jump_ac650:
 		mov    (%esp,%edx,1),%bl
-		mov    %bl,SCANNER_map(%eax)
+		mov    %bl,EXPORT_SYMBOL(SCANNER_map)(%eax)
 		mov    EXPORT_SYMBOL(SCANNER_data)(%eax),%bl
 		mov    %bl,(%esp,%edx,1)
 		jmp    jump_ac60a
@@ -101183,7 +101187,7 @@ SCANNER_outline:	/* 0x0AC57C */
 		inc    %edx
 		mov    (%esp,%eax,1),%bl
 		inc    %eax
-		mov    %bl,data_1caf87(%edx)
+		mov    %bl,EXPORT_SYMBOL(SCANNER_map)-0x01(%edx)
 		cmp    $0xff,%eax
 		jl     jump_ac670
 		add    $0x100,%esp
@@ -132076,46 +132080,7 @@ data_19aae7:
 		.byte	0x0
 GLOBAL (level_def)	/* 0x19AAE8 */
 level_def__PlayableGroups:
-		.fill   0x29
-data_19ab11:
-		.byte	0x0
-data_19ab12:
-		.byte	0x0
-data_19ab13:
-		.byte	0x0
-GLOBAL (bul_starts)	/* 0x19AB14 */
-		.byte	0x0
-data_19ab15:
-		.fill   0x1f3f
-GLOBAL (linear_vec_pal)	/* 0x19CA54 */
-		.fill   0x100
-
-GLOBAL (word_19CB58)	/* 0x19CB58 */
-		.fill   0x84
-
-		.long	0x0
-
-GLOBAL (nsta_size)	/* 0x19CC60 */
-		.short  0x0
-data_19cc62:
-		.short  0x0
-GLOBAL (word_19CC64)	/* 0x19CC64 */
-		.short  0x0
-GLOBAL (word_19CC66)	/* 0x19CC66 */
-		.short  0x0
-GLOBAL (super_quick_light)	/* 0x19CC68 */
-		.fill   0x4000 /* 2 * (RENDER_AREA_MAX + 1) * (RENDER_AREA_MAX + 1) */
-
-GLOBAL (keyboard_mode_direct)	/* 0x19EC6E */
-		.byte	0x0
-
-data_19ec70:
-		.byte	0x0
-
-GLOBAL (unkn_flags_01)	/* 0x19EC72 */
-		.long	0x0
-GLOBAL (display_mode)	/* 0x19EC76 */
-		.long	0x0
+		.fill   0x2c
 
 GLOBAL (things_used)	/* 0x19EC7E */
 		.short  0x0
@@ -132863,10 +132828,6 @@ GLOBAL (old_screentype)	/* 0x1C4AA4 */
 GLOBAL (screentype)	/* 0x1C4AA5 */
 		.ascii  "\x00\x00\x00"
 
-GLOBAL (options_title_text)	/* 0x1C4B4C */
-		.fill   0x14
-GLOBAL (map_editor)	/* 0x1C4B60 */
-		.long	0x0
 GLOBAL (brief_netscan_cost_text)	/* 0x1C4B64 */
 		.fill   0x14
 GLOBAL (start_into_mission)	/* 0x1c4b78 */
@@ -133093,15 +133054,11 @@ data_1c865c:
 		.fill   0x400
 data_1c8a5c:
 		.fill   0x2104
-GLOBAL (scanner_next_key_no)	/* 0x1CAB60 */
-		.ascii  "\x00\x00\x00"
-data_1cab63:
-		.byte	0x0
+		.align  4
+
 GLOBAL (low_trans_grey_pal_bright)	/* 0x1CAB64 */
-		.fill   0x423
-data_1caf87:
-		.byte	0x0
-SCANNER_map:	/* 0x1CAF88 */
+		.fill   0x424
+GLOBAL (SCANNER_map)	/* 0x1CAF88 */
 		.fill   0xdc
 GLOBAL (SCANNER_dw064)
 		.long	0x0

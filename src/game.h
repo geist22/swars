@@ -138,8 +138,6 @@ extern ubyte in_network_game;
 extern ubyte is_single_game;
 extern ubyte cmdln_colour_tables;
 extern ubyte cmdln_param_bcg;
-extern ubyte keyboard_mode_direct;
-extern long map_editor;
 
 extern ubyte login_control__State;
 extern ulong login_control__Money;
@@ -178,8 +176,6 @@ extern ubyte *spare_map_buffer;
 extern ushort word_176E38;
 
 extern ubyte net_service_started;
-extern ubyte linear_vec_pal[256];
-extern ulong nsta_size;
 
 extern ubyte net_host_player_no;
 extern ubyte byte_1C6D4A;
@@ -193,7 +189,6 @@ extern ubyte mouse_sprite_anim_frame;
 extern char *outro_text_s;
 extern char *outro_text_z;
 extern long data_1dd91c;
-extern ubyte unkn_flags_01;
 extern long outro_credits_enabled;
 extern long outro_unkn02;
 extern long outro_unkn03;
