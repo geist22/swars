@@ -2044,9 +2044,25 @@ void find_the_tall_buildings(void)
     return;
 }
 
-void func_749fc(void)
+//TODO change ret type to ThingIdx, when no longer used in ASM
+int create_train_carriage(short cor_dx, short cor_dy, short cor_dz, short otype)
 {
-    asm volatile ("call ASM_func_749fc\n"
+    int ret;
+    asm volatile ("call ASM_create_train_carriage\n"
+        : "=r" (ret) : "a" (cor_dx), "d" (cor_dy), "b" (cor_dz), "c" (otype));
+    return ret;
+}
+
+struct Thing *find_unused_train_track(void)
+{
+    struct Thing *ret;
+    asm volatile ("call ASM_find_unused_train_track\n"
+        : "=r" (ret) : );
+    return ret;
+}
+void create_train_for_each_track(void)
+{
+    asm volatile ("call ASM_create_train_for_each_track\n"
         :  :  : "eax" );
     return;
 }
@@ -2306,7 +2322,7 @@ void init_level(void)
     init_crater_textures();
     bang_init();
     FIRE_init();
-    func_749fc();
+    create_train_for_each_track();
     preprogress_trains_turns(50);
     tnext_floor_texture = next_floor_texture + 1;
     init_col_vects_linked_list();

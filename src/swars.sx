@@ -48484,14 +48484,17 @@ calc_bul_offsets:	/* 0x060FD4 */
 
 
 /*----------------------------------------------------------------*/
-func_61628:
+GLOBAL_FUNC(ASM_create_train_carriage)	/* 0x61628 */
 /*----------------------------------------------------------------*/
+		push   %ebx
+		push   %ecx
+		push   %edx
 		push   %esi
 		push   %edi
 		push   %ebp
 		sub    $0x10,%esp
 		mov    %ax,0xc(%esp)
-		call   func_617f0
+		call   ac_find_unused_train_track
 		mov    %eax,%esi
 		test   %eax,%eax
 		je     jump_617e7
@@ -48602,11 +48605,14 @@ func_61628:
 		pop    %ebp
 		pop    %edi
 		pop    %esi
+		pop    %edx
+		pop    %ecx
+		pop    %ebx
 		ret
 
 
 /*----------------------------------------------------------------*/
-func_617f0:
+GLOBAL_FUNC(ASM_find_unused_train_track)	/* 0x617f0 */
 /*----------------------------------------------------------------*/
 		push   %ebx
 		push   %ecx
@@ -63616,7 +63622,7 @@ GLOBAL_FUNC(ASM_func_74934)	/* 0x74934 */
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC(ASM_func_749fc)	/* 0x749fc */
+GLOBAL_FUNC(ASM_create_train_for_each_track)	/* 0x749fc */
 /*----------------------------------------------------------------*/
 		push   %ebx
 		push   %ecx
@@ -63629,7 +63635,7 @@ GLOBAL_FUNC(ASM_func_749fc)	/* 0x749fc */
 		mov    %edx,0x4(%esp)
 		mov    $0x5,%ebp
 	jump_74a10:
-		call   func_617f0
+		call   ac_find_unused_train_track
 		test   %eax,%eax
 		je     jump_74aee
 		xor    %eax,%eax
@@ -63643,25 +63649,25 @@ GLOBAL_FUNC(ASM_func_749fc)	/* 0x749fc */
 		xor    %eax,%eax
 		mov    %ebx,0x4(%esp)
 		xor    %ebx,%ebx
-		call   func_61628
+		call   ac_create_train_carriage
 		mov    $0x226,%ebx
 		mov    %ax,(%esp)
 		mov    %ebp,%ecx
 		xor    %edx,%edx
 		xor    %eax,%eax
-		call   func_61628
+		call   ac_create_train_carriage
 		mov    $0x44c,%ebx
 		mov    %eax,%edi
 		mov    %ebp,%ecx
 		xor    %edx,%edx
 		xor    %eax,%eax
-		call   func_61628
+		call   ac_create_train_carriage
 		mov    $0x672,%ebx
 		mov    %eax,%esi
 		mov    %ebp,%ecx
 		xor    %edx,%edx
 		xor    %eax,%eax
-		call   func_61628
+		call   ac_create_train_carriage
 		mov    %eax,%edx
 		mov    -0x2(%esp),%eax
 		sar    $0x10,%eax
@@ -63875,7 +63881,7 @@ GLOBAL_FUNC(ASM_init_level)	/* 0x074CDC */
 		call   ac_init_crater_textures
 		call   ASM_bang_init
 		call   ac_FIRE_init
-		call   ac_func_749fc
+		call   ac_create_train_for_each_track
 	jump_74ee8:
 		dec    %esi
 		cmp    $0xffffffff,%esi
