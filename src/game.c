@@ -178,6 +178,10 @@
  */
 #define INTRO_REPLAY_TURNS 1100
 
+/** Length of train railcar for carrying passengers, the 3D object.
+ */
+#define TRAIN_CARRY_LENGTH 550
+
 /** details on how much and how fast to rotate/tilt/zoom the camera.
  */
 #define CAMERA_TILT_MIN -192
@@ -2064,9 +2068,43 @@ struct Thing *find_unused_train_track(void)
 }
 void create_train_for_each_track(void)
 {
+#if 0
     asm volatile ("call ASM_create_train_for_each_track\n"
         :  :  : "eax" );
     return;
+#endif
+    ushort k;
+
+    k = 0;
+    while (find_unused_train_track() && k < 10)
+    {
+        ThingIdx veh[4];
+        struct Thing *p_thing;
+
+        veh[0] = create_train_carriage(0, 0, 0 * TRAIN_CARRY_LENGTH, 4);
+        veh[1] = create_train_carriage(0, 0, 1 * TRAIN_CARRY_LENGTH, 5);
+        veh[2] = create_train_carriage(0, 0, 2 * TRAIN_CARRY_LENGTH, 5);
+        veh[3] = create_train_carriage(0, 0, 3 * TRAIN_CARRY_LENGTH, 5);
+
+        p_thing = &things[veh[0]];
+        p_thing->Owner = 0;
+        p_thing->U.UVehicle.GotoX = veh[1];
+
+        p_thing = &things[veh[1]];
+        p_thing->Owner = veh[0];
+        p_thing->U.UVehicle.GotoX = veh[2];
+
+        p_thing = &things[veh[2]];
+        p_thing->Owner = veh[1];
+        p_thing->U.UVehicle.GotoX = veh[3];
+
+        p_thing = &things[veh[3]];
+        p_thing->U.UVehicle.GotoX = 0;
+        p_thing->Owner = veh[2];
+
+        ingame.fld_unkC59++;
+        k++;
+    }
 }
 
 void clear_word_1774E8(void)
