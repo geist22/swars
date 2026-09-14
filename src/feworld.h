@@ -36,7 +36,7 @@ extern sbyte map_hl_city_id;
 
 /** Whether the map screen was entered from mission brief.
  */
-extern ubyte map_from_mission;
+extern TbBool map_from_mission;
 
 extern short *dword_1C529C[6];
 extern short *landmap_2B4;

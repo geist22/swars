@@ -66,6 +66,7 @@ struct ScreenBox world_landmap_box = {0};
 ubyte byte_15511C = 1;
 
 sbyte map_hl_city_id = -1;
+TbBool map_from_mission = false;
 
 extern long landmap_8BC;
 extern long landmap_8C0;

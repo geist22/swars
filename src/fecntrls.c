@@ -60,6 +60,8 @@ short sheet_columns_x[] = {4, 200, 300};
  */
 ubyte controls_edited_gkey = 0;
 
+ubyte net_unkn_pos_02 = 0;
+
 /******************************************************************************/
 
 ubyte do_controls_defaults(ubyte click)

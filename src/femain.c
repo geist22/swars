@@ -70,6 +70,10 @@
 /******************************************************************************/
 #define SYSMNU_BUTTONS_COUNT 6
 
+struct ScreenBoxBase global_top_bar_box = {4, 4, 632, 15};
+struct ScreenBoxBase global_apps_bar_box = {3, 432, 634, 48};
+struct SynTime global_date;
+
 struct ScreenButton sysmnu_buttons[SYSMNU_BUTTONS_COUNT] = {0};
 
 /** Option title text buffer.
@@ -86,13 +90,13 @@ struct ScreenButton main_load_button = {0};
 
 struct ScreenBox alert_box;
 struct ScreenButton alert_OK_button;
+char alert_text[200];
+short alert_textpos = 0;
 ubyte show_alert = 0;
 
 struct ScreenTextBox heading_box = {0};
 struct ScreenTextBox loading_INITIATING_box = {0};
 struct ScreenTextBox unkn13_SYSTEM_button = {0};
-
-struct SynTime global_date;
 
 struct SynTime research_curr_wep_date;
 struct SynTime research_curr_mod_date;
@@ -100,14 +104,12 @@ extern ubyte research_curr_wep_daily_done;
 extern ubyte research_curr_mod_daily_done;
 extern ubyte byte_1C497D;
 
-extern ubyte enter_game;
+ubyte game_projector_speed = 0;
+ubyte enter_game = false;
+ubyte game_system_screen = SySc_NONE;
+ubyte redraw_screen_flag = 0;
+ubyte reload_background_flag = 1;
 TbBool map_editor = false;
-
-char alert_text[200];
-short alert_textpos = 0;
-
-struct ScreenBoxBase global_top_bar_box = {4, 4, 632, 15};
-struct ScreenBoxBase global_apps_bar_box = {3, 432, 634, 48};
 
 /******************************************************************************/
 

@@ -249,9 +249,6 @@ const char *primvehobj_fname = "qdata/primveh.obj";
 
 extern s32 dword_152E38[5]; // = {-1, -1, -1, -1, -1,};
 
-extern u32 dword_1C4B84;
-extern u32 dword_1C4B88;
-
 extern long dword_1DDECC;
 
 u32 engine_mem_alloc_size = 5900000;
@@ -294,6 +291,7 @@ extern ushort word_1AABD0;
 
 ubyte unkn_flags_01 = 0;
 
+ubyte start_into_mission = false;
 ubyte edit_flag = 0;
 
 struct OutroHotChar outro_hot_chars[OUTRO_HOT_CHARS_COUNT];
@@ -5745,10 +5743,10 @@ void update_mission_time(TbBool a1)
 #endif
     if (a1)
     {
-        dword_1C4B84 = gameturn;
+        // dword_1C4B84 = gameturn; //TODO no function - remove
         return;
     }
-    dword_1C4B88 = gameturn;
+    //dword_1C4B88 = gameturn; //TODO no function - remove
 
     mission_status_time_rand_progress(open_brief);
     global_date_update_after_mission();

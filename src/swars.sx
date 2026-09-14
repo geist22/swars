@@ -190,6 +190,9 @@
 .global EXPORT_SYMBOL(tree_route);
 .global EXPORT_SYMBOL(route_bak);		/* 0x1BF9C8 */
 
+.global EXPORT_SYMBOL(map_from_mission);	/* 0x1C4B79 */
+.global EXPORT_SYMBOL(reload_background_flag);	/* 0x1C4B80 */
+.global EXPORT_SYMBOL(cryo_agents);		/* 0x1C4BA0 */
 .global EXPORT_SYMBOL(background_type);	/* 0x1C6DEC */
 .global EXPORT_SYMBOL(global_date);		/* 0x1C6DF0 */
 .global EXPORT_SYMBOL(save_slot_base);	/* 0x1C82FC */
@@ -100258,7 +100261,7 @@ GLOBAL_FUNC (ASM_SCANNER_init)	/* 0x0ABA1C */
 		jmp    jump_abadb
 	jump_abae9:
 		inc    %ebx
-		mov    %dh,data_1db087(%ebx)
+		mov    %dh,EXPORT_SYMBOL(low_trans_grey_bright_limit)-0x01(%ebx)
 		jmp    jump_abaf4
 	jump_abaf2:
 		mov    $0x3f,%dh
@@ -130227,7 +130230,7 @@ GLOBAL_FUNC(ASM_init_agents)	/* 0x0CF8A0 */
 		imul   $0x1aa,%ecx,%ecx
 		add    $0x4,%edx
 		add    $0x2,%eax
-		mov    %edi,data_1c4b9c(%edx)
+		mov    %edi,EXPORT_SYMBOL(cryo_agents)-0x04(%edx)
 		mov    %edi,EXPORT_SYMBOL(players)+0x0CC(%ecx,%edx,1) # players[].DoubleMode-2
 		mov    %si,EXPORT_SYMBOL(cryo_agents)+0x07E(%eax) # cryo_agents.Mods - 2
 		mov    %si,EXPORT_SYMBOL(players)+0x0DE(%ecx,%eax,1) # players[].Mods-2
@@ -130241,7 +130244,7 @@ GLOBAL_FUNC(ASM_init_agents)	/* 0x0CF8A0 */
 		add    $0x4,%eax
 		mov    $0x1,%ebx
 		add    $0x2,%ecx
-		mov    %ebx,data_1c4b9c(%eax)
+		mov    %ebx,EXPORT_SYMBOL(cryo_agents)-0x04(%eax)
 		xor    %ebx,%ebx
 		inc    %edx
 		mov    %bx,EXPORT_SYMBOL(cryo_agents)+0x07E(%ecx) # cryo_agents.Mods - 2
@@ -130339,9 +130342,9 @@ GLOBAL_FUNC(ASM_remove_agent)	/* 0x0CFA64 */
 		mov    EXPORT_SYMBOL(cryo_agents)+0x184,%al # cryo_agents.NumAgents
 		cmp    %ebx,%eax
 		jbe    jump_cfb39
-		mov    cryo_agents(%esi),%eax
+		mov    EXPORT_SYMBOL(cryo_agents)(%esi),%eax
 		mov    (%esp),%cl
-		mov    %eax,data_1c4b9c(%esi)
+		mov    %eax,EXPORT_SYMBOL(cryo_agents)-0x04(%esi)
 		mov    $0x1,%ebx
 		mov    EXPORT_SYMBOL(cryo_agents)+0x080(%edi),%ax # cryo_agents.Mods[]
 		shl    %cl,%ebx
@@ -130448,7 +130451,7 @@ GLOBAL_FUNC(ASM_add_agent)	/* 0x0CFBD8 */
 		cmp    $0x1f,%eax
 		jg     jump_cfd80
 		and    $0xffa75fff,%esi
-		mov    %edx,cryo_agents(,%eax,4)
+		mov    %edx,EXPORT_SYMBOL(cryo_agents)(,%eax,4)
 		xor    %eax,%eax
 	jump_cfc02:
 		mov    $0x1,%ebx
@@ -130458,10 +130461,10 @@ GLOBAL_FUNC(ASM_add_agent)	/* 0x0CFBD8 */
 		je     jump_cfc46
 		xor    %ecx,%ecx
 		mov    EXPORT_SYMBOL(cryo_agents)+0x184,%cl # cryo_agents.NumAgents
-		mov    cryo_agents(,%ecx,4),%ebp
+		mov    EXPORT_SYMBOL(cryo_agents)(,%ecx,4),%ebp
 		or     %ebx,%ebp
 		mov    %al,%bl
-		mov    %ebp,cryo_agents(,%ecx,4)
+		mov    %ebp,EXPORT_SYMBOL(cryo_agents)(,%ecx,4)
 		inc    %bl
 		xor    %ecx,%ecx
 		mov    %bl,%cl
@@ -130489,7 +130492,7 @@ GLOBAL_FUNC(ASM_add_agent)	/* 0x0CFBD8 */
 		jb     jump_cfc51
 		xor    %eax,%eax
 		mov    EXPORT_SYMBOL(cryo_agents)+0x184,%al # cryo_agents.NumAgents
-		testb  $0x20,cryo_agents(,%eax,4)
+		testb  $0x20,EXPORT_SYMBOL(cryo_agents)(,%eax,4)
 		je     jump_cfc86
 		mov    %eax,%edx
 		movb   $0x1,EXPORT_SYMBOL(cryo_agents)+0x0E6(%edx,%eax,4) # cryo_agents.FourPacks + 2
@@ -131139,7 +131142,7 @@ GLOBAL_FUNC(ASM_do_unkn1_CANCEL)	/* 0x0D33E8 */
 		push   %edx
 		mov    $0x1,%ah
 		mov    $0x63,%dl
-		mov    %ah,reload_background_flag
+		mov    %ah,EXPORT_SYMBOL(reload_background_flag)
 		mov    %dl,screentype
 		xor    %al,%al
 		pop    %edx
@@ -132805,52 +132808,12 @@ GLOBAL (old_screentype)	/* 0x1C4AA4 */
 		.byte	0x0
 GLOBAL (screentype)	/* 0x1C4AA5 */
 		.ascii  "\x00\x00\x00"
-
-GLOBAL (brief_netscan_cost_text)	/* 0x1C4B64 */
-		.fill   0x14
-GLOBAL (start_into_mission)	/* 0x1c4b78 */
-		.byte	0x0
-GLOBAL (map_from_mission)	/* 0x1C4B79 */
-		.byte	0x0
-/* 0 - slow, 1 - fast */
-GLOBAL (game_projector_speed)	/* 1c4b7a */
-		.byte	0x0
-GLOBAL (enter_game)	/* 0x1C4B7B */
-		.byte	0x0
-/*
- * 0 - none
- * 1 - multinet access
- * 2 - file storage
- * 3 - interface
- * 4 - audio
- * 5 - visual depth
- * 6 - logout (temporary)
- */
-GLOBAL (game_system_screen)	/* 0x1c4b7c */
-		.byte	0x0
-GLOBAL (redraw_screen_flag)	/* 0x1C4B7D */
-		.byte	0x0
-GLOBAL (net_unkn_pos_02)	/* 0x1C4B7E */
-		.byte	0x0
-GLOBAL (byte_1C4B7F)
-		.byte	0x0
-GLOBAL (reload_background_flag)	/* 0x1C4B80 */
-		.byte	0x0
-/* bool */
-GLOBAL (game_high_resolution)	/* 0x1c4b81 */
-		.byte   0x0
-		.ascii  "\x00\x00"
-GLOBAL (dword_1C4B84)	/* 0x1C4B84 */
-		.long	0x0
-GLOBAL (dword_1C4B88)	/* 0x1C4B88 */
-		.long	0x0
-GLOBAL (equip_cost_text)	/* 0x1C4B8C */
-		.fill   0x10
-data_1c4b9c:
-		.long	0x0
-GLOBAL (cryo_agents)	/* 0x1C4BA0 */
-		.fill   0x185
 		.align  4
+
+GLOBAL (dword_1C4B84)	/* 0x1C4B84 no function - remove pending */
+		.long	0x0
+GLOBAL (dword_1C4B88)	/* 0x1C4B88 no function - remove pending  */
+		.long	0x0
 
 GLOBAL (num_cities)	/* 0x1C52B8 */
 		.short  0x0
@@ -133064,7 +133027,6 @@ GLOBAL (SCANNER_cont)
 		.byte	0x0
 GLOBAL (SCANNER_data)	/* 0x1CB088 */
 		.fill   0xffff
-data_1db087:
 		.byte	0x0
 GLOBAL (low_trans_grey_bright_limit)	/* 0x1DB088 */
 		.fill   0x100

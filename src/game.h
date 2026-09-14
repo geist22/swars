@@ -204,7 +204,6 @@ extern sbyte mission_result;
 extern ubyte scientists_lost;
 extern ulong new_mods_researched;
 extern ulong new_weapons_researched;
-extern ubyte redraw_screen_flag;
 
 extern sbyte selected_net_session;
 extern sbyte selected_net_user;
@@ -212,7 +211,6 @@ extern ubyte net_player_teams[8];
 extern long dword_153194;
 
 extern ubyte group_factions[8];
-extern ubyte net_unkn_pos_02;
 extern ubyte data_1c4aa2;
 extern ubyte start_into_mission;
 extern ubyte edit_flag;
@@ -223,7 +221,6 @@ extern ubyte mod_draw_states[4];
 extern ubyte new_current_drawing_mod;
 extern ubyte flic_mods[5];
 extern ubyte old_flic_mods[5];
-extern ubyte reload_background_flag;
 
 extern struct LevelDef level_def;
 
@@ -245,10 +242,7 @@ extern ubyte game_gfx_deep_radar;
 extern ubyte byte_1C4A6F;
 
 extern char net_unkn2_text[];
-extern char brief_netscan_cost_text[];
 extern char *misc_text[5];
-
-extern ubyte game_system_screen;
 
 extern ubyte execute_commands;
 
