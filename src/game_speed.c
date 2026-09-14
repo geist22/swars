@@ -28,10 +28,14 @@
 
 /******************************************************************************/
 
+GameTurn gameturn = 0;
+GameTurn prev_gameturn = 0;
+
+ulong turns_delta = 0;
+
 short frameskip = 0;
 
 GameTurn drawturn = 1;
-GameTurn prev_gameturn = 0;
 
 ulong curr_tick_time = 0;
 ulong prev_tick_time = 0;

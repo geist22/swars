@@ -189,8 +189,6 @@ extern long outro_unkn03;
 extern long dev_credits_groups_count;
 extern s32 dword_1DDB68;
 
-extern ubyte debug_hud_collision;
-
 extern char *dev_credits_desc[];
 extern char *dev_credits_groups[];
 
@@ -238,8 +236,6 @@ extern ubyte byte_1C4A6F;
 
 extern char net_unkn2_text[];
 extern char *misc_text[5];
-
-extern ubyte execute_commands;
 
 // To be replaced by LbArcTanAngle()
 short arctan(int dx, int dz);
