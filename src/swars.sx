@@ -130177,7 +130177,7 @@ GLOBAL_FUNC(ASM_init_agents)	/* 0x0CF8A0 */
 		mov    %dl,%al
 		inc    %edx
 		add    %bl,%al
-		mov    %al,data_1c4c63(%edx)
+		mov    %al,EXPORT_SYMBOL(cryo_agents)+0x0C3(%edx) # cryo_agents.RandomName[-1]
 		cmp    $0x20,%edx
 		jl     jump_cf8ef
 		mov    $0x1f,%esi
@@ -130198,19 +130198,19 @@ GLOBAL_FUNC(ASM_init_agents)	/* 0x0CF8A0 */
 		cmp    %eax,%ecx
 		je     jump_cf908
 		xor    %ebx,%ebx
-		mov    data_1c4c64(%ecx),%bl
+		mov    EXPORT_SYMBOL(cryo_agents)+0x0C4(%ecx),%bl # cryo_agents.RandomName[]
 		mov    %ebx,(%esp)
-		mov    data_1c4c64(%eax),%bl
-		mov    %bl,data_1c4c64(%ecx)
+		mov    EXPORT_SYMBOL(cryo_agents)+0x0C4(%eax),%bl # cryo_agents.RandomName[]
+		mov    %bl,EXPORT_SYMBOL(cryo_agents)+0x0C4(%ecx) # cryo_agents.RandomName[]
 		mov    (%esp),%bl
-		mov    %bl,data_1c4c64(%eax)
+		mov    %bl,EXPORT_SYMBOL(cryo_agents)+0x0C4(%eax) # cryo_agents.RandomName[]
 		jmp    jump_cf908
 	jump_cf94c:
 		call   ac_LbRandomAnyShort
 		xor    %ah,%ah
 		and    $0xffff,%eax
 		xor    %edx,%edx
-		mov    %eax,data_1c4c60
+		mov    %eax,EXPORT_SYMBOL(cryo_agents)+0x0C0 # cryo_agents.Sex
 		xor    %eax,%eax
 		mov    $0x1,%edi
 		xor    %esi,%esi
@@ -130222,7 +130222,7 @@ GLOBAL_FUNC(ASM_init_agents)	/* 0x0CF8A0 */
 		add    $0x2,%eax
 		mov    %edi,data_1c4b9c(%edx)
 		mov    %edi,EXPORT_SYMBOL(players)+0x0CC(%ecx,%edx,1) # players[].DoubleMode-2
-		mov    %si,data_1c4c1e(%eax)
+		mov    %si,EXPORT_SYMBOL(cryo_agents)+0x07E(%eax) # cryo_agents.Mods - 2
 		mov    %si,EXPORT_SYMBOL(players)+0x0DE(%ecx,%eax,1) # players[].Mods-2
 		cmp    $0x8,%eax
 		jne    jump_cf968
@@ -130237,7 +130237,7 @@ GLOBAL_FUNC(ASM_init_agents)	/* 0x0CF8A0 */
 		mov    %ebx,data_1c4b9c(%eax)
 		xor    %ebx,%ebx
 		inc    %edx
-		mov    %bx,data_1c4c1e(%ecx)
+		mov    %bx,EXPORT_SYMBOL(cryo_agents)+0x07E(%ecx) # cryo_agents.Mods - 2
 	jump_cf9c6:
 		xor    %ebx,%ebx
 		mov    EXPORT_SYMBOL(cryo_agents)+0x184,%bl # cryo_agents.NumAgents
@@ -130248,7 +130248,7 @@ GLOBAL_FUNC(ASM_init_agents)	/* 0x0CF8A0 */
 	jump_cf9d6:
 		add    $0x5,%eax
 		mov    %dl,EXPORT_SYMBOL(cryo_agents)+0x0E1(%eax) # cryo_agents.FourPacks - 3
-		mov    %dl,data_1c4c7f(%eax)
+		mov    %dl,EXPORT_SYMBOL(cryo_agents)+0x0DF(%eax) # cryo_agents.FourPacks - 5
 		mov    %dl,EXPORT_SYMBOL(cryo_agents)+0x0E0(%eax) # cryo_agents.FourPacks - 4
 		mov    %dl,EXPORT_SYMBOL(cryo_agents)+0x0E3(%eax) # cryo_agents.FourPacks - 1
 		mov    %dl,EXPORT_SYMBOL(cryo_agents)+0x0E2(%eax) # cryo_agents.FourPacks - 2
@@ -130336,23 +130336,23 @@ GLOBAL_FUNC(ASM_remove_agent)	/* 0x0CFA64 */
 		mov    (%esp),%cl
 		mov    %eax,data_1c4b9c(%esi)
 		mov    $0x1,%ebx
-		mov    data_1c4c20(%edi),%ax
+		mov    EXPORT_SYMBOL(cryo_agents)+0x080(%edi),%ax # cryo_agents.Mods[]
 		shl    %cl,%ebx
-		mov    %ax,data_1c4c1e(%edi)
+		mov    %ax,EXPORT_SYMBOL(cryo_agents)+0x07E(%edi) # cryo_agents.Mods - 2
 		mov    (%esp),%ecx
-		mov    data_1c4c60,%eax
+		mov    EXPORT_SYMBOL(cryo_agents)+0x0C0,%eax # cryo_agents.Sex
 		dec    %ecx
 		and    %eax,%ebx
 		mov    $0x1,%eax
 		shl    %cl,%eax
-		mov    data_1c4c60,%ecx
+		mov    EXPORT_SYMBOL(cryo_agents)+0x0C0,%ecx # cryo_agents.Sex
 		not    %eax
 		and    %eax,%ecx
 		mov    %ecx,%eax
-		mov    %ecx,data_1c4c60
+		mov    %ecx,EXPORT_SYMBOL(cryo_agents)+0x0C0 # cryo_agents.Sex
 		or     %ebx,%eax
 		mov    (%esp),%ecx
-		mov    %eax,data_1c4c60
+		mov    %eax,EXPORT_SYMBOL(cryo_agents)+0x0C0 # cryo_agents.Sex
 		lea    (%ecx,%ecx,4),%ecx
 		mov    %ebp,%ebx
 		mov    0x4(%esp),%eax
@@ -130368,7 +130368,7 @@ GLOBAL_FUNC(ASM_remove_agent)	/* 0x0CFA64 */
 		xor    %eax,%eax
 		mov    0x8(%esp),%al
 		inc    %eax
-		mov    data_1c4c63(%eax),%dl
+		mov    EXPORT_SYMBOL(cryo_agents)+0x0C3(%eax),%dl # cryo_agents.RandomName[-1]
 		mov    %eax,(%esp)
 		cmp    $0x20,%eax
 		jae    jump_cfb69
@@ -130376,9 +130376,9 @@ GLOBAL_FUNC(ASM_remove_agent)	/* 0x0CFA64 */
 		mov    (%esp),%ebx
 		mov    (%esp),%eax
 		inc    %ebx
-		mov    data_1c4c64(%eax),%al
+		mov    EXPORT_SYMBOL(cryo_agents)+0x0C4(%eax),%al # cryo_agents.RandomName[]
 		mov    %ebx,(%esp)
-		mov    %al,data_1c4c62(%ebx)
+		mov    %al,EXPORT_SYMBOL(cryo_agents)+0x0C2(%ebx) # cryo_agents.RandomName[-2]
 		cmp    $0x20,%ebx
 		jb     jump_cfb4e
 	jump_cfb69:
@@ -130489,28 +130489,28 @@ GLOBAL_FUNC(ASM_add_agent)	/* 0x0CFBD8 */
 	jump_cfc86:
 		xor    %edx,%edx
 		mov    EXPORT_SYMBOL(cryo_agents)+0x184,%dl # cryo_agents.NumAgents
-		testb  $0x8,data_1c4ba1(,%edx,4)
+		testb  $0x8,EXPORT_SYMBOL(cryo_agents)+0x001(,%edx,4) # cryo_agents.Weapons + 1
 		je     jump_cfca2
 		mov    %edx,%eax
 		movb   $0x1,EXPORT_SYMBOL(cryo_agents)+0x0E4(%edx,%eax,4) # cryo_agents.FourPacks + 0
 	jump_cfca2:
 		xor    %edx,%edx
 		mov    EXPORT_SYMBOL(cryo_agents)+0x184,%dl # cryo_agents.NumAgents
-		testb  $0x10,data_1c4ba1(,%edx,4)
+		testb  $0x10,EXPORT_SYMBOL(cryo_agents)+0x001(,%edx,4) # cryo_agents.Weapons + 1
 		je     jump_cfcbe
 		mov    %edx,%eax
 		movb   $0x1,EXPORT_SYMBOL(cryo_agents)+0x0E5(%edx,%eax,4) # cryo_agents.FourPacks + 1
 	jump_cfcbe:
 		xor    %edx,%edx
 		mov    EXPORT_SYMBOL(cryo_agents)+0x184,%dl # cryo_agents.NumAgents
-		testb  $0x4,data_1c4ba1(,%edx,4)
+		testb  $0x4,EXPORT_SYMBOL(cryo_agents)+0x001(,%edx,4) # cryo_agents.Weapons + 1
 		je     jump_cfcda
 		mov    %edx,%eax
 		movb   $0x1,EXPORT_SYMBOL(cryo_agents)+0x0E8(%edx,%eax,4) # cryo_agents.FourPacks + 4
 	jump_cfcda:
 		xor    %eax,%eax
 		mov    EXPORT_SYMBOL(cryo_agents)+0x184,%al # cryo_agents.NumAgents
-		testb  $0x2,data_1c4ba1(,%eax,4)
+		testb  $0x2,EXPORT_SYMBOL(cryo_agents)+0x001(,%eax,4) # cryo_agents.Weapons + 1
 		je     jump_cfcf5
 		mov    %eax,%edx
 		movb   $0x1,EXPORT_SYMBOL(cryo_agents)+0x0E7(%edx,%eax,4) # cryo_agents.FourPacks + 3
@@ -130518,7 +130518,7 @@ GLOBAL_FUNC(ASM_add_agent)	/* 0x0CFBD8 */
 		xor    %eax,%eax
 		mov    EXPORT_SYMBOL(cryo_agents)+0x184,%al # cryo_agents.NumAgents
 		xor    %edx,%edx
-		mov    %di,data_1c4c20(,%eax,2)
+		mov    %di,EXPORT_SYMBOL(cryo_agents)+0x080(,%eax,2) # cryo_agents.Mods[]
 		call   ac_LbRandomAnyShort
 		mov    %ax,%dx
 		mov    $0x11,%ebx
@@ -130530,10 +130530,10 @@ GLOBAL_FUNC(ASM_add_agent)	/* 0x0CFBD8 */
 		mov    $0x1,%eax
 		mov    EXPORT_SYMBOL(cryo_agents)+0x184,%cl # cryo_agents.NumAgents
 		shl    %cl,%eax
-		mov    data_1c4c60,%ebx
+		mov    EXPORT_SYMBOL(cryo_agents)+0x0C0,%ebx # cryo_agents.Sex
 		not    %eax
 		and    %eax,%ebx
-		mov    %ebx,data_1c4c60
+		mov    %ebx,EXPORT_SYMBOL(cryo_agents)+0x0C0 # cryo_agents.Sex
 		jmp    jump_cfd68
 	jump_cfd3e:
 		inc    %eax
@@ -130543,10 +130543,10 @@ GLOBAL_FUNC(ASM_add_agent)	/* 0x0CFBD8 */
 	jump_cfd4d:
 		mov    $0x1,%eax
 		mov    EXPORT_SYMBOL(cryo_agents)+0x184,%cl # cryo_agents.NumAgents
-		mov    data_1c4c60,%edx
+		mov    EXPORT_SYMBOL(cryo_agents)+0x0C0,%edx # cryo_agents.Sex
 		shl    %cl,%eax
 		or     %eax,%edx
-		mov    %edx,data_1c4c60
+		mov    %edx,EXPORT_SYMBOL(cryo_agents)+0x0C0 # cryo_agents.Sex
 	jump_cfd68:
 		mov    EXPORT_SYMBOL(cryo_agents)+0x184,%ch # cryo_agents.NumAgents
 		xor    %ah,%ah
@@ -132910,54 +132910,9 @@ GLOBAL (equip_cost_text)	/* 0x1C4B8C */
 data_1c4b9c:
 		.long	0x0
 GLOBAL (cryo_agents)	/* 0x1C4BA0 */
-		.byte	0x0
-data_1c4ba1:
-		.fill   0x7d
-data_1c4c1e:
-		.short  0x0
-data_1c4c20:
-		.byte	0x0
-data_1c4c21:
-		.byte	0x0
-data_1c4c22:
-		.short  0x0
-data_1c4c24:
-		.short  0x0
-data_1c4c26:
-		.fill   0x3a
-data_1c4c60:
-		.short  0x0
-data_1c4c62:
-		.byte	0x0
-data_1c4c63:
-		.byte	0x0
-data_1c4c64:
-		.fill   0x1b
-data_1c4c7f:
-		.byte	0x0
-		.byte	0x0
-		.byte	0x0
-		.byte	0x0
-		.byte	0x0
-		.byte	0x0
-		.byte	0x0
-		.byte	0x0
-		.byte	0x0
-		.fill   0x9a
-		.short  0x0
-		.byte	0x0
+		.fill   0x185
 		.align  4
 
-GLOBAL (refresh_equip_list)	/* 0x1C5298 */
-		.short  0x0
-data_1c529a:
-		.byte	0x0
-data_1c529b:
-		.byte	0x0
-GLOBAL (dword_1C529C)	/* 0x1C529C */
-		.fill   0x18
-GLOBAL (landmap_2B4)	/* 0x1C52B4 */
-		.long	0x0
 GLOBAL (num_cities)	/* 0x1C52B8 */
 		.short  0x0
 word_1C52BA:	/* 0x1C52BA */

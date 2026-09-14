@@ -1065,45 +1065,6 @@ void show_mission_loading_screen(void)
     wait_for_sound_sample_finish(118);
 }
 
-TbResult load_mapout(ubyte **pp_buf, const char *dir)
-{
-    char locstr[52];
-    ubyte *p_buf;
-    long len;
-    int i;
-    TbResult ret;
-
-    p_buf = *pp_buf;
-    ret = Lb_OK;
-
-    for (i = 0; i < 6; i++)
-    {
-        dword_1C529C[i] = (short *)p_buf;
-        sprintf(locstr, "%s/mapout%02d.dat", dir, i);
-        len = LbFileLoadAt(locstr, dword_1C529C[i]);
-        if (len == -1) {
-            LOGERR("Could not read file '%s'", locstr);
-            ret = Lb_FAIL;
-            len = 64;
-            LbMemorySet(p_buf, '\0', len);
-        }
-        p_buf += len;
-    }
-
-    landmap_2B4 = (short *)p_buf;
-    sprintf(locstr, "%s/mapinsid.dat", dir);
-    len = LbFileLoadAt(locstr, p_buf);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 64;
-        LbMemorySet(p_buf, '\0', len);
-    }
-    p_buf += len;
-
-    *pp_buf = p_buf;
-    return ret;
-}
-
 TbResult load_all_sprites_purple_mode(void)
 {
     PathInfo *pinfo;

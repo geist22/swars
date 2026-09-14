@@ -26,6 +26,7 @@
 #include "cybmod.h"
 #include "display.h"
 #include "fecryo.h"
+#include "feequip.h"
 #include "femain.h"
 #include "game_data.h"
 #include "game_options.h"

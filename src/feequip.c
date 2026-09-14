@@ -73,6 +73,7 @@ extern ubyte equip_agents_panel_draw_state;
 extern ubyte equip_agent_name_draw_state;
 
 extern ubyte mo_from_agent;
+ubyte refresh_equip_list = 0;
 
 extern char equip_cost_text[20];
 

@@ -181,9 +181,6 @@ extern ubyte net_service_started;
 extern ubyte linear_vec_pal[256];
 extern ulong nsta_size;
 
-extern short *dword_1C529C[6];
-extern short *landmap_2B4;
-
 extern ubyte net_host_player_no;
 extern ubyte byte_1C6D4A;
 extern ubyte byte_1C6DDC[5];
@@ -230,7 +227,6 @@ extern ubyte restore_savegame;
 extern ubyte current_drawing_mod;
 extern ubyte mod_draw_states[4];
 extern ubyte new_current_drawing_mod;
-extern ubyte refresh_equip_list;
 extern ubyte flic_mods[5];
 extern ubyte old_flic_mods[5];
 extern ubyte reload_background_flag;
