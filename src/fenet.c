@@ -56,6 +56,14 @@
 /******************************************************************************/
 #define MONITORED_SESSIONS_COUNT 20
 
+const uint starting_cash_amounts[] = {
+  20000, 50000, 200000, 500000, 2000000, 5000000, 20000000, 100000000,
+};
+
+const int serial_speeds[] = {
+  9600, 14400, 19200, 28800, 38400, 57600, 76800, 115200,
+};
+
 struct ScreenButton net_INITIATE_button = {0};
 struct ScreenButton net_groups_LOGON_button = {0};
 struct ScreenButton unkn8_EJECT_button = {0};
@@ -73,15 +81,16 @@ struct ScreenBox net_grpaint = {0};
 struct ScreenBox net_protocol_box = {0};
 struct ScreenButton net_protocol_option_button = {0};
 
-extern char net_baudrate_text[8];
-extern char net_proto_param_text[8];
+char net_proto_param_text[8] = "0000";
+
 extern ubyte byte_155174; // = 166;
 extern ubyte byte_155175[];
 extern ubyte byte_155180; // = 109;
 extern ubyte byte_155181[];
-extern int unkn_rate; // = 19200;
-extern int serial_speeds[8];
-extern char net_baudrate_text[8];
+
+int unkn_rate = 19200;
+char net_baudrate_text[8] = "19200";
+
 extern ubyte byte_1C47EA;
 extern ubyte byte_1C4805;
 extern ubyte byte_1C4806;

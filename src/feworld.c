@@ -46,14 +46,23 @@
 #include "wrcities.h"
 #include "swlog.h"
 /******************************************************************************/
+short word_155110[] = {
+  260, 110, 292, 160, 326, 192,
+};
+
+short word_155744[] = {
+  -5, -5, -5, -5, -5, -5,
+};
+
 struct ScreenTextBox world_city_info_box = {0};
 struct ScreenButton world_info_ACCEPT_button = {0};
 struct ScreenButton world_info_CANCEL_button = {0};
 struct ScreenBox world_landmap_box = {0};
 
-extern short word_155110[6];
-extern ubyte byte_15511C;// = 1;
-extern short word_155744[6];
+ubyte byte_15511C = 1;
+
+sbyte map_hl_city_id = -1;
+
 extern long landmap_8BC;
 extern long landmap_8C0;
 extern long landmap_8C4;

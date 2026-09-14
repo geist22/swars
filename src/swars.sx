@@ -82867,14 +82867,14 @@ triangle_route_do_given:	/* 0x082B5C */
 		mov    %eax,0x10(%esp)
 		mov    %edx,0x14(%esp)
 		mov    %ebx,0xc(%esp)
-		mov    tag_current,%ah
+		mov    EXPORT_SYMBOL(tag_current),%ah
 		mov    $0xffffffff,%edx
 		inc    %ah
 		xor    %ebx,%ebx
-		mov    %ah,tag_current
+		mov    %ah,EXPORT_SYMBOL(tag_current)
 		xor    %eax,%eax
 		mov    %edx,data_1c30c0
-		mov    tag_current,%al
+		mov    EXPORT_SYMBOL(tag_current),%al
 		mov    %ebx,heap_end
 		test   %eax,%eax
 		jne    jump_82bb2
@@ -82882,14 +82882,14 @@ triangle_route_do_given:	/* 0x082B5C */
 		mov    $EXPORT_SYMBOL(routeTags),%eax
 		xor    %edx,%edx
 		call   ac_memset
-		movb   $0x1,tag_current
+		movb   $0x1,EXPORT_SYMBOL(tag_current)
 	jump_82bb2:
 		mov    0x14(%esp),%eax
 		mov    $0x1,%ecx
 		mov    %eax,%edx
 		mov    %ecx,EXPORT_SYMBOL(tree_val)(,%eax,4)
 		mov    %eax,EXPORT_SYMBOL(tree_dad)(,%eax,4)
-		mov    tag_current,%al
+		mov    EXPORT_SYMBOL(tag_current),%al
 		mov    heap_end,%esi
 		mov    %al,EXPORT_SYMBOL(routeTags)(%edx)
 		cmp    $0x100,%esi
@@ -83047,7 +83047,7 @@ triangle_route_do_given:	/* 0x082B5C */
 		cmp    $0xffffffff,%ebx
 		je     jump_82e1f
 		mov    EXPORT_SYMBOL(routeTags)(%ebx),%cl
-		cmp    tag_current,%cl
+		cmp    EXPORT_SYMBOL(tag_current),%cl
 		je     jump_82e1f
 		testb  $0x8,0xe(%eax)
 		jne    jump_82e1f
@@ -83179,7 +83179,7 @@ triangle_route_do_given:	/* 0x082B5C */
 		jge    jump_82fb5
 		mov    %eax,%ecx
 	jump_82fb5:
-		mov    tag_current,%dl
+		mov    EXPORT_SYMBOL(tag_current),%dl
 		mov    heap_end,%eax
 		mov    %dl,EXPORT_SYMBOL(routeTags)(%ebx)
 		mov    0x1c(%esp),%edx
@@ -83292,14 +83292,14 @@ triangle_route_do_bak:
 		mov    %eax,0x10(%esp)
 		mov    %edx,0x14(%esp)
 		mov    %ebx,0xc(%esp)
-		mov    tag_current,%ah
+		mov    EXPORT_SYMBOL(tag_current),%ah
 		mov    $0xffffffff,%edx
 		inc    %ah
 		xor    %ebx,%ebx
-		mov    %ah,tag_current
+		mov    %ah,EXPORT_SYMBOL(tag_current)
 		xor    %eax,%eax
 		mov    %edx,data_1c30c0
-		mov    tag_current,%al
+		mov    EXPORT_SYMBOL(tag_current),%al
 		mov    %ebx,heap_end
 		test   %eax,%eax
 		jne    jump_8317e
@@ -83307,14 +83307,14 @@ triangle_route_do_bak:
 		mov    $EXPORT_SYMBOL(routeTags),%eax
 		xor    %edx,%edx
 		call   ac_memset
-		movb   $0x1,tag_current
+		movb   $0x1,EXPORT_SYMBOL(tag_current)
 	jump_8317e:
 		mov    0x14(%esp),%eax
 		mov    $0x1,%ecx
 		mov    %eax,%edx
 		mov    %ecx,EXPORT_SYMBOL(tree_val)(,%eax,4)
 		mov    %eax,EXPORT_SYMBOL(tree_dad)(,%eax,4)
-		mov    tag_current,%al
+		mov    EXPORT_SYMBOL(tag_current),%al
 		mov    heap_end,%esi
 		mov    %al,EXPORT_SYMBOL(routeTags)(%edx)
 		mov    %edx,%eax
@@ -83472,7 +83472,7 @@ triangle_route_do_bak:
 		cmp    $0xffffffff,%ebx
 		je     jump_833f3
 		mov    EXPORT_SYMBOL(routeTags)(%ebx),%dl
-		cmp    tag_current,%dl
+		cmp    EXPORT_SYMBOL(tag_current),%dl
 		je     jump_833f3
 		mov    %ebx,%esi
 		shl    $0x4,%esi
@@ -83605,7 +83605,7 @@ triangle_route_do_bak:
 		jge    jump_8358d
 		mov    %eax,%ecx
 	jump_8358d:
-		mov    tag_current,%dl
+		mov    EXPORT_SYMBOL(tag_current),%dl
 		mov    heap_end,%eax
 		mov    %dl,EXPORT_SYMBOL(routeTags)(%ebx)
 		mov    0x1c(%esp),%edx
@@ -83808,14 +83808,14 @@ triangle_route_do_unkn3:	/* 0x083834 */
 		mov    %eax,0x14(%esp)
 		mov    %edx,0x10(%esp)
 		mov    %ebx,0xc(%esp)
-		mov    tag_current,%ah
+		mov    EXPORT_SYMBOL(tag_current),%ah
 		mov    $0xffffffff,%edx
 		inc    %ah
 		xor    %ebx,%ebx
-		mov    %ah,tag_current
+		mov    %ah,EXPORT_SYMBOL(tag_current)
 		xor    %eax,%eax
 		mov    %edx,data_1c30c0
-		mov    tag_current,%al
+		mov    EXPORT_SYMBOL(tag_current),%al
 		mov    %ebx,heap_end
 		test   %eax,%eax
 		jne    jump_8388a
@@ -83823,14 +83823,14 @@ triangle_route_do_unkn3:	/* 0x083834 */
 		mov    $EXPORT_SYMBOL(routeTags),%eax
 		xor    %edx,%edx
 		call   ac_memset
-		movb   $0x1,tag_current
+		movb   $0x1,EXPORT_SYMBOL(tag_current)
 	jump_8388a:
 		mov    0x10(%esp),%eax
 		mov    $0x1,%ecx
 		mov    %eax,%edx
 		mov    %ecx,EXPORT_SYMBOL(tree_val)(,%eax,4)
 		mov    %eax,EXPORT_SYMBOL(tree_dad)(,%eax,4)
-		mov    tag_current,%al
+		mov    EXPORT_SYMBOL(tag_current),%al
 		mov    heap_end,%esi
 		mov    %al,EXPORT_SYMBOL(routeTags)(%edx)
 		cmp    $0x100,%esi
@@ -84075,7 +84075,7 @@ triangle_route_do_unkn3:	/* 0x083834 */
 		test   %edi,%esi
 		je     jump_83c3a
 		mov    EXPORT_SYMBOL(routeTags)(%ebx),%cl
-		cmp    tag_current,%cl
+		cmp    EXPORT_SYMBOL(tag_current),%cl
 		je     jump_83c3a
 		mov    0xb(%eax),%eax
 		sar    $0x18,%eax
@@ -84217,7 +84217,7 @@ triangle_route_do_unkn3:	/* 0x083834 */
 		add    %ecx,%edx
 	jump_83e14:
 		mov    %edx,EXPORT_SYMBOL(tree_val)(,%ebx,4)
-		mov    tag_current,%dl
+		mov    EXPORT_SYMBOL(tag_current),%dl
 		mov    %dl,EXPORT_SYMBOL(routeTags)(%ebx)
 		mov    0x20(%esp),%edx
 		mov    heap_end,%eax
@@ -84336,14 +84336,14 @@ triangle_route_do_unkn4:	/* 0x083FA4 */
 		mov    %eax,0x14(%esp)
 		mov    %edx,0x10(%esp)
 		mov    %ebx,0xc(%esp)
-		mov    tag_current,%ah
+		mov    EXPORT_SYMBOL(tag_current),%ah
 		mov    $0xffffffff,%edx
 		inc    %ah
 		xor    %ebx,%ebx
-		mov    %ah,tag_current
+		mov    %ah,EXPORT_SYMBOL(tag_current)
 		xor    %eax,%eax
 		mov    %edx,data_1c30c0
-		mov    tag_current,%al
+		mov    EXPORT_SYMBOL(tag_current),%al
 		mov    %ebx,heap_end
 		test   %eax,%eax
 		jne    jump_83ffa
@@ -84351,14 +84351,14 @@ triangle_route_do_unkn4:	/* 0x083FA4 */
 		mov    $EXPORT_SYMBOL(routeTags),%eax
 		xor    %edx,%edx
 		call   ac_memset
-		movb   $0x1,tag_current
+		movb   $0x1,EXPORT_SYMBOL(tag_current)
 	jump_83ffa:
 		mov    0x10(%esp),%eax
 		mov    $0x1,%ecx
 		mov    %eax,%edx
 		mov    %ecx,EXPORT_SYMBOL(tree_val)(,%eax,4)
 		mov    %eax,EXPORT_SYMBOL(tree_dad)(,%eax,4)
-		mov    tag_current,%al
+		mov    EXPORT_SYMBOL(tag_current),%al
 		mov    heap_end,%esi
 		mov    %al,EXPORT_SYMBOL(routeTags)(%edx)
 		cmp    $0x100,%esi
@@ -84600,7 +84600,7 @@ triangle_route_do_unkn4:	/* 0x083FA4 */
 		shl    %cl,%eax
 		test   %eax,%ebx
 		je     jump_843a0
-		mov    tag_current,%bl
+		mov    EXPORT_SYMBOL(tag_current),%bl
 		cmp    EXPORT_SYMBOL(routeTags)(%esi),%bl
 		je     jump_843a0
 		mov    %esi,%ecx
@@ -84744,7 +84744,7 @@ triangle_route_do_unkn4:	/* 0x083FA4 */
 		add    %ebx,%edx
 	jump_84571:
 		mov    %edx,EXPORT_SYMBOL(tree_val)(,%esi,4)
-		mov    tag_current,%dl
+		mov    EXPORT_SYMBOL(tag_current),%dl
 		mov    %dl,EXPORT_SYMBOL(routeTags)(%esi)
 		mov    0x20(%esp),%edx
 		mov    %edx,EXPORT_SYMBOL(tree_dad)(,%esi,4)
@@ -84953,14 +84953,14 @@ triangle_route_do_unkn5:	/* 0x084924 */
 		mov    %eax,0x14(%esp)
 		mov    %edx,0x10(%esp)
 		mov    %ebx,0xc(%esp)
-		mov    tag_current,%ah
+		mov    EXPORT_SYMBOL(tag_current),%ah
 		mov    $0xffffffff,%edx
 		inc    %ah
 		xor    %ebx,%ebx
-		mov    %ah,tag_current
+		mov    %ah,EXPORT_SYMBOL(tag_current)
 		xor    %eax,%eax
 		mov    %edx,data_1c30c0
-		mov    tag_current,%al
+		mov    EXPORT_SYMBOL(tag_current),%al
 		mov    %ebx,heap_end
 		test   %eax,%eax
 		jne    jump_8497a
@@ -84968,14 +84968,14 @@ triangle_route_do_unkn5:	/* 0x084924 */
 		mov    $EXPORT_SYMBOL(routeTags),%eax
 		xor    %edx,%edx
 		call   ac_memset
-		movb   $0x1,tag_current
+		movb   $0x1,EXPORT_SYMBOL(tag_current)
 	jump_8497a:
 		mov    0x10(%esp),%eax
 		mov    $0x1,%ecx
 		mov    %eax,%edx
 		mov    %ecx,EXPORT_SYMBOL(tree_val)(,%eax,4)
 		mov    %eax,EXPORT_SYMBOL(tree_dad)(,%eax,4)
-		mov    tag_current,%al
+		mov    EXPORT_SYMBOL(tag_current),%al
 		mov    heap_end,%esi
 		mov    %al,EXPORT_SYMBOL(routeTags)(%edx)
 		cmp    $0x100,%esi
@@ -85219,7 +85219,7 @@ triangle_route_do_unkn5:	/* 0x084924 */
 		sar    $0x10,%ebx
 		cmp    $0xffffffff,%ebx
 		je     jump_84d29
-		mov    tag_current,%cl
+		mov    EXPORT_SYMBOL(tag_current),%cl
 		cmp    EXPORT_SYMBOL(routeTags)(%ebx),%cl
 		je     jump_84d29
 		mov    %ebx,%esi
@@ -85347,7 +85347,7 @@ triangle_route_do_unkn5:	/* 0x084924 */
 		jge    jump_84ed7
 		mov    %eax,%ecx
 	jump_84ed7:
-		mov    tag_current,%dl
+		mov    EXPORT_SYMBOL(tag_current),%dl
 		mov    heap_end,%ebp
 		mov    %dl,EXPORT_SYMBOL(routeTags)(%ebx)
 		mov    0x20(%esp),%edx
@@ -85467,14 +85467,14 @@ triangle_route_do_unkn6:	/* 0x085068 */
 		mov    %eax,0x14(%esp)
 		mov    %edx,0x10(%esp)
 		mov    %ebx,0xc(%esp)
-		mov    tag_current,%ah
+		mov    EXPORT_SYMBOL(tag_current),%ah
 		mov    $0xffffffff,%edx
 		inc    %ah
 		xor    %ebx,%ebx
-		mov    %ah,tag_current
+		mov    %ah,EXPORT_SYMBOL(tag_current)
 		xor    %eax,%eax
 		mov    %edx,data_1c30c0
-		mov    tag_current,%al
+		mov    EXPORT_SYMBOL(tag_current),%al
 		mov    %ebx,heap_end
 		test   %eax,%eax
 		jne    jump_850be
@@ -85482,14 +85482,14 @@ triangle_route_do_unkn6:	/* 0x085068 */
 		mov    $EXPORT_SYMBOL(routeTags),%eax
 		xor    %edx,%edx
 		call   ac_memset
-		movb   $0x1,tag_current
+		movb   $0x1,EXPORT_SYMBOL(tag_current)
 	jump_850be:
 		mov    0x10(%esp),%eax
 		mov    $0x1,%ecx
 		mov    %eax,%edx
 		mov    %ecx,EXPORT_SYMBOL(tree_val)(,%eax,4)
 		mov    %eax,EXPORT_SYMBOL(tree_dad)(,%eax,4)
-		mov    tag_current,%al
+		mov    EXPORT_SYMBOL(tag_current),%al
 		mov    heap_end,%esi
 		mov    %al,EXPORT_SYMBOL(routeTags)(%edx)
 		cmp    $0x100,%esi
@@ -85733,7 +85733,7 @@ triangle_route_do_unkn6:	/* 0x085068 */
 		sar    $0x10,%ebx
 		cmp    $0xffffffff,%ebx
 		je     jump_8546d
-		mov    tag_current,%cl
+		mov    EXPORT_SYMBOL(tag_current),%cl
 		cmp    EXPORT_SYMBOL(routeTags)(%ebx),%cl
 		je     jump_8546d
 		mov    %ebx,%esi
@@ -85861,7 +85861,7 @@ triangle_route_do_unkn6:	/* 0x085068 */
 		jge    jump_8561b
 		mov    %eax,%ecx
 	jump_8561b:
-		mov    tag_current,%dl
+		mov    EXPORT_SYMBOL(tag_current),%dl
 		mov    heap_end,%ebp
 		mov    %dl,EXPORT_SYMBOL(routeTags)(%ebx)
 		mov    0x20(%esp),%edx
@@ -85982,28 +85982,28 @@ triangle_route_do_unkn7:	/* 0x0857AC */
 		mov    %edx,0x10(%esp)
 		mov    %ebx,0xc(%esp)
 		mov    $0xffffffff,%ebx
-		mov    tag_current,%ah
+		mov    EXPORT_SYMBOL(tag_current),%ah
 		xor    %edx,%edx
 		inc    %ah
 		mov    %edx,0x30(%esp)
-		mov    %ah,tag_current
+		mov    %ah,EXPORT_SYMBOL(tag_current)
 		xor    %eax,%eax
 		mov    %ebx,data_1c30c0
-		mov    tag_current,%al
+		mov    EXPORT_SYMBOL(tag_current),%al
 		mov    %edx,heap_end
 		test   %eax,%eax
 		jne    jump_85804
 		mov    $0x1f40,%ebx
 		mov    $EXPORT_SYMBOL(routeTags),%eax
 		call   ac_memset
-		movb   $0x1,tag_current
+		movb   $0x1,EXPORT_SYMBOL(tag_current)
 	jump_85804:
 		mov    0x10(%esp),%eax
 		mov    $0x1,%esi
 		mov    %eax,%edx
 		mov    %esi,EXPORT_SYMBOL(tree_val)(,%eax,4)
 		mov    %eax,EXPORT_SYMBOL(tree_dad)(,%eax,4)
-		mov    tag_current,%al
+		mov    EXPORT_SYMBOL(tag_current),%al
 		mov    heap_end,%edi
 		mov    %al,EXPORT_SYMBOL(routeTags)(%edx)
 		cmp    $0x100,%edi
@@ -86089,7 +86089,7 @@ triangle_route_do_unkn7:	/* 0x0857AC */
 		mov    0x2c(%esp),%eax
 		mov    EXPORT_SYMBOL(tree_dad)(%eax),%eax
 		mov    %eax,0x28(%esp)
-		mov    tag_current,%al
+		mov    EXPORT_SYMBOL(tag_current),%al
 		mov    $0x1e,%esi
 		inc    %al
 		mov    $0xffffffff,%edi
@@ -86262,7 +86262,7 @@ triangle_route_do_unkn7:	/* 0x0857AC */
 		cmp    $0xffffffff,%ebx
 		je     jump_85bff
 		mov    EXPORT_SYMBOL(routeTags)(%ebx),%dl
-		cmp    tag_current,%dl
+		cmp    EXPORT_SYMBOL(tag_current),%dl
 		je     jump_85bff
 		mov    EXPORT_SYMBOL(tree_Ax8),%ebp
 		mov    EXPORT_SYMBOL(tree_Ay8),%edi
@@ -86387,7 +86387,7 @@ triangle_route_do_unkn7:	/* 0x0857AC */
 		jge    jump_85daa
 		mov    %eax,%ecx
 	jump_85daa:
-		mov    tag_current,%dl
+		mov    EXPORT_SYMBOL(tag_current),%dl
 		mov    heap_end,%eax
 		mov    %dl,EXPORT_SYMBOL(routeTags)(%ebx)
 		mov    0x18(%esp),%edx
@@ -129657,9 +129657,9 @@ GLOBAL_FUNC(ASM_func_cc0d4)	/* 0xcc0d4 */
 		mov    (%edx),%edi
 		cmp    %ecx,%eax
 		jne    jump_cc403
-		cmpl   $0xffffffff,data_155704
+		cmpl   $0xffffffff,EXPORT_SYMBOL(data_155704)
 		je     jump_cc3c4
-		mov    data_155702,%edx
+		mov    EXPORT_SYMBOL(data_155704)-2,%edx
 		xor    %eax,%eax
 		sar    $0x10,%edx
 		call   ac_stop_sample_using_heap
@@ -129676,9 +129676,9 @@ GLOBAL_FUNC(ASM_func_cc0d4)	/* 0xcc0d4 */
 		mov    $0x40,%ecx
 		add    $0x2,%edx
 		push   $0x64
-		mov    %edx,data_155704
+		mov    %edx,EXPORT_SYMBOL(data_155704)
 		mov    $0x7f,%ebx
-		mov    data_155702,%edx
+		mov    EXPORT_SYMBOL(data_155704)-2,%edx
 		xor    %eax,%eax
 		sar    $0x10,%edx
 		call   ac_play_sample_using_heap
@@ -131563,54 +131563,12 @@ nav_rulesA2B:	/* 0x1550D0 */
 
 GLOBAL (selected_triangulation_no)	/* 0x1550EC */
 		.ascii  "\xff\xff\xff\xff"
-/* uint8_t tag_current
+/* sbyte tag_current = -1;
  */
 GLOBAL (tag_current)	/* 0x1550F0 */
 		.byte	0xff
 		.align	4
 
-		.ascii  "\xff\xff\xff\xff"
-		.ascii  "\xff\xff\xff\xff\xff\xff\xff\xff"
-		.ascii  "\x01\x00\x00\x00\x01\x00\x01\x00"
-		.ascii  "\xf6\xff\xf6\xff\xff\xff\x00\x00"
-GLOBAL (word_155110)	/* 0x155110 */
-		.ascii  "\x04\x01\x6e\x00\x24\x01\xa0\x00"
-		.ascii  "\x46\x01\xc0\x00"
-GLOBAL (byte_15511C)	/* 0x15511C */
-		.byte	0x1
-data_15511d:
-		.byte	0x0
-GLOBAL (word_15511E)	/* 0x15511E */
-		.ascii  "\xff\xff"
-GLOBAL (controls_hlight_gkey)	/* 0x155120 */
-		.ascii  "\x01\x01\x01\x00"
-GLOBAL (byte_155124)	/* 0x155124 */
-		.ascii  "\x01\x11\x21\x27\x3f\x94\x00\x00"
-GLOBAL (byte_15512C)	/* 0x15512C */
-		.ascii  "\x08\x08\x03\x0c\x08\x04\x00\x00"
-		.ascii  "\xff\x79\x03\x00"
-GLOBAL (net_baudrate_text)	/* 0x155138 */
-		.ascii  "19200"
-		.short  0x0
-		.byte	0x0
-GLOBAL (net_proto_param_text)	/* 0x155140 */
-		.string "0000"
-		.ascii  "\x00\x00\x00"
-		.string "100%"
-		.ascii  "\x00\x00\x00"
-GLOBAL (unkn_rate)	/* 0x155150 */
-		.byte	0x0
-		.ascii  "\x4b\x00\x00"
-		.align  4
-
-GLOBAL (research_on_weapons)	/* 0x155168 */
-		.byte	0x1
-GLOBAL (map_hl_city_id)	/* 0x155169 */
-		.byte	0xff
-GLOBAL (selected_city_id)	/* 0x15516A */
-		.byte	0xff
-GLOBAL (selected_netscan_objective)	/* 0x15516B */
-		.byte	0xff
 GLOBAL (selected_net_session)
 		.byte	0xff
 GLOBAL (selected_net_user)
@@ -131704,33 +131662,8 @@ data_1556f8:
 data_1556fc:
 		.ascii  "\x00\x40\x00\x00"
 data_155700:
-		.ascii  "\x00\x04"
-data_155702:
-		.short  0x0
-GLOBAL (data_155704)
-		.ascii  "\xff\xff"
-		.ascii  "\xff\xff"
+		.ascii  "\x00\x04\x00\x00"
 		.align  4
-
-GLOBAL (word_155744)	/* 0x155744 */
-		.ascii  "\xfb\xff"
-		.ascii  "\xfb\xff"
-		.ascii  "\xfb\xff"
-		.ascii  "\xfb\xff"
-		.ascii  "\xfb\xff"
-		.ascii  "\xfb\xff"
-GLOBAL (starting_cash_amounts)	/* 0x155750 */
-		.ascii  "\x20\x4e\x00\x00\x50\xc3\x00\x00"
-		.ascii  "\x40\x0d\x03\x00\x20\xa1\x07\x00"
-		.ascii  "\x80\x84\x1e\x00\x40\x4b\x4c\x00"
-		.ascii  "\x00\x2d\x31\x01\x00\xe1\xf5\x05"
-GLOBAL (serial_speeds)	/* 0x155770 */
-		.ascii  "\x80\x25\x00\x00\x40\x38\x00\x00"
-		.ascii  "\x00\x4b\x00\x00\x80\x70\x00\x00"
-		.ascii  "\x00\x96\x00\x00\x00\xe1\x00\x00"
-		.ascii  "\x00\x2c\x01\x00\x00\xc2\x01\x00"
-		.ascii  "\x01\x00\x00\x00"
-
 
 aGroupDTrucedWi:	/* 0x15BEB0 */
 		.string " group %d truced with group %d"

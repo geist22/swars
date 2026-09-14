@@ -191,7 +191,6 @@ extern ushort word_1C8446;
 
 extern ubyte old_screentype;
 extern ubyte screentype;
-extern long data_155704;
 extern ubyte data_1c498d;
 extern ubyte mouse_sprite_anim_frame;
 extern char *outro_text_s;
@@ -220,7 +219,6 @@ extern sbyte selected_net_session;
 extern sbyte selected_net_user;
 extern ubyte net_player_teams[8];
 extern long dword_153194;
-extern ulong starting_cash_amounts[8];
 
 extern ubyte group_factions[8];
 extern ubyte net_unkn_pos_02;

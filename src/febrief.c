@@ -18,6 +18,7 @@
 /******************************************************************************/
 #include "febrief.h"
 
+#include <assert.h>
 #include "bfkeybd.h"
 #include "bftext.h"
 #include "bfmath.h"
@@ -64,7 +65,7 @@ struct ScreenTextBox brief_netscan_box = {0};
 
 struct ScreenBox brief_graphical_box = {0};
 
-extern sbyte selected_netscan_objective;// = -1;
+sbyte selected_netscan_objective = -1;
 
 ubyte brief_state_city_selected = 0;
 ubyte brief_citymap_content = BriCtM_AUTO_SCANNER;
@@ -145,6 +146,8 @@ void reveal_netscan_objective(short nsobv)
 void brief_citymap_readd_scanner_signals(void)
 {
     struct NetscanObjective *p_nsobv;
+
+    assert(selected_netscan_objective >= 0);
 
     p_nsobv = &netscan_objectives[selected_netscan_objective];
     add_netscan_signal_to_scanner(p_nsobv, 1);

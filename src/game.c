@@ -226,6 +226,8 @@ long dword_153194 = 0x100;
 
 ushort word_1531E0 = 1;
 
+s32 data_155704 = -1;
+
 ulong stored_l3d_next_object;
 ulong stored_l3d_next_object_face3;
 ulong stored_l3d_next_object_face4;

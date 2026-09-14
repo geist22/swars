@@ -51,7 +51,7 @@ struct ScreenBox research_graph_box = {0};
 struct ScreenButton research_list_buttons[2] = {0};
 
 extern ubyte research_completed;// = 0;
-extern ubyte research_on_weapons;// = true;
+ubyte research_on_weapons = true;
 ubyte research_selected_wep = 0;
 ubyte research_selected_mod = 0;
 
