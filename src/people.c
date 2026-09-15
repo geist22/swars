@@ -6000,8 +6000,75 @@ void person_use_vehicle(struct Thing *p_person)
 
 void person_wait_vehicle(struct Thing *p_person)
 {
+#if 0
     asm volatile ("call ASM_person_wait_vehicle\n"
         : : "a" (p_person));
+#endif
+    struct Thing *p_vehicle;
+    TbBool next_cmd_is_goto;
+
+    p_vehicle = &things[p_person->U.UPerson.Vehicle];
+
+    next_cmd_is_goto = false;
+    if ((p_person->Flag & TngF_PlayerAgent) == 0)
+    {
+        struct Command *p_cmd;
+        short cmd;
+
+        cmd = p_person->U.UPerson.ComCur;
+        p_cmd = &game_commands[cmd];
+        while (1)
+        {
+            cmd = p_cmd->Next;
+            p_cmd = &game_commands[cmd];
+            if ((p_cmd->Flags & PCmdF_IsUntil) == 0)
+                break;
+        }
+
+        if (p_cmd->Type == PCmd_GO_TO_POINT)
+        {
+            next_cmd_is_goto = true;
+        }
+        else if (p_cmd->Type == PCmd_LOOP_COM)
+        {
+            struct Command *p_nxcmd;
+            p_nxcmd = &game_commands[p_cmd->OtherThing];
+            if (p_nxcmd->Type == PCmd_GO_TO_POINT) {
+                next_cmd_is_goto = true;
+            }
+        }
+    }
+    if (next_cmd_is_goto)
+    {
+        short cmd;
+
+        if ((p_vehicle->State == VehSt_UNKN_33)
+          || (p_vehicle->State == VehSt_NONE)
+          || (p_vehicle->State == VehSt_UNKN_3C)
+          || (p_vehicle->State == VehSt_UNKN_41)
+          || (p_vehicle->State == VehSt_FLY_LANDING))
+        {
+            cmd = p_person->U.UPerson.ComCur;
+            cmd = game_commands[cmd].Next;
+            p_person->U.UPerson.ComCur = cmd;
+            person_init_command(p_person, PCmd_FOLLOW_PERSON);
+        }
+    }
+    else
+    {
+        short cmd;
+
+        if ((p_vehicle->State == VehSt_PARKED_PARAL)
+          || (p_vehicle->State == VehSt_PARKED_PERPN)
+          || (p_vehicle->State == VehSt_NONE)
+          || (p_vehicle->State == VehSt_UNKN_41))
+        {
+            cmd = p_person->U.UPerson.ComCur;
+            cmd = game_commands[cmd].Next;
+            p_person->U.UPerson.ComCur = cmd;
+            person_init_command(p_person, PCmd_SUPPORT_PERSON);
+        }
+    }
 }
 
 void person_destroy_building(struct Thing *p_person)
