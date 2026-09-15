@@ -6660,8 +6660,31 @@ void person_burning(struct Thing *p_person)
 
 void person_being_persuaded(struct Thing *p_person)
 {
+#if 0
     asm volatile ("call ASM_person_being_persuaded\n"
         : : "a" (p_person));
+    return;
+#endif
+    ushort nxframe;
+
+    p_person->Timer1 -= fifties_per_gameturn;
+    if (p_person->Timer1 < 0)
+    {
+        p_person->Timer1 = p_person->StartTimer1;
+        nxframe = frame[p_person->Frame].Next;
+
+        if ((frame[nxframe].Flags & 0x01) != 0)
+        {
+            p_person->State = PerSt_WAIT;
+            p_person->Flag &= ~(TngF_Persuaded | TngF_Unkn40000000);
+            p_person->Flag |= TngF_Persuaded;
+            reset_person_frame(p_person);
+        }
+        else
+        {
+            p_person->Frame = nxframe;
+        }
+    }
 }
 
 void process_wander_and_fly(struct Thing *p_person, struct Thing *p_vehicle)
