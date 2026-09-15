@@ -51,6 +51,24 @@
 #include "util.h"
 #include "swlog.h"
 
+/******************************************************************************/
+
+#pragma pack(1)
+
+struct HeapMgrHeader { // sizeof=0x24
+    void *field_0;
+    void *field_4;
+    int field_8;
+    int samples_count;
+    int field_10;
+    int field_14;
+    int field_18;
+    int field_1C;
+    int field_20;
+};
+
+#pragma pack()
+
 extern long sound_heap_size;
 extern struct SampleTable *sound_heap_memory;
 extern TbFileHandle sound_file; // = INVALID_FILE;
@@ -211,12 +229,34 @@ void wait_for_sound_sample_finish(ushort smpl_id)
     }
 }
 
-struct HeapMgrHeader *heapmgr_init(struct HeapMgrHeader *head, int a2, int a3)
+struct HeapMgrHeader *heapmgr_init(void *p_buf, int buf_size, int n_samples)
 {
+#if 0
     struct HeapMgrHeader *ret;
     asm volatile ("call ASM_heapmgr_init\n"
-        : "=r" (ret) : "a" (head), "d" (a2), "b" (a3));
+        : "=r" (ret) : "a" (p_buf), "d" (buf_size), "b" (n_samples));
     return ret;
+#endif
+    struct HeapMgrHeader *p_hmhead;
+    uint offs_after_samples;
+    int offs3;
+
+    p_hmhead = (struct HeapMgrHeader *)p_buf;
+    offs_after_samples = 0x1C * n_samples + sizeof(struct HeapMgrHeader);
+    offs3 = buf_size - offs_after_samples;
+    if (offs3 <= 0)
+        return NULL;
+
+    p_hmhead->field_10 = 0;
+    p_hmhead->field_14 = 0;
+    p_hmhead->field_18 = 0;
+    p_hmhead->field_1C = 0;
+    p_hmhead->field_20 = 0;
+    p_hmhead->field_8 = offs3;
+    p_hmhead->samples_count = n_samples;
+    p_hmhead->field_0 = (ubyte *)p_hmhead + offs_after_samples;
+    p_hmhead->field_4 = (ubyte *)p_hmhead + buf_size;
+    return p_hmhead;
 }
 
 int setup_heap_manager(struct SampleTable *smptable, size_t smptb_len, const char *fname, ushort sndtype)
@@ -284,7 +324,7 @@ int setup_heap_manager(struct SampleTable *smptable, size_t smptb_len, const cha
     p_smptb_end = (ubyte *)smptable + tab_smptb_len;
     if (smptb_len_diff <= 0)
         return 0;
-    hmhead = heapmgr_init((struct HeapMgrHeader *)p_smptb_end, smptb_len_diff, samples_in_bank);
+    hmhead = heapmgr_init(p_smptb_end, smptb_len_diff, samples_in_bank);
     if (hmhead == NULL) {
         reset_heaps();
         return 0;
