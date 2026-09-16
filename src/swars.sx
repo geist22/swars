@@ -102069,7 +102069,7 @@ vtable_ad2c8:
 		.long   case_ad8b0
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC(ASM_SCANNER_unkn_func_196)	/* 0xAD2F4 */
+GLOBAL_FUNC(ASM_SCANNER_draw_solid)	/* 0xAD2F4 */
 /*----------------------------------------------------------------*/
 		push   %ebx
 		push   %ecx

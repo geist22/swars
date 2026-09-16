@@ -24,6 +24,7 @@
 #include "bfgentab.h"
 #include "bfline.h"
 #include "bfmath.h"
+#include "bfmemut.h"
 #include "bfpixel.h"
 #include "bfplanar.h"
 
@@ -702,7 +703,7 @@ void SCANNER_draw_new_transparent_map(void)
     int dt_x, dt_y;
     int sh_x, sh_y;
     int cu_x1, cu_y1, cu_x2, cu_y2;
-    long *p_width;
+    s32 *p_width;
     TbPixel *p_out;
     int cu_y;
 
@@ -1897,6 +1898,229 @@ void SCANNER_draw_signals(void)
     LbScreenLoadGraphicsWindow(&window_bkp);
 
     SCANNER_draw_things_dots(pos_mx, pos_mz, sh_x, sh_y, pos_x1, pos_y1, range);
+}
+
+/** Draws one scanner floor map scanline, sampling `SCANNER_data`.
+ */
+static void SCANNER_map_line_sample(s32 count)
+{
+    s32 cu_x, cu_y;
+    TbPixel *out;
+    s32 i;
+
+    cu_x = SCANNER_dw06C;
+    cu_y = SCANNER_dw070;
+    out = SCANNER_screenptr;
+
+    for (i = 0; i < count; i++)
+    {
+        ubyte tile_x, tile_z;
+
+        tile_x = (ubyte)(cu_x >> 16);
+        tile_z = (ubyte)(cu_y >> 16);
+        *out = SCANNER_data[tile_x][tile_z];
+        out++;
+        cu_x += SCANNER_dw064;
+        cu_y += SCANNER_dw068;
+    }
+
+    SCANNER_dw06C = cu_x;
+    SCANNER_dw070 = cu_y;
+    SCANNER_screenptr = out;
+    SCANNER_dw074 = count;
+}
+
+/** Blanks scanner map pixels from `SCANNER_screenptr` while given condition holds.
+ */
+static void SCANNER_map_line_blank_while_oob(ushort flags2)
+{
+    s32 cu_x, cu_y;
+    TbPixel *out;
+    s32 n;
+
+    cu_x = SCANNER_dw06C;
+    cu_y = SCANNER_dw070;
+    out = SCANNER_screenptr;
+    n = SCANNER_dw074;
+
+    while (n > 0)
+    {
+        TbBool oob;
+
+        oob = true;
+        if ((flags2 & 0x01) != 0)
+            oob = oob && (cu_x < 0);
+        if ((flags2 & 0x02) != 0)
+            oob = oob && (cu_x >= 0x1000000);
+        if ((flags2 & 0x04) != 0)
+            oob = oob && (cu_y < 0);
+        if ((flags2 & 0x08) != 0)
+            oob = oob && (cu_y >= 0x1000000);
+
+        if (!oob)
+            break;
+
+        *out = 0;
+        out++;
+        cu_x += SCANNER_dw064;
+        cu_y += SCANNER_dw068;
+        n--;
+    }
+
+    SCANNER_dw06C = cu_x;
+    SCANNER_dw070 = cu_y;
+    SCANNER_screenptr = out;
+    SCANNER_dw074 = n;
+}
+
+/** Renders one scanner floor map row.
+ *
+ * Uses Cohen-Sutherland-style clipping of texture within the
+ * valid [0, 0x1000000) texture range.
+ */
+static void SCANNER_render_map_row(ushort flags1)
+{
+    for (;;)
+    {
+        ushort flags2;
+        s32 cu_x, cu_y;
+        s32 pv_val, cu_val, dt_val;
+
+        cu_x = SCANNER_dw06C;
+        cu_y = SCANNER_dw070;
+
+        flags2 = (0x01 * (cu_x < 0))
+               | (0x02 * (cu_x >= 0x1000000))
+               | (0x04 * (cu_y < 0))
+               | (0x08 * (cu_y >= 0x1000000));
+
+        if ((flags1 | flags2) == 0)
+        {
+            // Whole rest of the row is within the map texture - sample it.
+            SCANNER_map_line_sample(SCANNER_dw074);
+            return;
+        }
+        if ((flags1 & flags2) != 0)
+        {
+            // Row leaves the map on this side and never returns - blank it.
+            LbMemorySet(SCANNER_screenptr, 0, SCANNER_dw074);
+            return;
+        }
+
+        switch (flags2)
+        {
+        case 0x00:
+            // Currently inside the map, but will leave it before the row
+            // ends. Sample map pixels, then blank the remainder of the row.
+            pv_val = SCANNER_dw074;
+            SCANNER_dnt_SCANNER_dw070_update(flags1);
+            cu_val = SCANNER_dw074;
+            dt_val = pv_val - cu_val;
+
+            if ((cu_val > 0) && (cu_val <= 400))
+                SCANNER_map_line_sample(cu_val);
+            if ((dt_val > 0) && (dt_val <= 400))
+            {
+                SCANNER_dw074 = dt_val;
+                LbMemorySet(SCANNER_screenptr, 0, dt_val);
+                SCANNER_screenptr += dt_val;
+            }
+            break;
+        case 0x01:
+        case 0x02:
+        case 0x04:
+        case 0x05:
+        case 0x06:
+        case 0x08:
+        case 0x09:
+        case 0x0A:
+            // Currently outside the map - blank pixels
+            // until back inside or the row runs out.
+            SCANNER_map_line_blank_while_oob(flags2);
+            if (SCANNER_dw074 != 0)
+                continue;
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+static void SCANNER_draw_solid_map(void)
+{
+    s32 dt_x, dt_y;
+    s32 sh_x, sh_y;
+    s32 cu_x1, cu_y1, cu_x2, cu_y2;
+    s32 *p_width;
+    TbPixel *out;
+    int cu_y;
+
+    sh_y = SCANNER_dw064;
+    sh_x = SCANNER_dw068;
+
+    dt_x = (ingame.Scanner.X2 - ingame.Scanner.X1) >> 1;
+    dt_y = (ingame.Scanner.Y2 - ingame.Scanner.Y1) >> 1;
+
+    cu_x1 = (ingame.Scanner.MZ << 16) + sh_x * dt_y - sh_y * dt_x;
+    cu_y1 = (ingame.Scanner.MX << 16) - sh_x * dt_x - sh_y * dt_y;
+    cu_x2 = (ingame.Scanner.MX << 16) + sh_x * dt_x - sh_y * dt_y;
+    cu_y2 = (ingame.Scanner.MZ << 16) + sh_y * dt_x + sh_x * dt_y;
+
+    p_width = SCANNER_width;
+    out = &lbDisplay.WScreen[ingame.Scanner.X1 + lbDisplay.PhysicalScreenWidth * ingame.Scanner.Y1];
+
+    for (cu_y = ingame.Scanner.Y1; cu_y <= ingame.Scanner.Y2; cu_y++)
+    {
+        ushort flags1;
+
+        SCANNER_dw06C = cu_x1;
+        SCANNER_dw070 = cu_y1;
+        SCANNER_dw074 = *p_width + 1;
+        SCANNER_screenptr = out;
+
+        flags1 = (0x01 * (cu_y2 < 0))
+               | (0x02 * (cu_y2 >= 0x1000000))
+               | (0x04 * (cu_x2 < 0))
+               | (0x08 * (cu_x2 >= 0x1000000));
+
+        SCANNER_render_map_row(flags1);
+
+        p_width++;
+        out += lbDisplay.PhysicalScreenWidth;
+        cu_y1 += sh_y;
+        cu_x1 -= sh_x;
+        cu_y2 -= sh_x;
+        cu_x2 += sh_y;
+    }
+}
+
+void SCANNER_draw_solid(void)
+{
+#if 1
+    asm volatile ("call ASM_SCANNER_draw_solid\n"
+        :  :  : "eax" );
+    return;
+#endif
+    s32 sh_x, sh_y;
+
+    SCANNER_process_bbpoints();
+
+    sh_y = (ingame.Scanner.Zoom * lbSinTable[ingame.Scanner.Angle]) >> 8;
+    sh_x = (ingame.Scanner.Zoom * lbSinTable[ingame.Scanner.Angle + LbFPMath_PI/2]) >> 8;
+
+    SCANNER_dw064 = sh_y;
+    SCANNER_dw068 = sh_x;
+    SCANNER_dw07C = sh_y << 16;
+    SCANNER_dw080 = sh_x << 16;
+    SCANNER_bt084 = (sh_y >> 16);
+    SCANNER_bt085 = (sh_x >> 16);
+
+    SCANNER_draw_solid_map();
+
+    // TODO: BigBlip marker overlay (projecting ingame.Scanner.BigBlip[] onto
+    // screen, drawing point markers and clipped boundary lines with a
+    // fade-table colour) is not yet converted - see ASM_SCANNER_draw_solid
+    // in swars.sx from label jump_adad8 onward for reference.
 }
 
 void SCANNER_draw_new_transparent(void)

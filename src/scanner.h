@@ -40,8 +40,8 @@ struct PanelStyle;
 
 struct BigBlip // sizeof=12
 {
-  long X;
-  long Z;
+  s32 X;
+  s32 Z;
   ubyte Colour;
   ubyte Period;
   ubyte Speed;
@@ -50,10 +50,10 @@ struct BigBlip // sizeof=12
 
 struct Arc // sizeof=20
 {
-  long X1;
-  long Z1;
-  long X2;
-  long Z2;
+  s32 X1;
+  s32 Z1;
+  s32 X2;
+  s32 Z2;
   ubyte ColourIsUnused;
   ubyte Period;
   ubyte SpeedIsUnused;
@@ -62,17 +62,17 @@ struct Arc // sizeof=20
 
 struct Scanner // sizeof=0x467 (before resize)
 {
-  long X1; // offset=ingame+0x00C
-  long Y1;
-  long X2;
-  long Y2;
-  long MX;
-  long MZ;
-  long Zoom;
-  long Angle;
-  long Contrast;
-  long Brightness;
-  long Width[500]; // offset=ingame+0x034; modified 200 -> 500
+  s32 X1; // offset=ingame+0x00C
+  s32 Y1;
+  s32 X2;
+  s32 Y2;
+  s32 MX;
+  s32 MZ;
+  s32 Zoom;
+  s32 Angle;
+  s32 Contrast;
+  s32 Brightness;
+  s32 Width[500]; // offset=ingame+0x034; modified 200 -> 500
   struct BigBlip BigBlip[SCANNER_BIG_BLIP_COUNT];
   struct Arc Arc[SCANNER_ARC_COUNT];
   ubyte Group[SCANNER_GROUP_COUNT];
@@ -83,7 +83,7 @@ struct Scanner // sizeof=0x467 (before resize)
 
 #pragma pack()
 /******************************************************************************/
-extern long *SCANNER_width;
+extern s32 *SCANNER_width;
 extern ubyte SCANNER_data[SCANNER_MAPDATA_HEIGHT][SCANNER_MAPDATA_WIDTH];
 extern ushort SCANNER_base_zoom_factor;
 extern ushort SCANNER_user_zoom_factor;
