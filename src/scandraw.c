@@ -1714,6 +1714,92 @@ static void map_coords_to_scanner(int *sc_x, int *sc_y, int sh_x, int sh_y, int 
     *sc_x = prec_x >> 16;
 }
 
+/** Draws the BigBlip markers and their boundary-trail lines on top of the scanner map.
+ */
+static void SCANNER_draw_solid_blips(int pos_mx, int pos_mz, int sh_x, int sh_y)
+{
+    struct TbAnyWindow window_bkp;
+    short bn;
+    int sc_width;
+
+    LbScreenStoreGraphicsWindow(&window_bkp);
+
+    sc_width = (ingame.Scanner.X2 - ingame.Scanner.X1) - 24;
+
+    for (bn = 0; bn < SCANNER_BIG_BLIP_COUNT; bn++)
+    {
+        int base_i, i;
+
+        if (ingame.Scanner.BigBlip[bn].Period == 0)
+            continue;
+
+        LbScreenLoadGraphicsWindow(&window_bkp);
+
+        {
+            int bsh_x, bsh_y;
+            int sc_x, sc_y;
+
+            bsh_y = 2 * ingame.Scanner.BigBlip[bn].Z - pos_mz;
+            bsh_x = 2 * ingame.Scanner.BigBlip[bn].X - pos_mx;
+            map_coords_to_scanner(&sc_x, &sc_y, sh_x, sh_y, bsh_x, bsh_y);
+
+            if ((sc_y >= 1) && (ingame.Scanner.Y1 + sc_y <= ingame.Scanner.Y2)
+             && (sc_x >= 1) && (sc_x <= SCANNER_width[sc_y]))
+            {
+                SCANNER_draw_mark_point5_blink4(ingame.Scanner.X1 + sc_x,
+                  ingame.Scanner.Y1 + sc_y, 0x57);
+            }
+        }
+
+        LbScreenSetGraphicsWindow(ingame.Scanner.X1, ingame.Scanner.Y1,
+          ingame.Scanner.X2 - ingame.Scanner.X1 + 1,
+          ingame.Scanner.Y2 - ingame.Scanner.Y1 + 1);
+
+        base_i = bn * 16;
+
+        for (i = 0; i < 16; i++)
+        {
+            int bsh_x, bsh_y;
+            int sc_x, sc_y;
+
+            bsh_y = 2 * SCANNER_bbpoint[i].u - pos_mz;
+            bsh_x = 2 * SCANNER_bbpoint[i].v - pos_mx;
+            map_coords_to_scanner(&sc_x, &sc_y, sh_x, sh_y, bsh_x, bsh_y);
+
+            SCANNER_unknarr_1DBB6C[2 * (base_i + i) + 0] = sc_x;
+            SCANNER_unknarr_1DBB6C[2 * (base_i + i) + 1] = sc_y;
+        }
+
+        for (i = 0; i < 16; i++)
+        {
+            int ri;
+            int x1, y1, x2, y2;
+
+            ri = base_i + i;
+            x1 = SCANNER_unknarr_1DBB6C[2 * ri + 0];
+            y1 = SCANNER_unknarr_1DBB6C[2 * ri + 1];
+            if (i == 15)
+              ri = base_i + i - 15;
+            else
+              ri = base_i + i + 1;
+            x2 = SCANNER_unknarr_1DBB6C[2 * ri + 0];
+            y2 = SCANNER_unknarr_1DBB6C[2 * ri + 1];
+
+            if ((x1 - sc_width <= y1) || (x2 - sc_width <= y2))
+            {
+                ushort ft_idx;
+
+                scanner_coords_line_clip(&x1, &y1, &x2, &y2, sc_width);
+                ft_idx = 512 * (31 - ingame.Scanner.BigBlip[bn].Counter)
+                           + ingame.Scanner.BigBlip[bn].Colour;
+                LbDrawLine(x1, y1, x2, y2, pixmap.fade_table[ft_idx]);
+            }
+        }
+    }
+
+    LbScreenLoadGraphicsWindow(&window_bkp);
+}
+
 void SCANNER_draw_blips(int pos_mx, int pos_mz, int sh_x, int sh_y)
 {
     short bn;
@@ -2082,6 +2168,22 @@ void SCANNER_draw_area_frame(void)
       ingame.Scanner.X2 + 1, ingame.Scanner.Y2 + 1, SCANNER_colour[ScnClr_Frame]);
 }
 
+static void SCANNER_draw_solid_signals(void)
+{
+    int dt_x, dt_y;
+    int sh_x, sh_y;
+    int pos_mx, pos_mz;
+
+    dt_x = (ingame.Scanner.X2 - ingame.Scanner.X1) >> 1;
+    dt_y = (ingame.Scanner.Y2 - ingame.Scanner.Y1) >> 1;
+    sh_y = SCANNER_dw064;
+    sh_x = SCANNER_dw068;
+    pos_mz = (ingame.Scanner.MZ << 16) + sh_x * dt_y - sh_y * dt_x;
+    pos_mx = (ingame.Scanner.MX << 16) - sh_x * dt_x - sh_y * dt_y;
+
+    SCANNER_draw_solid_blips(pos_mx, pos_mz, sh_x, sh_y);
+}
+
 void SCANNER_draw_signals(void)
 {
 #if 0
@@ -2129,7 +2231,7 @@ void SCANNER_draw_signals(void)
 
 void SCANNER_draw_solid(void)
 {
-#if 1
+#if 0
     asm volatile ("call ASM_SCANNER_draw_solid\n"
         :  :  : "eax" );
     return;
@@ -2137,11 +2239,7 @@ void SCANNER_draw_solid(void)
     SCANNER_process_bbpoints();
     SCANNER_update_shifts();
     SCANNER_draw_solid_map();
-
-    // TODO: BigBlip marker overlay (projecting ingame.Scanner.BigBlip[] onto
-    // screen, drawing point markers and clipped boundary lines with a
-    // fade-table colour) is not yet converted - see ASM_SCANNER_draw_solid
-    // in swars.sx from label jump_adad8 onward for reference.
+    SCANNER_draw_solid_signals();
 }
 
 void SCANNER_draw_new_transparent(void)
