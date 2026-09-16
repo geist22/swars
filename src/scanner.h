@@ -95,7 +95,7 @@ void SCANNER_init(void);
 void SCANNER_fill_in(void);
 void SCANNER_fill_in_a_little_bit(int x1, int y1, int x2, int y2);
 void SCANNER_set_colours(struct PanelStyle *p_style);
-void SCANNER_find_position(int x, int y, int *U, int *V);
+void SCANNER_find_position(int x, int y, int *Ua, int *Vb);
 void SCANNER_data_to_screen(void);
 void SCANNER_set_zoom(int zoom);
 

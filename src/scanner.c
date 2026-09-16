@@ -22,6 +22,7 @@
 #include "bfmath.h"
 #include "bfmemut.h"
 #include "bfpalette.h"
+#include "bfplanar.h"
 #include "bfscreen.h"
 #include "bfutility.h"
 
@@ -283,11 +284,55 @@ void SCANNER_init_blippoint(ushort blip_no, int x, int z, int colour)
     ingame.Scanner.BigBlip[blip_no].Period = 32;
 }
 
-void SCANNER_find_position(int x, int y, int *U, int *V)
+void SCANNER_find_position(int x, int y, int *Ua, int *Vb)
 {
+#if 0
     asm volatile (
       "call ASM_SCANNER_find_position\n"
-        : : "a" (x), "d" (y), "b" (U), "c" (V));
+        : : "a" (x), "d" (y), "b" (Ua), "c" (Vb));
+#endif
+    struct TbPoint s1, s2, dt;
+    int mz, mx, zoom, angle;
+    int sin_z, cos_z;
+    int half_w, half_h;
+    int base_u, base_v;
+    int raw_u, raw_v;
+
+    s1.x = ingame.Scanner.X1;
+    s1.y = ingame.Scanner.Y1;
+    s2.x = ingame.Scanner.X2;
+    s2.y = ingame.Scanner.Y2;
+    mz = ingame.Scanner.MZ;
+    mx = ingame.Scanner.MX;
+    zoom = ingame.Scanner.Zoom;
+    angle = ingame.Scanner.Angle;
+
+    sin_z = (lbSinTable[angle] * zoom) >> 8;
+    cos_z = (lbSinTable[angle + LbFPMath_PI/2] * zoom) >> 8;
+
+    half_w = (s2.x - s1.x) >> 1;
+    half_h = (s2.y - s1.y) >> 1;
+
+    // Position of the scanner view center, rotated by scanner angle.
+    base_u = (mz << 16) - half_w * sin_z + half_h * cos_z;
+    base_v = (mx << 16) - half_w * cos_z - half_h * sin_z;
+
+    dt.x = x - s1.x;
+    dt.y = y - s1.y;
+
+    raw_u = base_u + sin_z * dt.x - cos_z * dt.y;
+    raw_v = base_v + cos_z * dt.x + sin_z * dt.y;
+
+    raw_u <<= 7;
+    raw_v <<= 7;
+
+    // Rescale, rounding toward zero (as opposed to a plain
+    // arithmetic shift, which would round toward -infinity).
+    raw_u = (raw_u - ((raw_u >> 31) << 7)) >> 8;
+    raw_v = (raw_v - ((raw_v >> 31) << 7)) >> 8;
+
+    *Ua = raw_u >> 8;
+    *Vb = raw_v >> 8;
 }
 
 TbBool mouse_move_over_scanner(void)
