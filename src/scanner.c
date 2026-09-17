@@ -20,6 +20,9 @@
 
 #include "bfgentab.h"
 #include "bfmath.h"
+#include "bfmemut.h"
+#include "bfpalette.h"
+#include "bfplanar.h"
 #include "bfscreen.h"
 #include "bfutility.h"
 
@@ -34,11 +37,14 @@
 #include "game.h"
 #include "game_options.h"
 #include "game_speed.h"
+#include "hud_panel.h"
 #include "lvobjctv.h"
 #include "scandraw.h"
 #include "swlog.h"
 /******************************************************************************/
 #pragma pack(1)
+
+#define BBP_ADDS_COUNT 16
 
 struct BbpAdds {
     s32 du;
@@ -52,12 +58,24 @@ struct BbpAdds {
 extern ushort signal_count;
 extern ulong turn_last; // = 999;
 extern ulong SCANNER_keep_arcs;
-extern ulong dword_1DB1A0;
-extern struct BbpAdds SCANNER_bbpadds[16];
+extern struct BbpAdds SCANNER_bbpadds[BBP_ADDS_COUNT];
 
 ushort SCANNER_base_zoom_factor = 180;
 ushort SCANNER_user_zoom_factor = 192;
 ubyte SCANNER_scale_dots = true;
+
+extern s32 SCANNER_dw064;
+extern s32 SCANNER_dw068;
+extern s32 SCANNER_dw06C;
+extern s32 SCANNER_dw070;
+extern s32 SCANNER_dw074;
+extern s32 SCANNER_dw07C;
+extern s32 SCANNER_dw080;
+
+extern ubyte SCANNER_bt084;
+extern ubyte SCANNER_bt085;
+
+/******************************************************************************/
 
 void SCANNER_set_zoom(int zoom)
 {
@@ -75,12 +93,17 @@ void SCANNER_init_bbpoints(void)
     int i;
 
     k = 0;
-    for (i = 0; i < 16; i++, k += 2048)
+    for (i = 0; i < BBP_ADDS_COUNT; i++, k += 2048)
     {
-      angle = (k >> 4);
-      SCANNER_bbpadds[i+1].du = lbSinTable[angle] >> 2;
-      SCANNER_bbpadds[i+1].dv = lbSinTable[angle + 512] >> 2;
+        angle = (k >> 4);
+        SCANNER_bbpadds[i].du = lbSinTable[angle] >> 2;
+        SCANNER_bbpadds[i].dv = lbSinTable[angle + 512] >> 2;
     }
+}
+
+void SCANNER_clear(void)
+{
+    LbMemorySet(SCANNER_data, SCANNER_colour[0], sizeof(SCANNER_data));
 }
 
 void SCANNER_init_people_colours(void)
@@ -122,38 +145,85 @@ void SCANNER_init(void)
 #endif
 }
 
-void SCANNER_set_colour(ubyte col)
+void SCANNER_set_colours(struct PanelStyle *p_style)
 {
-#if 0
-    asm volatile ("call ASM_SCANNER_set_colour\n"
-        :  : "a" ((long)col));
-#endif
-    switch (col)
-    {
-    case 1:
-        SCANNER_colour[0] = 40;
-        SCANNER_colour[1] = 68;
-        SCANNER_colour[2] = pixmap.fade_table[10 * PALETTE_8b_COLORS + 20];
-        SCANNER_colour[4] = 40;
-        SCANNER_colour[3] = 32;
-        break;
-    case 2:
-        SCANNER_colour[0] = 20;
-        SCANNER_colour[1] = 68;
-        SCANNER_colour[2] = pixmap.fade_table[10 * PALETTE_8b_COLORS + 20];
-        SCANNER_colour[4] = 20;
-        SCANNER_colour[3] = colour_lookup[ColLU_CYAN];
-        break;
-    default:
-        break;
-    }
-    byte_1DB2E9 = col;
+    TbPixel bcol1;
+
+    bcol1 = p_style->Colours[PanColr_Liquid];
+    SCANNER_colour[ScnClr_Text] = p_style->Colours[PanColr_Text];
+    SCANNER_colour[ScnClr_Roadway] = p_style->Colours[PanColr_Roadway];
+    SCANNER_colour[ScnClr_LiquidDk] = pixmap.fade_table[10 * PALETTE_8b_COLORS + bcol1];
+    SCANNER_colour[ScnClr_Outline] = p_style->Colours[PanColr_Outline];
+    SCANNER_colour[ScnClr_Frame] = p_style->Colours[PanColr_Frame];
 }
 
 void SCANNER_fill_in(void)
 {
     asm volatile ("call ASM_SCANNER_fill_in\n"
         :  :  : "eax" );
+}
+
+int SCANNER_find_colour(int mapx, int mapy)
+{
+    int ret;
+    asm volatile ("call ASM_SCANNER_find_colour\n"
+        : "=r" (ret) : "a" (mapx), "d" (mapy));
+    return ret;
+}
+
+void SCANNER_fill_in_a_little_bit(int x1, int z1, int x2, int z2)
+{
+#if 0
+    asm volatile ("call ASM_SCANNER_fill_in_a_little_bit\n"
+        : : "a" (x1), "d" (z1), "b" (x2), "c" (z2));
+#endif
+    int tile_x, tile_z;
+
+    if (x1 > x2) {
+        return;
+    }
+    if (z1 > z2) {
+        return;
+    }
+
+    for (tile_x = x1; tile_x <= x2; tile_x++)
+    {
+        for (tile_z = z1; tile_z <= z2; tile_z++)
+        {
+            int alt1, alt2, alt3, alt4;
+            int cor_x, cor_z;
+            ushort sc_col;
+            short bri;
+            TbPixel col1;
+
+            cor_x = tile_x << 7;
+            cor_z = tile_z << 7;
+
+            sc_col = SCANNER_find_colour(cor_x, cor_z);
+            if (sc_col == 0)
+                col1 = SCANNER_colour[ScnClr_Text];
+            else if (sc_col == 1)
+                col1 = SCANNER_colour[ScnClr_Roadway];
+            else if (sc_col == 2)
+                col1 = SCANNER_colour[ScnClr_LiquidDk];
+            else {
+                LOGWARN("invalid scanner colour found");
+                col1 = SCANNER_colour[ScnClr_Outline];
+            }
+
+            alt1 = alt_at_point(cor_z, cor_x + 128);
+            alt2 = alt_at_point(cor_z, cor_x - 128);
+            alt3 = alt_at_point(cor_z + 128, cor_x);
+            alt4 = alt_at_point(cor_z - 128, cor_x);
+            bri = ((alt1 - alt2) >> 9) + ((alt3 - alt4) >> 9) + 32;
+            if (bri < 0)
+                bri = 0;
+            if (bri > 63)
+                bri = 63;
+
+            SCANNER_data[tile_x][tile_z] = pixmap.fade_table[256 * bri + col1];
+        }
+    }
 }
 
 void SCANNER_init_arcpoint(int x1, int z1, int x2, int z2, int c)
@@ -164,16 +234,9 @@ void SCANNER_init_arcpoint(int x1, int z1, int x2, int z2, int c)
         : : "a" (x1), "d" (z1), "b" (x2), "c" (z2), "g" (c));
 }
 
-void SCANNER_unkn_func_196(void)
-{
-    // TODO when rewriting, use mul_shift16_sign_pad_lo()
-    asm volatile ("call ASM_SCANNER_unkn_func_196\n"
-        :  :  : "eax" );
-}
-
 void SCANNER_data_to_screen(void)
 {
-    SCANNER_unkn_func_196();
+    SCANNER_draw_solid();
 }
 
 void SCANNER_set_screen_box(short x, short y, short width, short height, short cutout)
@@ -225,11 +288,55 @@ void SCANNER_init_blippoint(ushort blip_no, int x, int z, int colour)
     ingame.Scanner.BigBlip[blip_no].Period = 32;
 }
 
-void SCANNER_find_position(int x, int y, int *U, int *V)
+void SCANNER_find_position(int x, int y, int *Ua, int *Vb)
 {
+#if 0
     asm volatile (
       "call ASM_SCANNER_find_position\n"
-        : : "a" (x), "d" (y), "b" (U), "c" (V));
+        : : "a" (x), "d" (y), "b" (Ua), "c" (Vb));
+#endif
+    struct TbPoint s1, s2, dt;
+    int mz, mx, zoom, angle;
+    int sin_z, cos_z;
+    int half_w, half_h;
+    int base_u, base_v;
+    int raw_u, raw_v;
+
+    s1.x = ingame.Scanner.X1;
+    s1.y = ingame.Scanner.Y1;
+    s2.x = ingame.Scanner.X2;
+    s2.y = ingame.Scanner.Y2;
+    mz = ingame.Scanner.MZ;
+    mx = ingame.Scanner.MX;
+    zoom = ingame.Scanner.Zoom;
+    angle = ingame.Scanner.Angle;
+
+    sin_z = (lbSinTable[angle] * zoom) >> 8;
+    cos_z = (lbSinTable[angle + LbFPMath_PI/2] * zoom) >> 8;
+
+    half_w = (s2.x - s1.x) >> 1;
+    half_h = (s2.y - s1.y) >> 1;
+
+    // Position of the scanner view center, rotated by scanner angle.
+    base_u = (mz << 16) - half_w * sin_z + half_h * cos_z;
+    base_v = (mx << 16) - half_w * cos_z - half_h * sin_z;
+
+    dt.x = x - s1.x;
+    dt.y = y - s1.y;
+
+    raw_u = base_u + sin_z * dt.x - cos_z * dt.y;
+    raw_v = base_v + cos_z * dt.x + sin_z * dt.y;
+
+    raw_u <<= 7;
+    raw_v <<= 7;
+
+    // Rescale, rounding toward zero (as opposed to a plain
+    // arithmetic shift, which would round toward -infinity).
+    raw_u = (raw_u - ((raw_u >> 31) << 7)) >> 8;
+    raw_v = (raw_v - ((raw_v >> 31) << 7)) >> 8;
+
+    *Ua = raw_u >> 8;
+    *Vb = raw_v >> 8;
 }
 
 TbBool mouse_move_over_scanner(void)
@@ -359,7 +466,7 @@ ushort do_group_near_thing_scanner(struct Objective *p_objectv, ushort next_sign
         }
         else
         {
-            if (((ingame.TrackThing == 0) || game_cam_tracked_thing_is_player_agent()) && (ingame.Flags & GamF_HUDPanel))
+            if (panel_any_visible())
                 SCANNER_init_arcpoint(Z2, X2, Z1, X1, 1);
         }
         SCANNER_keep_arcs = 1;
@@ -499,7 +606,7 @@ ushort do_thing_arrive_area_scanner(struct Objective *p_objectv, ushort next_sig
     }
     else
     {
-        if (((ingame.TrackThing == 0) || game_cam_tracked_thing_is_player_agent()) && (ingame.Flags & GamF_HUDPanel))
+        if (panel_any_visible())
             SCANNER_init_arcpoint(Z, X,
               MAPCOORD_TO_PRCCOORD(p_objectv->Z,0),
               MAPCOORD_TO_PRCCOORD(p_objectv->X,0), 1);
@@ -557,7 +664,7 @@ ushort do_thing_near_thing_scanner(struct Objective *p_objectv, ushort next_sign
     }
     else
     {
-        if (((ingame.TrackThing == 0) || game_cam_tracked_thing_is_player_agent()) && (ingame.Flags & GamF_HUDPanel))
+        if (panel_any_visible())
             SCANNER_init_arcpoint(Z2, X2, Z1, X1, 1);
     }
     SCANNER_keep_arcs = 1;

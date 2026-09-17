@@ -22,11 +22,11 @@
 #include "bfstrut.h"
 #include <assert.h>
 
-#include "bflib_joyst.h"
+#include "bfjoyst.h"
 
 #include "campaign.h"
 #include "display.h"
-#include "engindrwlstm.h"
+#include "engincam.h"
 #include "febrief.h"
 #include "femail.h"
 #include "femain.h"
@@ -50,6 +50,7 @@ extern ubyte save_crypto_data_state[3];
 
 char save_slot_names[SAVE_SLOTS_VISIBLE_COUNT][25] = {0};
 char save_active_desc[25];
+s32 save_slot_base = 0;
 
 /******************************************************************************/
 
@@ -289,25 +290,31 @@ void read_user_settings(void)
         if (fmtver == 0) {
             // In original game, the last key (agent 4 select) is not saved at all
             set_default_game_keys();
+            ushort jskeys_old[23];
             LbFileRead(fh, kbkeys, 23 * sizeof(ushort));
-            LbFileRead(fh, jskeys, 23 * sizeof(ushort));
+            LbFileRead(fh, jskeys_old, 23 * sizeof(ushort));
+            for (i = 0; i < 23; i++)
+                jskeys[i] = jskeys_old[i];
         } else if (fmtver == 1) {
             set_default_game_keys();
+            ushort jskeys_old[29];
             LbFileRead(fh, kbkeys, 29 * sizeof(ushort));
-            LbFileRead(fh, jskeys, 29 * sizeof(ushort));
+            LbFileRead(fh, jskeys_old, 29 * sizeof(ushort));
+            for (i = 0; i < 29; i++)
+                jskeys[i] = jskeys_old[i];
         } else if (fmtver == 2) {
             set_default_game_keys();
+            ushort jskeys_old[50];
             LbFileRead(fh, kbkeys, 50 * sizeof(ushort));
-            LbFileRead(fh, jskeys, 50 * sizeof(ushort));
+            LbFileRead(fh, jskeys_old, 50 * sizeof(ushort));
+            for (i = 0; i < 50; i++)
+                jskeys[i] = jskeys_old[i];
         } else {
-#ifdef MORE_GAME_KEYS
+            assert(sizeof(JoyButtonSet) == 4);
             if (fmtver != 3)
-#else
-            if (fmtver != 2)
-#endif
                 LOGWARN("Settings may be invalid, as \"%s\" has unrecognized format version %d", fname, (int)fmtver);
             LbFileRead(fh, kbkeys, GKey_KEYS_COUNT * sizeof(ushort));
-            LbFileRead(fh, jskeys, GKey_KEYS_COUNT * sizeof(ushort));
+            LbFileRead(fh, jskeys, GKey_KEYS_COUNT * sizeof(JoyButtonSet));
         }
 
         LbFileRead(fh, &ctl_joystick_type, sizeof(ctl_joystick_type));
@@ -352,7 +359,7 @@ void read_user_settings(void)
 
     i = -1;
     if (ctl_joystick_type)
-        i = joy_func_067(&joy, ctl_joystick_type);
+        i = JoySetupDevice(&joy, ctl_joystick_type);
     if (i != 1)
         ctl_joystick_type = JTyp_NONE;
 }
@@ -365,11 +372,7 @@ TbBool save_user_settings(void)
     int i;
 
     get_user_settings_fname(fname, login_name);
-#ifdef MORE_GAME_KEYS
     fmtver = 3;
-#else
-    fmtver = 2;
-#endif
 
     fh = LbFileOpen(fname, Lb_FILE_MODE_NEW);
     if (fh == INVALID_FILE)
@@ -377,7 +380,7 @@ TbBool save_user_settings(void)
 
     LbFileWrite(fh, &fmtver, sizeof(fmtver));
     LbFileWrite(fh, kbkeys, GKey_KEYS_COUNT * sizeof(ushort));
-    LbFileWrite(fh, jskeys, GKey_KEYS_COUNT * sizeof(ushort));
+    LbFileWrite(fh, jskeys, GKey_KEYS_COUNT * sizeof(JoyButtonSet));
     LbFileWrite(fh, &ctl_joystick_type, sizeof(ctl_joystick_type));
     LbFileWrite(fh, &players[local_player_no].DoubleMode,
       sizeof(players[local_player_no].DoubleMode));
@@ -518,7 +521,7 @@ int save_game_write(ubyte slot, char *desc)
           global_date.Day, global_date.Month, global_date.Year);
         LbStringToUpper(desc);
     }
-  
+
     while ((gblen & 7) != 0)
     {
         save_game_buffer[gblen] = 0;

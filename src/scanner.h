@@ -36,11 +36,12 @@ extern "C" {
 
 struct Objective;
 struct NetscanObjective;
+struct PanelStyle;
 
 struct BigBlip // sizeof=12
 {
-  long X;
-  long Z;
+  s32 X;
+  s32 Z;
   ubyte Colour;
   ubyte Period;
   ubyte Speed;
@@ -49,10 +50,10 @@ struct BigBlip // sizeof=12
 
 struct Arc // sizeof=20
 {
-  long X1;
-  long Z1;
-  long X2;
-  long Z2;
+  s32 X1;
+  s32 Z1;
+  s32 X2;
+  s32 Z2;
   ubyte ColourIsUnused;
   ubyte Period;
   ubyte SpeedIsUnused;
@@ -61,17 +62,17 @@ struct Arc // sizeof=20
 
 struct Scanner // sizeof=0x467 (before resize)
 {
-  long X1; // offset=ingame+0x00C
-  long Y1;
-  long X2;
-  long Y2;
-  long MX;
-  long MZ;
-  long Zoom;
-  long Angle;
-  long Contrast;
-  long Brightness;
-  long Width[500]; // offset=ingame+0x034; modified 200 -> 500
+  s32 X1; // offset=ingame+0x00C
+  s32 Y1;
+  s32 X2;
+  s32 Y2;
+  s32 MX;
+  s32 MZ;
+  s32 Zoom;
+  s32 Angle;
+  s32 Contrast;
+  s32 Brightness;
+  s32 Width[500]; // offset=ingame+0x034; modified 200 -> 500
   struct BigBlip BigBlip[SCANNER_BIG_BLIP_COUNT];
   struct Arc Arc[SCANNER_ARC_COUNT];
   ubyte Group[SCANNER_GROUP_COUNT];
@@ -82,19 +83,19 @@ struct Scanner // sizeof=0x467 (before resize)
 
 #pragma pack()
 /******************************************************************************/
-extern long *SCANNER_width;
+extern s32 *SCANNER_width;
 extern ubyte SCANNER_data[SCANNER_MAPDATA_HEIGHT][SCANNER_MAPDATA_WIDTH];
 extern ushort SCANNER_base_zoom_factor;
 extern ushort SCANNER_user_zoom_factor;
 extern ubyte SCANNER_scale_dots;
+extern u32 dword_1DB1A0;
 
-extern short waft_table2[32];
-extern short waft_table[32];
-
+void SCANNER_clear(void);
 void SCANNER_init(void);
 void SCANNER_fill_in(void);
-void SCANNER_set_colour(ubyte col);
-void SCANNER_find_position(int x, int y, int *U, int *V);
+void SCANNER_fill_in_a_little_bit(int x1, int y1, int x2, int y2);
+void SCANNER_set_colours(struct PanelStyle *p_style);
+void SCANNER_find_position(int x, int y, int *Ua, int *Vb);
 void SCANNER_data_to_screen(void);
 void SCANNER_set_zoom(int zoom);
 

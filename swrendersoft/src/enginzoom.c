@@ -38,6 +38,8 @@ ushort zoom_levels[ZOOM_RANGE_BLOCKS_LIMIT+1] = {
     150, 145, 140, 135,
 };
 
+/******************************************************************************/
+
 #define RANGE1 7
 #define RANGE2 15
 #define FACTOR1 2

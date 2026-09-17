@@ -26,7 +26,7 @@
 #include "bfmemut.h"
 #include "bfmouse.h"
 #include "bfutility.h"
-#include "bflib_joyst.h"
+#include "bfjoyst.h"
 #include "ssampply.h"
 
 #include "app_gentab.h"
@@ -46,6 +46,7 @@
 #include "feresearch.h"
 #include "feshared.h"
 #include "festorage.h"
+#include "feworld.h"
 #include "guiboxes.h"
 #include "guitext.h"
 #include "game_data.h"
@@ -55,6 +56,7 @@
 #include "game_sprts.h"
 #include "game.h"
 #include "keyboard.h"
+#include "misstat.h"
 #include "mydraw.h"
 #include "network.h"
 #include "packetfe.h"
@@ -68,68 +70,66 @@
 /******************************************************************************/
 #define SYSMNU_BUTTONS_COUNT 6
 
+struct ScreenBoxBase global_top_bar_box = {4, 4, 632, 15};
+struct ScreenBoxBase global_apps_bar_box = {3, 432, 634, 48};
+struct SynTime global_date;
+
 struct ScreenButton sysmnu_buttons[SYSMNU_BUTTONS_COUNT] = {0};
-extern char options_title_text[];
+
+/** Option title text buffer.
+ *
+ * To be used only if the title being set is not a global localized string.
+ * Global strings can be set directly as ScreenBox Text.
+ */
+char options_title_text[20];
 
 struct ScreenButton main_quit_button = {0};
 struct ScreenButton main_login_button = {0};
 struct ScreenButton main_map_editor_button = {0};
 struct ScreenButton main_load_button = {0};
 
-extern struct ScreenBox alert_box;
-extern struct ScreenButton alert_OK_button;
+struct ScreenBox alert_box;
+struct ScreenButton alert_OK_button;
+char alert_text[200];
+short alert_textpos = 0;
+ubyte show_alert = 0;
 
 struct ScreenTextBox heading_box = {0};
 struct ScreenTextBox loading_INITIATING_box = {0};
 struct ScreenTextBox unkn13_SYSTEM_button = {0};
 
+struct SynTime research_curr_wep_date;
+struct SynTime research_curr_mod_date;
 extern ubyte research_curr_wep_daily_done;
 extern ubyte research_curr_mod_daily_done;
 extern ubyte byte_1C497D;
-extern ubyte month_days[12];
 
-extern ubyte enter_game;
-
-extern char alert_text[200];
-extern short alert_textpos;
-
-struct ScreenBoxBase global_top_bar_box = {4, 4, 632, 15};
-struct ScreenBoxBase global_apps_bar_box = {3, 432, 634, 48};
+ubyte game_projector_speed = 0;
+ubyte enter_game = false;
+ubyte game_system_screen = SySc_NONE;
+ubyte redraw_screen_flag = 0;
+ubyte reload_background_flag = 1;
+TbBool map_editor = false;
 
 /******************************************************************************/
 
-ubyte ac_main_do_my_quit(ubyte click);
-ubyte ac_main_do_login_1(ubyte click);
-ubyte ac_goto_savegame(ubyte click);
-ubyte ac_main_do_map_editor(ubyte click);
-ubyte ac_alert_OK(ubyte click);
-ubyte ac_do_sysmnu_button(ubyte click);
+ubyte goto_savegame(ubyte click);
 
-long time_difference(struct SynTime *tm1, struct SynTime *tm2)
+void global_date_new_game_reset(void)
 {
-#if 0
-    asm volatile ("call ASM_time_difference\n"
-        : : "a" (tm1), "d" (tm2));
-    return;
-#endif
-    return 60 * (tm1->Hour - (long)tm2->Hour) + tm1->Minute - (long)tm2->Minute;
+    global_date.Day = 2;
+    global_date.Month = 6;
+    global_date.Year = 74;
 }
 
-/** Increment timestamp stored in given syntime by one day.
- */
-void syntime_inc_day(struct SynTime *tm)
+void global_date_update_after_mission(void)
 {
-    tm->Day++;
-    if (tm->Day > month_days[tm->Month-1])
-    {
-        tm->Month++;
-        tm->Day = 1;
-        if (tm->Month > 12) {
-            tm->Year++;
-            tm->Month = 1;
-            tm->Year %= 100;
-        }
-    }
+    struct MissionStatus *p_mistat;
+
+    p_mistat = &mission_status[open_brief];
+
+    syntime_inc_days(&global_date, p_mistat->CityDays);
+    syntime_inc_hours(&global_date, p_mistat->CityHours);
 }
 
 short get_fe_max_detail_for_screen_res(short screen_width, short screen_height)
@@ -248,12 +248,6 @@ void reload_background(void)
 
 ubyte main_do_my_quit(ubyte click)
 {
-#if 0
-    ubyte ret;
-    asm volatile ("call ASM_main_do_my_quit\n"
-        : "=r" (ret) : "a" (click));
-    return ret;
-#endif
     stop_sample_using_heap(0, 122);
     exit_game = 1;
     return 1;
@@ -261,24 +255,12 @@ ubyte main_do_my_quit(ubyte click)
 
 ubyte main_do_map_editor(ubyte click)
 {
-#if 0
-    ubyte ret;
-    asm volatile ("call ASM_main_do_map_editor\n"
-        : "=r" (ret) : "a" (click));
-    return ret;
-#endif
     map_editor = 1;
     return 1;
 }
 
 ubyte main_do_login_1(ubyte click)
 {
-#if 0
-    ubyte ret;
-    asm volatile ("call ASM_main_do_login_1\n"
-        : "=r" (ret) : "a" (click));
-    return ret;
-#endif
     screentype = SCRT_LOGIN;
     edit_flag = 1;
     reload_background_flag = 1;
@@ -301,15 +283,9 @@ void show_main_screen(void)
         clear_key_pressed(KC_SPACE);
         skip_flashy_draw_main_screen_boxes();
     }
-    //main_quit_button.DrawFn(&main_quit_button); -- incompatible calling convention
-    asm volatile ("call *%1\n"
-        : : "a" (&main_quit_button), "g" (main_quit_button.DrawFn));
-    //main_load_button.DrawFn(&main_load_button); -- incompatible calling convention
-    asm volatile ("call *%1\n"
-        : : "a" (&main_load_button), "g" (main_load_button.DrawFn));
-    //main_login_button.DrawFn(&main_login_button); -- incompatible calling convention
-    asm volatile ("call *%1\n"
-        : : "a" (&main_login_button), "g" (main_login_button.DrawFn));
+    main_quit_button.DrawFn(&main_quit_button);
+    main_load_button.DrawFn(&main_load_button);
+    main_login_button.DrawFn(&main_login_button);
 }
 
 void init_main_screen_boxes(void)
@@ -337,10 +313,10 @@ void init_main_screen_boxes(void)
     main_quit_button.Border = 3;
     main_load_button.Border = 3;
 
-    main_map_editor_button.CallBackFn = ac_main_do_map_editor;
-    main_login_button.CallBackFn = ac_main_do_login_1;
-    main_quit_button.CallBackFn = ac_main_do_my_quit;
-    main_load_button.CallBackFn = ac_goto_savegame;
+    main_map_editor_button.CallBackFn = main_do_map_editor;
+    main_login_button.CallBackFn = main_do_login_1;
+    main_quit_button.CallBackFn = main_do_my_quit;
+    main_load_button.CallBackFn = goto_savegame;
 
     main_login_button.AccelKey = KC_RETURN;
     main_quit_button.AccelKey = KC_ESCAPE;
@@ -356,12 +332,6 @@ void set_flag01_main_screen_boxes(void)
 
 ubyte alert_OK(ubyte click)
 {
-#if 0
-    ubyte ret;
-    asm volatile ("call ASM_alert_OK\n"
-        : "=r" (ret) : "a" (click));
-    return ret;
-#endif
     screentype = old_screentype;
     redraw_screen_flag = 1;
     if (old_screentype == SCRT_SYSMENU)
@@ -371,10 +341,6 @@ ubyte alert_OK(ubyte click)
 
 void show_alert_box(void)
 {
-#if 0
-    asm volatile ("call ASM_show_alert_box\n"
-        :  :  : "eax" );
-#endif
     ubyte drawn = 0;
 
     if ((alert_box.Flags & 0x01) != 0)
@@ -390,9 +356,8 @@ void show_alert_box(void)
         alert_box.Y = alert_OK_button.Y - lnheight * nlines - 4;
         alert_box.Height = alert_OK_button.Height + 8 + lnheight * nlines;
     }
-    asm volatile ("call *%2\n"
-      : "=r" (drawn) : "a" (&alert_box), "g" (alert_box.DrawFn));
-    //drawn = alert_box.DrawFn(&alert_box);
+
+    drawn = alert_box.DrawFn(&alert_box);
     if (drawn == 3)
     {
         lbFontPtr = small_med_font;
@@ -400,9 +365,7 @@ void show_alert_box(void)
         lbDisplay.DrawFlags = Lb_TEXT_HALIGN_CENTER;
         flashy_draw_text(0, 0, alert_text, 3, 0, &alert_textpos, 0);
         lbDisplay.DrawFlags = 0;
-        asm volatile ("call *%2\n"
-          : "=r" (drawn) : "a" (&alert_OK_button), "g" (alert_OK_button.DrawFn));
-        //alert_OK_button.DrawFn(&alert_OK_button);
+        drawn = alert_OK_button.DrawFn(&alert_OK_button);
     }
 }
 
@@ -427,7 +390,7 @@ void init_alert_screen_boxes(void)
     init_screen_box(&alert_box, 219u, 189u, 200u, 100, 6);
     init_screen_button(&alert_OK_button, 10u, 269u,
       gui_strings[458], 6, med2_font, 1, 0);
-    alert_OK_button.CallBackFn = ac_alert_OK;
+    alert_OK_button.CallBackFn = alert_OK;
 
     alert_box.X = (scr_w - alert_box.Width) / 2 - 1;
     alert_OK_button.X = (scr_w - alert_OK_button.Width) / 2 - 1;
@@ -453,6 +416,11 @@ void skip_flashy_draw_sysmenu_boxes(void)
         sysmnu_buttons[i].Flags |= GBxFlg_Unkn0002;
 }
 
+TbBool button_is_modal_alert(struct ScreenButton *p_btn)
+{
+    return p_btn == &alert_OK_button;
+}
+
 void alert_box_text_va(const char *fmt, va_list arg)
 {
     vsnprintf(alert_text, sizeof(alert_text), fmt, arg);
@@ -469,12 +437,6 @@ void alert_box_text_fmt(const char *fmt, ...)
 
 ubyte show_title_box(struct ScreenTextBox *p_box)
 {
-#if 0
-    ubyte ret;
-    asm volatile ("call ASM_show_title_box\n"
-        : "=r" (ret) : "a" (p_box));
-    return ret;
-#endif
     short scr_x, scr_y;
     short tx_width, tx_height;
     ubyte cyan;
@@ -540,9 +502,7 @@ void show_sysmenu_screen(void)
         enter_game = 0;
     }
 
-    //drawn = unkn13_SYSTEM_button.DrawFn(&unkn13_SYSTEM_button); -- incompatible calling convention
-    asm volatile ("call *%2\n"
-        : "=r" (drawn) : "a" (&unkn13_SYSTEM_button), "g" (unkn13_SYSTEM_button.DrawFn));
+    drawn = unkn13_SYSTEM_button.DrawFn(&unkn13_SYSTEM_button);
     if (drawn)
     {
         for (i = 0; i < SYSMNU_BUTTONS_COUNT; i++)
@@ -551,9 +511,7 @@ void show_sysmenu_screen(void)
                 continue;
             if (restore_savegame && i < 5)
                 continue;
-            //drawn = sysmnu_buttons[i].DrawFn(&sysmnu_buttons[i]); -- incompatible calling convention
-            asm volatile ("call *%2\n"
-                : "=r" (drawn) : "a" (&sysmnu_buttons[i]), "g" (sysmnu_buttons[i].DrawFn));
+            drawn = sysmnu_buttons[i].DrawFn(&sysmnu_buttons[i]);
             if (!drawn)
                 v2 = 0;
             if (enter_game) {
@@ -620,11 +578,11 @@ void show_sysmenu_screen(void)
             reset_options_gfx_boxes_flags();
             break;
         case SySc_LOGOUT:
-            if (login_control__State == LognCt_Unkn5)
+            if (login_control__State == LognCt_NetStarted)
             {
                 net_schedule_local_player_logout();
-                byte_15516D = -1;
-                byte_15516C = -1;
+                selected_net_user = -1;
+                selected_net_session = -1;
                 switch_net_screen_boxes_to_initiate();
                 net_unkn_func_33();
             }
@@ -644,12 +602,6 @@ void show_sysmenu_screen(void)
 
 ubyte do_sysmnu_button(ubyte click)
 {
-#if 0
-    ubyte ret;
-    asm volatile ("call ASM_do_sysmnu_button\n"
-        : "=r" (ret) : "a" (click));
-    return ret;
-#endif
     enter_game = 1;
     return 1;
 }
@@ -665,7 +617,7 @@ void init_system_menu_boxes(void)
     x = 7;
     y = 25;
     init_screen_text_box(&heading_box, x, y, 640 - 2*7, 38, 6, big_font, 1);
-    heading_box.DrawTextFn = ac_show_title_box;
+    heading_box.DrawTextFn = show_title_box;
     heading_box.Text = options_title_text;
 
     start_x = (scr_w - heading_box.Width) / 2;
@@ -674,7 +626,7 @@ void init_system_menu_boxes(void)
     init_screen_text_box(&unkn13_SYSTEM_button, x, y, 197u, 38, 6,
       big_font, 1);
     unkn13_SYSTEM_button.Text = gui_strings[366];
-    unkn13_SYSTEM_button.DrawTextFn = ac_show_title_box;
+    unkn13_SYSTEM_button.DrawTextFn = show_title_box;
 
     val = 0;
     y += unkn13_SYSTEM_button.Height + 9;
@@ -684,7 +636,7 @@ void init_system_menu_boxes(void)
           gui_strings[378 + val], 6, med2_font, 1, 0);
         sysmnu_buttons[i].Width = unkn13_SYSTEM_button.Width;
         sysmnu_buttons[i].Height = 21;
-        sysmnu_buttons[i].CallBackFn = ac_do_sysmnu_button;
+        sysmnu_buttons[i].CallBackFn = do_sysmnu_button;
         sysmnu_buttons[i].Flags |= GBxFlg_Unkn0010;
         sysmnu_buttons[i].Border = 3;
         val++;
@@ -744,9 +696,7 @@ void skip_flashy_draw_heading_screen_boxes(void)
 ubyte draw_heading_box(void)
 {
     ubyte drawn = true;
-    //drawn = heading_box.DrawFn(&heading_box); -- incompatible calling convention
-    asm volatile ("call *%2\n"
-        : "=r" (drawn) : "a" (&heading_box), "g" (heading_box.DrawFn));
+    drawn = heading_box.DrawFn(&heading_box);
     return drawn;
 }
 
@@ -768,7 +718,7 @@ void global_date_tick(void)
     {
         if (!byte_1C497D) {
             byte_1C497D = 1;
-            syntime_inc_day(&global_date);
+            syntime_inc_days(&global_date, 1);
         }
     }
 
@@ -981,7 +931,6 @@ static void global_credits_box_draw(void)
 static void global_citydrop_box_draw(void)
 {
     const char *text;
-    uint n;
     const char *subtext;
     char locstr[50];
     short cx, cy;
@@ -1001,9 +950,8 @@ static void global_citydrop_box_draw(void)
     if (login_control__City == -1) {
         subtext = "";
     } else {
-        unkn_city_no = login_control__City;
-        n = cities[unkn_city_no].TextIndex[0];
-        subtext = (char *)&memload[n];
+        map_hl_city_id = login_control__City;
+        subtext = city_full_name(map_hl_city_id);
     }
     sprintf(locstr, "%s: %s", gui_strings[446], subtext);
     text = loctext_to_gtext(locstr);
@@ -1038,7 +986,7 @@ void show_purple_status_top_bar(void)
     global_date_box_draw();
     global_time_box_draw();
 
-    if (login_control__State == LognCt_Unkn5)
+    if (login_control__State == LognCt_NetStarted)
     {
         global_citydrop_box_draw();
         global_techlevel_box_draw();
@@ -1112,9 +1060,7 @@ void show_mission_loading_screen(void)
             clear_key_pressed(KC_SPACE);
             skip_flashy_draw_loading_screen_boxes();
         }
-        //loading_INITIATING_box.DrawFn(&loading_INITIATING_box); -- incompatible calling convention
-        asm volatile ("call *%1\n"
-            : : "a" (&loading_INITIATING_box), "g" (loading_INITIATING_box.DrawFn));
+        loading_INITIATING_box.DrawFn(&loading_INITIATING_box);
         if ((loading_INITIATING_box.Flags & GBxFlg_TextCopied) != 0)
             finished++;
         draw_purple_screen();
@@ -1126,45 +1072,6 @@ void show_mission_loading_screen(void)
 
     loading_INITIATING_box.Flags = GBxFlg_Unkn0001;
     wait_for_sound_sample_finish(118);
-}
-
-TbResult load_mapout(ubyte **pp_buf, const char *dir)
-{
-    char locstr[52];
-    ubyte *p_buf;
-    long len;
-    int i;
-    TbResult ret;
-
-    p_buf = *pp_buf;
-    ret = Lb_OK;
-
-    for (i = 0; i < 6; i++)
-    {
-        dword_1C529C[i] = (short *)p_buf;
-        sprintf(locstr, "%s/mapout%02d.dat", dir, i);
-        len = LbFileLoadAt(locstr, dword_1C529C[i]);
-        if (len == -1) {
-            LOGERR("Could not read file '%s'", locstr);
-            ret = Lb_FAIL;
-            len = 64;
-            LbMemorySet(p_buf, '\0', len);
-        }
-        p_buf += len;
-    }
-
-    landmap_2B4 = (short *)p_buf;
-    sprintf(locstr, "%s/mapinsid.dat", dir);
-    len = LbFileLoadAt(locstr, p_buf);
-    if (len == -1) {
-        ret = Lb_FAIL;
-        len = 64;
-        LbMemorySet(p_buf, '\0', len);
-    }
-    p_buf += len;
-
-    *pp_buf = p_buf;
-    return ret;
 }
 
 TbResult load_all_sprites_purple_mode(void)
@@ -1283,6 +1190,18 @@ TbBool init_purple_mode_colors_and_sprites(void)
 
     LOGSYNC("Done, ret=%s", ret ? "success" : "fail");
     return ret;
+}
+
+void reset_frontend_player_state(void)
+{
+    selected_city_id = -1;
+    reset_equip_screen_player_state();
+    reset_cryo_screen_player_state();
+    reset_world_screen_player_state();
+    reset_brief_screen_player_state();
+    reset_research_screen_player_state();
+    clear_all_scanner_signals();
+    reset_app_bar_player_state();
 }
 
 /******************************************************************************/

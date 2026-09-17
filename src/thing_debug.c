@@ -53,9 +53,9 @@ int dword_1DC7A4 = 0;
 short word_1DC7A0 = 0;
 short word_1DC7A2 = 0;
 
-extern ushort word_1DC898;
-extern ushort word_1DC8CE;
-extern ubyte byte_1DC89C[0x30];
+ushort word_1DC898 = 0;
+ushort word_1DC8CE = 0;
+ubyte byte_1DC89C[50];
 
 s32 mfilter_nearest_debug_selectable(ThingIdx thing, short X, short Z, ThingFilterParams *params)
 {
@@ -286,7 +286,7 @@ void count_fnavs(TbBool a1)
         word_1DC898++;
         return;
     }
-    if ((ingame.Flags & GamF_Unkn0200) != 0)
+    if ((ingame.Flags & GamF_NaviPerfInfo) != 0)
     {
         ushort i;
         TbPixel col;
@@ -300,9 +300,9 @@ void count_fnavs(TbBool a1)
             scr_x = lbDisplay.GraphicsScreenWidth - 29 * (pop1_sprites_scale + 1) / 2;
             scr_y = lbDisplay.GraphicsScreenHeight - (29 + 6 * i) * (pop1_sprites_scale + 1) / 2;
             if (byte_1DC89C[i])
-                col = colour_lookup[3];
+                col = colour_lookup[ColLU_GREEN];
             else
-                col = colour_lookup[2];
+                col = colour_lookup[ColLU_RED];
             LbDrawBox(scr_x, scr_y, w, h, col);
         }
     }
@@ -316,7 +316,7 @@ void navi_onscreen_debug(TbBool a1)
         word_1DC8CE++;
         return;
     }
-    if ((ingame.Flags & GamF_Unkn0200) != 0)
+    if ((ingame.Flags & GamF_NaviPerfInfo) != 0)
     {
         ushort i;
 
@@ -489,7 +489,7 @@ void draw_unkn_func_07(short x, short y, short a3, short a4, ubyte a5)
     asm volatile (
       "push %4\n"
       "call ASM_draw_unkn_func_07\n"
-        : : "a" (x), "d" (y), "b" (a3), "c" (a4), "g" (a5));
+        : : "a" (x), "d" (y), "b" (a3), "c" (a4), "g" ((u32)a5));
 }
 
 // TODO separate get_person_commands_debug_hud_inputs() from the below
@@ -876,7 +876,7 @@ void things_debug_hud(void)
         gtti_scr_y = scr_y + ln*3;
         draw_text(gtti_scr_x, gtti_scr_y, locstr, colour_lookup[ColLU_WHITE]);
 
-        if (p_track_thing->Flag & TngF_Unkn00040000)
+        if (p_track_thing->Flag & TngF_DangerFlee)
             draw_text(scr_x + 0, scr_y + ln*4, "Da", colour_lookup[ColLU_WHITE]);
         if (p_track_thing->Flag & TngF_WepRecoil)
             draw_text(scr_x + 20, scr_y + ln*4, "Re", colour_lookup[ColLU_WHITE]);
@@ -888,11 +888,11 @@ void things_debug_hud(void)
             draw_text(scr_x + 80, scr_y + ln*4, "Ch", colour_lookup[ColLU_WHITE]);
         if (p_track_thing->Flag & TngF_Unkn0040)
             draw_text(scr_x + 100, scr_y + ln*4, "CI", colour_lookup[ColLU_WHITE]);
-        if (p_track_thing->Flag & TngF_Unkn20000000)
+        if (p_track_thing->Flag & TngF_ShootAtPos)
             draw_text(scr_x + 120, scr_y + ln*4, "SAP", colour_lookup[ColLU_WHITE]);
         if (p_track_thing->Flag & TngF_StationrSht)
             draw_text(scr_x + 160, scr_y + ln*4, "Sta", colour_lookup[ColLU_RED]);
-        if (p_track_thing->Flag & TngF_Unkn0800)
+        if (p_track_thing->Flag & TngF_TriggerUse)
             draw_text(scr_x + 230, scr_y + ln*4, "TRIG", colour_lookup[ColLU_WHITE]);
 
         switch (p_track_thing->Type)

@@ -18,11 +18,13 @@
 /******************************************************************************/
 #include "vehicle.h"
 
-#include <assert.h>
 #include "bfmath.h"
 #include "bfmemut.h"
 #include "bfutility.h"
 #include "ssampply.h"
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "bigmap.h"
 #include "bmbang.h"
@@ -47,6 +49,97 @@ struct CarGlare { // sizeof=7
     short Diy;
     short Diz;
     ubyte Flag;
+};
+
+// TODO Maybe this is the same as players count, maybe not; owner field does not typically store player number
+#define MECH_OWNER_LIMIT 8
+
+struct unkn_mech_struc1 { // sizeof=0x11
+    ubyte field_0;
+    s32 field_1;
+    s32 field_5;
+    s32 field_9;
+    s32 field_D;
+};
+
+struct unkn_mech_struc2 { // sizeof=0x89
+    s32 field_0;
+    ubyte field_4[132];
+    ubyte field_88;
+};
+
+struct unkn_mech_struc3 { // sizeof=0x76
+    struct unkn_mech_struc4 *mech3_arr4_ptr;
+    s32 mech3_unkn_arr4_idx;
+    s32 mech3_unkn_fld_8;
+    struct M33 mech3_unkn_mat_C;
+    s32 mech3_unkn_X;
+    s32 mech3_unkn_Y;
+    s32 mech3_unkn_Z;
+    ubyte mech3_unkn_fld_3C[13];
+    s32 mech3_unkn_fld_49;
+    ubyte mech3_unkn_fld_4D[7];
+    s32 mech3_unkn_fld_54[3];
+    ubyte field_60;
+    ubyte field_61[3];
+    s32 field_64;
+    s32 field_68;
+    s32 field_6C;
+    ubyte field_70[2];
+    ubyte field_72[2];
+    ubyte field_74;
+    ubyte field_75;
+};
+
+struct unkn_mech_struc4 { // sizeof=0x7A
+    short thing;
+    ubyte field_2[33];
+    short field_23;
+    s32 field_25;
+    s32 field_29;
+    s32 field_2D;
+    s32 field_31;
+    s32 field_35;
+    s32 field_39;
+    s32 field_3D;
+    s32 field_41;
+    s32 field_45;
+    s32 angle_49;
+    s32 angle_4D;
+    s32 angle_51;
+    s32 field_55;
+    s32 field_59;
+    ubyte field_5D[4];
+    struct M31 field_61;
+    struct M31 field_6D;
+    ubyte field_79;
+};
+
+struct unkn_mech_struc5_s1 { // sizeof=24
+    s32 unkst5sub_04;
+    s32 unkst5sub_08;
+    s32 unkst5sub_0C;
+    s32 unkst5sub_10;
+    s32 unkst5sub_14;
+    ubyte unkst5sub_18[4];
+};
+
+struct unkn_mech_struc5 { // sizeof=0x1A9
+    s32 field_0;
+    struct unkn_mech_struc5_s1 field_4[16];
+    ubyte field_184[8];
+    ubyte field_18C[24];
+    ubyte field_1A4[4];
+    ubyte field_1A8;
+};
+
+struct unkn_mech_struc7 { // sizeof=0x13488
+    struct unkn_mech_struc3 field_0[MECH_OWNER_LIMIT];
+    struct unkn_mech_struc4 field_3B0[256];
+    struct unkn_mech_struc5 field_7DB0[64];
+    struct unkn_mech_struc1 field_E7F0[1024];
+    ubyte field_12BF0[8];
+    struct unkn_mech_struc2 field_12BF8[16];
 };
 
 #pragma pack()
@@ -183,6 +276,34 @@ struct CarGlare car_glare[] = {
   {-96, -16, 304, 0},
 };
 
+struct unkn_mech_struc3 *unkn_mech_arr3 = NULL;
+struct unkn_mech_struc4 *unkn_mech_arr4 = NULL;
+struct unkn_mech_struc5 *unkn_mech_arr5 = NULL;
+struct unkn_mech_struc1 *unkn_mech_arr1 = NULL;
+ubyte *unkn_mech_arr6 = NULL;
+struct unkn_mech_struc2 *unkn_mech_arr2 = NULL;
+struct M33 unkn_mech_mat8;
+
+s32 mech_last_cor_x = TILE_TO_MAPCOORD(MAP_TILE_WIDTH/2, 127);
+s32 mech_last_cor_y = TILE_TO_MAPCOORD(1, 0);
+s32 mech_last_cor_z = TILE_TO_MAPCOORD(MAP_TILE_WIDTH/2, 127);
+
+// to be removed after ASM use is gone
+s32 mech_unkn_tile_y2;
+s32 mech_unkn_tile_x3;
+s32 mech_unkn_tile_y3;
+
+s32 mech_rocket1_launch_cor_x = TILE_TO_MAPCOORD(MAP_TILE_WIDTH/2, 127);
+s32 mech_rocket1_launch_cor_y = TILE_TO_MAPCOORD(1, 0);
+s32 mech_rocket1_launch_cor_z = TILE_TO_MAPCOORD(MAP_TILE_WIDTH/2, 127);
+
+s32 mech_rocket2_launch_cor_x = TILE_TO_MAPCOORD(MAP_TILE_WIDTH/2, 127);
+s32 mech_rocket2_launch_cor_y = TILE_TO_MAPCOORD(1, 0);
+s32 mech_rocket2_launch_cor_z = TILE_TO_MAPCOORD(MAP_TILE_WIDTH/2, 127);
+
+extern s32 unkn_mech_var10;
+extern s32 unkn_mech_var11;
+
 const char *vehicle_type_name(ushort vtype)
 {
 #if 0
@@ -234,11 +355,123 @@ void snprint_vehicle_state(char *buf, ulong buflen, struct Thing *p_thing)
     snprintf(s, buflen - (s-buf), " )");
 }
 
+void mech_clear_all_fld72(void)
+{
+    ushort i;
+    ushort owner;
+
+    for (owner = 0; owner < MECH_OWNER_LIMIT; owner++)
+    {
+        struct unkn_mech_struc3 *p_u3itm;
+
+        p_u3itm = &unkn_mech_arr3[owner];
+        for (i = 0; i < 2; i++) {
+            p_u3itm->field_72[i] = 0;
+        }
+    }
+}
+
+void mech_unkn_func_02(void)
+{
+#if 0
+    asm volatile ("call ASM_mech_unkn_func_02\n"
+        :  :  : "eax" );
+    return;
+#endif
+    unkn_mech_var10 = 0;
+    unkn_mech_var11 = 0;
+
+    mech_clear_all_fld72();
+}
+
+int load_mech_dat(const char *fname)
+{
+#if 0
+    int ret;
+    asm volatile ("call ASM_load_mech_dat\n"
+        : "=r" (ret) : "a" (fname));
+    return ret;
+#endif
+    TbFileHandle fh;
+    int i, k;
+
+    fh = LbFileOpen(fname, Lb_FILE_MODE_READ_ONLY);
+    if (fh == INVALID_FILE) {
+        return 0;
+    }
+
+    for (i = 0; i < 64; i++)
+    {
+        struct unkn_mech_struc5 *p_u5itm;
+
+        p_u5itm = &unkn_mech_arr5[i];
+        LbFileRead(fh, p_u5itm, sizeof(struct unkn_mech_struc5));
+
+        for (k = 0; k < 17; k++)
+        {
+            p_u5itm->field_4[k].unkst5sub_0C = 0x800 - p_u5itm->field_4[k].unkst5sub_0C;
+            p_u5itm->field_4[k].unkst5sub_14 = 0x800 - p_u5itm->field_4[k].unkst5sub_14;
+            p_u5itm->field_4[k].unkst5sub_0C &= 0x7FF;
+            p_u5itm->field_4[k].unkst5sub_10 &= 0x7FF;
+            p_u5itm->field_4[k].unkst5sub_14 &= 0x7FF;
+            p_u5itm->field_4[k].unkst5sub_04 = -p_u5itm->field_4[k].unkst5sub_04;
+        }
+    }
+
+    for (i = 0; i < 16; i++) {
+        LbFileRead(fh, &unkn_mech_arr2[i], sizeof(struct unkn_mech_struc2));
+    }
+
+    for (i = 0; i < 1024; i++) {
+        LbFileRead(fh, &unkn_mech_arr1[i], sizeof(struct unkn_mech_struc1));
+    }
+
+    LbFileClose(fh);
+    return 1;
+}
 
 void init_mech(void)
 {
+#if 0
     asm volatile ("call ASM_init_mech\n"
         :  :  : "eax" );
+#endif
+    u32 a1idx;
+
+    unkn_mech_arr4 = &unkn_mech_stct7->field_3B0[0];
+    unkn_mech_arr5 = &unkn_mech_stct7->field_7DB0[0];
+    unkn_mech_arr1 = &unkn_mech_stct7->field_E7F0[0];
+    unkn_mech_arr6 = unkn_mech_stct7->field_12BF0;
+    unkn_mech_arr2 = &unkn_mech_stct7->field_12BF8[0];
+    unkn_mech_arr3 = &unkn_mech_stct7->field_0[0];
+    memset(unkn_mech_stct7, 0, sizeof(struct unkn_mech_struc7));
+
+    memset(&unkn_mech_mat8, 0, sizeof(struct M33));
+    unkn_mech_mat8.R[0][0] = 0x4000;
+    unkn_mech_mat8.R[1][1] = 0x4000;
+    unkn_mech_mat8.R[2][2] = 0x4000;
+
+    load_mech_dat("data/mech.dat");
+
+    mech_clear_all_fld72();
+    unkn_mech_arr3->field_6C = 0;
+    a1idx = unkn_mech_arr2[unkn_mech_arr3->field_6C].field_0;
+    unkn_mech_arr3->field_64 = a1idx;
+    unkn_mech_arr3->mech3_unkn_fld_54[2] = unkn_mech_arr1[a1idx].field_9;
+}
+
+void mech_gameturn_reinit(void)
+{
+    // Mech rocket coordinates should be recomputed later using proper matrix
+    // transforms; but to avoid them being unset, init to last body location
+    //TODO why do we think there is a chance of the coords not being properly updated from things?
+    mech_rocket1_launch_cor_x = mech_last_cor_x;
+    mech_rocket1_launch_cor_y = mech_last_cor_y;
+    mech_rocket1_launch_cor_z = mech_last_cor_z;
+
+    mech_rocket2_launch_cor_x = mech_last_cor_x;
+    mech_rocket2_launch_cor_y = mech_last_cor_y;
+    mech_rocket2_launch_cor_z = mech_last_cor_z;
 }
 
 TbBool vehicle_is_destroyed(ThingIdx thing)
@@ -250,12 +483,6 @@ TbBool vehicle_is_destroyed(ThingIdx thing)
 
     p_thing = &things[thing];
     return thing_is_destroyed(thing) || (p_thing->Type != TT_VEHICLE);
-}
-
-void mech_unkn_func_02(void)
-{
-    asm volatile ("call ASM_mech_unkn_func_02\n"
-        :  :  : "eax" );
 }
 
 void mech_unkn_func_09(ThingIdx thing)
@@ -302,7 +529,6 @@ void veh_add(struct Thing *p_vehicle, short frame)
         coord_x = PRCCOORD_TO_MAPCOORD(p_vehicle->X);
         coord_y = PRCCOORD_TO_MAPCOORD(p_vehicle->Y);
         coord_z = PRCCOORD_TO_MAPCOORD(p_vehicle->Z);
-        byte_1C83D1 = 0;
         snobj = copy_prim_obj_to_game_object(coord_x, coord_z, -19 - prim_unknprop01, coord_y + 20);
         p_mgun->X = 0;
         p_mgun->Y = 0x2800;
@@ -335,7 +561,6 @@ void veh_add(struct Thing *p_vehicle, short frame)
         coord_x = PRCCOORD_TO_MAPCOORD(p_vehicle->X);
         coord_y = PRCCOORD_TO_MAPCOORD(p_vehicle->Y);
         coord_z = PRCCOORD_TO_MAPCOORD(p_vehicle->Z);
-        byte_1C83D1 = 0;
         snobj = copy_prim_obj_to_game_object(coord_x, coord_z, -27 - prim_unknprop01, coord_y + 20);
         p_mgun->X = 0;
         p_mgun->Y = 0x1E00;
@@ -365,7 +590,6 @@ void veh_add(struct Thing *p_vehicle, short frame)
         p_mgun->U.UMGun.MatrixIndex = matx;
         p_mgun->StartFrame = frame;
 
-        byte_1C83D1 = 0;
         coord_x = PRCCOORD_TO_MAPCOORD(p_vehicle->X);
         coord_y = PRCCOORD_TO_MAPCOORD(p_vehicle->Y);
         coord_z = PRCCOORD_TO_MAPCOORD(p_vehicle->Z);
@@ -908,7 +1132,7 @@ void process_tank_turret(struct Thing *p_tank)
         return;
     }
     p_turret = &things[turret];
-    if ((p_tank->Flag & TngF_Unkn20000000) != 0)
+    if ((p_tank->Flag & TngF_ShootAtPos) != 0)
     {
         target_x = p_tank->U.UVehicle.TargetDX;
         target_y = p_tank->U.UVehicle.TargetDZ;

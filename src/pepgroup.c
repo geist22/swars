@@ -20,14 +20,135 @@
 
 #include "bfutility.h"
 #include "bfmemut.h"
+#include <assert.h>
 
 #include "command.h"
 #include "player.h"
+#include "swlog.h"
 #include "thing.h"
 #include "game.h"
 #include "game_options.h"
 #include "agent_cosmetics.h"
 /******************************************************************************/
+
+TbBool things_check_same_group(ThingIdx tng1, ThingIdx tng2)
+{
+    struct Thing *p_thing1;
+    struct Thing *p_thing2;
+    short grp1, grp2;
+
+    if (tng1 <= 0) {
+        return false;
+    }
+    if (tng2 <= 0) {
+        return false;
+    }
+    p_thing1 = &things[tng1];
+    p_thing2 = &things[tng2];
+
+    // This function can be called for objects, people, vehicles, mguns and rockets
+    assert(offsetof(struct Thing, U.UObject.EffectiveGroup) == offsetof(struct Thing, U.UPerson.EffectiveGroup));
+    assert(offsetof(struct Thing, U.UObject.EffectiveGroup) == offsetof(struct Thing, U.UVehicle.EffectiveGroup));
+    assert(offsetof(struct Thing, U.UObject.EffectiveGroup) == offsetof(struct Thing, U.UMGun.EffectiveGroup));
+    assert(offsetof(struct Thing, U.UObject.EffectiveGroup) == offsetof(struct Thing, U.UEffect.EffectiveGroup));
+
+    grp1 = p_thing1->U.UObject.EffectiveGroup & 0x7F;
+    grp2 = p_thing2->U.UObject.EffectiveGroup & 0x7F;
+    return groups_equal(grp1, grp2);
+}
+
+TbBool things_check_have_truce_one_way(ThingIdx tng1, ThingIdx tng2)
+{
+    struct Thing *p_thing1;
+    struct Thing *p_thing2;
+    short grp1, grp2;
+
+    if (tng1 <= 0) {
+        return false;
+    }
+    if (tng2 <= 0) {
+        return false;
+    }
+    p_thing1 = &things[tng1];
+    p_thing2 = &things[tng2];
+
+    // This function can be called for objects, people, vehicles, mguns and rockets
+    assert(offsetof(struct Thing, U.UObject.EffectiveGroup) == offsetof(struct Thing, U.UPerson.EffectiveGroup));
+    assert(offsetof(struct Thing, U.UObject.EffectiveGroup) == offsetof(struct Thing, U.UVehicle.EffectiveGroup));
+    assert(offsetof(struct Thing, U.UObject.EffectiveGroup) == offsetof(struct Thing, U.UMGun.EffectiveGroup));
+    assert(offsetof(struct Thing, U.UObject.EffectiveGroup) == offsetof(struct Thing, U.UEffect.EffectiveGroup));
+
+    grp1 = p_thing1->U.UObject.EffectiveGroup & 0x7F;
+    grp2 = p_thing2->U.UObject.EffectiveGroup & 0x7F;
+    return groups_have_truce(grp1, grp2);
+}
+
+TbBool things_check_have_truce_any_way(ThingIdx tng1, ThingIdx tng2)
+{
+    struct Thing *p_thing1;
+    struct Thing *p_thing2;
+    short grp1, grp2;
+
+    if (tng1 <= 0) {
+        return false;
+    }
+    if (tng2 <= 0) {
+        return false;
+    }
+    p_thing1 = &things[tng1];
+    p_thing2 = &things[tng2];
+
+    // This function can be called for objects, people, vehicles, mguns and rockets
+    assert(offsetof(struct Thing, U.UObject.EffectiveGroup) == offsetof(struct Thing, U.UPerson.EffectiveGroup));
+    assert(offsetof(struct Thing, U.UObject.EffectiveGroup) == offsetof(struct Thing, U.UVehicle.EffectiveGroup));
+    assert(offsetof(struct Thing, U.UObject.EffectiveGroup) == offsetof(struct Thing, U.UMGun.EffectiveGroup));
+    assert(offsetof(struct Thing, U.UObject.EffectiveGroup) == offsetof(struct Thing, U.UEffect.EffectiveGroup));
+
+    grp1 = p_thing1->U.UObject.EffectiveGroup & 0x7F;
+    grp2 = p_thing2->U.UObject.EffectiveGroup & 0x7F;
+    return groups_have_truce(grp1, grp2) || groups_have_truce(grp2, grp1);
+}
+
+TbBool thing_group_has_guardians(ThingIdx tng)
+{
+    struct Thing *p_thing;
+    short grp;
+
+    if (tng <= 0) {
+        return false;
+    }
+    p_thing = &things[tng];
+
+    // This function can be called for objects, people, vehicles, mguns and rockets
+    assert(offsetof(struct Thing, U.UObject.EffectiveGroup) == offsetof(struct Thing, U.UPerson.EffectiveGroup));
+    assert(offsetof(struct Thing, U.UObject.EffectiveGroup) == offsetof(struct Thing, U.UVehicle.EffectiveGroup));
+    assert(offsetof(struct Thing, U.UObject.EffectiveGroup) == offsetof(struct Thing, U.UMGun.EffectiveGroup));
+    assert(offsetof(struct Thing, U.UObject.EffectiveGroup) == offsetof(struct Thing, U.UEffect.EffectiveGroup));
+
+    grp = p_thing->U.UObject.EffectiveGroup & 0x7F;
+    return group_has_guardians(grp);
+}
+
+void thing_groups_set_kill_on_sight_one_way(ThingIdx tng1, ThingIdx tng2)
+{
+    struct Thing *p_thing1;
+    struct Thing *p_thing2;
+    short grp1, grp2;
+
+    if (tng1 <= 0) {
+        return;
+    }
+    if (tng2 <= 0) {
+        return;
+    }
+    p_thing1 = &things[tng1];
+    p_thing2 = &things[tng2];
+
+    grp1 = p_thing1->U.UObject.EffectiveGroup & 0x7F;
+    grp2 = p_thing2->U.UObject.EffectiveGroup & 0x7F;
+
+    groups_set_kill_on_sight(grp1, grp2, true);
+}
 
 short find_unused_group_id(TbBool largest)
 {
@@ -44,14 +165,14 @@ short find_unused_group_id(TbBool largest)
     }
     if (largest)
     {
-        for (group = PEOPLE_GROUPS_COUNT-1; group > 0; group--) {
+        for (group = PEOPLE_GROUPS_LIMIT-1; group > 0; group--) {
             if ((used_groups & (1 << group)) == 0)
                 return group;
         }
     }
     else
     {
-        for (group = 1; group < PEOPLE_GROUPS_COUNT; group++) {
+        for (group = 1; group < PEOPLE_GROUPS_LIMIT; group++) {
             if ((used_groups & (1 << group)) == 0)
                 return group;
         }
@@ -84,11 +205,17 @@ ushort count_people_in_group(ushort group, short subtype)
     return count;
 }
 
-void thing_group_copy(short pv_group, short nx_group, ubyte allow_kill)
+TbBool groups_equal(short grp1, short grp2)
+{
+    // TODO why are we disallowing outranged groups to be treated as same?
+    return ((grp1 == grp2) && (grp1 < PEOPLE_GROUPS_LIMIT) && (grp2 < PEOPLE_GROUPS_LIMIT));
+}
+
+void groups_copy(short pv_group, short nx_group, ubyte allow_kill)
 {
     int i;
 
-    for (i = 0; i < PEOPLE_GROUPS_COUNT; i++)
+    for (i = 0; i < PEOPLE_GROUPS_LIMIT; i++)
     {
         if (i == pv_group)
         {
@@ -146,31 +273,55 @@ void thing_group_copy(short pv_group, short nx_group, ubyte allow_kill)
     }
 }
 
-void thing_group_set_kill_on_sight(short mod_grp, short target_grp, TbBool state)
+TbBool group_has_guardians(short check_grp)
 {
-    mod_grp &= 0x1F;
+    check_grp &= PEOPLE_GROUPS_INDEX_MASK;
+    return (war_flags[check_grp].Guardians[0] != 0);
+}
+
+TbBool groups_have_kill_if_weapon_out(short check_grp, short target_grp)
+{
+    check_grp &= PEOPLE_GROUPS_INDEX_MASK;
+    return (war_flags[check_grp].KillIfWeaponOut & (1 << target_grp)) != 0;
+}
+
+TbBool groups_have_kill_if_armed(short check_grp, short target_grp)
+{
+    check_grp &= PEOPLE_GROUPS_INDEX_MASK;
+    return (war_flags[check_grp].KillIfArmed & (1 << target_grp)) != 0;
+}
+
+TbBool groups_have_kill_on_sight(short check_grp, short target_grp)
+{
+    check_grp &= PEOPLE_GROUPS_INDEX_MASK;
+    return (war_flags[check_grp].KillOnSight & (1 << target_grp)) != 0;
+}
+
+void groups_set_kill_on_sight(short mod_grp, short target_grp, TbBool state)
+{
+    mod_grp &= PEOPLE_GROUPS_INDEX_MASK;
     if (state)
         war_flags[mod_grp].KillOnSight |= 1 << target_grp;
     else
         war_flags[mod_grp].KillOnSight &= ~(1 << target_grp);
 }
 
-TbBool thing_group_have_truce(short check_grp, short target_grp)
+TbBool groups_have_truce(short check_grp, short target_grp)
 {
-    check_grp &= 0x1F;
+    check_grp &= PEOPLE_GROUPS_INDEX_MASK;
     return (war_flags[check_grp].Truce & (1 << target_grp)) != 0;
 }
 
-void thing_group_set_truce(short mod_grp, short target_grp, TbBool state)
+void groups_set_truce(short mod_grp, short target_grp, TbBool state)
 {
-    mod_grp &= 0x1F;
+    mod_grp &= PEOPLE_GROUPS_INDEX_MASK;
     if (state)
         war_flags[mod_grp].Truce |= 1 << target_grp;
     else
         war_flags[mod_grp].Truce &= ~(1 << target_grp);
 }
 
-int thing_group_transfer_people(short pv_group, short nx_group, short subtype, int stay_limit, int tran_limit)
+int group_to_group_transfer_people(short pv_group, short nx_group, short subtype, int stay_limit, int tran_limit)
 {
     ThingIdx thing;
     struct Thing *p_thing;
@@ -223,7 +374,7 @@ void thing_groups_clear_all_actions(void)
 {
     short group;
 
-    for (group = 0; group < PEOPLE_GROUPS_COUNT; group++)
+    for (group = 0; group < PEOPLE_GROUPS_LIMIT; group++)
     {
         thing_group_clear_action(group);
     }
@@ -231,12 +382,18 @@ void thing_groups_clear_all_actions(void)
 
 TbBool all_group_members_destroyed(ushort group)
 {
-    ThingIdx thing;
     struct Thing *p_thing;
+    ThingIdx thing;
+    short i;
 
+    assert(group < PEOPLE_GROUPS_LIMIT);
     thing = same_type_head[256 + group];
-    for (; thing > 0; thing = p_thing->LinkSameGroup)
+    for (i = 0; thing > 0; thing = p_thing->LinkSameGroup, i++)
     {
+        if (i >= THINGS_LIMIT) {
+            LOGERR("Infinite loop in same group things list");
+            break;
+        }
         p_thing = &things[thing];
         if (!thing_is_destroyed(thing))
             return false;
@@ -246,12 +403,18 @@ TbBool all_group_members_destroyed(ushort group)
 
 TbBool all_group_persuaded(ushort group)
 {
-    ThingIdx thing;
     struct Thing *p_thing;
+    ThingIdx thing;
+    short i;
 
+    assert(group < PEOPLE_GROUPS_LIMIT);
     thing = same_type_head[256 + group];
-    for (; thing > 0; thing = p_thing->LinkSameGroup)
+    for (i = 0; thing > 0; thing = p_thing->LinkSameGroup, i++)
     {
+        if (i >= THINGS_LIMIT) {
+            LOGERR("Infinite loop in same group things list");
+            break;
+        }
         p_thing = &things[thing];
         if (!person_is_persuaded(thing) || ((things[p_thing->Owner].Flag & TngF_PlayerAgent) == 0))
         {
@@ -274,12 +437,18 @@ ubyte all_group_arrived(ushort group, short x, short y, short z, int radius)
 
 TbBool group_has_all_killed_or_persuaded_by_player(ushort group, ushort plyr)
 {
-    ThingIdx thing;
     struct Thing *p_thing;
+    ThingIdx thing;
+    short i;
 
+    assert(group < PEOPLE_GROUPS_LIMIT);
     thing = same_type_head[256 + group];
-    for (; thing > 0; thing = p_thing->LinkSameGroup)
+    for (i = 0; thing > 0; thing = p_thing->LinkSameGroup, i++)
     {
+        if (i >= THINGS_LIMIT) {
+            LOGERR("Infinite loop in same group things list");
+            break;
+        }
         p_thing = &things[thing];
         if (!person_is_persuaded_by_player(thing, plyr))
         {
@@ -292,12 +461,18 @@ TbBool group_has_all_killed_or_persuaded_by_player(ushort group, ushort plyr)
 
 TbBool group_has_all_survivors_in_vehicle(ushort group, ThingIdx vehicle)
 {
-    ThingIdx thing;
     struct Thing *p_thing;
+    ThingIdx thing;
+    short i;
 
+    assert(group < PEOPLE_GROUPS_LIMIT);
     thing = same_type_head[256 + group];
-    for (; thing > 0; thing = p_thing->LinkSameGroup)
+    for (i = 0; thing > 0; thing = p_thing->LinkSameGroup, i++)
     {
+        if (i >= THINGS_LIMIT) {
+            LOGERR("Infinite loop in same group things list");
+            break;
+        }
         p_thing = &things[thing];
         if (!person_is_in_vehicle(p_thing, vehicle))
         {
@@ -310,14 +485,20 @@ TbBool group_has_all_survivors_in_vehicle(ushort group, ThingIdx vehicle)
 
 TbBool group_has_no_less_members_in_vehicle(ushort group, ThingIdx vehicle, ushort amount)
 {
-    ThingIdx thing;
     struct Thing *p_thing;
+    ThingIdx thing;
+    short i;
     ushort n;
 
+    assert(group < PEOPLE_GROUPS_LIMIT);
     n = 0;
     thing = same_type_head[256 + group];
-    for (; thing > 0; thing = p_thing->LinkSameGroup)
+    for (i = 0; thing > 0; thing = p_thing->LinkSameGroup, i++)
     {
+        if (i >= THINGS_LIMIT) {
+            LOGERR("Infinite loop in same group things list");
+            break;
+        }
         p_thing = &things[thing];
         if (!person_is_dead(thing) && !thing_is_destroyed(thing))
         {
@@ -332,14 +513,20 @@ TbBool group_has_no_less_members_in_vehicle(ushort group, ThingIdx vehicle, usho
 
 TbBool group_has_no_less_members_persuaded_by_player(ushort group, ushort plyr, ushort amount)
 {
-    ThingIdx thing;
     struct Thing *p_thing;
+    ThingIdx thing;
+    short i;
     ushort n;
 
+    assert(group < PEOPLE_GROUPS_LIMIT);
     n = 0;
     thing = same_type_head[256 + group];
-    for (; thing > 0; thing = p_thing->LinkSameGroup)
+    for (i = 0; thing > 0; thing = p_thing->LinkSameGroup, i++)
     {
+        if (i >= THINGS_LIMIT) {
+            LOGERR("Infinite loop in same group things list");
+            break;
+        }
         p_thing = &things[thing];
         if (person_is_persuaded_by_player(thing, plyr))
             n++;
@@ -351,14 +538,20 @@ TbBool group_has_no_less_members_persuaded_by_player(ushort group, ushort plyr, 
 
 TbBool group_has_no_less_members_killed_or_persuaded_by_player(ushort group, ushort plyr, ushort amount)
 {
-    ThingIdx thing;
     struct Thing *p_thing;
+    ThingIdx thing;
+    short i;
     ushort n;
 
+    assert(group < PEOPLE_GROUPS_LIMIT);
     n = 0;
     thing = same_type_head[256 + group];
-    for (; thing > 0; thing = p_thing->LinkSameGroup)
+    for (i = 0; thing > 0; thing = p_thing->LinkSameGroup, i++)
     {
+        if (i >= THINGS_LIMIT) {
+            LOGERR("Infinite loop in same group things list");
+            break;
+        }
         p_thing = &things[thing];
         if (person_is_persuaded_by_player(thing, plyr) ||
           person_is_dead(thing) || thing_is_destroyed(thing))
@@ -371,14 +564,20 @@ TbBool group_has_no_less_members_killed_or_persuaded_by_player(ushort group, ush
 
 TbBool group_has_no_less_members_dead(ushort group, ushort amount)
 {
-    ThingIdx thing;
     struct Thing *p_thing;
+    ThingIdx thing;
+    short i;
     ushort n;
 
+    assert(group < PEOPLE_GROUPS_LIMIT);
     n = 0;
     thing = same_type_head[256 + group];
-    for (; thing > 0; thing = p_thing->LinkSameGroup)
+    for (i = 0; thing > 0; thing = p_thing->LinkSameGroup, i++)
     {
+        if (i >= THINGS_LIMIT) {
+            LOGERR("Infinite loop in same group things list");
+            break;
+        }
         p_thing = &things[thing];
         if (person_is_dead(thing) || thing_is_destroyed(thing))
             n++;
@@ -390,8 +589,9 @@ TbBool group_has_no_less_members_dead(ushort group, ushort amount)
 
 TbBool group_has_no_less_members_near_thing(ThingIdx neartng, ushort group, ushort amount, ushort radius)
 {
-    ThingIdx thing;
     struct Thing *p_thing;
+    ThingIdx thing;
+    short i;
     ushort n;
     short nearX, nearZ;
 
@@ -409,10 +609,15 @@ TbBool group_has_no_less_members_near_thing(ThingIdx neartng, ushort group, usho
         nearZ = p_neartng->Z;
     }
 
+    assert(group < PEOPLE_GROUPS_LIMIT);
     n = 0;
     thing = same_type_head[256 + group];
-    for (; thing > 0; thing = p_thing->LinkSameGroup)
+    for (i = 0; thing > 0; thing = p_thing->LinkSameGroup, i++)
     {
+        if (i >= THINGS_LIMIT) {
+            LOGERR("Infinite loop in same group things list");
+            break;
+        }
         p_thing = &things[thing];
         if (!person_is_dead(thing) && !thing_is_destroyed(thing))
         {
@@ -427,14 +632,20 @@ TbBool group_has_no_less_members_near_thing(ThingIdx neartng, ushort group, usho
 
 TbBool group_has_no_less_members_persuaded_by_person(ushort group, ThingIdx owntng, ushort amount)
 {
-    ThingIdx thing;
     struct Thing *p_thing;
+    ThingIdx thing;
+    short i;
     ushort n;
 
+    assert(group < PEOPLE_GROUPS_LIMIT);
     n = 0;
     thing = same_type_head[256 + group];
-    for (; thing > 0; thing = p_thing->LinkSameGroup)
+    for (i = 0; thing > 0; thing = p_thing->LinkSameGroup, i++)
     {
+        if (i >= THINGS_LIMIT) {
+            LOGERR("Infinite loop in same group things list");
+            break;
+        }
         p_thing = &things[thing];
         if (person_is_persuaded_by_person(thing, owntng))
             n++;
@@ -469,8 +680,8 @@ void reset_default_player_agent(PlayerIdx plyr, short plagent, struct Thing *p_a
     else
     {
         p_player->DirectControl[plagent] = p_agent->ThingOffset;
-        p_agent->Flag |= TngF_Unkn1000;
-        if ((local_player_no == plyr) && (plagent == 0)) {
+        p_agent->Flag |= TngF_SelectedAgent;
+        if ((plyr == local_player_no) && (plagent == 0)) {
             game_set_cam_track_thing_xz(p_agent->ThingOffset);
         }
     }
@@ -541,7 +752,7 @@ void reset_group_member_player_agent(PlayerIdx plyr, ushort plagent, ushort high
     else
     {
         p_player->DirectControl[plagent] = p_agent->ThingOffset;
-        p_agent->Flag |= TngF_Unkn1000;
+        p_agent->Flag |= TngF_SelectedAgent;
         if ((plyr == local_player_no) && (plagent == 0)) {
             game_set_cam_track_thing_xz(p_agent->ThingOffset);
         }
@@ -670,5 +881,50 @@ ushort make_group_into_players(ushort group, ushort plyr, ushort max_agent, shor
         players[plyr].MyAgent[plagent] = &things[0];
 
     return n;
+}
+
+void unkn_truce_groups_sub1(void)
+{
+    ubyte playable[40];
+    ubyte pla_grp_count[5];
+    ushort plyr;
+    ushort grp1, grp2;
+    ushort k, m;
+    ushort j;
+
+    LbMemorySet(playable, 0, sizeof(playable));
+    LbMemorySet(pla_grp_count, 0, sizeof(pla_grp_count));
+
+    for (plyr = 0; plyr < PLAYERS_LIMIT; plyr++)
+    {
+        if (((1 << plyr) & ingame.InNetGame_UNSURE) == 0)
+            continue;
+
+        j = net_player_teams[plyr];
+        k = pla_grp_count[j];
+        playable[8 * j + k] = level_def.PlayableGroups[plyr];
+        pla_grp_count[j]++;
+    }
+
+    for (j = 1; j < 5; j++)
+    {
+        for (k = 0; k < pla_grp_count[j]; k++)
+        {
+            for (m = 0; m < pla_grp_count[j]; m++)
+            {
+                if (m == k)
+                    continue;
+
+                grp1 = playable[8 * j + k];
+                grp2 = playable[8 * j + m];
+
+                war_flags[grp1].Truce |= (1 << grp2);
+                war_flags[grp1].KillOnSight &= ~(1 << grp2);
+                war_flags[grp1].KillIfArmed &= ~(1 << grp2);
+                war_flags[grp1].KillIfWeaponOut &= ~(1 << grp2);
+                LOGSYNC("group %d truced with group %d", grp1, grp2);
+            }
+        }
+    }
 }
 /******************************************************************************/

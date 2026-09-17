@@ -34,6 +34,7 @@
 #include "game_data.h"
 #include "guitext.h"
 #include "lvobjctv.h"
+#include "mydraw.h"
 #include "wadfile.h"
 #include "swlog.h"
 /******************************************************************************/
@@ -59,23 +60,27 @@ const struct TbNamedEnum cities_conf_city_cmds[] = {
   {NULL,		0},
 };
 
-void load_city_txt(void)
+char *memload_city_prop_text = NULL;
+
+sbyte selected_city_id = -1;
+
+void load_city_prop_text(void)
 {
     char *s;
     int totlen;
     int i, k, city;
 
-    totlen = load_file_alltext("textdata/city.txt", memload);
+    totlen = load_file_alltext("textdata/city.txt", memload_city_prop_text);
     if (totlen == Lb_FAIL) {
         return;
     }
-    if (totlen >= memload_len) {
-        LOGERR("Insufficient memory for memload - %d instead of %d", memload_len, totlen);
-        totlen = memload_len - 1;
+    if (totlen >= memload_city_prop_text_len) {
+        LOGERR("Insufficient memory for city_prop_text - %d instead of %d", memload_city_prop_text_len, totlen);
+        totlen = memload_city_prop_text_len - 1;
     }
-    memload[totlen] = '\0';
+    memload_city_prop_text[totlen] = '\0';
 
-    s = (char *)memload;
+    s = memload_city_prop_text;
     // Read property names
     {
         for (i = 0; i < 6; )
@@ -118,7 +123,7 @@ void load_city_txt(void)
                 } while ((c != '\n') && (c != '\0'));
                 continue;
             }
-            cities[city].TextIndex[i] = s - (char *)memload;
+            cities[city].TextIndex[i] = s - memload_city_prop_text;
             while ((*s != '\r') && (*s != '\0')) {
                 s++;
             }
@@ -126,16 +131,31 @@ void load_city_txt(void)
             s += 2;
             // String ready, preprocess it
             k = cities[city].TextIndex[i];
-            my_preprocess_text((char *)&memload[k]);
+            my_preprocess_text(memload_city_prop_text + k);
             i++;
         }
     }
 }
 
+const char *city_property_text(sbyte city, ubyte prop_id)
+{
+    uint bufpos;
+
+    if ((city < 0) || (city >= num_cities))
+        return "";
+    bufpos = cities[city].TextIndex[prop_id];
+    return memload_city_prop_text + bufpos;
+}
+
+const char *city_full_name(sbyte city)
+{
+    return city_property_text(city, 0);
+}
+
 void save_city_single_conf(TbFileHandle fh, struct City *p_city, char *buf)
 {
     {
-        sprintf(buf, "Name = %s\n", memload + p_city->TextIndex[0]);
+        sprintf(buf, "Name = %s\n", memload_city_prop_text + p_city->TextIndex[0]);
         LbFileWrite(fh, buf, strlen(buf));
     }
     if (p_city->TextIndex[0] != 0) {
@@ -503,6 +523,11 @@ void clear_cities_decor(ushort flags)
     }
 }
 
+void clear_city_netscan(ubyte city)
+{
+    cities[city].Info = 0;
+}
+
 void activate_cities(ubyte brief)
 {
     ushort missi, spmissi;
@@ -510,7 +535,7 @@ void activate_cities(ubyte brief)
 
     deactivate_cities();
 
-    if (login_control__State == LognCt_Unkn5)
+    if (login_control__State == LognCt_NetStarted)
     {
         clear_cities_decor(0x01);
         return;
@@ -545,6 +570,19 @@ void activate_cities(ubyte brief)
             update_cities_decor_to_brief(brief - 1, 0x01);
         }
     }
+}
+
+ushort find_mission_for_city_in_brief(short brief, sbyte city)
+{
+    ushort missi;
+
+    for (missi = brief_store[brief].Mission; missi != 0;
+      missi = mission_list[missi].SpecialTrigger[0])
+    {
+        if (mission_list[missi].MapNo == cities[city].MapID)
+            break;
+    }
+    return missi;
 }
 
 sbyte find_closest_city(ushort x, ushort y)

@@ -43,7 +43,7 @@ static void print_walk_items_for_face(short face)
     {
         struct SingleObjectFace3 *p_face;
 
-        p_face = &game_object_faces[face];
+        p_face = &game_object_faces3[face];
         wh = p_face->WalkHeader;
     }
     else if (face < 0)
@@ -67,9 +67,9 @@ void print_walk_items(void)
 {
     short face;
 
-    for (face = 1; face < next_object_face; face++)
+    for (face = 1; face < next_object_face3; face++)
     {
-        if ((game_object_faces[face].GFlags & 0x04) != 0)
+        if ((game_object_faces3[face].GFlags & 0x04) != 0)
             print_walk_items_for_face(face);
     }
     for (face = 1; face < next_object_face4; face++)
@@ -322,13 +322,13 @@ void save_triangulation_png(const char *fname)
     ubyte *pal;
     ubyte *img;
 
-    pal = malloc(256*3);
-    img = malloc(img_dim*img_dim);
+    pal = LbMemoryAlloc(256*3);
+    img = LbMemoryAlloc(img_dim*img_dim);
     draw_triangulation_palette(pal);
     draw_triangulation_debug_image(img, margin, margin, img_dim, img_dim, cor_shl);
     LbPngSave(fname, img, img_dim, img_dim, pal, true);
-    free(pal);
-    free(img);
+    LbMemoryFree(pal);
+    LbMemoryFree(img);
 }
 
 /******************************************************************************/

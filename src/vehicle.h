@@ -30,6 +30,18 @@ extern "C" {
 
 #define VEHICLE_PASSENGER_LIMIT 500
 
+/** Distance from bottom of the mech body to where the barrel is, for beam weapons.
+ *
+ * Used as starting point of shots.
+ */
+#define MECH_BOTTOM_TO_BEAM_WEAPON_HEIGHT 24
+
+/** Length from mech body center to tip of the mech weapon, for beam weapons.
+ *
+ * Used as starting point of shots.
+ */
+#define MECH_CENTER_TO_BEAM_WEAPON_TIP_MAPCOORD -96
+
 enum SubTypeVehicle {
   SubTT_VEH_TRAIN = 0x1D,
   SubTT_VEH_UNKN30 = 0x1E,
@@ -199,6 +211,8 @@ enum VehWorkPlaceFlags {
 };
 
 struct Thing;
+struct unkn_mech_struc7;
+struct unkn_mech_struc3;
 
 /** Stores configuration for a state of a vehicle.
  */
@@ -210,7 +224,27 @@ struct VehStateConfig
 
 #pragma pack()
 /******************************************************************************/
+
+extern struct unkn_mech_struc7 *unkn_mech_stct7; // = NULL;
+extern void *dword_177750;
+
+extern s32 mech_rocket1_launch_cor_x;
+extern s32 mech_rocket1_launch_cor_y;
+extern s32 mech_rocket1_launch_cor_z;
+extern s32 mech_rocket2_launch_cor_x;
+extern s32 mech_rocket2_launch_cor_y;
+extern s32 mech_rocket2_launch_cor_z;
+
+extern struct unkn_mech_struc3 *unkn_mech_arr3;
+
+/******************************************************************************/
+
 void init_mech(void);
+
+/** Reinit per-gameturn state of mech vehicles.
+ */
+void mech_gameturn_reinit(void);
+
 void mech_unkn_func_02(void);
 void mech_unkn_func_09(ThingIdx thing);
 void init_mech_explode(struct Thing *p_vehicle);
