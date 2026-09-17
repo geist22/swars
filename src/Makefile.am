@@ -4,51 +4,6 @@ bindir = $(prefix)/$(PACKAGE)
 MKW = $(PYTHON) $(top_srcdir)/util/mkwrappers
 
 syndwarsfx_SOURCES = \
-	../swrendersoft/src/app_gengh.c \
-	../swrendersoft/include/app_gentab.h \
-	../swrendersoft/src/app_spr_init.c \
-	../swrendersoft/src/ap_gspr_map.c \
-	../swrendersoft/src/ap_spr_smap.c \
-	../swrendersoft/include/app_sprite.h \
-	../swrendersoft/src/app_text_cw.c \
-	../swrendersoft/include/app_text_cw.h \
-	../swrendersoft/src/app_text_sf.c \
-	../swrendersoft/include/app_text_sf.h \
-	../swrendersoft/src/drawshape.c \
-	../swrendersoft/include/drawshape.h \
-	../swrendersoft/src/drawtext.c \
-	../swrendersoft/include/drawtext.h \
-	../swrendersoft/src/enginbckt.c \
-	../swrendersoft/include/enginbckt.h \
-	../swrendersoft/src/engincolour.c \
-	../swrendersoft/include/engincolour.h \
-	../swrendersoft/src/enginfloor.c \
-	../swrendersoft/include/enginfloor.h \
-	../swrendersoft/src/engindrwlstx_fac.c \
-	../swrendersoft/src/engindrwlstx_spr.c \
-	../swrendersoft/include/engindrwlstx.h \
-	../swrendersoft/src/enginlights.c \
-	../swrendersoft/include/enginlights.h \
-	../swrendersoft/src/enginpeff.c \
-	../swrendersoft/include/enginpeff.h \
-	../swrendersoft/src/enginpritxtr.c \
-	../swrendersoft/include/enginpritxtr.h \
-	../swrendersoft/src/engintxtrmap.c \
-	../swrendersoft/include/engintxtrmap.h \
-	../swrendersoft/src/enginprops.c \
-	../swrendersoft/include/enginprops.h \
-	../swrendersoft/src/enginsngtxtr.c \
-	../swrendersoft/include/enginsngtxtr.h \
-	../swrendersoft/src/enginzoom.c \
-	../swrendersoft/include/enginzoom.h \
-	../swrendersoft/src/frame_sprani.c \
-	../swrendersoft/include/frame_sprani.h \
-	../swrendersoft/include/render_gpoly.h \
-	../swrendersoft/src/render_gpoly.c \
-	../swrendersoft/include/privrdlog.h \
-	bflib_joyst.c \
-	bflib_joyst.h \
-	bflib_joyst_s.sx \
 	bflib_snd_mss_s.sx \
 	bflib_vidraw.c \
 	bflib_vidraw.h \
@@ -100,24 +55,14 @@ syndwarsfx_SOURCES = \
 	dos.h \
 	drawtext_wrp.c \
 	drawtext_wrp.h \
-	engindrwlstm.c \
-	engindrwlstm.h \
-	engindrwlstx.c \
+	embedanim.c \
+	embedanim.h \
+	engindrwlstm_wrp.c \
+	engindrwlstm_wrp.h \
+	engindrwlstx_tng.c \
 	engindrwlstx_tng.h \
-	enginfexpl.c \
-	enginfexpl.h \
-	enginpriobjs.c \
-	enginpriobjs.h \
-	enginshrapn.c \
-	enginshrapn.h \
-	enginsngobjs.c \
-	enginsngobjs.h \
-	enginshadws.c \
-	enginshadws.h \
 	engintext.c \
 	engintext.h \
-	engintrns.c \
-	engintrns.h \
 	feappbar.c \
 	feappbar.h \
 	febrief.c \
@@ -171,15 +116,14 @@ syndwarsfx_SOURCES = \
 	game_sprts.c \
 	game_sprts.h \
 	game.h \
-	globals.h \
+	hud_draw.c \
+	hud_draw.h \
 	hud_panecfg.c \
 	hud_panecfg.h \
 	hud_panel.c \
 	hud_panel.h \
 	hud_target.c \
 	hud_target.h \
-	joy_modul1.sx \
-	joy_modul2.sx \
 	keyboard.c \
 	keyboard.h \
 	lvdraw3d.c \
@@ -201,6 +145,7 @@ syndwarsfx_SOURCES = \
 	mydraw.h \
 	netipx1.sx \
 	netser1.sx \
+	netdos.sx \
 	network.c \
 	network.h \
 	pathtrig.c \
@@ -237,20 +182,28 @@ syndwarsfx_SOURCES = \
 	scandraw.h \
 	sound.c \
 	sound.h \
+	sound_smp_s.sx \
+	sound_heap_s.sx \
 	specblit.c \
 	specblit.h \
 	swars.sx \
 	swlog.h \
 	thing.c \
 	thing.h \
+	thing_expld.c \
+	thing_expld.h \
+	thing_expld_s.sx \
 	thing_search.c \
 	thing_search.h \
 	thing_fire.c \
 	thing_fire.h \
+	thing_fire_s.sx \
 	thing_debug.c \
 	thing_debug_s.sx \
 	thing_onface.h \
 	thing_onface.c \
+	thing_ovmous.h \
+	thing_ovmous.c \
 	tngcolisn.c \
 	tngcolisn.h \
 	tngobjdrw.c \
@@ -293,7 +246,7 @@ endif
 nodist_EXTRA_syndwarsfx_SOURCES = dummy.cxx
 
 # Libraries included with the project
-syndwarsfx_PROJECT_LIBS = ../lib/libbullfrog.a ../lib/libbfsound.a
+syndwarsfx_PROJECT_LIBS = ../lib/libbullfrog.a ../lib/libbfsound.a ../lib/libswrender.a
 
 $(syndwarsfx_OBJECTS) $(bin_PROGRAMS): $(syndwarsfx_PROJECT_LIBS)
 
@@ -304,6 +257,9 @@ syndwarsfx_LDADD = \
 	$(MAKE) -C $(<D) DESTDIR="../" prefix="" install
 
 ../lib/libbfsound.a: ../bfsoundlib/libbfsound.a
+	$(MAKE) -C $(<D) DESTDIR="../" prefix="" install
+
+../lib/libswrender.a: ../swrendersoft/libswrender.a
 	$(MAKE) -C $(<D) DESTDIR="../" prefix="" install
 
 $(syndwarsfx_WRAPPERS:.o=.sx): %.sx: $(top_srcdir)/conf/%.conf

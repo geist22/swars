@@ -39,6 +39,8 @@ struct TbSprite;
 /******************************************************************************/
 extern ushort my_font_flags;
 
+extern ubyte byte_197160;
+
 u32 my_str_len(const char *t);
 int font_word_length(const char *text);
 
@@ -63,6 +65,7 @@ ushort my_draw_text(short x, short y, const char *text, ushort startline);
  */
 TbBool my_font_prefer_upper_case(const struct TbSprite *p_font);
 
+void my_preprocess_text(char *text);
 /******************************************************************************/
 #ifdef __cplusplus
 }

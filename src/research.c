@@ -22,9 +22,9 @@
 
 #include "weapon.h"
 #include "cybmod.h"
+#include "feequip.h"
 #include "feresearch.h"
 #include "game_options.h"
-#include "game.h"
 #include "guitext.h"
 #include "wadfile.h"
 #include "swlog.h"
@@ -33,6 +33,10 @@ short daily_scientist_death_chance_permil = 20;
 short scientists_per_group = 4;
 short weapon_donate_research_incr_permil = 125;
 short research_progress_rtc_minutes = 0;
+
+struct ResearchInfo research;
+
+/******************************************************************************/
 
 void load_scientist_lost_reason(ushort reason_no, ubyte *scratch_buf)
 {
@@ -245,11 +249,6 @@ void research_cymod_complete(ushort mtype)
 
 void research_unkn_func_003(void)
 {
-#if 0
-    asm volatile ("call ASM_research_unkn_func_003\n"
-        :  :  : "eax" );
-    return;
-#endif
     struct WeaponDef *wdef;
     WeaponType wtype;
 
@@ -374,6 +373,7 @@ int research_daily_progress_for_type(ubyte rstype)
     int scientists_died;
 
     real_funding = 0;
+    progress = 0;
 
     switch (rstype)
     {

@@ -22,18 +22,25 @@
 #include "bfline.h"
 
 #include "drawtext.h"
+#include "engincam.h"
 #include "engincolour.h"
 #include "engintrns.h"
 #include "enginzoom.h"
 
 #include "bigmap.h"
-#include "display.h"
 #include "drawtext_wrp.h"
 #include "thing.h"
 /******************************************************************************/
 
+struct ColVect *game_col_vects = NULL;
 ushort next_col_vect = 1;
+
+struct ColVectList *game_col_vects_list = NULL;
 ushort next_vects_list = 1;
+
+ubyte debug_hud_collision = 0;
+
+/******************************************************************************/
 
 void set_dome_col(struct Thing *p_building, ubyte flag)
 {

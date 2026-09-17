@@ -108,8 +108,8 @@ enum ThingFlags {
     TngF_VehUnkn0100  = 0x0100,
     TngF_StationrSht  = 0x0200,
     TngF_WepCharging  = 0x0400,
-    TngF_Unkn0800     = 0x0800,
-    TngF_Unkn1000     = 0x1000,
+    TngF_TriggerUse   = 0x0800,
+    TngF_SelectedAgent= 0x1000,
     TngF_PlayerAgent  = 0x2000,
     TngF_Unkn4000     = 0x4000,
     TngF_Unkn8000     = 0x8000,
@@ -126,7 +126,7 @@ enum ThingFlags {
     TngF_Unkn04000000 = 0x04000000,
     TngF_Unkn08000000 = 0x08000000,
     TngF_InVehicle    = 0x10000000,
-    TngF_Unkn20000000 = 0x20000000,
+    TngF_ShootAtPos   = 0x20000000,
     TngF_Unkn40000000 = 0x40000000,
 };
 
@@ -146,6 +146,15 @@ enum ThingFlags {
  * The flag has this meaning for people, different meaning for other things.
  */
 #define TngF_StandOnVehicle TngF_Unkn01000000
+
+/** Thing object is locked and cannot be entered or passed.
+ * The flag has this meaning for buildings, different meaning for other things.
+ */
+#define TngF_PassageLocked TngF_TriggerUse
+
+/** Person is during flee from danger.
+ */
+#define TngF_DangerFlee TngF_Unkn00040000
 
 enum ThingFlags2 {
     TgF2_Unkn0001     = 0x0001,
@@ -170,8 +179,16 @@ enum ThingFlags2 {
     TgF2_Unkn00080000 = 0x00080000,
     TgF2_Unkn00100000 = 0x00100000,
     TgF2_Unkn00200000 = 0x00200000,
-    TgF2_Unkn00400000 = 0x00400000,
-    TgF2_Unkn00800000 = 0x00800000,
+    /** The thing has sub-type temporarely altered from original.
+     *
+     * If set, the thing is affected by clone shield or from other reasons
+     * has SubTyper property altered from real value. The original value
+     * is stored in OldSubType property.
+     */
+    TgF2_AlteredSubType = 0x00400000,
+    /** When dropping an item, activate it (ie. arm the explosive).
+     */
+    TgF2_DroppedActivate = 0x00800000,
     /** The thing is not added to map content lists and is invisible.
      *
      * If set, the thing is invisible and on-map things cannot affect it.
@@ -196,8 +213,6 @@ enum StateChangeResult {
     StCh_DENIED,        /**< The current state of either target or other world elements prevents entering the state at this time. */
     StCh_UNATTAIN,      /**< The current state of the world elements makes it impossible to ever enter that state, ie. target does not exist. */
 };
-
-typedef ubyte StateChRes;
 
 struct M33;
 
@@ -441,7 +456,7 @@ struct TngUPerson
   short TempWeapon;
   short Stamina;
   short MaxStamina;
-  ulong WeaponsCarried;
+  u32 WeaponsCarried;
 };
 
 /** Structure for storing State of any Thing.
@@ -469,6 +484,9 @@ struct Thing { // sizeof=168
     long Y;
     long Z;
     short Frame;
+    /** For things represented by a sprite, starting frame of animation.
+     * For objects, 3D model selection.
+     */
     ushort StartFrame;
     short Timer1;
     short StartTimer1;
@@ -488,7 +506,7 @@ struct Thing { // sizeof=168
     ubyte PathOffset;
     ubyte SubState;
     struct Thing *PTarget;
-    ulong Flag2;
+    u32 Flag2;
     ThingIdx GotoThingIndex;
     short OldTarget;
     union { // pos=76
@@ -540,7 +558,7 @@ struct STngUFire {
     short flame;
 };
 
-struct SimpleThing
+struct SimpleThing // sizeof=60
 {
     /** Index of some kind of entity which generated the thing.
      * Speciifics depend on thing type; often it's another thing index,
@@ -557,6 +575,8 @@ struct SimpleThing
     short State;
     ulong Flag;
     short LinkSame;
+    /** Object index, or range.
+     */
     short Object;
     short Radius;
     ThingIdx ThingOffset;
@@ -766,7 +786,7 @@ struct ThingOldV9 { // sizeof=216
             ubyte TngUnkn87;
         };
     };
-    ulong PersonWeaponsCarried; // pos=88
+    u32 PersonWeaponsCarried; // pos=88
     /** Next command assigned to the Person.
      * Confirmed since fmtver=4 (from Pre-Alpha Demo code analysis).
      */
@@ -946,7 +966,7 @@ extern struct Thing *things;
 extern ThingIdx things_used_head;
 extern ThingIdx things_empty_head;
 extern ushort things_used;
-extern ThingIdx same_type_head[256+32];
+extern ThingIdx same_type_head[256 + 32 + 1]; // 256 + PEOPLE_GROUPS_LIMIT
 extern short static_radii[];
 
 extern struct SimpleThing *sthings;
@@ -955,6 +975,7 @@ extern ushort sthings_used;
 
 extern TbBool debug_hud_things;
 extern ubyte debug_log_things;
+extern short word_1552F8;
 
 struct Thing *get_thing_safe(ThingIdx thing, ubyte ttype);
 
@@ -977,6 +998,10 @@ void snprint_sthing(char *buf, ulong buflen, struct SimpleThing *p_sthing);
 /** Returns if given type represents SimpleThing rather than a full featured Thing.
  */
 TbBool thing_type_is_simple(short ttype);
+
+/** Returns if given type represents a thing which can be (or is) picked up by a person.
+ */
+TbBool thing_type_is_pickup_item(short ttype);
 
 /** Given thing index, sets its position in map coordinates to three variables.
  *
@@ -1007,6 +1032,10 @@ void things_debug_hud(void);
 void navi_onscreen_debug(TbBool a1);
 
 TbBool thing_is_destroyed(ThingIdx thing);
+
+/** Returns if given thing can be (or is) picked up by a person.
+ */
+TbBool thing_is_pickup_item(ThingIdx thing);
 
 struct Thing *effective_owner_of_thing(struct Thing *p_thing);
 
@@ -1077,9 +1106,19 @@ TbBool thing_intersects_circle(ThingIdx thing, short X, short Z, ushort R);
  */
 TbBool thing_intersects_cylinder(ThingIdx thing, short X, short Y, short Z, ushort R, ushort H);
 
-struct SimpleThing *create_scale_effect(int x, int y, int z, ushort frame, int timer);
+struct SimpleThing *create_item(int x, int y, int z, ushort frame, ubyte subtype);
+
+struct SimpleThing *create_scale_effect(int x, int y, int z, ushort frame, short timer);
 
 struct SimpleThing *create_sound_effect(int x, int y, int z, ushort sample, int vol, int loop);
+
+struct SimpleThing *create_stasis_pod(MapCoord x, MapCoord y, MapCoord z,
+  ushort timer, struct Thing *p_owner);
+struct SimpleThing *create_time_pod(MapCoord x, MapCoord y, MapCoord z,
+  ushort timer);
+
+struct SimpleThing *create_electric_strand(MapCoord x, MapCoord y, MapCoord z,
+  MapCoord x2, MapCoord y2, MapCoord z2, int sound);
 
 int mine_hit_by_bullet(struct Thing *p_thing, short hp,
   int vx, int vy, int vz, struct Thing *p_attacker, ushort type);

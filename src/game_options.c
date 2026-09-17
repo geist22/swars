@@ -21,7 +21,7 @@
 #include <assert.h>
 
 #include "display.h"
-#include "engindrwlstm.h"
+#include "engincam.h"
 #include "engindrwlstx.h"
 #include "femain.h"
 #include "game.h"
@@ -30,7 +30,12 @@
 #include "swlog.h"
 
 /******************************************************************************/
+struct InGame ingame;
 
+short user_sel_brightness = 0;
+
+TbPixel deep_radar_surface_col = 0xd8;
+TbPixel deep_radar_line_col = 0x64;
 
 /******************************************************************************/
 
@@ -218,7 +223,7 @@ int game_option_min(int option_no)
     case GOpt_DetailLevel:
         return 0;
     case GOpt_CameraPerspective:
-        return 0;
+        return ProjM_Isometric;
     case GOpt_AdvancedLights:
     case GOpt_BillboardMovies:
     case GOpt_DeepRadar:
@@ -316,10 +321,10 @@ void game_option_toggle(int option_no)
             ingame.DetailLevel = 1;
         break;
     case GOpt_CameraPerspective:
-        if (game_perspective == 5)
-            game_perspective = 0;
+        if (game_perspective == ProjM_Perspective)
+            game_perspective = ProjM_Isometric;
         else
-            game_perspective = 5;
+            game_perspective = ProjM_Perspective;
         break;
     case GOpt_AdvancedLights:
         if ((ingame.Flags & GamF_AdvLights) == 0)
@@ -486,7 +491,7 @@ void set_default_gfx_settings(void)
     game_gfx_deep_radar = 0;
     game_high_resolution = true;
     game_projector_speed = 0;
-    game_perspective = 5;
+    game_perspective = ProjM_Perspective;
     deep_radar_surface_col = 216;
     deep_radar_line_col = 100;
 }
@@ -503,5 +508,20 @@ void set_default_audio_tracks(void)
 {
     ingame.DangerTrack = OPT_DANGER_TRACK_MIN;
     ingame.CDTrack = OPT_CD_TRACK_MIN;
+}
+
+void apply_user_gfx_settings(void)
+{
+    game_option_set(GOpt_AdvancedLights, game_gfx_advanced_lights);
+    game_option_set(GOpt_BillboardMovies, game_billboard_movies);
+    game_option_set(GOpt_DeepRadar, game_gfx_deep_radar);
+    bang_set_detail(ingame.DetailLevel == 0);
+}
+
+void apply_user_sfx_settings(void)
+{
+    sfx_apply_samplevol();
+    sfx_apply_midivol();
+    sfx_apply_cdvolume();
 }
 /******************************************************************************/

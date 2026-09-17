@@ -25,17 +25,38 @@
 #include "bfutility.h"
 
 #include "enginbckt.h"
+#include "engincam.h"
 #include "engincolour.h"
 #include "enginprops.h"
 #include "engintrns.h"
 #include "engintxtrmap.h"
-#include "scanner.h"
 #include "privrdlog.h"
-
-#include "display.h"
 /******************************************************************************/
+const short waft_table2[] = {
+  -28, -27, -25, -22, -18, -13, -7, 0,  7,  13,  18,  22,  25,  27,  28,  29,
+   28,  27,       22,  18,  13,  7, 0, -7, -13, -18, -22, -25, -27, -28, -29, -28,
+};
+
+const short waft_table[] = {
+  -28, -24, -21, -17, -14, -10, -7, -3, 0,  4,  7,  11,  14,  18,  21,  24,
+   28,  24,  21,  18,  14,  11,  7,  4, 0, -3, -7, -10, -14, -17, -21, -24, -28,
+};
+
 ushort gamep_scene_effect_intensity = 1000;
 short gamep_scene_effect_change = -1;
+ushort gamep_scene_effect_type = ScEff_NONE;
+
+ushort rain_drop_max_width = 0;
+ushort snow_flake_max_size = 0;
+ushort star_max_size = 0;
+
+/** Applies one of the effect size limits, a limit of zero meaning none. */
+static ushort size_limited(ushort size, ushort limit)
+{
+    if ((limit != 0) && (size > limit))
+        return limit;
+    return size;
+}
 
 ushort word_1A7314;
 ushort word_1A7330[1000];
@@ -44,11 +65,6 @@ ubyte byte_1A7EE8[9004];
 
 void scene_post_effect_rain_init(void)
 {
-#if 0
-    asm volatile ("call ASM_scene_post_effect_rain_init\n"
-        :  :  : "eax" );
-    return;
-#endif
     uint i;
     ushort idx3;
 
@@ -61,7 +77,7 @@ void scene_post_effect_rain_init(void)
             ushort idx1, idx2;
             ubyte *tmap;
 
-            rnd = (render_anim_turn >> 2) + LbRandomAnyShort();
+            rnd = (render_anim_turn >> (RENDER_ANIM_TURN_SHIFT + 2)) + LbRandomAnyShort();
             idx1 = (rnd >> 3) & 0x1FFF;
             if ((byte_1A7EE8[idx1] & (1 << (idx1 & 7))) == 0)
             {
@@ -78,10 +94,6 @@ void scene_post_effect_rain_init(void)
 
 void water_droplets_on_floor(void)
 {
-#if 0
-    asm volatile ("call ASM_water_droplets_on_floor\n"
-        :  : );
-#else
     ushort i, k;
 
     for (i = 0; i < 999; i++)
@@ -100,7 +112,7 @@ void water_droplets_on_floor(void)
             }
             n = k >> 3;
             byte_1A7EE8[n] &= ~(1 << (n & 7));
-            k = (render_anim_turn >> 2) + LbRandomAnyShort();
+            k = (render_anim_turn >> (RENDER_ANIM_TURN_SHIFT + 2)) + LbRandomAnyShort();
             n = k >> 3;
             if (((1 << (n & 7)) & byte_1A7EE8[n]) == 0)
             {
@@ -130,7 +142,6 @@ void water_droplets_on_floor(void)
         }
     }
     word_1A7314++;
-#endif
 }
 
 void scene_post_effect_texture_with_snow(void)
@@ -140,7 +151,7 @@ void scene_post_effect_texture_with_snow(void)
     for (i = 0; i < 10; i++) {
         ushort pos;
         ubyte *ptr;
-        pos = LbRandomAnyShort() + (render_anim_turn >> 2);
+        pos = LbRandomAnyShort() + (render_anim_turn >> (RENDER_ANIM_TURN_SHIFT + 2));
         ptr = vec_tmap[0] + pos;
         *ptr = pixmap.fade_table[40*PALETTE_8b_COLORS + *ptr];
     }
@@ -196,7 +207,7 @@ void draw_falling_rain(int bckt)
     scanln = lbDisplay.GraphicsScreenWidth;
 
     icol = (BUCKETS_COUNT - bckt) / 416 << 7;
-    shift_y = render_anim_turn * (BUCKETS_COUNT - bckt);
+    shift_y = (render_anim_turn >> RENDER_ANIM_TURN_SHIFT) * (BUCKETS_COUNT - bckt);
     limit_y = 236 - (bckt >> 5);
     if (limit_y < 20)
         return;
@@ -206,12 +217,12 @@ void draw_falling_rain(int bckt)
 
     lbSeed = bckt;
     rnd = LbRandomPosShort();
-    x = (rnd + (engn_xc >> 4) + (engn_anglexz >> 7)) % scanln;
+    x = (rnd + (engn_xc >> 4) + (engn_cam_yaw >> 7)) % scanln;
     rnd = LbRandomPosShort();
     y = m * ((rnd + (shift_y >> 10)) % limit_y);
     lbDisplay.DrawFlags = Lb_SPRITE_TRANSPAR4;
     o = &lbDisplay.WScreen[scanln * y + x];
-    w = m;
+    w = size_limited(m, rain_drop_max_width);
     h = m;
     if (bckt < 4000) h += m;
     if (bckt < 3000) h += m;
@@ -237,11 +248,6 @@ static void draw_static_dot(short x, short y, short w, short h, short ftpos)
 
 void draw_falling_snow(int bckt)
 {
-#if 0
-    asm volatile (
-      "call ASM_draw_falling_snow\n"
-        : : "a" (a1));
-#endif
     int height;
     uint seed_bkp;
     ushort m, scanln;
@@ -258,19 +264,21 @@ void draw_falling_snow(int bckt)
         uint x, y;
         ushort speed;
         ushort angXZs, angXZc;
+        ushort dm;
 
-        angXZs = ((engn_anglexz >> 5)) & 0x7FF;
-        angXZc = ((engn_anglexz >> 5) + LbFPMath_PI/2) & 0x7FF;
+        angXZs = ((engn_cam_yaw >> 5)) & 0x7FF;
+        angXZc = ((engn_cam_yaw >> 5) + LbFPMath_PI/2) & 0x7FF;
 
         lbSeed = bckt;
         speed = (bckt >> 5) & 0x3;
-        shift1 = waft_table[(bckt + render_anim_turn) & 0x1F];
+        shift1 = waft_table[(bckt + (render_anim_turn >> RENDER_ANIM_TURN_SHIFT)) & 0x1F];
         // Moving with full background speed would be >> 19, dividing by half to make rotation look beter
         x = (shift1 >> (speed + 1)) + ((engn_zc * lbSinTable[angXZs]) >> 20) - ((engn_xc * lbSinTable[angXZc]) >> 20) + LbRandomAnyShort();
-        shift2 = (BUCKETS_COUNT - bckt) * render_anim_turn;
+        shift2 = (BUCKETS_COUNT - bckt) * (render_anim_turn >> RENDER_ANIM_TURN_SHIFT);
         y = (shift2 >> (12 - speed/2)) + ((engn_xc * lbSinTable[angXZs]) >> 20) + ((engn_zc * lbSinTable[angXZc]) >> 20) + LbRandomAnyShort();
         lbDisplay.DrawFlags = Lb_SPRITE_TRANSPAR4;
-        draw_static_dot((x * m) % scanln, (y % height) * m, m, m, 128 * ((BUCKETS_COUNT - bckt) / 416) + colour_lookup[ColLU_WHITE]);
+        dm = size_limited(m, snow_flake_max_size);
+        draw_static_dot((x * m) % scanln, (y % height) * m, dm, dm, 128 * ((BUCKETS_COUNT - bckt) / 416) + colour_lookup[ColLU_WHITE]);
         lbSeed = seed_bkp;
         lbDisplay.DrawFlags = 0;
     }
@@ -313,17 +321,14 @@ static void draw_distant_stars(short x, short y, short w, short h, TbPixel color
 
 void draw_background_stars(void)
 {
-#if 0
-    asm volatile ("call ASM_draw_background_stars\n"
-        :  :  : "eax" );
-#endif
     ulong seed_bkp;
     int i, limit;
     int scr_x0, scr_y0;
-    ushort m;
+    ushort m, dm;
 
     m = lbDisplay.GraphicsScreenHeight / 300;
     if (m == 0) m++;
+    dm = size_limited(m, star_max_size);
     scr_x0 = lbDisplay.GraphicsScreenWidth / 2;
     scr_y0 = lbDisplay.GraphicsScreenHeight / 2;
 
@@ -336,7 +341,7 @@ void draw_background_stars(void)
         int simp_x, simp_y;
         int scr_x, scr_y;
 
-        gt = render_anim_turn & 0x7FF;
+        gt = (render_anim_turn >> RENDER_ANIM_TURN_SHIFT) & 0x7FF;
         plane = (i >> 4) + 1;
 #if 0 // some testing code which remained for no reason, remove later
         if (lbShift == KMod_SHIFT)
@@ -350,7 +355,7 @@ void draw_background_stars(void)
         scr_x = scr_x0 + ((simp_x * m * dword_176D14 - simp_y * m * dword_176D10) >> 16);
         scr_y = scr_y0 - ((simp_x * m * dword_176D10 + simp_y * m * dword_176D14) >> 16);
 
-        draw_distant_stars(scr_x, scr_y, m, m, 79 - (plane >> 1));
+        draw_distant_stars(scr_x, scr_y, dm, dm, 79 - (plane >> 1));
     }
     lbSeed = seed_bkp;
 }

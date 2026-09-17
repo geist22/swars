@@ -1,10 +1,21 @@
-#include <assert.h>
-#include <errno.h>
-#include <limits.h>
-#include <stdio.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
+/******************************************************************************/
+// Syndicate Wars Fan Expansion, source port of the classic game from Bullfrog.
+/******************************************************************************/
+/** @file game.c
+ *     Game loop and high level functions.
+ * @par Purpose:
+ *     Implement functions for high level flows of the game application.
+ * @par Comment:
+ *     None.
+ * @author   Tomasz Lis
+ * @date     22 Apr 2023 - 22 Oct 2023
+ * @par  Copying and copyrights:
+ *     This program is free software; you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation; either version 2 of the License, or
+ *     (at your option) any later version.
+ */
+/******************************************************************************/
 #include "bfconfig.h"
 #include "bfcircle.h"
 #include "bfdata.h"
@@ -39,7 +50,15 @@
 #include "bfsmack.h"
 #include "bftringl.h"
 #include "bfscd.h"
+#include <assert.h>
+#include <errno.h>
+#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
+#include "engincam.h"
 #include "engincolour.h"
 #include "enginprops.h"
 #include "engintxtrmap.h"
@@ -50,13 +69,15 @@
 #include "svesa.h"
 #include "swlog.h"
 #include "bflib_vidraw.h"
-#include "bflib_joyst.h"
+#include "bfjoyst.h"
 #include "ssampply.h"
 #include "matrix.h"
 #include "dos.h"
+#include "drawshape.h"
 #include "drawtext.h"
+#include "embedanim.h"
 #include "enginbckt.h"
-#include "engindrwlstm.h"
+#include "engindrwlstm_wrp.h"
 #include "engindrwlstx.h"
 #include "engindrwlstx_tng.h"
 #include "enginfexpl.h"
@@ -133,8 +154,10 @@
 #include "rules.h"
 #include "scandraw.h"
 #include "thing.h"
+#include "thing_expld.h"
 #include "thing_search.h"
 #include "thing_onface.h"
+#include "thing_ovmous.h"
 #include "tngcolisn.h"
 #include "tngobjdrw.h"
 #include "vehicle.h"
@@ -155,10 +178,48 @@
  */
 #define INTRO_REPLAY_TURNS 1100
 
+/** Length of train railcar for carrying passengers, the 3D object.
+ */
+#define TRAIN_CARRY_LENGTH 550
+
+/** details on how much and how fast to rotate/tilt/zoom the camera.
+ */
+#define CAMERA_TILT_MIN -192
+#define CAMERA_TILT_MAX -152
+#define CAMERA_ZOOM_MIN 120
+#define CAMERA_ZOOM_MAX 256
+#define CAMERA_ROTATION_INPUT_MULTIPLIER 256
+#define CAMERA_TILT_INPUT_MULTIPLIER 4
+
 enum PostRenderAction {
     PRend_NONE = 0,
     PRend_SaveScreenshot,
 };
+
+enum ReloadMenuFlags {
+    RelMnuF_ColorsSprites = 0x01,
+    RelMnuF_BriefScanner = 0x02,
+    RelMnuF_ScrBoxesFull = 0x04,
+};
+
+#define OUTRO_HOT_CHARS_COUNT 8
+
+#pragma pack(1)
+
+/** A character of the outro text which was already drawn, and is still
+ * bright enough to be worth drawing again while it fades out. */
+struct OutroHotChar {
+    s32 x;
+    s32 y;
+    ubyte chr;
+    /** Brightness, used as index within pixmap.fade_table[]. */
+    ubyte fade_lv;
+    /** Font to draw with; 1 selects big_font, anything else med2_font. */
+    ubyte font;
+    ubyte field_B;
+};
+
+#pragma pack()
 
 extern char *fadedat_fname;
 char session_name[20] = "SWARA";
@@ -169,10 +230,10 @@ long dword_153194 = 0x100;
 
 ushort word_1531E0 = 1;
 
-ushort next_mission = 1;
+s32 data_155704 = -1;
 
 ulong stored_l3d_next_object;
-ulong stored_l3d_next_object_face;
+ulong stored_l3d_next_object_face3;
 ulong stored_l3d_next_object_face4;
 ulong stored_l3d_next_object_point;
 ulong stored_l3d_next_normal;
@@ -181,11 +242,14 @@ ulong stored_l3d_next_floor_texture;
 ulong stored_l3d_next_local_mat;
 ulong stored_level3d_inuse;
 
+TbPixel linear_vec_pal[PALETTE_8b_COLORS];
+
 extern int data_1c8428;
 const char *primvehobj_fname = "qdata/primveh.obj";
 
-extern short word_1C6E08;
-extern short word_1C6E0A;
+extern s32 dword_152E38[5]; // = {-1, -1, -1, -1, -1,};
+
+u32 active_flags_general_unkn01 = 0;
 
 extern long dword_1DDECC;
 
@@ -218,31 +282,25 @@ int mouse_map_z = 0x3200;
 
 extern short last_map_for_lights_func_11;
 
-extern short word_1552F8;
+char mission_status_text[100];
 
-extern long dword_176CBC;
+char *data_15319c = mission_status_text;
 
-extern char unknmsg_str[100];
-extern short word_1774E8[2 * 150];
+s32 navi2_unkn_counter = 0;
+s32 navi2_unkn_counter_max = 0;
 
-char *data_15319c = unknmsg_str;
-
-extern ubyte billboard_anim_no;
-extern ubyte byte_1AAA88;
 extern long dword_1AAB74;
 extern long dword_1AAB78;
-extern ubyte active_anim;
 extern ushort word_1AABD0;
 
-extern long mech_unkn_tile_x1;
-extern long mech_unkn_tile_y1;
-extern long mech_unkn_tile_x2;
-extern long mech_unkn_tile_y2;
-extern long mech_unkn_tile_x3;
-extern long mech_unkn_tile_y3;
+ubyte unkn_flags_01 = 0;
 
-//TODO this is not an extern only because I was unable to locate it in asm
-ushort next_bezier_pt = 1;
+ubyte start_into_mission = false;
+ubyte edit_flag = 0;
+
+struct OutroHotChar outro_hot_chars[OUTRO_HOT_CHARS_COUNT];
+
+ubyte input_char;
 
 const char *miss_end_sta_names[] = {
   "undecided state",
@@ -294,17 +352,11 @@ struct TbLoadFiles missionspr_load_files[] =
   { "",					(void **)NULL, 				(void **)NULL,				0, 0, 0 }
 };
 
-ubyte byte_154BB4[] = {
-  220, 224, 224, 222, 220, 220,
-};
-
 char unk_credits_text_s[] = "";
 char unk_credits_text_z[] = "";
 char unk_credits_text_p[] = "";
 
-ubyte reload_menu_flag = false;
-
-void ac_purple_unkn1_data_to_screen(void);
+ubyte reload_menu_flags = 0;
 
 short arctan(int dx, int dz)
 {
@@ -382,10 +434,6 @@ int reload_texturemaps(void)
 
 void load_texturemaps(void)
 {
-#if 0
-    asm volatile ("call ASM_load_texturemaps\n"
-        :  :  : "eax" );
-#endif
     if (vec_tmap[0] == NULL)
     {
         int tmap_count;
@@ -394,7 +442,7 @@ void load_texturemaps(void)
             exit_game = 1;
             return;
         }
-        ingame.LastTmap = tmap_count - 1;
+        shadow_tmap_page = tmap_count - 1;
     }
     reload_texturemaps();
 }
@@ -421,22 +469,10 @@ void load_prim_quad(void)
         test_open(100);
 }
 
-void bang_init(void)
-{
-    asm volatile ("call ASM_bang_init\n"
-        :  :  : "eax" );
-}
-
 void bang_set_detail(int a1)
 {
     asm volatile ("call ASM_bang_set_detail\n"
         : : "a" (a1));
-}
-
-void FIRE_init_or_samples_init(void)
-{
-    asm volatile ("call ASM_FIRE_init_or_samples_init\n"
-        :  :  : "eax" );
 }
 
 /** Remains of some Bf debug stuff.
@@ -478,7 +514,6 @@ void colour_tables_ghost_fixup(void)
 
 TbBool game_setup_stuff(void)
 {
-    TbFileHandle fh;
     ushort i;
     TbBool ret;
 
@@ -486,14 +521,6 @@ TbBool game_setup_stuff(void)
     for (i = 0; i < PALETTE_8b_COLORS; i++)
         linear_vec_pal[i] = i;
     vec_pal = linear_vec_pal;
-
-    fh = LbFileOpen("data/nsta-0.ani", Lb_FILE_MODE_READ_ONLY);
-    if (fh != INVALID_FILE) {
-        nsta_size = LbFileSeek(fh, 0, Lb_FILE_SEEK_END);
-        LbFileClose(fh);
-    } else {
-        ret = false;
-    }
 
     if (display_palette != NULL) {
         colour_brown2 = LbPaletteFindColour(display_palette, 42, 37, 30);
@@ -508,174 +535,6 @@ TbBool game_setup_stuff(void)
     }
 
     return ret;
-}
-
-void anim_show_FLI_SS2_NP(void)
-{
-    struct Animation *p_anim;
-
-    p_anim = &animations[active_anim];
-    anim_show_FLI_SS2(p_anim);
-}
-
-void anim_show_FLI_BRUN_NP(void)
-{
-    struct Animation *p_anim;
-
-    p_anim = &animations[active_anim];
-    anim_show_FLI_BRUN(p_anim);
-}
-
-void anim_show_FLI_LC_NP(void)
-{
-    struct Animation *p_anim;
-
-    p_anim = &animations[active_anim];
-    anim_show_FLI_LC(p_anim);
-}
-
-ubyte *anim_type_get_output_buffer(ubyte anislot)
-{
-    switch (anislot)
-    {
-    case AniSl_FULLSCREEN:
-    default:
-        return lbDisplay.WScreen;
-    case AniSl_BILLBOARD:
-        return vec_tmap[4];
-    case AniSl_EQVIEW:
-    case AniSl_UNKN4:
-    case AniSl_UNKN5:
-    case AniSl_UNKN6:
-    case AniSl_UNKN7:
-    case AniSl_NETSCAN:
-        return vec_tmap[5];
-    case AniSl_CYBORG_INOUT:
-    case AniSl_CYBORG_BRTH:
-        return vec_tmap[5] + 0x8000;
-    case AniSl_SCRATCH:
-        return vec_tmap[4] + 0x8000;
-    }
-}
-
-void anim_billboard_select_rand(void)
-{
-    ushort rnd;
-
-    rnd = LbRandomPosShort() & 7;
-    if (rnd <= 0)
-        billboard_anim_no = 1;
-    else if (rnd <= 2)
-        billboard_anim_no = 2;
-    else if (rnd <= 5)
-        billboard_anim_no = 0;
-    else
-        billboard_anim_no = 3;
-}
-
-void anim_billboard_select_next(void)
-{
-    billboard_anim_no++;
-    if (billboard_anim_no > 3)
-        billboard_anim_no = 0;
-}
-
-void anim_billboard_broadcast_sound(void)
-{
-    struct Thing *p_thing;
-    ushort rnd;
-    ubyte smpl_no;
-
-    if (in_network_game)
-        return;
-    if (ingame.VisibleBillboardThing == 0)
-        return;
-
-    p_thing = &things[ingame.VisibleBillboardThing];
-    smpl_no = byte_154BB4[billboard_anim_no];
-    rnd = LbRandomPosShort() & 1;
-    play_dist_sample(p_thing, smpl_no + rnd, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 1);
-}
-
-void flic_unkn03(ubyte anislot)
-{
-    struct Animation *p_anim;
-    ubyte *frmbuf;
-    PathInfo *pinfo;
-    int k;
-
-    k = anim_slots[anislot];
-    p_anim = &animations[k];
-    if (anim_is_opened(p_anim)) {
-        anim_flic_close(p_anim);
-    }
-
-    anim_scratch = scratch_buf1;
-    anim_flic_init(p_anim, anislot, 0x00);
-    frmbuf = anim_type_get_output_buffer(anislot);
-
-    switch (anislot)
-    {
-    case AniSl_BILLBOARD:
-        byte_1AAA88 = 0;
-        anim_flic_set_frame_buffer(p_anim, frmbuf, 0, 0, 0, 0x20);
-        anim_billboard_select_rand();
-        anim_billboard_broadcast_sound();
-        pinfo = &game_dirs[DirPlace_QData];
-        anim_flic_set_fname(p_anim, "%s/%s-1%d.fli", pinfo->directory, "demo", (int)billboard_anim_no);
-        anim_billboard_select_next();
-        break;
-    case AniSl_EQVIEW:
-        byte_1AAA88 = 0;
-        anim_flic_set_frame_buffer(p_anim, frmbuf, 0, 0, 0, 0x00);
-        break;
-    case AniSl_CYBORG_INOUT:
-        byte_1AAA88 = 0;
-        anim_flic_set_frame_buffer(p_anim, frmbuf, 0, 0, 0, 0x00);
-        break;
-    case AniSl_UNKN4:
-        byte_1AAA88 = 1;
-        anim_flic_set_frame_buffer(p_anim, frmbuf, 0, 0, 0, 0x02);
-        pinfo = &game_dirs[DirPlace_Data];
-        anim_flic_set_fname(p_anim, "%s/%s.fli", pinfo->directory, "intro");
-        break;
-    case AniSl_UNKN5:
-        byte_1AAA88 = 0;
-        anim_flic_set_frame_buffer(p_anim, frmbuf, 10, 30, 0, 0x02);
-        pinfo = &game_dirs[DirPlace_Data];
-        anim_flic_set_fname(p_anim, "%s/%s.fli", pinfo->directory, "mcomp");
-        break;
-    case AniSl_UNKN6:
-        byte_1AAA88 = 0;
-        anim_flic_set_frame_buffer(p_anim, frmbuf, 10, 30, 0, 0x02);
-        pinfo = &game_dirs[DirPlace_Data];
-        anim_flic_set_fname(p_anim, "%s/%s.fli", pinfo->directory, "mcomp");
-        break;
-    case AniSl_UNKN7:
-        byte_1AAA88 = 0;
-        anim_flic_set_frame_buffer(p_anim, frmbuf, 10, 30, 0, 0x02);
-        pinfo = &game_dirs[DirPlace_Data];
-        anim_flic_set_fname(p_anim, "%s/%s.fli", pinfo->directory, "mcomp");
-        break;
-    case AniSl_CYBORG_BRTH:
-        byte_1AAA88 = 0;
-        anim_flic_set_frame_buffer(p_anim, frmbuf, 0, 0, 0, 0x20);
-        break;
-    case AniSl_NETSCAN:
-        byte_1AAA88 = 0;
-        anim_flic_set_frame_buffer(p_anim, frmbuf, 0, 0, 0, 0x00);
-        break;
-      default:
-        break;
-    }
-
-    if (anim_flic_show_open(p_anim) == Lb_FAIL)
-    {
-        if (anislot == AniSl_BILLBOARD)
-            ingame.Flags &= ~GamF_BillboardMovies;
-        return;
-    }
-    p_anim->anfield_4 += 12;
 }
 
 void update_danger_music(ubyte a1)
@@ -964,6 +823,19 @@ void play_intro(void)
     }
 }
 
+void outro_hot_chars_shift(void)
+{
+    ushort i;
+
+    for (i = 0; i < OUTRO_HOT_CHARS_COUNT - 1; i++)
+    {
+        LbMemoryCopy(&outro_hot_chars[i], &outro_hot_chars[i+1], sizeof(struct OutroHotChar));
+        if (outro_hot_chars[i].fade_lv > 32)
+            outro_hot_chars[i].fade_lv -= 4;
+    }
+    outro_hot_chars[OUTRO_HOT_CHARS_COUNT - 1].chr = 0;
+}
+
 char func_cc638(const char *text1, const char *text2)
 {
     char ret;
@@ -974,8 +846,73 @@ char func_cc638(const char *text1, const char *text2)
 
 void screen_dark_curtain_down(void)
 {
+#if 0
     asm volatile ("call ASM_screen_dark_curtain_down\n"
         :  :  : "eax" );
+    return;
+#endif
+    int w;
+    ushort range_beg[MAX_SUPPORTED_SCREEN_WIDTH];
+    ushort range_len[MAX_SUPPORTED_SCREEN_WIDTH];
+    uint already_count;
+    short angl_A, angl_B, angl_C;
+    short dt_angl_A, dt_angl_B, dt_angl_C;
+
+    dt_angl_B = 20 + (LbRandomAnyShort() & 0x1F);
+    dt_angl_A = 20 + (LbRandomAnyShort() & 0x1F);
+    dt_angl_C = 20 + (LbRandomAnyShort() & 0x1F);
+    angl_B = LbRandomAnyShort() & LbFPMath_AngleMask;
+    angl_A = LbRandomAnyShort() & LbFPMath_AngleMask;
+    angl_C = LbRandomAnyShort() & LbFPMath_AngleMask;
+    for (w = 0; w < 320; w++)
+    {
+        int mag;
+
+        range_beg[w] = 0;
+        mag = lbSinTable[(angl_A & LbFPMath_AngleMask) + 512];
+        mag += lbSinTable[angl_B & LbFPMath_AngleMask];
+        mag -= lbSinTable[angl_C & LbFPMath_AngleMask];
+        range_len[w] = abs(mag) >> 14;
+
+        angl_C += dt_angl_C;
+        angl_A += dt_angl_A;
+        angl_B += dt_angl_B;
+    }
+
+    do
+    {
+        int h_beg, h_end, h;
+
+        already_count = 0;
+        for (w = 0; w < 320; w++)
+        {
+            h_beg = range_beg[w] / game_num_fps;
+            if (h_beg >= lbDisplay.GraphicsScreenHeight) {
+                already_count++;
+                continue;
+            }
+            h_end = (range_beg[w] + range_len[w]) / game_num_fps;
+            for (h = h_beg; h < h_end; h++)
+            {
+                TbPixel px;
+                uint scr_pos;
+
+                if (h >= lbDisplay.GraphicsScreenHeight)
+                    break;
+
+                scr_pos = 320 * h + w;
+                px = lbDisplay.WScreen[scr_pos];
+                lbDisplay.WScreen[scr_pos] = pixmap.fade_table[px + 4096];
+            }
+            range_beg[w] += range_len[w];
+            range_len[w] += 1 + (range_len[w] >> 5);
+            if (range_len[w] > MAX_SUPPORTED_SCREEN_HEIGHT * 4)
+                range_len[w] = MAX_SUPPORTED_SCREEN_HEIGHT * 4;
+        }
+        swap_wscreen();
+        game_update();
+    }
+    while (already_count < 320);
 }
 
 int load_outro_text(ubyte *buf)
@@ -1050,7 +987,7 @@ int load_people_text(ubyte *buf)
               s += 4;
               break;
             }
-            people_credits_desc[2 * groupno + 0] = name;
+            dev_credits_desc[2 * groupno + 0] = name;
 
             while (*s != '[')
             {
@@ -1062,7 +999,7 @@ int load_people_text(ubyte *buf)
             }
             s++;
             desc = s;
-            people_credits_desc[2 * groupno + 1] = desc;
+            dev_credits_desc[2 * groupno + 1] = desc;
             continue;
         }
         if (*s == '#') {
@@ -1084,7 +1021,7 @@ int load_people_text(ubyte *buf)
                 s += 4;
                 break;
             }
-            people_credits_groups[2 * groupno + 0] = s;
+            dev_credits_groups[2 * groupno + 0] = s;
 
             while (*s != '[')
             {
@@ -1096,7 +1033,7 @@ int load_people_text(ubyte *buf)
             }
             s++;
             g = &buf[totlen];
-            people_credits_groups[2 * groupno + 1] = (char *)g; // TODO we should really use a struct here
+            dev_credits_groups[2 * groupno + 1] = (char *)g; // TODO we should really use a struct here
 
             // Recognize the list of integers, store them in g
             while ( 1 )
@@ -1122,7 +1059,7 @@ int load_people_text(ubyte *buf)
         }
         s++;
     }
-    people_groups_count = groupno + 1;
+    dev_credits_groups_count = groupno + 1;
 
     return totlen;
 }
@@ -1182,8 +1119,46 @@ TbResult load_outro_sprites(void)
 
 void fill_floor_textures(void)
 {
+#if 0
     asm volatile ("call ASM_fill_floor_textures\n"
         :  :  : "eax" );
+#endif
+    struct SingleFloorTexture *p_fltextr;
+    uint i;
+
+    for (i = 1; i < next_floor_texture; i++)
+    {
+        p_fltextr = &game_textures[i];
+        if (p_fltextr->Page == 5)
+        {
+            p_fltextr->TMapX1 += 64;
+            p_fltextr->TMapX2 += 64;
+            p_fltextr->TMapX3 += 64;
+            p_fltextr->TMapX4 += 64;
+            p_fltextr->TMapY1 -= 96;
+            p_fltextr->TMapY2 -= 96;
+            p_fltextr->TMapY3 -= 96;
+            p_fltextr->TMapY4 -= 96;
+            p_fltextr->Page = 4;
+        }
+    }
+
+    for (i = 1; i < prim4_textures_count; i++)
+    {
+        p_fltextr = &prim4_textures[i];
+        if (p_fltextr->Page == 5)
+        {
+            p_fltextr->TMapX1 += 64;
+            p_fltextr->TMapX2 += 64;
+            p_fltextr->TMapX3 += 64;
+            p_fltextr->TMapX4 += 64;
+            p_fltextr->TMapY1 -= 96;
+            p_fltextr->TMapY2 -= 96;
+            p_fltextr->TMapY3 -= 96;
+            p_fltextr->TMapY4 -= 96;
+            p_fltextr->Page = 4;
+        }
+    }
 }
 
 void fill_netgame_agent_pos(int plyr, int group, int num_agents)
@@ -1225,13 +1200,13 @@ void fill_netgame_agent_pos(int plyr, int group, int num_agents)
  */
 void unkn_f_pressed_func(void)
 {
-    ThingIdx thing;
+    struct Thing *p_person;
+    ThingIdx person;
     short i;
 
-    thing = get_thing_same_type_head(TT_PERSON, -1);
-    for (i = 0; thing != 0; i++)
+    person = get_thing_same_type_head(TT_PERSON, -1);
+    for (i = 0; person > 0; person = p_person->LinkSame, i++)
     {
-        struct Thing *p_thing;
         ushort cmd;
         struct Command *p_cmd_prev;
 
@@ -1239,8 +1214,8 @@ void unkn_f_pressed_func(void)
             LOGERR("Infinite loop in same type things list");
             break;
         }
-        p_thing = &things[thing];
-        cmd = p_thing->U.UPerson.ComHead;
+        p_person = &things[person];
+        cmd = p_person->U.UPerson.ComHead;
         p_cmd_prev = NULL;
         while (cmd != 0)
         {
@@ -1256,7 +1231,6 @@ void unkn_f_pressed_func(void)
             p_cmd_prev = p_cmd;
             cmd = p_cmd->Next;
         }
-        thing = p_thing->LinkSame;
     }
 }
 
@@ -1371,174 +1345,23 @@ void process_view_inputs(int thing)
     process_overall_scale(zoom);
 }
 
-void draw_hud_target_mouse(short dcthing)
-{
-    PlayerInfo *p_locplayer;
-    struct Thing *p_dcthing;
-
-    p_dcthing = &things[dcthing];
-    p_locplayer = &players[local_player_no];
-    if (p_locplayer->Target > 0)
-    {
-        struct Thing *p_targtng;
-        int weprange;
-        ushort msspr;
-        uint range;
-
-        weprange = current_hand_weapon_range(p_dcthing);
-        switch (p_locplayer->TargetType)
-        {
-        case TrgTp_Unkn1:
-        case TrgTp_Unkn2:
-        case TrgTp_Unkn6:
-        case TrgTp_Unkn7:
-            p_locplayer->field_102 = p_locplayer->Target;
-            p_locplayer->TargetType = TrgTp_Unkn7;
-            p_targtng = &things[p_locplayer->Target];
-            range = weprange * weprange;
-            if (can_i_see_thing(p_dcthing, p_targtng, range, 3) ) {
-                msspr = 3;
-            } else {
-                msspr = 2;
-            }
-            do_change_mouse(msspr);
-            break;
-        case TrgTp_Unkn3:
-            p_locplayer->field_102 = p_locplayer->Target;
-            do_change_mouse(7);
-            break;
-        case TrgTp_Unkn4:
-            p_locplayer->field_102 = p_locplayer->Target;
-            p_targtng = &things[p_locplayer->field_102];
-            p_dcthing = &things[p_locplayer->DirectControl[mouser]];
-            if (can_i_enter_vehicle(p_dcthing, p_targtng)) {
-              msspr = 6;
-            } else {
-              range = p_targtng->Radius * p_targtng->Radius + weprange * weprange;
-              if (can_i_see_thing(p_dcthing, p_targtng, range, 3) ) {
-                msspr = 3;
-              } else {
-                msspr = 2;
-              }
-            }
-            do_change_mouse(msspr);
-            break;
-        default:
-            break;
-        }
-    }
-    else if (p_locplayer->Target < 0)
-    {
-        if (p_locplayer->TargetType == TrgTp_Unkn3) {
-          p_locplayer->field_102 = p_locplayer->Target;
-          do_change_mouse(7);
-        } else {
-          p_locplayer->field_102 = p_locplayer->Target;
-          do_change_mouse(5);
-        }
-    }
-    else
-    {
-        do_change_mouse(8);
-    }
-}
-
-void show_goto_point(uint flag)
-{
-    asm volatile ("call ASM_show_goto_point\n"
-        : : "a" (flag));
-    return;
-}
-
-void draw_hud(int dcthing)
-{
-#if 0
-    asm volatile ("call ASM_draw_hud\n"
-        : : "a" (dcthing));
-    return;
-#endif
-    PlayerInfo *p_locplayer;
-
-    p_locplayer = &players[local_player_no];
-    if (ingame.TrackThing != 0)
-    {
-        if (!game_cam_tracked_thing_is_player_agent())
-            return;
-    }
-    if ((ingame.Flags & GamF_HUDPanel) == 0)
-        return;
-
-    show_goto_point(0);
-
-    if (target_old_frameno == 0)
-        target_old_frameno = nstart_ani[983];
-
-    {
-        struct Thing *p_mothing;
-
-        p_mothing = &things[p_locplayer->DirectControl[mouser]];
-        if (!lbDisplay.MRightButton
-          || (p_mothing->PTarget == NULL)
-          || current_weapon_has_targetting(p_mothing)
-          || (p_mothing->U.UPerson.WeaponTimer < 14)) {
-            p_locplayer->field_102 = 0;
-        }
-    }
-
-    draw_hud_lock_target();
-
-    if (ingame.DisplayMode == 50)
-    {
-        short plagent;
-        short target;
-
-        for (plagent = 0; plagent < playable_agents; plagent++)
-        {
-            struct Thing *p_agent;
-
-            p_agent = p_locplayer->MyAgent[plagent];
-            number_player(p_agent, plagent);
-            if ((p_agent->Flag & TngF_Unkn1000) != 0)
-            {
-                short ctlmode;
-                ctlmode = p_locplayer->UserInput[plagent].ControlMode & ~UInpCtr_AllFlagsMask;
-                if (ctlmode != UInpCtr_Mouse)
-                {
-                    if (p_agent->PTarget != NULL)
-                        draw_target_person(p_agent->PTarget, 2);
-                }
-            }
-        }
-
-        if (!PacketRecord_IsPlayback())
-        {
-          draw_hud_target_mouse(dcthing);
-        }
-
-        target = p_locplayer->field_102;
-        if (target > 0)
-        {
-            if (!thing_is_destroyed(target))
-                draw_hud_target2(dcthing, target);
-        }
-        draw_new_panel();
-    }
-}
-
 void func_6fd1c(int a1, int a2, int a3, int a4, int a5, int a6, ubyte a7)
 {
-    asm volatile (
-      "push %6\n"
-      "push %5\n"
-      "push %4\n"
-      "call ASM_func_6fd1c\n"
-        : : "a" (a1), "d" (a2), "b" (a3), "c" (a4), "g" (a5), "g" (a6), "g" (a7));
-}
+    // Pushed through a register holding them: a "g" operand may be placed
+    // relative to the stack pointer, which each push moves.
+    int stkargs[3];
 
-void draw_engine_net_text(void)
-{
-    asm volatile ("call ASM_draw_engine_net_text\n"
-        :  :  : "eax" );
+    stkargs[0] = (int)(intptr_t)a5;
+    stkargs[1] = (int)(intptr_t)a6;
+    stkargs[2] = (int)(intptr_t)a7;
+
+    asm volatile (
+      "push 8(%4)\n"
+      "push 4(%4)\n"
+      "push 0(%4)\n"
+      "call ASM_func_6fd1c\n"
+        : : "a" (a1), "d" (a2), "b" (a3), "c" (a4), "S" (stkargs)
+        : "cc", "memory");
 }
 
 void check_mouse_overvehicle(struct Thing *p_thing, ubyte target_assign)
@@ -1571,135 +1394,10 @@ void check_mouse_overvehicle(struct Thing *p_thing, ubyte target_assign)
     }
 }
 
-int mech_unkn_func_03(struct Thing *p_thing)
-{
-    int ret;
-    asm volatile ("call ASM_mech_unkn_func_03\n"
-        : "=r" (ret) : "a" (p_thing));
-    return ret;
-}
-
-void func_13A78(void)
-{
-    asm volatile ("call ASM_func_13A78\n"
-        :  :  : "eax" );
-}
-
 void process_map_craters(void)
 {
     asm volatile ("call ASM_process_map_craters\n"
         :  :  : "eax" );
-}
-
-void engine_draw_things(int pos_beg_x, int pos_beg_z, int rend_beg_x, int rend_beg_z, short tlcount_x, short tlcount_z)
-{
-    int tlno_x, pos_x;
-    int view_end_x, view_beg_z;
-    int view_beg_x, view_end_z;
-
-    view_end_x = rend_beg_x + 512;
-    view_beg_z = rend_beg_z - 512;
-    view_beg_x = rend_beg_x - ((render_area_a << 8) + 512);
-    view_end_z = rend_beg_z + ((render_area_b << 8) + 512);
-
-    for (tlno_x = 0, pos_x = pos_beg_x; tlno_x < tlcount_x; tlno_x++, pos_x += -256)
-    {
-        int tlno_z, pos_z;
-
-        for (tlno_z = 0, pos_z = pos_beg_z; tlno_z < tlcount_z; tlno_z++, pos_z += 256)
-        {
-            struct MyMapElement *p_mapel;
-
-            if (pos_x <= TILE_TO_MAPCOORD(0,0) || pos_x >= MAP_COORD_WIDTH)
-                continue;
-            if (pos_z <= TILE_TO_MAPCOORD(0,0) || pos_z >= MAP_COORD_HEIGHT)
-                continue;
-
-            p_mapel = &game_my_big_map[MAPCOORD_TO_TILE(pos_x) + MAPCOORD_TO_TILE(pos_z) * MAP_TILE_WIDTH];
-
-            if (pos_x >= view_beg_x && pos_x <= view_end_x && pos_z >= view_beg_z && pos_z <= view_end_z)
-            {
-                ThingIdx thing;
-                ushort lv;
-
-                lv = p_mapel->ColHead;
-                if (lv != 0)
-                {
-                    thing = game_col_vects_list[lv].Object;
-                    if (thing > 0)
-                    {
-                        struct Thing *p_thing;
-                        p_thing = &things[thing];
-                        if ((p_thing->Type == TT_BUILDING)
-                         && (p_thing->U.UObject.DrawTurn != gameturn)) {
-                            draw_thing_object(p_thing);
-                        }
-                    }
-                }
-                thing = p_mapel->Child;
-                while (thing != 0)
-                {
-                    if (thing > 0)
-                    {
-                        struct Thing *p_thing;
-                        p_thing = &things[thing];
-                        thing = draw_thing_object(p_thing);
-                        continue;
-                    }
-                    else
-                    {
-                        struct SimpleThing *p_sthing;
-                        p_sthing = &sthings[thing];
-                        thing = draw_sthing_object(p_sthing);
-                        continue;
-                    }
-                }
-            }
-            else
-            {
-                ThingIdx thing;
-                ushort lv;
-
-                lv = p_mapel->ColHead;
-                if (lv != 0)
-                {
-                    thing = game_col_vects_list[lv].Object;
-                    if (thing > 0)
-                    {
-                        struct Thing *p_thing;
-                        p_thing = &things[thing];
-                        if ((p_thing->Type == TT_BUILDING)
-                          && (p_thing->U.UObject.DrawTurn != gameturn)
-                          && (p_thing->U.UObject.BHeight > 1400)) {
-                            draw_thing_object(p_thing);
-                        }
-                    }
-                }
-                thing = p_mapel->Child;
-                while (thing != 0)
-                {
-                    if (thing > 0)
-                    {
-                        struct Thing *p_thing;
-                        p_thing = &things[thing];
-                        if ( p_thing->Type == TT_BUILDING
-                          && (p_thing->U.UObject.DrawTurn != gameturn)
-                          && (p_thing->U.UObject.BHeight > 1400)) {
-                            thing = draw_thing_object(p_thing);
-                            continue;
-                        }
-                        thing = p_thing->Next;
-                    }
-                    else
-                    {
-                        struct SimpleThing *p_sthing;
-                        p_sthing = &sthings[thing];
-                        thing = p_sthing->Next;
-                    }
-                }
-            }
-        }
-    }
 }
 
 ubyte get_engine_inputs(void)
@@ -1725,122 +1423,30 @@ ubyte get_engine_inputs(void)
         clear_gamekey_pressed(GKey_TRANS_OBJ_LINE_COL);
         did_inp |= GINPUT_DIRECT;
     }
-    return did_inp;
-}
-
-void screen_position_face_render_callback(
-  struct PolyPoint *p_pt1,
-  struct PolyPoint *p_pt2,
-  struct PolyPoint *p_pt3,
-  ushort face, ubyte type)
-{
-    PlayerInfo *p_locplayer;
-
-    p_locplayer = &players[local_player_no];
-    if (p_locplayer->TargetType < TrgTp_Unkn3) {
-        check_mouse_over_face(p_pt1, p_pt2, p_pt3, face, type);
-    }
-}
-
-void screen_sorted_sprite_1a_render_callback(ushort sspr)
-{
-    struct Thing *p_thing;
-    PlayerInfo *p_locplayer;
-
-    p_locplayer = &players[local_player_no];
-    p_thing = game_sort_sprites[sspr].PThing;
-    if ((p_locplayer->TargetType <= TrgTp_DroppedTng) && (p_thing->Type == SmTT_DROPPED_ITEM)) {
-        check_mouse_overlap_item(sspr);
-    }
-
-    if ((p_locplayer->TargetType < TrgTp_Unkn6) && (p_thing->Type == TT_MINE))
+    if (game_perspective == ProjM_IsomObjWirefr)
     {
-        if ((p_thing->SubType == 7) || (p_thing->SubType == 3))
-            check_mouse_overlap_item(sspr);
-        else if (p_thing->SubType == 48)
-            check_mouse_overlap(sspr);
+        if (lbKeyOn[KC_RALT]) {
+            render_faces_flags |= RendFacF_Perspectv3SkipWireframe;
+            did_inp |= GINPUT_DIRECT;
+        } else {
+            render_faces_flags &= ~RendFacF_Perspectv3SkipWireframe;
+        }
     }
+    return did_inp;
 }
 
 void process_engine_unk3(void)
 {
-    PlayerInfo *p_locplayer;
-
     get_engine_inputs();
-
-    reset_drawlist();
-    screen_position_face_render_cb = screen_position_face_render_callback;
-    screen_sorted_sprite_render_cb = screen_sorted_sprite_1a_render_callback;
-    player_target_clear(local_player_no);
-    mech_unkn_dw_1DC880 = mech_unkn_tile_x1;
-    mech_unkn_dw_1DC884 = mech_unkn_tile_y1;
-    mech_unkn_dw_1DC888 = mech_unkn_tile_x2;
-    mech_unkn_dw_1DC88C = mech_unkn_tile_y2;
-    mech_unkn_dw_1DC890 = mech_unkn_tile_x3;
-    mech_unkn_dw_1DC894 = mech_unkn_tile_y3;
-
+    mech_gameturn_reinit();
     process_map_craters();
-    func_13A78();
 
-    if (((ingame.Flags & GamF_BillboardBAT) == 0) &&
-      ((ingame.Flags & GamF_BillboardMovies) != 0))
-    {
-        dword_176CBC += fifties_per_gameturn;
-        if (dword_176CBC > 80)
-        {
-            dword_176CBC = 0;
-            if (!in_network_game && ((ingame.Flags & GamF_Unkn00040000) != 0))
-            {
-                ingame.Flags &= ~GamF_Unkn00040000;
-                xdo_next_frame(AniSl_BILLBOARD);
-            }
-        }
-    }
+    engine_draw_whole_screen_top_down();
 
-    int rend_beg_x, rend_beg_z;
-    int pos_beg_x, pos_beg_z;
-    int tlcount_x, tlcount_z;
-
-    camera_setup_view(&pos_beg_x, &pos_beg_z, &rend_beg_x, &rend_beg_z, &tlcount_x, &tlcount_z);
-
-    if ((ingame.Flags & GamF_RenderScene) != 0)
-    {
-        engine_draw_things(pos_beg_x, pos_beg_z, rend_beg_x, rend_beg_z, tlcount_x, tlcount_z);
-    }
-
-    if ((ingame.Flags & GamF_RenderScene) != 0)
-    {
-        if ((gamep_scene_effect_type == ScEff_SPACE) && engine_render_lights)
-            draw_background_stars();
-        if (game_perspective == 6) {
-            draw_background_stars();
-        } else {
-            lvdraw_do_floor();
-        }
-    }
-
-    if (word_1552F8 != 36 && !byte_1C8444)
-    {
-        clear_super_quick_lights();
-    }
-    assert(vec_tmap[1] != NULL);
-    vec_map = vec_tmap[1];
-    p_locplayer = &players[local_player_no];
-    if ((ingame.Flags & GamF_RenderScene) != 0)
-    {
-        draw_explode();
-        draw_screen();
-        draw_hud(p_locplayer->DirectControl[0]);
-        if (in_network_game)
-            draw_engine_net_text();
-        if (debug_hud_collision)
-            draw_engine_unk3_last(engn_xc, engn_zc);
-    }
-    else
-    {
-        draw_hud(p_locplayer->DirectControl[0]);
-        reset_drawlist();
-    }
+    // Which frame of an animated texture is on screen is not part of the game
+    // state - no simulation code reads it. Advanced here, after the frame was
+    // enlisted, it keeps the pace it had within process_things().
+    animate_textures();
 }
 
 void process_sound_heap(void)
@@ -1961,7 +1567,7 @@ void init_outro(void)
     outro_unkn02 = 0;
     outro_unkn03 = 0;
     gameturn = 0;
-    render_anim_turn = gameturn;
+    render_clock_set_turn(gameturn);
 
     screen_animate_draw_outro_text();
     // Sleep for up to 10 seconds
@@ -1975,7 +1581,6 @@ void init_outro(void)
     setup_heaps(SHSC_CreditsSnd, language_3str);
     play_sample_using_heap(0, 1, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_4EVER, 3);
 
-    data_197150 = 1;
     data_1dd91c = 0;
     unkn_flags_01 = 1;
     overall_scale = 40;
@@ -2006,20 +1611,21 @@ void init_outro(void)
         }
 
         gameturn++;
-        render_anim_turn = gameturn;
+        render_clock_set_turn(gameturn);
         traffic_unkn_func_01();
-        process_engine_unk1();
+        camera_apply_velocity();
+        prepare_drawlist();
         process_sound_heap();
-        func_2e440();
+        engine_draw_whole_screen_flyby();
         if (outro_credits_enabled)
         {
             outro_unkn02++;
-            func_cc0d4((char **)&people_credits_groups[2 * outro_unkn03]);
-            if (outro_unkn02 > data_1ddb68 + 50)
+            func_cc0d4((char **)&dev_credits_groups[2 * outro_unkn03]);
+            if (outro_unkn02 > dword_1DDB68 + 50)
             {
                 outro_unkn02 = 0;
                 outro_unkn03++;
-                if (outro_unkn03 == people_groups_count)
+                if (outro_unkn03 == dev_credits_groups_count)
                     outro_unkn03 = 0;
             }
           }
@@ -2036,60 +1642,6 @@ void init_outro(void)
     setup_heaps(SHSC_GameSndBestQ, language_3str);
 }
 
-void srm_scanner_set_size_at_bottom_left(short margin, short width, short height)
-{
-    short hlimit;
-
-    // Limit the height here, to make sure reduced rectangle is still put at bottom
-    hlimit = sizeof(ingame.Scanner.Width)/sizeof(ingame.Scanner.Width[0]);
-    if (height >= hlimit)
-        height = hlimit - 1;
-
-    SCANNER_set_screen_box(1, lbDisplay.GraphicsScreenHeight - margin - height,
-        width, height, 24);
-}
-
-void srm_scanner_size_update(void)
-{
-    short margin, width, height;
-
-    panel_get_scanner_screen_size(&margin, &width, &height,
-      lbDisplay.GraphicsScreenWidth, lbDisplay.GraphicsScreenHeight, pop1_sprites_scale);
-    srm_scanner_set_size_at_bottom_left(margin, width, height);
-}
-
-void init_scanner_colour(void)
-{
-    sbyte panperm;
-    ubyte col;
-
-    panperm = ingame.PanelPermutation;
-    if ((panperm == 2) || (panperm == -3)) {
-        col = 1;
-    } else
-    if ((panperm == 0) || (panperm == -1)) {
-        col = 2;
-    } else {
-        col = 2;
-    }
-    SCANNER_set_colour(col);
-    SCANNER_fill_in();
-}
-
-void init_scanner(void)
-{
-    init_scanner_colour();
-    dword_1AA5C4 = 0;
-    dword_1AA5C8 = 0;
-    ingame.Scanner.Brightness = 8;
-    ingame.Scanner.Contrast = 5;
-    SCANNER_width = ingame.Scanner.Width;
-    ingame.Scanner.Zoom = 128;
-    ingame.Scanner.Angle = 0;
-    srm_scanner_size_update();
-    SCANNER_init();
-}
-
 /**
  * Updates engine parameters for best display for current video mode within the tactical mission.
  */
@@ -2102,6 +1654,7 @@ TbBool adjust_mission_engine_to_video_mode(void)
     // Set scale 15% over the min, to create a nice pan effect
     overall_scale = (get_overall_scale_min() * 295) >> 8;
 
+    // loads sprites for the panel, but also panel config file, and stretches to actual resolution
     if (load_pop_sprites_for_current_mode() == Lb_FAIL)
         ret = false;
     if (load_mouse_pointers_sprites_for_current_mode() == Lb_FAIL)
@@ -2111,6 +1664,7 @@ TbBool adjust_mission_engine_to_video_mode(void)
 
     render_area_a = render_area_b = \
       get_render_area_for_zoom(user_zoom_min);
+    init_scanner_colour();
     srm_scanner_size_update();
 
     return ret;
@@ -2387,7 +1941,7 @@ TbBool setup_host(void)
 
     setup_host_sub6();
     play_intro();
-    flic_unkn03(AniSl_BILLBOARD);
+    embanim_init();
 
     return ret;
 }
@@ -2398,10 +1952,63 @@ void init_engine(void)
         :  :  : "eax" );
 }
 
+void net_player_colors_reassign(void)
+{
+    s32 npcolors[5];
+    ubyte incolors[8];
+    ushort plyr;
+    ushort incol_idx;
+
+    //TODO would probalny make more sense to memset with -1, as the source is never written to
+    LbMemoryCopy(npcolors, dword_152E38, sizeof(npcolors));
+    incolors[0] = colour_lookup[ColLU_GREEN];
+    incolors[1] = colour_lookup[ColLU_RED];
+    incolors[2] = colour_lookup[ColLU_WHITE];
+    incolors[3] = colour_lookup[ColLU_PINK];
+    incolors[4] = colour_lookup[ColLU_CYAN];
+    incolors[5] = colour_lookup[ColLU_YELLOW];
+    incolors[6] = colour_lookup[ColLU_GREYMD];
+    incolors[7] = colour_lookup[ColLU_BLACK];
+
+    incol_idx = 0;
+    for (plyr = 0; plyr < PLAYERS_LIMIT; plyr++)
+    {
+        ubyte v12;
+        TbPixel c;
+
+        if (((1 << plyr) & ingame.InNetGame_UNSURE) == 0)
+            continue;
+
+        v12 = net_player_teams[plyr];
+        if (v12 == 0)
+        {
+            c = incolors[incol_idx];
+            net_player_colours[plyr] = c;
+            incol_idx++;
+        }
+        else if (npcolors[v12] == -1)
+        {
+            c = incolors[incol_idx];
+            net_player_colours[plyr] = c;
+            npcolors[v12] = c;
+            incol_idx++;
+        }
+        else
+        {
+            c = npcolors[v12];
+            net_player_colours[plyr] = c;
+        }
+    }
+}
+
 void unkn_truce_groups(void)
 {
+#if 0
     asm volatile ("call ASM_unkn_truce_groups\n"
         :  :  : "eax" );
+#endif
+    unkn_truce_groups_sub1();
+    net_player_colors_reassign();
 }
 
 void blind_progress_game(ulong nturns)
@@ -2411,6 +2018,7 @@ void blind_progress_game(ulong nturns)
     for (n = 0; n < nturns; n++)
     {
         process_things();
+        process_explode();
         gameturn++;
     }
 }
@@ -2441,13 +2049,64 @@ void find_the_tall_buildings(void)
     return;
 }
 
-void func_749fc(void)
+//TODO change ret type to ThingIdx, when no longer used in ASM
+int create_train_carriage(short cor_dx, short cor_dy, short cor_dz, short otype)
 {
-    asm volatile ("call ASM_func_749fc\n"
-        :  :  : "eax" );
-    return;
+    int ret;
+    asm volatile ("call ASM_create_train_carriage\n"
+        : "=r" (ret) : "a" (cor_dx), "d" (cor_dy), "b" (cor_dz), "c" (otype));
+    return ret;
 }
 
+struct Thing *find_unused_train_track(void)
+{
+    struct Thing *ret;
+    asm volatile ("call ASM_find_unused_train_track\n"
+        : "=r" (ret) : );
+    return ret;
+}
+void create_train_for_each_track(void)
+{
+#if 0
+    asm volatile ("call ASM_create_train_for_each_track\n"
+        :  :  : "eax" );
+    return;
+#endif
+    ushort k;
+
+    k = 0;
+    while (find_unused_train_track() && k < 10)
+    {
+        ThingIdx veh[4];
+        struct Thing *p_thing;
+
+        veh[0] = create_train_carriage(0, 0, 0 * TRAIN_CARRY_LENGTH, 4);
+        veh[1] = create_train_carriage(0, 0, 1 * TRAIN_CARRY_LENGTH, 5);
+        veh[2] = create_train_carriage(0, 0, 2 * TRAIN_CARRY_LENGTH, 5);
+        veh[3] = create_train_carriage(0, 0, 3 * TRAIN_CARRY_LENGTH, 5);
+
+        p_thing = &things[veh[0]];
+        p_thing->Owner = 0;
+        p_thing->U.UVehicle.GotoX = veh[1];
+
+        p_thing = &things[veh[1]];
+        p_thing->Owner = veh[0];
+        p_thing->U.UVehicle.GotoX = veh[2];
+
+        p_thing = &things[veh[2]];
+        p_thing->Owner = veh[1];
+        p_thing->U.UVehicle.GotoX = veh[3];
+
+        p_thing = &things[veh[3]];
+        p_thing->U.UVehicle.GotoX = 0;
+        p_thing->Owner = veh[2];
+
+        ingame.fld_unkC59++;
+        k++;
+    }
+}
+
+/* no function - delete pending
 void clear_word_1774E8(void)
 {
     short i;
@@ -2457,6 +2116,7 @@ void clear_word_1774E8(void)
         word_1774E8[2 * i + 0] = 0;
     }
 }
+*/
 
 void init_my_paths(void)
 {
@@ -2514,7 +2174,7 @@ void init_level_unknsub01_person(struct Thing *p_person)
 
 void init_level_unknsub01_building(struct Thing *p_buildng)
 {
-    p_buildng->Flag &= TngF_Unkn0800;
+    p_buildng->Flag &= ~TngF_TriggerUse;
     if (p_buildng->SubType == SubTT_BLD_MGUN)
     {
         p_buildng->PTarget = NULL;
@@ -2653,11 +2313,7 @@ void init_level(void)
     if (in_network_game)
     {
         ingame.DetailLevel = 1;
-        for (plyr_no = 0; plyr_no < PLAYERS_LIMIT; plyr_no++)
-        {
-            player_message_timer[plyr_no] = 0;
-            player_message_text[plyr_no][0] =  '\0';
-        }
+        player_chat_clear();
     }
     else
     {
@@ -2673,9 +2329,7 @@ void init_level(void)
         p_player = &players[plyr_no];
         for (plagent = 0; plagent < LOCAL_USERS_MAX_COUNT; plagent++)
         {
-            p_player->UserVX[plagent] = 0;
-            p_player->UserVY[plagent] = 0;
-            p_player->UserVZ[plagent] = 0;
+            player_agent_clear_user_vect(plyr_no, plagent);
             p_player->SpecialItems[plagent] = 0;
             p_player->PanelItem[plagent] = 0;
             p_player->PanelState[plagent] = PANEL_STATE_NORMAL;
@@ -2688,7 +2342,7 @@ void init_level(void)
     set_user_selected_brightness();
     ingame.Flags &= ~TngF_Unkn8000;
     if (!in_network_game)
-        ingame.InNetGame_UNSURE = 1;
+        ingame.InNetGame_UNSURE = (1 << 0);
     word_1531DA = 1;
     shield_frames_init();
     ingame.fld_unkCB7 = 0;
@@ -2697,7 +2351,7 @@ void init_level(void)
     ingame.SoundThing = 0;
     ingame.fld_unkCB5 = 0;
     clear_open_mission_status();
-    init_free_explode_faces();
+    init_object_explode_faces();
     StopAllSamples();
     ingame.TrackThing = 0;
     func_74934();
@@ -2708,8 +2362,8 @@ void init_level(void)
     word_1AABD0 = next_floor_texture;
     init_crater_textures();
     bang_init();
-    FIRE_init_or_samples_init();
-    func_749fc();
+    FIRE_init();
+    create_train_for_each_track();
     preprogress_trains_turns(50);
     tnext_floor_texture = next_floor_texture + 1;
     init_col_vects_linked_list();
@@ -2722,7 +2376,7 @@ void init_level(void)
     gamep_unknval_16 = 0;
     ingame.fld_unkCB1 = 1;
     ingame.fld_unkCB2 = 1;
-    clear_word_1774E8();
+    // clear_word_1774E8(); // no function - delete pending
     missions_clear_bank_tests();
     thing_groups_clear_all_actions();
     init_my_paths();
@@ -2753,7 +2407,7 @@ void init_level_3d(ubyte flag)
     if (flag)
     {
         next_object = stored_l3d_next_object;
-        next_object_face = stored_l3d_next_object_face;
+        next_object_face3 = stored_l3d_next_object_face3;
         next_object_face4 = stored_l3d_next_object_face4;
         next_object_point = stored_l3d_next_object_point;
         next_normal = stored_l3d_next_normal;
@@ -2765,7 +2419,7 @@ void init_level_3d(ubyte flag)
     else
     {
         stored_l3d_next_object = next_object;
-        stored_l3d_next_object_face = next_object_face;
+        stored_l3d_next_object_face3 = next_object_face3;
         stored_l3d_next_object_face4 = next_object_face4;
         stored_l3d_next_object_point = next_object_point;
         stored_l3d_next_normal = next_normal;
@@ -2777,9 +2431,10 @@ void init_level_3d(ubyte flag)
         // Prepare objects for rockets
         for (i = 0; i < WEP_ROCKETS_FIRED_LIMIT; i++)
         {
-            copy_prim_obj_to_game_object(0, 0, -prim_unknprop01 - 20, 0);
-            unkn_object_shift_03(next_object - 1);
-            ingame.Rocket1[i] = next_object - 1;
+            ushort snobj;
+            snobj = copy_prim_obj_to_game_object(0, 0, -prim_unknprop01 - 20, 0);
+            unkn_object_shift_03(snobj);
+            ingame.Rocket1[i] = snobj;
         }
         unkn2_pos_x = 64;
         unkn2_pos_y = 64;
@@ -2795,8 +2450,14 @@ void unkn1_handle_agent_groups(void)
 
 void init_game_controls(void)
 {
+#if 0
     asm volatile ("call ASM_init_game_controls\n"
         :  :  : "eax" );
+#endif
+    reset_user_groups();
+    reset_user_input();
+
+    init_user_input_local_controls();
 }
 
 void simulated_level(void)
@@ -2965,11 +2626,25 @@ void init_random_seed_default(void)
 void preprogress_game_turns(void)
 {
     struct Mission *p_missi;
+    u32 bkp_ingame_flags;
+    ubyte bkp_execute_commands;
 
     p_missi = &mission_list[ingame.CurrentMission];
     LOGSYNC("PreProcess %d turns for mission %d, starting at %lu",
       (int)p_missi->PreProcess, (int)ingame.CurrentMission, (ulong)gameturn);
+
+    // Stopping things update would make the preprocess ineffective
+    bkp_ingame_flags = ingame.Flags;
+    ingame.Flags |= TngF_ProgressAction;
+
+    bkp_execute_commands = execute_commands;
+    execute_commands = 1;
+
     blind_progress_game(p_missi->PreProcess);
+
+    execute_commands = bkp_execute_commands;
+    if ((bkp_ingame_flags & TngF_ProgressAction) == 0)
+        ingame.Flags &= ~TngF_ProgressAction;
 }
 
 /** Initializes player presence on a level.
@@ -3008,7 +2683,6 @@ void init_player(void)
     player_agents_clear_weapon_delays(local_player_no);
 
     init_game_controls();
-    preprogress_game_turns();
 }
 
 /** Macro for returning given array of elements in random order.
@@ -3099,9 +2773,15 @@ void prep_single_mission(void)
     if (PacketRecord_IsPlayback())
     {
         PacketRecord_OpenRead();
+    }
+
+    // TODO this code repeats for starting game from menu, close into one function
+    if (PacketRecord_IsPlayback())
+    {
         packet_read_whole_player_init();
     }
     init_game(0);
+    preprogress_game_turns();
     if (!in_network_game)
     {
         if (PacketRecord_IsRecord()) {
@@ -3113,6 +2793,9 @@ void prep_single_mission(void)
     LbScreenClear(0);
     generate_shadows_for_multicolor_sprites();
     adjust_mission_engine_to_video_mode();
+
+    embanim_reinit(AniSl_BILLBOARD);
+    embanim_do_next_frame(AniSl_BILLBOARD);
 }
 
 void restart_back_into_mission(ushort missi)
@@ -3125,7 +2808,7 @@ void restart_back_into_mission(ushort missi)
     mission_result = 0;
     ingame.MissionEndFade = 0;
     ingame.CurrentMission = missi;
-    mission_list[missi].Complete = 0;
+    mission_list[missi].Complete = MResol_UNDECIDED;
     change_current_map(mapno);
     map_lights_update();
     if (ingame.GameMode == GamM_Unkn2)
@@ -3141,6 +2824,7 @@ void restart_back_into_mission(ushort missi)
             packet_write_whole_player_init();
         }
     }
+    preprogress_game_turns();
 }
 
 void compound_mission_brief_store_next(void)
@@ -3386,10 +3070,10 @@ TbBool game_setup(void)
     read_weapons_conf_file();
     read_cybmods_conf_file();
     bang_init();
-    init_free_explode_faces();
+    init_object_explode_faces();
     init_search_spiral();
     bang_set_detail(0);
-    FIRE_init_or_samples_init();
+    FIRE_init();
     ingame.draw_unknprop_01 = 0;
     debug_trace_setup(-5);
     if (!game_setup_stuff()) {
@@ -3411,7 +3095,7 @@ TbBool game_setup(void)
     setup_sprites_small_font();
     load_peep_type_stats();
     load_campaigns();
-    player_mission_agents_reset(local_player_no);
+    player_mission_agents_toggle_reset(local_player_no);
     debug_trace_setup(-1);
     if ( is_single_game || cmdln_param_bcg )
     {
@@ -3433,7 +3117,7 @@ TbBool game_setup(void)
     }
     if (in_network_game || cmdln_param_bcg) {
         ingame.DisplayMode = DpM_PURPLEMNU;
-        reload_menu_flag = true;
+        reload_menu_flags |= RelMnuF_ColorsSprites;
     }
     debug_trace_setup(2);
     switch (cmdln_colour_tables)
@@ -3452,99 +3136,199 @@ TbBool game_setup(void)
     return ret;
 }
 
-void anim_show_draw_next_frame(struct Animation *p_anim)
+/** Triggers the orbital station self-destruct explosion at given map position.
+ *
+ * Sends a few decorative sparks near the position, clears the mapwho things
+ * within a 33x33 tile area centered on it (calling explode faces effects on
+ * the way), then removes every remaining Thing in the game and every
+ * SimpleThing still linked to the map.
+ */
+void mapwho_unkn01(int cent_tile_x, int cent_tile_z)
 {
-    ubyte pal_change;
-
-    pal_change = anim_show_frame(p_anim);
-    p_anim->FrameNumber++;
-
-    if (pal_change)
-    {
-        LbScreenWaitVbi();
-        if (byte_1AAA88) {
-            LbPaletteSet(anim_palette);
-        }
-    }
-}
-
-int xdo_next_frame(ubyte anislot)
-{
-    struct Animation *p_anim;
-    ushort k;
-
-    k = anim_slots[anislot];
-    active_anim = k;
-    p_anim = &animations[k];
-
-    if (anislot >= AniSl_EQVIEW && anislot <= AniSl_CYBORG_INOUT)
-    {
-        if (p_anim->FrameNumber == 0) {
-            play_sample_using_heap(0, 135, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3u);
-        } else if (p_anim->FrameNumber == p_anim->FLCFileHeader.NumberOfFrames >> 1) {
-            play_sample_using_heap(0, 115, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3u);
-        }
-    }
-
-    if (p_anim->FrameNumber >= p_anim->FLCFileHeader.NumberOfFrames)
-    {
-        anim_flic_close(p_anim);
-        if ((p_anim->Flags & 0x20) != 0) {
-            flic_unkn03(p_anim->Type);
-        }
-        return 1;
-    }
-
-    anim_show_prep_next_frame(p_anim, anim_type_get_output_buffer(p_anim->Type));
-    anim_show_draw_next_frame(p_anim);
-
-    return 0;
-}
-
-int xdo_prev_frame(ubyte anislot)
-{
-    struct Animation *p_anim;
-    ubyte *p_frmbuf;
-    uint i, rq_frame;
-    ushort k;
-
-    k = anim_slots[anislot];
-    active_anim = k;
-    p_anim = &animations[k];
-
-    if (p_anim->FrameNumber == 0)
-        rq_frame = p_anim->FLCFileHeader.NumberOfFrames;
-    else
-        rq_frame = p_anim->FrameNumber - 1;
-
-    p_frmbuf = anim_type_get_output_buffer(p_anim->Type);
-
-    if (rq_frame == 0)
-    {
-        LbMemorySet(p_frmbuf, 0, p_anim->FLCFileHeader.Width * p_anim->FLCFileHeader.Height);
-        anim_flic_close(p_anim);
-        if ((p_anim->Flags & 0x20) != 0) {
-            flic_unkn03(p_anim->Type);
-        }
-        return 1;
-    }
-
-    anim_flic_show_replay(p_anim);
-    LbMemorySet(p_frmbuf, 0, p_anim->FLCFileHeader.Width * p_anim->FLCFileHeader.Height);
-    anim_show_prep_next_frame(p_anim, p_frmbuf);
-    anim_show_draw_next_frame(p_anim);
-    for (i = 1; i < rq_frame; i++)
-    {
-        anim_show_prep_next_frame(p_anim, NULL);
-        anim_show_draw_next_frame(p_anim);
-    }
-    return 0;
-}
-
-void mapwho_unkn01(int a1, int a2)
-{
+#if 0
     asm volatile ("call ASM_mapwho_unkn01\n"
-        : : "a" (a1), "d" (a2));
+        : : "a" (cent_tile_x), "d" (cent_tile_z));
+#endif
+    int i;
+    int dx, dz;
+    int tl_x, tl_z;
+    ThingIdx thing, nxthing;
+
+    dont_bother_with_explode_faces = 0;
+    SCANNER_clear();
+
+    expl_unkn_cor_x = TILE_TO_MAPCOORD(cent_tile_x, 0);
+    expl_unkn_cor_z = TILE_TO_MAPCOORD(cent_tile_z, 0);
+
+    for (i = 0; i < 5; i++)
+    {
+        int spk_tl_x, spk_tl_z;
+
+        spk_tl_z = cent_tile_z + (LbRandomAnyShort() & 0xF) - 7;
+        spk_tl_x = cent_tile_x + (LbRandomAnyShort() & 0xF) - 7;
+        bang_new4(TILE_TO_MAPCOORD(spk_tl_x, 0) << 8, 0, TILE_TO_MAPCOORD(spk_tl_z, 0) << 8, 95);
+    }
+
+    // Process the outer ring of the 33x33 area.
+    // Push explode faces effect onto every Thing.
+    for (dx = -16; dx <= 16; dx++)
+    {
+        for (dz = -16; dz <= 16; dz++)
+        {
+            struct MyMapElement *p_mapel;
+
+            if ((dx >= -8) && (dx <= 8) && (dz >= -8) && (dz <= 8))
+                continue;
+
+            tl_x = cent_tile_x + dx;
+            tl_z = cent_tile_z + dz;
+            if ((tl_x < 0) || (tl_x >= MAP_TILE_WIDTH))
+                continue;
+            if ((tl_z < 0) || (tl_z >= MAP_TILE_HEIGHT))
+                continue;
+
+            p_mapel = &game_my_big_map[MAP_TILE_WIDTH * tl_z + tl_x];
+
+            for (thing = p_mapel->Child; thing != 0; thing = nxthing)
+            {
+                if (thing > 0)
+                {
+                    struct Thing *p_thing;
+                    p_thing = &things[thing];
+                    nxthing = p_thing->Next;
+
+                    thing_explode_faces(p_thing);
+                }
+                else
+                {
+                    struct SimpleThing *p_sthing;
+                    p_sthing = &sthings[thing];
+                    nxthing = p_sthing->Next;
+                }
+            }
+        }
+    }
+
+    // Process the inner 17x17 area. Explode faces effect on every tile,
+    // plus explode faces effect on every Thing.
+    for (dx = -8; dx <= 8; dx++)
+    {
+        for (dz = -8; dz <= 8; dz++)
+        {
+            struct MyMapElement *p_mapel;
+
+            tl_x = cent_tile_x + dx;
+            tl_z = cent_tile_z + dz;
+            if ((tl_x < 0) || (tl_x >= MAP_TILE_WIDTH))
+                continue;
+            if ((tl_z < 0) || (tl_z >= MAP_TILE_HEIGHT))
+                continue;
+
+            floor_explode_faces(tl_x, tl_z);
+
+            p_mapel = &game_my_big_map[MAP_TILE_WIDTH * tl_z + tl_x];
+
+            for (thing = p_mapel->Child; thing != 0; thing = nxthing)
+            {
+                if (thing > 0)
+                {
+                    struct Thing *p_thing;
+                    p_thing = &things[thing];
+                    nxthing = p_thing->Next;
+
+                    thing_explode_faces(p_thing);
+                }
+                else
+                {
+                    struct SimpleThing *p_sthing;
+                    p_sthing = &sthings[thing];
+                    nxthing = p_sthing->Next;
+                }
+            }
+        }
+    }
+
+    // Remove every Thing currently in the game.
+    for (thing = things_used_head; thing != 0; thing = nxthing)
+    {
+        struct Thing *p_thing;
+
+        p_thing = &things[thing];
+        nxthing = p_thing->LinkChild;
+
+        remove_thing(p_thing->ThingOffset);
+        if (on_mapwho(p_thing))
+              delete_node(p_thing);
+
+        p_thing->Flag2 = 0;
+        //TODO shouldn't dead state be only valid for people, not all things?
+        p_thing->State = PerSt_DEAD;
+        p_thing->Flag |= TngF_Destroyed;
+    }
+
+    // Remove every SimpleThing still linked to the mapwho chains.
+    for (tl_z = 0; tl_z < MAP_TILE_WIDTH; tl_z++)
+    {
+        for (tl_x = 0; tl_x < MAP_TILE_WIDTH; tl_x++)
+        {
+            struct MyMapElement *p_mapel;
+            ThingIdx thing;
+
+            p_mapel = &game_my_big_map[MAP_TILE_WIDTH * tl_z + tl_x];
+
+            thing = p_mapel->Child;
+            while (thing != 0)
+            {
+                if (thing > 0)
+                {
+                    struct Thing *p_thing;
+                    p_thing = &things[thing];
+                    thing = p_thing->Next;
+                }
+                else
+                {
+                    struct SimpleThing *p_sthing;
+                    p_sthing = &sthings[thing];
+                    if (p_sthing->Type != SmTT_BANG) {
+                        remove_sthing(p_sthing->ThingOffset);
+                        delete_snode(p_sthing);
+                    }
+                    thing = p_sthing->Next;
+                }
+            }
+        }
+    }
+
+    // Reset per-tile collision data,
+    for (tl_z = 0; tl_z < MAP_TILE_WIDTH; tl_z++)
+    {
+        for (tl_x = 0; tl_x < MAP_TILE_WIDTH; tl_x++)
+        {
+            struct MyMapElement *p_mapel;
+            ThingIdx thing;
+
+            p_mapel = &game_my_big_map[MAP_TILE_WIDTH * tl_z + tl_x];
+            p_mapel->Flags |= 0x80;
+            p_mapel->ColHead = 0;
+            p_mapel->ColumnHead = 0;
+
+            thing = p_mapel->Child;
+            if (thing > 0)
+            {
+                struct Thing *p_thing;
+                p_thing = &things[thing];
+                if (p_thing->Type != SmTT_BANG)
+                    LOGWARN("Still thing on mapwho type %d", (int)p_thing->Type);
+            }
+            else if (thing < 0)
+            {
+                struct SimpleThing *p_sthing;
+                p_sthing = &sthings[thing];
+                if (p_sthing->Type != SmTT_BANG)
+                    LOGWARN("Still simple on mapwho type %d", (int)p_sthing->Type);
+            }
+        }
+    }
 }
 
 void show_unkn3A_screen(int a1)
@@ -3568,6 +3352,68 @@ void compute_scanner_zoom(void)
     SCANNER_set_zoom(zoom);
 }
 
+void recalc_mouse_pos(void)
+{
+    int cor_dx, cor_dy, cor_dz;
+    int fctr_xz;
+    int chk_x, chk_y, chk_z;
+    short mag;
+    short i;
+
+    cor_dy = (dword_176D18 >> 8);
+    fctr_xz = (dword_176D1C >> 8);
+    cor_dx = (fctr_xz * dword_176D10) >> 16;
+    cor_dz = (fctr_xz * dword_176D14) >> 16;
+
+    chk_x = 200 * cor_dx + 16 * mouse_map_x;
+    chk_y = 200 * cor_dy;
+    chk_z = 200 * cor_dz + 16 * mouse_map_z;
+
+    mag = 0;
+    for (i = 0; i < 400; i++)
+    {
+        if ( chk_y >> 4 < PRCCOORD_TO_YCOORD(alt_at_point(chk_x >> 4, chk_z >> 4)))
+            mag = i;
+        chk_x -= cor_dx;
+        chk_y -= cor_dy;
+        chk_z -= cor_dz;
+    }
+
+    if (mag != 0)
+    {
+        mag -= 200;
+        mouse_map_x -= (mag * cor_dx) >> 4;
+        mouse_map_z -= (mag * cor_dz) >> 4;
+        mouse_map_y = alt_at_point(mouse_map_x, mouse_map_z) >> 8;
+    }
+}
+
+void prepare_mouse_on_map(void)
+{
+    short msx, msy;
+    int offs_y;
+    int scr_x, scr_y;
+    int map_dxc, map_dzc;
+
+    msx = lbDisplay.MMouseX;
+    msy = lbDisplay.MMouseY;
+
+    if (ingame.DisplayMode == DpM_ENGINEPLY)
+      offs_y = (engn_yc * overall_scale) >> 8;
+    else
+      offs_y = 0;
+
+    scr_y = msy - offs_y;
+    scr_x = msx;
+
+    transform_screen_to_map_isometric(&map_dxc, &map_dzc, scr_x, scr_y);
+
+    mouse_map_x = engn_xc + map_dxc;
+    mouse_map_z = engn_zc + map_dzc;
+    if (ingame.DisplayMode == DpM_ENGINEPLY)
+        recalc_mouse_pos();
+}
+
 void show_game_engine(void)
 {
     PlayerInfo *p_locplayer;
@@ -3578,10 +3424,26 @@ void show_game_engine(void)
     process_view_inputs(dcthing);// inlined call gengine_ctrl
 
     compute_scanner_zoom();
-    process_engine_unk1();
-    process_engine_unk2();
+    camera_apply_velocity();
+    prepare_drawlist();
+    prepare_mouse_on_map();
     process_engine_unk3();
-    setup_engine_nullsub4();
+}
+
+TbResult clear_vecs_screen(TbPixel colour)
+{
+    TbPixel *ptr;
+    long h;
+
+    ptr = vec_screen;
+    if (ptr == NULL)
+        return Lb_FAIL;
+    for (h = vec_window_height; h >= 0; h--)
+    {
+        LbMemorySet(ptr, colour, vec_window_width);
+        ptr += vec_screen_width;
+    }
+    return Lb_SUCCESS;
 }
 
 void gproc3_unknsub2(void)
@@ -3591,16 +3453,13 @@ void gproc3_unknsub2(void)
         :  :  : "eax" );
     return;
 #endif
-    short ms_x, ms_y;
+    struct CameraState cam_bkp;
+    short ms_x, ms_y, ms_limit;
+    TbPixel *outbuf;
     int i;
 
-    int bkp_ingame_flags;
-    int long bkp_engn_anglexz;
-    ushort bkp_render_area_a, bkp_render_area_b;
-    long bkp_dword_152EEC;
+    u32 bkp_ingame_flags;
     ubyte bkp_unkn_flags_01;
-    ushort bkp_overall_scale;
-    s32 bkp_engn_xc, bkp_engn_yc, bkp_engn_zc;
 
     ingame.Flags &= ~GamF_BillboardMovies;
     if (is_key_pressed(KC_Q, KMod_DONTCARE))
@@ -3612,28 +3471,27 @@ void gproc3_unknsub2(void)
         dword_155018 = 50;
     }
 
-    bkp_render_area_a = render_area_a;
-    bkp_render_area_b = render_area_b;
-    bkp_overall_scale = overall_scale;
-    bkp_engn_xc = engn_xc;
-    bkp_engn_yc = engn_yc;
-    bkp_engn_zc = engn_zc;
-    bkp_engn_anglexz = engn_anglexz;
     bkp_ingame_flags = ingame.Flags;
-    bkp_dword_152EEC = dword_152EEC;
     bkp_unkn_flags_01 = unkn_flags_01;
+
+    camera_save_backup_state(&cam_bkp);
 
     render_area_a = 24;
     render_area_b = 24;
+    overall_scale = 18;
+
+    unkn_flags_01 = 1;
     ingame.Flags = 0;
 
-    ms_x = lbDisplay.GraphicsScreenHeight < 400 ? 2 * lbDisplay.MMouseX : lbDisplay.MMouseX;
-    ms_y = lbDisplay.GraphicsScreenHeight < 400 ? 2 * lbDisplay.MMouseY : lbDisplay.MMouseY;
+    ms_x = lbDisplay.MMouseX;
+    ms_y = lbDisplay.MMouseY;
 
-    if (ms_x < 200)
-      dword_1AAB74 -= 16;
-    if (ms_x > 440)
-      dword_1AAB74 += 16;
+    ms_limit = lbDisplay.MouseWindowX + lbDisplay.MouseWindowWidth * 1 / 3;
+    if (ms_x < ms_limit)
+        dword_1AAB74 -= 16;
+    ms_limit = lbDisplay.MouseWindowX + lbDisplay.MouseWindowWidth * 2 / 3;
+    if (ms_x > ms_limit)
+        dword_1AAB74 += 16;
     dword_1AAB74 &= 0x7FF;
 
     if (!lbDisplay.MRightButton)
@@ -3642,10 +3500,12 @@ void gproc3_unknsub2(void)
         dword_155014 += lbSinTable[dword_1AAB74 + LbFPMath_PI/2] >> 9;
     }
 
-    if (ms_y < 180)
-        dword_1AAB78 -= (180 - ms_y) >> 5;
-    if (ms_y > 220)
-        dword_1AAB78 -= (220 - ms_y) >> 5;
+    ms_limit = lbDisplay.MouseWindowY + lbDisplay.MouseWindowHeight * 1 / 3;
+    if (ms_y < ms_limit)
+        dword_1AAB78 -= (ms_limit - ms_y) >> 5;
+    ms_limit = lbDisplay.MouseWindowY + lbDisplay.MouseWindowHeight * 2 / 3;
+    if (ms_y > ms_limit)
+        dword_1AAB78 -= (ms_limit - ms_y) >> 5;
     if (dword_1AAB78 > 300)
         dword_1AAB78 = 300;
     if (dword_1AAB78 < -300)
@@ -3665,57 +3525,37 @@ void gproc3_unknsub2(void)
     if (dword_155014 > 0x8000)
         dword_155014 = 0;
 
-    dword_152EEC = dword_1AAB78;
+    engn_cam_tilt = dword_1AAB78;
     engn_xc = dword_155010;
     engn_yc = dword_155018;
     engn_zc = dword_155014;
-    engn_anglexz = 32 * dword_1AAB74;
+    engn_cam_yaw = 32 * dword_1AAB74;
 
-    setup_vecs(vec_tmap[5], vec_tmap[0], 0x100u, 0x60u, 64);
-    process_engine_unk1();
+#if 0
+    outbuf = vec_tmap[5];
+#else
+    outbuf = vec_tmap[4] + 256 * (5 * 32) + 2 * 32;
+#endif
+    setup_vecs(outbuf, vec_tmap[0], 256, 96, 64);
+    prepare_drawlist();
 
-    unkn_flags_01 = 1;
-    overall_scale = 18;
-    memset(vec_tmap[5], 0, 0x4000);
-    gameturn -= 10;
-    func_2e440();
-    gameturn += 10;
+    clear_vecs_screen(0);
+    drawturn -= 10;
+    engine_draw_whole_screen_flyby();
+    drawturn += 10;
 
     setup_vecs(lbDisplay.WScreen, vec_tmap[0],
       lbDisplay.PhysicalScreenWidth,
       lbDisplay.PhysicalScreenWidth,
       lbDisplay.PhysicalScreenHeight);
-    dword_176D3C = vec_window_width / 2;
-    dword_176D40 = vec_window_height / 2;
+    transform_reinit_vec_window();
 
-    render_area_a = bkp_render_area_a;
-    render_area_b = bkp_render_area_b;
-    overall_scale = bkp_overall_scale;
-    engn_xc = bkp_engn_xc;
-    engn_yc = bkp_engn_yc;
-    engn_zc = bkp_engn_zc;
-    engn_anglexz = bkp_engn_anglexz;
+    camera_load_backup_state(&cam_bkp);
+
     ingame.Flags = bkp_ingame_flags;
-    dword_152EEC = bkp_dword_152EEC;
     unkn_flags_01 = bkp_unkn_flags_01;
 
-    process_engine_unk1();
-}
-
-ubyte accept_mission(ubyte click)
-{
-    ubyte ret;
-    asm volatile ("call ASM_accept_mission\n"
-        : "=r" (ret) : "a" (click));
-    return ret;
-}
-
-ubyte do_unkn1_CANCEL(ubyte click)
-{
-    ubyte ret;
-    asm volatile ("call ASM_do_unkn1_CANCEL\n"
-        : "=r" (ret) : "a" (click));
-    return ret;
+    prepare_drawlist();
 }
 
 ubyte load_game_slot(ubyte click)
@@ -3751,9 +3591,8 @@ ubyte load_game_slot(ubyte click)
     alert_box_text_fmt("%s", gui_strings[572]);
 
     // Reading the save might have caused campaign switch
-    reload_background_flag = 1;
     load_objectives_text();
-    init_weapon_text();
+    load_wep_mod_desc_text();
 
     mark_system_menu_screen_boxes_redraw();
     mark_sys_scr_shared_header_box_redraw();
@@ -3765,6 +3604,7 @@ ubyte load_game_slot(ubyte click)
     selected_agent = 0;
     screentype = SCRT_99;
     game_system_screen = SySc_NONE;
+    reload_background_flag = 1;
     if (restore_savegame) {
         restore_savegame = 0;
         sysmnu_button_enable(0, 5);
@@ -3783,27 +3623,10 @@ ubyte save_game_slot(ubyte click)
     return ret;
 }
 
-void init_variables(void)
+void reinit_unkn6_always_reset_variables(void)
 {
-#if 0
-    asm volatile ("call ASM_init_variables\n"
-        :  :  : "eax" );
-#endif
-    selected_city_id = -1;
-    reset_equip_screen_player_state();
-    reset_cryo_screen_player_state();
-    reset_world_screen_player_state();
-    reset_brief_screen_player_state();
-    reset_research_screen_player_state();
-    clear_all_scanner_signals();
-    reset_app_bar_player_state();
-    //word_1C6F48 = 0; -- set but never used - remove pending
-    global_date.Day = 2;
-    global_date.Month = 6;
-    global_date.Year = 74;
-    //word_15518A = -1; -- set but never used - remove pending
-    ingame.MissionStatus = ObvStatu_COMPLETED;
-    login_control__Money = starting_cash_amounts[4];
+    login_control__TechLevel = 4;
+    login_control__Money = starting_cash_amounts[login_control__TechLevel];
     if (login_control__State == LognCt_Unkn6)
     {
         ingame.Credits = 50000;
@@ -3815,17 +3638,53 @@ void init_variables(void)
         ingame.CashAtStart = login_control__Money;
     }
     ingame.Expenditure = 0;
-    login_control__City = 19;
     login_control__State = LognCt_Unkn6;
-    byte_181189 = 0;
     net_game_play_flags = NGPF_Unkn20 | NGPF_Unkn10 | NGPF_Unkn08 | NGPF_Unkn04;
-    login_control__TechLevel = 4;
+}
+
+void reinit_unkn6_adjustable_variables(void)
+{
+    login_control__City = -1;
+
+    reinit_unkn6_always_reset_variables();
+}
+
+void init_unkn6_adjustable_variables(void)
+{
+    ingame.MissionStatus = ObvStatu_COMPLETED;
+    login_control__City = 19; // Tokyo
+    login_control__Team = 0;
+
+    reinit_unkn6_always_reset_variables();
 }
 
 void init_agents(void)
 {
+#if 0
     asm volatile ("call ASM_init_agents\n"
         :  :  : "eax" );
+#endif
+    PlayerIdx plyr;
+    ushort cryo_no;
+
+    cryo_agents.NumAgents = 8;
+    cryo_agents_assign_random_names_and_sex();
+    cryo_agents_clear_wep_mod();
+
+    // TODO starting equipment could be a part of campaign file
+    for (cryo_no = 0; cryo_no < cryo_agents.NumAgents; cryo_no++)
+    {
+        player_cryo_add_weapon_one(cryo_no, WEP_UZI);
+    }
+
+    // Initialize all players from the same starting cryo
+    for (plyr = 0; plyr < PLAYERS_LIMIT; plyr++)
+    {
+        PlayerInfo *p_player;
+
+        p_player = &players[plyr];
+        player_update_agents_from_cryo(p_player);
+    }
 }
 
 /** Initializes the research data for a new game.
@@ -3854,45 +3713,7 @@ void srm_reset_research(void)
     research.NumBases = 0;
 }
 
-ubyte goto_savegame(ubyte click)
-{
-#if 0
-    ubyte ret;
-    asm volatile ("call ASM_goto_savegame\n"
-        : "=r" (ret) : "a" (click));
-    return ret;
-#endif
-    restore_savegame = 1;
-    game_system_screen = SySc_STORAGE;
-    screentype = SCRT_SYSMENU;
-    sysmnu_button_disable(0, 5);
-    update_sys_scr_shared_header(game_system_screen);
-    ingame.Flags &= ~GamF_MortalGame;
-
-    load_city_data(0);
-    init_weapon_text();
-    load_city_txt();
-    player_mission_agents_reset(local_player_no);
-    init_variables();
-    srm_reset_research();
-    init_agents();
-
-    edit_flag = 0;
-    save_slot_base = 0;
-    redraw_screen_flag = 1;
-
-    load_save_slot_names();
-
-    return 1;
-}
-
-void my_preprocess_text(char *text)
-{
-    asm volatile ("call ASM_my_preprocess_text\n"
-        :  : "a" (text));
-}
-
-void research_unkn_func_006(ushort missi)
+void mission_over_give_extra_reward(ushort missi)
 {
     struct Mission *p_missi;
     int i;
@@ -3992,25 +3813,7 @@ ulong calculate_cash_gain_from_persuaded_person(struct Thing *p_person)
     ulong credits;
 
     credits = 0;
-    switch (p_person->SubType)
-    {
-    case SubTT_PERS_AGENT:
-        credits += 1000;
-        break;
-    case SubTT_PERS_ZEALOT:
-        credits += 1000;
-        break;
-    case SubTT_PERS_PUNK_M:
-    case SubTT_PERS_PUNK_F:
-        credits += 150;
-        break;
-    case SubTT_PERS_SCIENTIST:
-        credits += 500;
-        break;
-    default:
-        credits += 100;
-        break;
-    }
+    credits += person_type_get_persuasion_credit(p_person->SubType);
     credits += person_carried_weapons_pesuaded_sell_value(p_person);
 
     return credits;
@@ -4021,16 +3824,22 @@ ulong mission_over_calculate_cash_gain_from_persuaded_crowd(ushort tgroup)
     ulong credits;
     struct Thing *p_person;
     ThingIdx person;
+    short i;
 
     credits = 0;
     person = get_thing_same_type_head(TT_PERSON, -1);
-    for (; person > 0; person = p_person->LinkSame)
+    for (i = 0; person > 0; person = p_person->LinkSame, i++)
     {
+        if (i >= THINGS_LIMIT) {
+            LOGERR("Infinite loop in same type things list");
+            break;
+        }
         p_person = &things[person];
         if ((p_person->Flag & TngF_Persuaded) == 0)
             continue;
         if (p_person->U.UPerson.EffectiveGroup != tgroup)
             continue;
+
         credits += calculate_cash_gain_from_persuaded_person(p_person);
     }
     return credits;
@@ -4040,24 +3849,26 @@ void mission_over_gain_personnel_from_persuaded_crowd(void)
 {
     struct Thing *p_person;
     ThingIdx person;
+    short i;
 
     person = get_thing_same_type_head(TT_PERSON, -1);
-    for (; person > 0; person = p_person->LinkSame)
+    for (i = 0; person > 0; person = p_person->LinkSame, i++)
     {
+        if (i >= THINGS_LIMIT) {
+            LOGERR("Infinite loop in same type things list");
+            break;
+        }
         p_person = &things[person];
         if ((p_person->Flag & TngF_Persuaded) == 0)
             continue;
         if (p_person->U.UPerson.EffectiveGroup != ingame.MyGroup)
             continue;
-        switch (p_person->SubType)
-        {
-        case SubTT_PERS_AGENT:
+
+        if (person_type_is_synd_agent(p_person->SubType))
             add_agent(p_person->U.UPerson.WeaponsCarried, p_person->U.UPerson.UMod.Mods);
-            break;
-        case SubTT_PERS_SCIENTIST:
+
+        if (person_type_is_scientist(p_person->SubType))
             research.Scientists++;
-            break;
-        }
     }
 }
 
@@ -4152,7 +3963,7 @@ TbBool check_mission_conds(ushort missi)
     for (i = 0; i < 5; i++)
     {
         cmissi = mission_list[missi].MissionCond[i];
-        if ((cmissi > 0) && (mission_list[cmissi].Complete != 1))
+        if ((cmissi > 0) && (mission_list[cmissi].Complete != MResol_COMPLETED))
           return false;
     }
     return true;
@@ -4211,7 +4022,7 @@ void mission_special_triggers_0_1_set_fail(ushort missi)
     {
         ushort tmp_missi;
 
-        mission_list[next_missi].Complete = -1;
+        mission_list[next_missi].Complete = MResol_FAILED;
 
         // TODO Why only one these? If failing, shouldn't we fail both?
         tmp_missi = mission_list[next_missi].SpecialTrigger[0];
@@ -4282,13 +4093,20 @@ void update_mission_list_to_mission_state(ushort missi, sbyte state)
     if (state == MResol_COMPLETED) {
         mission_list[missi].Complete = state;
     } else if (mission_remain_until_success(missi)) {
-          mission_list[missi].Complete = 0;
-          set_mission_state_using_state_slot(missi, MResol_UNDECIDED);
+        mission_list[missi].Complete = MResol_UNDECIDED;
+        set_mission_state_using_state_slot(missi, MResol_UNDECIDED);
     } else {
-          mission_list[missi].Complete = state;
+        mission_list[missi].Complete = state;
     }
 }
 
+/** Return the way forward in regard to opening more missions for the player.
+ *
+ * If the mission was either completed or failed, the function returns
+ * whether more missions, and from which group, should become available to
+ * the player. It also updates special triggers to acknowledge given
+ * state of given mission.
+ */
 ubyte check_open_next_mission(ushort missi, sbyte state)
 {
     if (mission_has_no_special_triggers(missi))
@@ -4461,7 +4279,8 @@ ubyte check_delete_open_mission(ushort missi, sbyte state)
 
     conds_met = check_mission_conds(missi);
 
-    research_unkn_func_006(missi);
+    if ((state == MResol_COMPLETED) || (state == MResol_FAILED))
+        mission_over_give_extra_reward(missi);
 
     misend = check_open_next_mission(missi, state);
 
@@ -4492,6 +4311,8 @@ ubyte check_delete_open_mission(ushort missi, sbyte state)
         break;
     case OMiSta_ContFailed:
         break;
+    default:
+        break;
     }
     return misend;
 }
@@ -4504,7 +4325,7 @@ void mission_over(void)
     mission_over_prepare_agents();
 
     ingame.DisplayMode = DpM_PURPLEMNU;
-    reload_menu_flag = true;
+    reload_menu_flags |= RelMnuF_ColorsSprites;
 
     LbMouseChangeSprite(0);
     StopCD();
@@ -4542,19 +4363,19 @@ void mission_over(void)
         ingame.Credits += cr_award;
         if (email != 0)
             queue_up_new_mail(0, -email);
-        misend = check_delete_open_mission(missi, mstate);
         break;
     case MResol_FAILED:
         email = mission_list[missi].FailID;
         ingame.fld_unkC57++;
         if (email != 0)
             queue_up_new_mail(0, -email);
-        misend = check_delete_open_mission(missi, mstate);
         break;
     default:
         mstate = MResol_UNDECIDED;
         break;
     }
+
+    misend = check_delete_open_mission(missi, mstate);
 
     if (misend == OMiSta_EndSuccess) {
         if (mission_is_final_at_game_end(missi))
@@ -4591,6 +4412,14 @@ TbBool player_try_spend_money(long cost)
     return true;
 }
 
+void init_net_players(void)
+{
+    int i;
+    for (i = 0; i < 5; i++) {
+        LbMemorySet(&net_players[i], '\0', sizeof(struct NetPlayer2));
+    }
+}
+
 void campaign_new_game_prepare(void)
 {
     struct Campaign *p_campgn;
@@ -4605,10 +4434,13 @@ void campaign_new_game_prepare(void)
     load_objectives_text();
 
     load_city_data(0);
-    init_weapon_text();
-    load_city_txt();
-    player_mission_agents_reset(local_player_no);
-    init_variables();
+    load_wep_mod_desc_text();
+    load_city_prop_text();
+    reset_frontend_player_state();
+
+    player_mission_agents_toggle_reset(local_player_no);
+    global_date_new_game_reset();
+    init_unkn6_adjustable_variables();
     srm_reset_research();
     init_agents();
 
@@ -4619,6 +4451,54 @@ void campaign_new_game_prepare(void)
 
     reload_background_flag = 1;
     edit_flag = 0;
+}
+
+ubyte goto_savegame(ubyte click)
+{
+    restore_savegame = 1;
+    game_system_screen = SySc_STORAGE;
+    screentype = SCRT_SYSMENU;
+    sysmnu_button_disable(0, 5);
+    update_sys_scr_shared_header(game_system_screen);
+    ingame.Flags &= ~GamF_MortalGame;
+
+    load_city_data(0);
+    load_wep_mod_desc_text();
+    load_city_prop_text();
+    reset_frontend_player_state();
+
+    player_mission_agents_toggle_reset(local_player_no);
+    global_date_new_game_reset();
+    init_unkn6_adjustable_variables();
+    srm_reset_research();
+    init_agents();
+
+    edit_flag = 0;
+    save_slot_base = 0;
+    redraw_screen_flag = 1;
+
+    load_save_slot_names();
+
+    return 1;
+}
+
+void net_new_game_prepare(void)
+{
+    switch_net_screen_boxes_to_initiate();
+
+    load_missions(background_type);
+    load_objectives_text();
+
+    selected_net_user = -1;
+    selected_net_session = -1;
+    reset_world_screen_player_state();
+
+    reinit_unkn6_adjustable_variables();
+    srm_reset_research();
+    init_agents();
+
+    init_net_players();
+    net_grpaint_clear_op();
 }
 
 ubyte do_storage_NEW_MORTAL(ubyte click)
@@ -4676,14 +4556,6 @@ void init_screen_boxes(void)
     init_cryo_screen_boxes();
     init_research_screen_boxes();
     init_equip_screen_shapes();
-}
-
-void players_init_control_mode(void)
-{
-    PlayerIdx plyr;
-    for (plyr = 0; plyr < PLAYERS_LIMIT; plyr++) {
-      players[plyr].UserInput[0].ControlMode = UInpCtr_Mouse;
-    }
 }
 
 void move_camera(int x, int y, int z)
@@ -4807,7 +4679,7 @@ void do_scroll_map(void)
         }
         if (dcthing)
         {
-            ctlmode = p_locplayer->UserInput[0].ControlMode & ~UInpCtr_AllFlagsMask;
+            ctlmode = user_input_control_mode_get(local_player_no, 0);
             if (ctlmode == UInpCtr_Mouse || PacketRecord_IsPlayback())
                 move_camera(ingame.TrackX, engn_yc, ingame.TrackZ);
             else
@@ -4816,7 +4688,7 @@ void do_scroll_map(void)
     }
     dy = 0;
     dx = 0;
-    ctlmode = p_locplayer->UserInput[byte_153198-1].ControlMode & ~UInpCtr_AllFlagsMask;
+    ctlmode = user_input_control_mode_get(local_player_no, byte_153198-1);
     engn_xc_orig = engn_xc;
     engn_zc_orig = engn_zc;
     if (ctlmode == UInpCtr_Mouse || PacketRecord_IsPlayback())
@@ -4830,7 +4702,7 @@ void do_scroll_map(void)
         }
     }
 
-    abase = -engn_anglexz >> 5;
+    abase = -engn_cam_yaw >> 5;
     angle = -1;
     if (dx > 0)
         angle = (abase + 3583) & LbFPMath_AngleMask;
@@ -4887,16 +4759,16 @@ void do_scroll_map(void)
     }
     if ((engn_zc - engn_zc_orig) || (engn_xc - engn_xc_orig)) {
         engn_x_vel = engn_xc - engn_xc_orig;
-        engn_y_vel = engn_zc - engn_zc_orig;
+        engn_z_vel = engn_zc - engn_zc_orig;
     } else {
         engn_x_vel >>= 2;
-        engn_y_vel >>= 2;
+        engn_z_vel >>= 2;
         if (abs(engn_x_vel) < 5)
             engn_x_vel = 0;
-        if (abs(engn_y_vel) < 5)
-            engn_y_vel = 0;
+        if (abs(engn_z_vel) < 5)
+            engn_z_vel = 0;
         engn_xc += engn_x_vel;
-        engn_zc += engn_y_vel;
+        engn_zc += engn_z_vel;
     }
 }
 
@@ -4935,7 +4807,6 @@ ubyte weapon_select_input(void)
         }
     }
 
-#ifdef MORE_GAME_KEYS
     if (is_gamekey_pressed(GKey_SUPERSHIELD))
     {
         clear_gamekey_pressed(GKey_SUPERSHIELD);
@@ -4955,7 +4826,6 @@ ubyte weapon_select_input(void)
             return GINPUT_PACKET;
         }
     }
-#endif
 
     assert(sizeof(sel_weapon_gkeys)/sizeof(sel_weapon_gkeys[0]) <= WEAPONS_CARRIED_MAX_COUNT);
 
@@ -4995,8 +4865,79 @@ ubyte weapon_select_input(void)
 
 void do_rotate_map(void)
 {
+#if 0
     asm volatile ("call ASM_do_rotate_map\n"
         :  :  : "eax" );
+    return;
+#endif
+
+    short rotate_input = 0;
+    if (is_gamekey_pressed(GKey_VIEW_SPIN_R))
+        rotate_input++;
+    if (is_gamekey_pressed(GKey_VIEW_SPIN_L))
+        rotate_input--;
+
+    if (rotate_input == 0) {
+#ifdef MORE_GAME_KEYS
+        // these keys are used for rotation only here, but since
+        // at the same time they are also used for moving the
+        // viewport (GKey_LEFT/GKey_LEFT), the result is panning
+        if (is_gamekey_pressed(GKey_VIEW_PAN_R))
+            rotate_input++;
+        if (is_gamekey_pressed(GKey_VIEW_PAN_L))
+            rotate_input--;
+#else
+        if (is_key_pressed(kbkeys[GKey_RIGHT], KMod_SHIFT))
+            rotate_input++;
+        if (is_key_pressed(kbkeys[GKey_LEFT], KMod_SHIFT))
+            rotate_input--;
+#endif
+    }
+
+    short zoom_input = 0;
+    if (is_gamekey_pressed(GKey_ZOOM_IN))
+        zoom_input++;
+    if (is_gamekey_pressed(GKey_ZOOM_OUT))
+        zoom_input--;
+
+    // Update zoom level
+    if (zoom_input != 0)
+    {
+        short new_zoom = ingame.UserZoom + (zoom_input * 8);
+
+        if (new_zoom < CAMERA_ZOOM_MIN) {
+            if (pktrec_mode != PktR_PLAYBACK) {
+                new_zoom = CAMERA_ZOOM_MIN;
+            }
+        }
+        else if (new_zoom > CAMERA_ZOOM_MAX) {
+            new_zoom = CAMERA_ZOOM_MAX;
+        }
+
+        ingame.UserZoom = new_zoom;
+    }
+
+    short tilt_input = 0;
+    if (is_gamekey_pressed(GKey_VIEW_TILT_U))
+        tilt_input++;
+    if (is_gamekey_pressed(GKey_VIEW_TILT_D))
+        tilt_input--;
+
+    if (tilt_input != 0)
+    {
+        s32 new_cam_tilt = engn_cam_tilt + (tilt_input * CAMERA_TILT_INPUT_MULTIPLIER);
+        if (new_cam_tilt < CAMERA_TILT_MIN) {
+            new_cam_tilt = CAMERA_TILT_MIN;
+        }
+        else if (new_cam_tilt > CAMERA_TILT_MAX) {
+            new_cam_tilt = CAMERA_TILT_MAX;
+        }
+        engn_cam_tilt = new_cam_tilt;
+    }
+
+    s32 new_cam_yaw_vel = engn_cam_yaw_vel + (rotate_input * CAMERA_ROTATION_INPUT_MULTIPLIER);
+    new_cam_yaw_vel = (3 * new_cam_yaw_vel) / 4;
+    engn_cam_yaw_vel = new_cam_yaw_vel;
 }
 
 ubyte process_mouse_inputs(void)
@@ -5018,9 +4959,9 @@ ubyte process_mouse_inputs(void)
     p_locplayer = &players[local_player_no];
 
     if (!lbDisplay.MLeftButton)
-        p_locplayer->UserInput[mouser].ControlMode &= ~UInpCtrF_Unkn8000;
+        user_input_control_flags_clear(local_player_no, mouser, UInpCtrF_LBtnDown);
     if (!lbDisplay.MRightButton)
-        p_locplayer->UserInput[mouser].ControlMode &= ~UInpCtrF_Unkn4000;
+        user_input_control_flags_clear(local_player_no, mouser, UInpCtrF_RBtnDown);
     if ((ingame.DisplayMode != DpM_ENGINEPLY) && (ingame.DisplayMode != DpM_UNKN_3B))
         return did_inp;
     did_inp |= process_panel_state();
@@ -5111,8 +5052,8 @@ ubyte process_mouse_inputs(void)
 
         if (!p_locplayer->DoubleMode)
         {
-            short ctlmode;
-            ctlmode = p_locplayer->UserInput[0].ControlMode & ~UInpCtr_AllFlagsMask;
+            ushort ctlmode;
+            ctlmode = user_input_control_mode_get(local_player_no, 0);
             if (ctlmode != UInpCtr_Mouse)
             {
                 do_change_mouse(8);
@@ -5145,7 +5086,7 @@ ubyte process_mouse_inputs(void)
         return did_inp;
     }
 
-    if (lbDisplay.RightButton && ((p_locplayer->UserInput[mouser].ControlMode & 0x4000) == 0))
+    if (lbDisplay.RightButton && !user_input_control_flags_check(local_player_no, mouser, UInpCtrF_RBtnDown))
     {
         WeaponType wtype;
         lbDisplay.RightButton = 0;
@@ -5209,7 +5150,7 @@ ubyte process_mouse_inputs(void)
         }
     }
 
-    if ( lbDisplay.MRightButton && ((p_locplayer->UserInput[mouser].ControlMode & 0x4000) == 0))
+    if (lbDisplay.MRightButton && !user_input_control_flags_check(local_player_no, mouser, UInpCtrF_RBtnDown))
     {
         p_pckt = &packets[local_player_no];
         map_y = (alt_at_point(mouse_map_x, mouse_map_z) >> 8) + 20;
@@ -5340,12 +5281,11 @@ ubyte do_user_interface(void)
         {
             clear_key_pressed(KC_RETURN);
             if ((p_locplayer->PanelState[mouser] != PANEL_STATE_SEND_MESSAGE)
-              && (player_message_timer[local_player_no] <= 140))
+              && player_message_add_allowed(local_player_no))
             {
                 p_locplayer->PanelState[mouser] = PANEL_STATE_SEND_MESSAGE;
                 reset_buffered_keys();
-                player_message_text[local_player_no][0] = '\0';
-                player_message_timer[local_player_no] = 0;
+                player_message_clear(local_player_no);
                 scanner_unkn370 = 0;
                 scanner_unkn3CC = 0;
                 did_inp |= GINPUT_DIRECT;
@@ -5391,10 +5331,23 @@ ubyte do_user_interface(void)
     if (is_key_pressed(KC_F9, KMod_NONE))
     {
         clear_key_pressed(KC_F9);
-        StopCD();
         game_option_inc(GOpt_PanelPermutation);
-        init_scanner_colour();
         load_pop_sprites_for_current_mode();
+        init_scanner_colour();
+        did_inp |= GINPUT_DIRECT;
+    }
+
+    // Switch old/new panel
+    if (is_key_pressed(KC_F9, KMod_CONTROL))
+    {
+        clear_key_pressed(KC_F9);
+        //game_option_inc(GOpt_PanelType);
+        if (ingame.PanelPermutation < 0)
+            game_option_set(GOpt_PanelPermutation, -ingame.PanelPermutation-1);
+        else
+            game_option_set(GOpt_PanelPermutation, -ingame.PanelPermutation-1);
+        load_pop_sprites_for_current_mode();
+        init_scanner_colour();
         did_inp |= GINPUT_DIRECT;
     }
 
@@ -5402,7 +5355,6 @@ ubyte do_user_interface(void)
     if (is_key_pressed(KC_F10, KMod_NONE))
     {
         clear_key_pressed(KC_F10);
-        StopCD();
         game_option_inc(GOpt_TrenchcoatPreference);
         prep_multicolor_sprites();
         did_inp |= GINPUT_DIRECT;
@@ -5448,10 +5400,10 @@ ubyte do_user_interface(void)
     if (is_key_pressed(KC_F3, KMod_CONTROL))
     {
         clear_key_pressed(KC_F3);
-        if (ingame.Flags & GamF_StopThings)
-            ingame.Flags &= ~GamF_StopThings;
+        if (ingame.Flags & TngF_ProgressAction)
+            ingame.Flags &= ~TngF_ProgressAction;
         else
-            ingame.Flags |= GamF_StopThings;
+            ingame.Flags |= TngF_ProgressAction;
         did_inp |= GINPUT_DIRECT;
     }
     if (is_key_pressed(KC_F4, KMod_CONTROL))
@@ -5495,12 +5447,14 @@ ubyte do_user_interface(void)
     {
         if (is_key_pressed(KC_E, KMod_ALT) || is_key_pressed(KC_E, KMod_ALT|KMod_SHIFT))
         {
+            short dt;
+
             if (lbShift & KMod_SHIFT)
-                n = -2;
+                dt = -2;
             else
-                n = 2;
-            render_area_a = bound_render_area(render_area_a + n);
-            render_area_b = bound_render_area(render_area_b + n);
+                dt = 2;
+            render_area_a = bound_render_area(render_area_a + dt);
+            render_area_b = bound_render_area(render_area_b + dt);
             did_inp |= GINPUT_DIRECT;
         }
     }
@@ -5582,7 +5536,7 @@ ubyte do_user_interface(void)
                     short dcthing;
                     dcthing = p_locplayer->DirectControl[n];
                     my_build_packet(&packets[local_player_no], PAct_SELECT_AGENT, dcthing, p_agent->ThingOffset, 0, 0);
-                    p_locplayer->UserInput[0].ControlMode |= UInpCtrF_Unkn8000;
+                    user_input_control_flags_raise(local_player_no, 0, UInpCtrF_LBtnDown);
                     // Double tapping - center view on the agent
                     if (gameturn - last_sel_agent_turn[n] < 7)
                     {
@@ -5626,17 +5580,18 @@ ubyte do_user_interface(void)
     }
 
     struct SpecialUserInput *p_usrinp;
-    short ctlmode;
+    ushort ctlmode;
+    ubyte dmuser;
 
     if (p_locplayer->DoubleMode)
     {
-        for (n = 0; n < p_locplayer->DoubleMode + 1; n++)
+        for (dmuser = 0; dmuser < p_locplayer->DoubleMode + 1; dmuser++)
         {
             short dcthing;
 
-            p_usrinp = &p_locplayer->UserInput[n];
+            p_usrinp = &p_locplayer->UserInput[dmuser];
             do_user_input_bits_control_clear_nonmove(p_usrinp);
-            ctlmode = p_usrinp->ControlMode & ~UInpCtr_AllFlagsMask;
+            ctlmode = user_input_control_mode_get(local_player_no, dmuser);
             if (ctlmode == UInpCtr_Mouse)
             {
                 do_user_input_bits_control_clear_all(p_usrinp);
@@ -5644,7 +5599,7 @@ ubyte do_user_interface(void)
             }
             else if (ctlmode <= UInpCtr_Keyboard)
             {
-                dcthing = p_locplayer->DirectControl[n];
+                dcthing = p_locplayer->DirectControl[dmuser];
                 if (person_can_accept_control(dcthing))
                 {
                     did_inp = weapon_select_input();
@@ -5658,7 +5613,7 @@ ubyte do_user_interface(void)
             }
             else
             {
-                dcthing = p_locplayer->DirectControl[n];
+                dcthing = p_locplayer->DirectControl[dmuser];
                 if (!person_can_accept_control(dcthing))
                     return did_inp;
 
@@ -5666,10 +5621,18 @@ ubyte do_user_interface(void)
                 do_user_input_bits_direction_from_joy(p_usrinp, ctlmode - 2);
                 do_user_input_bits_actions_from_joy(p_usrinp, ctlmode - 2);
             }
-            ctlmode = p_usrinp->ControlMode & ~UInpCtr_AllFlagsMask;
+            ctlmode = user_input_control_mode_get(local_player_no, dmuser);
             if (ctlmode != UInpCtr_Mouse)
             {
                 update_agent_move_direction_deltas(p_usrinp);
+            }
+
+            if ((debug_log_things & 0x02) != 0)
+            {
+                LOGSYNC_F("User %d.%d ControlMode 0x%04X Bits 0x%04X Turn %u Dt(%d,%d) OnFace %d",
+                  (int)local_player_no, (int)dmuser, (uint)p_usrinp->ControlMode, (uint)p_usrinp->Bits,
+                  (uint)p_usrinp->Turn, (int)p_usrinp->DtX, (int)p_usrinp->DtZ,
+                  (int)p_usrinp->OnFace);
             }
         }
     }
@@ -5678,7 +5641,7 @@ ubyte do_user_interface(void)
         short dcthing;
 
         p_usrinp = &p_locplayer->UserInput[0];
-        ctlmode = p_usrinp->ControlMode & ~UInpCtr_AllFlagsMask;
+        ctlmode = user_input_control_mode_get(local_player_no, 0);
         if ((ctlmode == UInpCtr_Mouse) && is_gamekey_pressed(GKey_KEY_CONTROL))
         {
             clear_gamekey_pressed(GKey_KEY_CONTROL);
@@ -5704,7 +5667,7 @@ ubyte do_user_interface(void)
         {
             do_user_input_bits_actions_from_joy_and_kbd(p_usrinp);
 
-            ctlmode = p_usrinp->ControlMode & ~UInpCtr_AllFlagsMask;
+            ctlmode = user_input_control_mode_get(local_player_no, 0);
             if (ctlmode != UInpCtr_Mouse)
             {
                 do_user_input_bits_direction_clear(p_usrinp);
@@ -5720,6 +5683,13 @@ ubyte do_user_interface(void)
                 do_user_input_bits_direction_from_joy(p_usrinp, 0);
             }
         }
+        if ((debug_log_things & 0x02) != 0)
+        {
+            LOGSYNC_F("User %d.%d ControlMode 0x%04X Bits 0x%04X Turn %u Dt(%d,%d) OnFace %d",
+              (int)local_player_no, (int)n, (uint)p_usrinp->ControlMode, (uint)p_usrinp->Bits,
+              (uint)p_usrinp->Turn, (int)p_usrinp->DtX, (int)p_usrinp->DtZ,
+              (int)p_usrinp->OnFace);
+        }
     }
     return did_inp;
 }
@@ -5733,9 +5703,8 @@ void show_menu_screen_st0(void)
     lbInkeyToAscii[KC_OEM_102] = '\\';
     lbInkeyToAsciiShift[KC_OEM_102] = '|';
 
-    players_init_control_mode();
+    players_init_default_control_mode();
 
-    login_control__State = LognCt_Unkn6;
     sprintf(net_unkn2_text, "01234567890");
 
     {
@@ -5746,27 +5715,25 @@ void show_menu_screen_st0(void)
         mission_briefing_text = (char *)scratch_malloc_mem + pos;
         pos += mission_briefing_text_len;
 
-        netscan_text = (char *)scratch_malloc_mem + pos;
-        pos += netscan_text_len;
+        memload_netscan_text = (char *)scratch_malloc_mem + pos;
+        pos += memload_netscan_text_len;
 
-        weapon_text = (char *)scratch_malloc_mem + pos;
-        pos += weapon_text_len;
+        memload_wep_mod_desc_text = (char *)scratch_malloc_mem + pos;
+        pos += memload_wep_mod_desc_text_len;
 
-        memload = (ubyte *)scratch_malloc_mem + pos;
-        pos += memload_len;
+        memload_city_prop_text = (char *)scratch_malloc_mem + pos;
+        pos += memload_city_prop_text_len;
 
         purple_draw_list = (struct PurpleDrawItem *)((ubyte *)scratch_malloc_mem + pos);
     }
 
-    ingame.Credits = 50000;
-
-    global_date.Day = 2;
-    global_date.Month = 6;
-    global_date.Year = 74;
-
     load_city_data(0);
-    load_city_txt();
-    player_mission_agents_reset(local_player_no);
+    load_city_prop_text();
+
+    player_mission_agents_toggle_reset(local_player_no);
+    global_date_new_game_reset();
+    ingame.Credits = 50000;
+    login_control__State = LognCt_Unkn6;
 
     debug_trace_place(17);
     // Need to set screen type before gfx background is reloaded
@@ -5774,56 +5741,29 @@ void show_menu_screen_st0(void)
         screentype = SCRT_LOGIN;
     else
         screentype = SCRT_MAINMENU;
+    reload_menu_flags |= RelMnuF_ColorsSprites | RelMnuF_ScrBoxesFull | RelMnuF_BriefScanner;
 
     debug_trace_place(18);
-    reload_menu_flag = 0;
-    init_purple_mode_colors_and_sprites();
-
-    debug_trace_place(19);
-    init_screen_boxes();
-
-    init_brief_screen_scanner();
-
     save_game_buffer = vec_tmap[5];
 
     net_system_init0();
 }
 
-void init_net_players(void)
+void update_mission_time(TbBool a1)
 {
-    int i;
-    for (i = 0; i < 5; i++) {
-        LbMemorySet(&net_players[i], '\0', sizeof(struct NetPlayer2));
-    }
-}
-
-void net_new_game_prepare(void)
-{
-    switch_net_screen_boxes_to_initiate();
-    login_control__State = LognCt_Unkn6;
-    byte_15516D = -1;
-    byte_15516C = -1;
-    ingame.Credits = 50000;
-    ingame.CashAtStart = 50000;
-    login_control__TechLevel = 4;
-    reset_world_screen_player_state();
-    login_control__City = -1;
-    ingame.Expenditure = 0;
-    net_game_play_flags = NGPF_Unkn20 | NGPF_Unkn10 | NGPF_Unkn08 | NGPF_Unkn04;
-    login_control__Money = starting_cash_amounts[4];
-    init_agents();
-    load_missions(background_type);
-    load_objectives_text();
-    srm_reset_research();
-    init_net_players();
-    draw_flic_purple_list(ac_purple_unkn1_data_to_screen);
-}
-
-
-void update_mission_time(char a1)
-{
+#if 0
     asm volatile ("call ASM_update_mission_time\n"
         : : "a" (a1));
+#endif
+    if (a1)
+    {
+        // dword_1C4B84 = gameturn; //TODO no function - remove
+        return;
+    }
+    //dword_1C4B88 = gameturn; //TODO no function - remove
+
+    mission_status_time_rand_progress(open_brief);
+    global_date_update_after_mission();
 }
 
 void show_menu_screen_st2(void)
@@ -5835,11 +5775,12 @@ void show_menu_screen_st2(void)
         local_player_no = 0;
         net_new_game_prepare();
         net_sessionlist_clear();
-        selected_mod = -1;
-        selected_weapon = -1;
         scientists_lost = 0;
         update_mission_time(0);
         in_network_game = 0;
+
+        reset_cryo_screen_player_state();
+        reset_equip_screen_player_state();
         screentype = SCRT_NETDEBRF;
         redraw_screen_flag = 1;
         set_heading_box_text(gui_strings[374]);
@@ -5848,16 +5789,16 @@ void show_menu_screen_st2(void)
     {
       update_mission_time(0);
       selected_city_id = -1;
-      byte_1C4AA3 = brief_store[open_brief - 1].RefNum;
+      open_ref = brief_store[open_brief - 1].RefNum;
       // Original code compared MissionStatus to 0 and 2, is 2 a valid value?
       if ((ingame.MissionStatus != ObvStatu_UNDECIDED) && (ingame.MissionStatus != ObvStatu_FAILED))
       {
-            memcpy(&mission_status[0], &mission_status[open_brief],
+            LbMemoryCopy(&mission_status[0], &mission_status[open_brief],
               sizeof(struct MissionStatus));
             delete_mail(open_brief - 1, MlTp_Mission);
             open_brief = 0;
-            old_mission_brief = 0;
-            cities[unkn_city_no].Info = 0;
+            clear_city_netscan(map_hl_city_id);
+            reset_brief_screen_player_state();
       }
       else
       {
@@ -5885,46 +5826,17 @@ void show_menu_screen_st2(void)
       }
     }
 
-    init_weapon_text();
-    load_city_txt();
-
-    reload_menu_flag = 0;
-    init_purple_mode_colors_and_sprites();
+    load_wep_mod_desc_text();
+    load_city_prop_text();
 
     update_options_screen_state();
-    init_brief_screen_scanner();
+
+    reload_menu_flags |= RelMnuF_ColorsSprites | RelMnuF_BriefScanner;
 
     if ((new_mail != 0) && (screentype != SCRT_MAINMENU))
         play_sample_using_heap(0, 119 + (LbRandomAnyShort() % 3), FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3u);
 
     net_system_init2();
-}
-
-ushort find_mission_with_mapid(short mapID, short mission_limit)
-{
-    ushort i;
-    for (i = 1; i < mission_limit; i++)
-    {
-        if (mission_list[i].MapNo == mapID) {
-            return i;
-        }
-    }
-    return 0;
-}
-
-/** Searches for mission taking place in given city, within mission chain specified by the brief.
- */
-ushort find_mission_for_city_in_brief(short brief, sbyte city_no)
-{
-    ushort missi;
-
-    for (missi = brief_store[brief].Mission; missi != 0;
-      missi = mission_list[missi].SpecialTrigger[0])
-    {
-        if (mission_list[missi].MapNo == cities[city_no].MapID)
-            break;
-    }
-    return missi;
 }
 
 void update_open_brief(void)
@@ -5935,7 +5847,7 @@ void update_open_brief(void)
     {
         ushort missi;
 
-        missi = find_mission_for_city_in_brief(brief, unkn_city_no);
+        missi = find_mission_for_city_in_brief(brief, map_hl_city_id);
         if (missi != 0) {
             open_brief = brief + 1;
             break;
@@ -5962,7 +5874,9 @@ void show_load_and_prep_mission(void)
         {
             ushort missi;
             ingame.MissionNo = 1;
-            missi = find_mission_with_mapid(cities[login_control__City].MapID, next_mission);
+            missi = 0;
+            if (login_control__City != -1)
+                missi = find_first_mission_with_map(cities[login_control__City].MapID);
             if (missi > 0) {
                 ingame.MissionNo = missi;
             }
@@ -5973,9 +5887,12 @@ void show_load_and_prep_mission(void)
         else
         {
             ushort missi;
-            missi = find_mission_for_city_in_brief(open_brief - 1, unkn_city_no);
+            missi = find_mission_for_city_in_brief(open_brief - 1, map_hl_city_id);
             load_mission_name_text(missi);
             ingame.CurrentMission = missi;
+            // The names are propagated by fenet only in network game
+            net_unkn2_names_clear();
+            strncpy(unkn2_names[0], login_name, 16);
             debug_trace_place(12);
         }
     }
@@ -6001,24 +5918,21 @@ void show_load_and_prep_mission(void)
             packet_read_whole_player_init();
         }
         init_game(0);
+        preprogress_game_turns();
     }
 
     // Update game progress and prepare level to play
     if (start_into_mission)
     {
         clear_open_mission_status();
+        update_mission_time(1);
         if (in_network_game)
         {
-            update_mission_time(1);
             gameturn = 0;
         }
         else
         {
-            net_unkn2_names_clear();
-            strncpy(unkn2_names[0], login_name, 16);
-
-            update_mission_time(1);
-            cities[unkn_city_no].Info = 0;
+            clear_city_netscan(map_hl_city_id);
             mission_result = 0;
         }
         if (!in_network_game)
@@ -6030,7 +5944,7 @@ void show_load_and_prep_mission(void)
         }
         debug_trace_place(19);
     }
-    render_anim_turn = gameturn;
+    render_clock_set_turn(gameturn);
 
     // Set up remaining graphics data and controls
     if (start_into_mission)
@@ -6040,8 +5954,8 @@ void show_load_and_prep_mission(void)
         generate_shadows_for_multicolor_sprites();
         adjust_mission_engine_to_video_mode();
 
-        flic_unkn03(AniSl_BILLBOARD);
-        xdo_next_frame(AniSl_BILLBOARD);
+        embanim_reinit(AniSl_BILLBOARD);
+        embanim_do_next_frame(AniSl_BILLBOARD);
 
         if (in_network_game)
         {
@@ -6076,7 +5990,7 @@ void mouse_sprite_animate(void)
 
 void menu_screen_redraw(void)
 {
-    mo_weapon = -1;
+    mo_weapon = 0;
     reload_background_flag = 1;
     if (screentype == SCRT_WORLDMAP)
     {
@@ -6185,6 +6099,78 @@ void input_processing_end(void)
 #endif
 }
 
+void apply_change_screen(void)
+{
+    if (change_screen == ChSCRT_SYSMENU)
+    {
+        screentype = SCRT_SYSMENU;
+        redraw_screen_flag = 1;
+        set_heading_box_text("");
+        edit_flag = 0;
+        change_screen = ChSCRT_NONE;
+    }
+    if (change_screen == ChSCRT_PANET)
+    {
+        screentype = SCRT_PANET;
+        redraw_screen_flag = 1;
+        set_heading_box_text(gui_strings[367]);
+        edit_flag = 0;
+        change_screen = ChSCRT_NONE;
+    }
+    if (change_screen == ChSCRT_WORLDMAP)
+    {
+        set_heading_box_text(gui_strings[368]);
+        redraw_screen_flag = 1;
+        edit_flag = 0;
+        change_screen = ChSCRT_NONE;
+        screentype = SCRT_WORLDMAP;
+        if (selected_city_id != -1)
+          map_hl_city_id = selected_city_id;
+    }
+    if (change_screen == ChSCRT_CRYO)
+    {
+        screentype = SCRT_CRYO;
+        switch_shared_equip_screen_buttons_to_cybmod();
+
+        update_cybmod_cost_text();
+        redraw_screen_flag = 1;
+        reset_mod_draw_states_flag08();
+        current_drawing_mod = 0;
+        new_current_drawing_mod = 0;
+        edit_flag = 0;
+        change_screen = ChSCRT_NONE;
+    }
+    if (change_screen == ChSCRT_EQUIP)
+    {
+        screentype = SCRT_EQUIP;
+        switch_shared_equip_screen_buttons_to_equip();
+        update_equip_cost_text();
+        redraw_screen_flag = 1;
+        edit_flag = 0;
+        change_screen = ChSCRT_NONE;
+    }
+    if (change_screen == ChSCRT_RESEARCH)
+    {
+        screentype = SCRT_RESEARCH;
+        set_heading_box_text(gui_strings[371]);
+        clear_research_screen();
+        edit_flag = 0;
+        change_screen = ChSCRT_NONE;
+        redraw_screen_flag = 1;
+    }
+    if (change_screen == ChSCRT_MISBRIEF)
+    {
+        selected_city_id = -1;
+        screentype = SCRT_MISSION;
+        brief_load_mission_info();
+        redraw_screen_flag = 1;
+        edit_flag = 0;
+        change_screen = ChSCRT_NONE;
+    }
+
+    assert(change_screen == 0);
+}
+
 void show_menu_screen(void)
 {
     switch (data_1c498d)
@@ -6208,14 +6194,26 @@ void show_menu_screen(void)
         LbMouseReset();
         LbScreenClear(0);
         setup_screen_mode(screen_mode_menu);
-        reload_menu_flag = 1;
+        reload_menu_flags |= RelMnuF_ColorsSprites;
     }
 
-    if (reload_menu_flag)
+    if ((reload_menu_flags & RelMnuF_ColorsSprites) != 0)
     {
-        reload_menu_flag = 0;
+        reload_menu_flags &= ~RelMnuF_ColorsSprites;
         init_purple_mode_colors_and_sprites();
         my_set_text_window(0, 0, lbDisplay.GraphicsScreenWidth, lbDisplay.GraphicsScreenHeight);
+    }
+
+    if ((reload_menu_flags & RelMnuF_ScrBoxesFull) != 0)
+    {
+        reload_menu_flags &= ~RelMnuF_ScrBoxesFull;
+        init_screen_boxes();
+    }
+
+    if ((reload_menu_flags & RelMnuF_BriefScanner) != 0)
+    {
+        reload_menu_flags &= ~RelMnuF_BriefScanner;
+        init_brief_screen_scanner();
     }
 
     if (screentype == SCRT_MAINMENU)
@@ -6242,11 +6240,8 @@ void show_menu_screen(void)
 
     if ((screentype == SCRT_DEBRIEF || screentype == SCRT_NETDEBRF) && change_screen == ChSCRT_MISBRIEF)
     {
-        screentype = SCRT_MISSION;
-        brief_load_mission_info();
-        redraw_screen_flag = 1;
-        edit_flag = 0;
-        change_screen = ChSCRT_NONE;
+        change_screen = ChSCRT_MISBRIEF;
+        apply_change_screen();
     }
 
     input_processing_beg();
@@ -6304,7 +6299,7 @@ void show_menu_screen(void)
 
     input_processing_end();
 
-    if (login_control__State == LognCt_Unkn5)
+    if (login_control__State == LognCt_NetStarted)
     {
         net_unkn_func_33();
     }
@@ -6334,72 +6329,8 @@ void show_menu_screen(void)
 
     update_date_time();
 
-    if (change_screen == ChSCRT_SYSMENU)
-    {
-        screentype = SCRT_SYSMENU;
-        redraw_screen_flag = 1;
-        set_heading_box_text("");
-        edit_flag = 0;
-        change_screen = 0;
-    }
-    if (change_screen == ChSCRT_PANET)
-    {
-        screentype = SCRT_PANET;
-        redraw_screen_flag = 1;
-        set_heading_box_text(gui_strings[367]);
-        edit_flag = 0;
-        change_screen = 0;
-    }
-    if (change_screen == ChSCRT_WORLDMAP)
-    {
-        set_heading_box_text(gui_strings[368]);
-        redraw_screen_flag = 1;
-        edit_flag = 0;
-        change_screen = 0;
-        screentype = SCRT_WORLDMAP;
-        if (selected_city_id != -1)
-          unkn_city_no = selected_city_id;
-    }
-    if (change_screen == ChSCRT_CRYO)
-    {
-        screentype = SCRT_CRYO;
-        switch_shared_equip_screen_buttons_to_cybmod();
+    apply_change_screen();
 
-        update_cybmod_cost_text();
-        redraw_screen_flag = 1;
-        reset_mod_draw_states_flag08();
-        current_drawing_mod = 0;
-        new_current_drawing_mod = 0;
-        edit_flag = 0;
-        change_screen = 0;
-    }
-    if (change_screen == ChSCRT_EQUIP)
-    {
-        screentype = SCRT_EQUIP;
-        switch_shared_equip_screen_buttons_to_equip();
-        update_equip_cost_text();
-        redraw_screen_flag = 1;
-        edit_flag = 0;
-        change_screen = 0;
-    }
-    if (change_screen == ChSCRT_RESEARCH)
-    {
-        screentype = SCRT_RESEARCH;
-        set_heading_box_text(gui_strings[371]);
-        clear_research_screen();
-        edit_flag = 0;
-        change_screen = 0;
-        redraw_screen_flag = 1;
-    }
-    if (change_screen == ChSCRT_MISBRIEF)
-    {
-        selected_city_id = -1;
-        screentype = SCRT_MISSION;
-        brief_load_mission_info();
-        redraw_screen_flag = 1;
-        edit_flag = 0;
-        change_screen = 0;
-    }
     if (show_alert)
     {
         reset_alert_screen_boxes_flags();
@@ -6419,7 +6350,7 @@ void show_menu_screen(void)
 
     mouse_sprite_animate();
 
-    if ( start_into_mission || map_editor )
+    if (start_into_mission || map_editor)
     {
         show_load_and_prep_mission();
         data_1c498d = 2;
@@ -6452,7 +6383,6 @@ void show_game_screen(void)
 
     if (skip_redraw_this_turn())
         return;
-
     show_game_engine();
 
     if ((ingame.Flags & GamF_Unkn0800) != 0)
@@ -6476,6 +6406,10 @@ void show_game_screen(void)
 
 void draw_game(void)
 {
+    // One more frame is about to be drawn. The counters the drawing uses
+    // advance here, so that they follow the frames and not the game turns.
+    render_clock_next_frame(RENDER_ANIM_TURN_UNIT);
+
     switch (ingame.DisplayMode)
     {
     case DpM_UNKN_1:
@@ -6494,25 +6428,6 @@ void draw_game(void)
         LOGERR("DisplayMode %d empty\n", (int)ingame.DisplayMode);
         break;
     }
-}
-
-/** Draws simple purple rect directly, without drawlists.
- */
-void draw_purple_rect(int x, int y, int w, int h, ubyte active)
-{
-    TbPixel col1, col2;
-
-    lbDisplay.DrawFlags &= ~Lb_SPRITE_OUTLINE;
-    if (active) {
-        col1 = 0x0E;
-        col2 = 0x0C;
-    } else {
-        col1 = 0x10;
-        col2 = 0x0E;
-    }
-    LbDrawBox(x, y, w, h, col1);
-    LbDrawLine(x, y, x + w - 2, y, col2);
-    LbDrawLine(x, y, x, y + h - 2, col2);
 }
 
 ubyte critical_action_input(void)
@@ -6545,12 +6460,44 @@ ubyte critical_action_input(void)
     return (key == KC_Y);
 }
 
-ubyte process_send_person(ushort player, int i)
+ubyte process_send_person(PlayerIdx plyr, ubyte dmuser)
 {
+#if 0
     ubyte ret;
     asm volatile ("call ASM_process_send_person\n"
-        : "=r" (ret) : "a" (player), "d" (i));
+        : "=r" (ret) : "a" (plyr), "d" (dmuser));
     return ret;
+#endif
+    PlayerInfo *p_player;
+    TbBool usrinp_is_goto_point;
+
+    p_player = &players[plyr];
+
+    if (p_player->State[dmuser] != 1)
+    {
+        p_player->State[dmuser] = 1;
+        p_player->SubState[dmuser] = 0;
+    }
+
+    usrinp_is_goto_point = ((p_player->UserInput[dmuser].Bits & SpUIn_GotoPoint) != 0);
+
+    if (!usrinp_is_goto_point && (p_player->SubState[dmuser] == 0))
+    {
+        p_player->SubState[dmuser] = 1;
+        return 0;
+    }
+    if (usrinp_is_goto_point && (p_player->SubState[dmuser] == 1))
+    {
+        p_player->SubState[dmuser] = 2;
+        return 0;
+    }
+    if (!usrinp_is_goto_point && (p_player->SubState[dmuser] == 2))
+    {
+        p_player->SubState[dmuser] = 3;
+        p_player->State[dmuser] = 0;
+        return 1;
+    }
+    return 0;
 }
 
 void do_agent_track_only(void)
@@ -6625,9 +6572,9 @@ void draw_mission_concluded(void)
     tm = (dos_clock() - ingame.fld_unkC91) / 100;
     if (ingame.fld_unkCB5)
     {
-        sprintf(unknmsg_str, "%s %s: %s ", gui_strings[GSTR_CHK_MISSION_STA_PRE],
+        sprintf(mission_status_text, "%s %s: %s ", gui_strings[GSTR_CHK_MISSION_STA_PRE],
           gui_strings[GSTR_ENM_MISSION_STATUS + 1 + ingame.MissionStatus], scroll_text);
-        data_15319c = unknmsg_str;
+        data_15319c = mission_status_text;
     }
     else
     {
@@ -6637,13 +6584,13 @@ void draw_mission_concluded(void)
         tm_m = tm / 60;
         tm_s = tm % 60;
 
-        sprintf(unknmsg_str, "%s %s %s %s %02d:%02d:%02d", gui_strings[GSTR_CHK_MISSION_STA_PRE],
+        sprintf(mission_status_text, "%s %s %s %s %02d:%02d:%02d", gui_strings[GSTR_CHK_MISSION_STA_PRE],
           gui_strings[GSTR_ENM_MISSION_STATUS + 1 + ingame.MissionStatus],
           gui_strings[GSTR_CHK_MISSION_STA_SUF_KEYS], gui_strings[GSTR_CHK_MISSION_STA_TIME],
           tm_h, tm_m % 60, tm_s);
-        data_15319c = unknmsg_str;
-        scroll_text = unknmsg_str;
-        LbStringToUpper(unknmsg_str);
+        LbStringToUpper(mission_status_text);
+        data_15319c = mission_status_text;
+        scroll_text = mission_status_text;
     }
     {
         int scr_x, scr_y;
@@ -6652,7 +6599,7 @@ void draw_mission_concluded(void)
         scr_x = 11 * pop1_sprites_scale;
         scr_y = 26 * pop1_sprites_scale;
 
-        lbDisplay.DrawColour = SCANNER_colour[0];
+        lbDisplay.DrawColour = SCANNER_colour[ScnClr_Text];
         AppTextDrawMissionStatus(scr_x, scr_y, data_15319c);
     }
 }
@@ -6692,7 +6639,7 @@ void load_packet(void)
     if (PacketRecord_IsPlayback()) // packet replay controls
     {
         if (!in_network_game)
-            PacketRecord_Read(p_pckt);
+            PacketRecord_Read(p_pckt, p_locplayer->DoubleMode);
         input_packet_playback();
         ingame.MissionStatus = test_missions(0);
         return;
@@ -6765,8 +6712,8 @@ void load_packet(void)
         for (dmuser = 0; dmuser < p_locplayer->DoubleMode + 1; dmuser++)
         {
             if (p_locplayer->DoubleMode != 0) {
-                ulong ctlmode;
-                ctlmode = p_locplayer->UserInput[dmuser].ControlMode & ~UInpCtr_AllFlagsMask;
+                ushort ctlmode;
+                ctlmode = user_input_control_mode_get(local_player_no, dmuser);
                 if (ctlmode == UInpCtr_Mouse)
                     continue;
             }
@@ -6799,15 +6746,49 @@ void load_packet(void)
 
         if (PacketRecord_IsRecord() && !in_network_game)
         {
-            PacketRecord_Write(p_pckt);
+            PacketRecord_Write(p_pckt, p_locplayer->DoubleMode);
         }
     }
 }
 
 void joy_input(void)
 {
-    asm volatile ("call ASM_joy_input\n"
-        :  :  : "eax" );
+    JoyUpdateInputs(&joy);
+
+    PlayerInfo *p_locplayer = &players[local_player_no];
+
+    if (p_locplayer->DoubleMode && ingame.DisplayMode != DpM_PURPLEMNU)
+    {
+        if (ingame.DisplayMode == DpM_ENGINEPLY)
+        {
+            for (int i = 0; i < joy.NumberOfDevices; i++)
+            {
+                if (!joy.Init[i])
+                    continue;
+
+                JoyButtonSet rotate_btns = jskeys[GKey_VIEW_SPIN_R] | jskeys[GKey_VIEW_SPIN_L]
+                                        | jskeys[GKey_VIEW_TILT_U] | jskeys[GKey_VIEW_TILT_D] 
+                                        | jskeys[GKey_ZOOM_IN] | jskeys[GKey_ZOOM_OUT]
+                                        #if defined MORE_GAME_KEYS
+                                        | jskeys[GKey_VIEW_PAN_R] | jskeys[GKey_VIEW_PAN_L]
+                                        #endif
+                                           ;
+                joy.Buttons[0] |= (joy.Buttons[i] & rotate_btns);
+            }
+        }
+    }
+    else
+    {
+        for (int i = 0; i < joy.NumberOfDevices; i++)
+        {
+            if (!joy.Init[i])
+                continue;
+
+            joy.Buttons[0] |= joy.Buttons[i];
+            joy.DigitalX[0] |= joy.DigitalX[i];
+            joy.DigitalY[0] |= joy.DigitalY[i];
+        }
+    }
 }
 
 /** Orbital station explosion code.
@@ -6818,7 +6799,7 @@ void game_process_orbital_station_explode(void)
     {
         unkn01_downcount--;
         LOGDBG("unkn01_downcount = %ld", unkn01_downcount);
-        if ( unkn01_downcount == 40 ) {
+        if (unkn01_downcount == 40) {
             mapwho_unkn01(unkn01_pos_x, unkn01_pos_y);
         }
         else if (unkn01_downcount < 40) {
@@ -6854,6 +6835,12 @@ void game_process(void)
         }
         input();
         update_tick_time();
+        // Faces thrown by an explosion can hit people once they land, so they
+        // are world state and progress with the world - not from within the
+        // renderer, where this used to be called from.
+        if ((ingame.DisplayMode == DpM_ENGINEPLY)
+          && ((ingame.Flags & TngF_ProgressAction) != 0))
+            process_explode();
         draw_game();
         debug_trace_turn_bound(gameturn);
         load_packet();
@@ -6885,7 +6872,6 @@ void game_process(void)
         update_unkn_changing_colors();
         game_process_orbital_station_explode();
         gameturn++;
-        render_anim_turn = gameturn;
         scene_post_effect_prepare();
     }
     PacketRecord_Close();
@@ -6950,3 +6936,4 @@ void game_reset(void)
     LbDataFreeAll(missionspr_load_files);
 }
 
+/******************************************************************************/

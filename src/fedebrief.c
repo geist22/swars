@@ -21,10 +21,11 @@
 #include "bftext.h"
 #include "bffont.h"
 #include "bfutility.h"
+#include <string.h>
 
-#include "campaign.h"
 #include "display.h"
 #include "febrief.h"
+#include "fecryo.h"
 #include "femain.h"
 #include "guiboxes.h"
 #include "guitext.h"
@@ -49,8 +50,6 @@ struct DebriefReport curr_report;
 struct ScreenBox debrief_mission_box = {0};
 struct ScreenBox debrief_people_box = {0};
 
-const ushort mod_group_type_strid[] = {74, 71, 72, 70, 73, };
-
 // Shared boxes
 extern struct ScreenTextBox world_city_info_box;
 
@@ -59,10 +58,6 @@ extern ushort word_1C4856[8];
 
 void show_debrief_screen(void)
 {
-#if 0
-    asm volatile ("call ASM_show_debrief_screen\n"
-        :  :  : "eax" );
-#endif
     ubyte drawn;
 
     if ((game_projector_speed && is_heading_flag01()) ||
@@ -76,19 +71,13 @@ void show_debrief_screen(void)
         drawn = draw_heading_box();
     }
     if (drawn) {
-        //drawn = debrief_mission_box.DrawFn(&debrief_mission_box); -- incompatible calling convention
-        asm volatile ("call *%2\n"
-            : "=r" (drawn) : "a" (&debrief_mission_box), "g" (debrief_mission_box.DrawFn));
+        drawn = debrief_mission_box.DrawFn(&debrief_mission_box);
     }
     if (drawn) {
-        //drawn = debrief_people_box.DrawFn(&debrief_people_box); -- incompatible calling convention
-        asm volatile ("call *%2\n"
-            : "=r" (drawn) : "a" (&debrief_people_box), "g" (debrief_people_box.DrawFn));
+        drawn = debrief_people_box.DrawFn(&debrief_people_box);
     }
     if (drawn) {
-        //drawn = world_city_info_box.DrawFn(&world_city_info_box); -- incompatible calling convention
-        asm volatile ("call *%2\n"
-            : "=r" (drawn) : "a" (&world_city_info_box), "g" (world_city_info_box.DrawFn));
+        drawn = world_city_info_box.DrawFn(&world_city_info_box);
     }
 }
 
@@ -212,13 +201,12 @@ void draw_mission_stats_vals_static(struct ScreenBox *box,
 void snprint_concat_comma_separated_weapons_list(char *out, ushort outlen, ulong weapons)
 {
     WeaponType wtype;
-    ushort strid;
-    ushort pos;
 
     wtype = WEP_TYPES_COUNT;
     while (1)
     {
-        struct Campaign *p_campgn;
+        const char *text;
+        ushort pos;
 
         wtype = weapons_prev_weapon(weapons, wtype);
         if (wtype == WEP_NULL)
@@ -227,22 +215,19 @@ void snprint_concat_comma_separated_weapons_list(char *out, ushort outlen, ulong
         if (strlen(out) > outlen - 4u)
             break;
 
-        p_campgn = &campaigns[background_type];
-        strid = p_campgn->WeaponsTextIdShift + wtype - 1;
+        text = weapon_full_name(wtype);
 
         pos = strlen(out);
         if (pos == 0)
-            snprintf(out, outlen, "%s", gui_strings[strid]);
+            snprintf(out, outlen, "%s", text);
         else
-            snprintf(out + pos, outlen - pos, ", %s", gui_strings[strid]);
+            snprintf(out + pos, outlen - pos, ", %s", text);
     }
 }
 
 void snprint_concat_comma_separated_cybmods_list(char *out, ushort outlen, ulong cybmods)
 {
-    ushort mtype, mgrouptype;
-    ushort gt_strid;
-    ushort mv_strid;
+    ushort mtype;
     ushort pos;
 
     mtype = MOD_TYPES_COUNT;
@@ -252,23 +237,16 @@ void snprint_concat_comma_separated_cybmods_list(char *out, ushort outlen, ulong
         if (mtype == 0)
             break;
 
-        if (strlen(out) > outlen - 4u)
+        pos = strlen(out);
+
+        if (pos > outlen - 4u)
             break;
 
-        mgrouptype = cybmod_group_type(mtype);
-        gt_strid = mod_group_type_strid[mgrouptype];
-        if (mgrouptype == 4)
-            mv_strid = 75;
-        else
-            mv_strid = 76;
-
-        pos = strlen(out);
-        if (pos == 0)
-            snprintf(out, outlen, "%s %s %d",
-              gui_strings[gt_strid], gui_strings[mv_strid], cybmod_version(mtype));
-        else
-            snprintf(out + pos, outlen - pos, ", %s %s %d",
-              gui_strings[gt_strid], gui_strings[mv_strid], cybmod_version(mtype));
+        if (pos != 0) {
+            snprintf(out + pos, outlen - pos, ", ");
+            pos += 2;
+        }
+        snprint_cybmod_type_long_name(out + pos, outlen - pos, mtype);
     }
 }
 
@@ -363,7 +341,7 @@ void draw_mission_stats_vals_dynamic(struct ScreenBox *box,
 
 void debrief_report_fill(struct DebriefReport *p_rep)
 {
-    p_rep->RefNo = byte_1C4AA3;
+    p_rep->RefNo = open_ref;
     p_rep->BriefNo = open_brief;
     p_rep->Status = ingame.MissionStatus;
     p_rep->Income = (ingame.Credits + ingame.Expenditure) - ingame.CashAtStart;
@@ -556,7 +534,7 @@ void draw_mission_mp_players_names_column(struct ScreenBox *box,
     used_num = 1;
     for (plyr = 0; plyr < PLAYERS_LIMIT; plyr++)
     {
-        k = byte_1C5C28[plyr];
+        k = net_player_teams[plyr];
         word_1C4856[k] = 0;
     }
 
@@ -571,7 +549,7 @@ void draw_mission_mp_players_names_column(struct ScreenBox *box,
 
         word_1C4846[plyr] = stats_mp_count_net_players_agents_kills(plyr);
 
-        k = byte_1C5C28[plyr];
+        k = net_player_teams[plyr];
         if (k != 0)
             word_1C4856[k] += word_1C4846[plyr];
 
@@ -641,7 +619,7 @@ void draw_mission_mp_players_vals_column(struct ScreenBox *box,
         textw = my_string_width(text);
         draw_text_purple_list2(x - textw, y, text, 0);
 
-        k = byte_1C5C28[i];
+        k = net_player_teams[i];
         if (k != 0)
         {
             x += 1;
@@ -668,7 +646,7 @@ void draw_mission_mp_players_vals_column(struct ScreenBox *box,
         if (unkn2_names[i][0] == '\0')
             continue;
 
-        plyr = (players[k].MyAgent[0]->U.UPerson.ComCur & 0x1C) >> 2;
+        plyr = (players[i].MyAgent[0]->U.UPerson.ComCur & 0x1C) >> 2;
         n = stats_mp_count_players_agents_killed(plyr);
         snprintf(locstr, sizeof(locstr), "%d", n);
         text = loctext_to_gtext(locstr);

@@ -20,10 +20,12 @@
 /******************************************************************************/
 #include "packetfe.h"
 
-#include <string.h>
 #include "bfutility.h"
+#include <stdlib.h>
+#include <string.h>
 
 #include "fecryo.h"
+#include "feequip.h"
 #include "fenet.h"
 #include "game.h"
 #include "game_options.h"
@@ -41,12 +43,6 @@ extern struct NetworkPlayer network_players[8];
 
 TbBool net_local_player_hosts_the_game(void)
 {
-#if 0
-    TbBool ret;
-    asm volatile ("call ASM_net_local_player_hosts_the_game\n"
-        : "=r" (ret) : );
-    return ret;
-#endif
     int plyr;
 
     plyr = LbNetworkPlayerNumber();
@@ -276,7 +272,7 @@ void agents_copy_fourpacks_netplayer_to_player(int plyr, struct NetworkPlayer *p
     for (plagent = 0; plagent < 4; plagent++)
     {
         for (fp = 0; fp < WFRPK_COUNT; fp++) {
-            players[plyr].FourPacks[plagent][fp] = \
+            players[plyr].FourPacks[fp][plagent] = \
               p_netplyr->U.FourPacks.FourPacks[plagent][fp];
         }
     }
@@ -355,9 +351,9 @@ void net_player_copy_to_progress_packet(struct NetworkPlayer *p_netplyr)
 
     p_netplyr->U.Progress.TechLevel = login_control__TechLevel;
     p_netplyr->U.Progress.val_flags_08 = net_game_play_flags;
-    p_netplyr->U.Progress.val_181189 = byte_181189;
-    p_netplyr->U.Progress.val_181183 = byte_181183;
-    p_netplyr->U.Progress.val_15516D = byte_15516D;
+    p_netplyr->U.Progress.Team = login_control__Team;
+    p_netplyr->U.Progress.Faction = login_control__Faction;
+    p_netplyr->U.Progress.SelectedUser = selected_net_user;
     p_netplyr->U.Progress.Expenditure = ingame.Expenditure;
 
     for (i = 0; i < 4; i++)
@@ -374,8 +370,8 @@ void net_player_update_from_progress_packet(int plyr)
     int i;
 
     p_netplyr = &network_players[plyr];
-    group_types[plyr] = p_netplyr->U.Progress.val_181183;
-    byte_1C5C28[plyr] = p_netplyr->U.Progress.val_181189;
+    group_factions[plyr] = p_netplyr->U.Progress.Faction;
+    net_player_teams[plyr] = p_netplyr->U.Progress.Team;
     if (net_host_player_no == plyr)
     {
         if ((net_game_play_flags & NGPF_Unkn02) == 0)
@@ -452,11 +448,11 @@ void net_player_action_prepare(int plyr)
     }
 }
 
-TbBool net_players_immediate_exchange(void)
+TbBool net_players_immediate_exchange(int plyr)
 {
     if (LbNetworkExchange(network_players, sizeof(struct NetworkPlayer)) != 1)
     {
-        LbNetworkSessionStop();
+        LbNetworkSessionStop(plyr);
         net_new_game_prepare();
         if (nsvc.I.Type != NetSvc_IPX)
         {
@@ -550,12 +546,13 @@ void net_player_action_execute(int plyr, int netplyr)
             1, plyr);
         break;
     case NPAct_PlyrEject:
-        byte_15516D = -1;
+        selected_net_user = -1;
+        i = p_netplyr->U.Progress.SelectedUser;
         reset_net_screen_EJECT_flags();
-        LbNetworkSessionStop();
+        LbNetworkSessionStop(i);
         if (nsvc.I.Type == NetSvc_IPX)
         {
-            if (p_netplyr->U.Progress.val_15516D == netplyr)
+            if (i == netplyr)
             {
                 net_new_game_prepare();
                 if (screentype == SCRT_CRYO)
@@ -565,8 +562,8 @@ void net_player_action_execute(int plyr, int netplyr)
                 }
             }
         } else {
-            if (p_netplyr->U.Progress.val_15516D != netplyr)
-                LbNetworkSessionStop();
+            if (i != netplyr)
+                LbNetworkSessionStop(netplyr);
             net_new_game_prepare();
             if (byte_1C4A6F)
                 LbNetworkHangUp();
@@ -575,18 +572,23 @@ void net_player_action_execute(int plyr, int netplyr)
         }
         break;
     case NPAct_PlyrLogOut:
-        LbNetworkSessionStop();
         if (nsvc.I.Type == NetSvc_IPX)
         {
             if (plyr == netplyr || net_host_player_no == plyr)
             {
+                LbNetworkSessionStop(netplyr);
                 net_new_game_prepare();
                 net_sessionlist_clear();
                 net_unkn2_names_clear();
             }
+            else
+            {
+                LbNetworkSessionStop(plyr);
+            }
         }
         else
         {
+            LbNetworkSessionStop(netplyr);
             net_new_game_prepare();
             net_unkn2_names_clear();
             if (byte_1C4A6F)
@@ -653,11 +655,11 @@ void net_player_action_execute(int plyr, int netplyr)
             if (in_network_game) {
                 LOGWARN("Partial team in network game, mask 0x%x; switching to full",
                   (uint)players[plyr].MissionAgents);
-                player_mission_agents_reset(plyr);
+                player_mission_agents_toggle_reset(plyr);
             }
             if ((players[plyr].MissionAgents & 0x0F) == 0) {
                 LOGWARN("Cannot start a game with empty team, switching to full");
-                player_mission_agents_reset(plyr);
+                player_mission_agents_toggle_reset(plyr);
             }
         }
         break;
@@ -771,7 +773,7 @@ void net_unkn_func_33(void)
 
     net_player_action_prepare(player);
 
-    net_players_immediate_exchange();
+    net_players_immediate_exchange(player);
 
     for (i = 0; i < 8; i++)
     {
