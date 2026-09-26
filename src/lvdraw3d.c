@@ -583,6 +583,21 @@ void fill_floor_tile_pos_and_shade_fading(struct FloorTile *p_floortl, struct My
     p_mapel->ShadeR = p_dsp->Shade >> 9;
 }
 
+struct MyMapElement *map_element_for_clipped_cords(int map_x, int map_z)
+{
+    if (map_x < 0)
+        map_x = 0;
+    else if (map_x >= MAP_COORD_WIDTH)
+        map_x = MAP_COORD_WIDTH - 1;
+
+    if (map_z < 0)
+        map_z = 0;
+    else if (map_z >= MAP_COORD_HEIGHT)
+        map_z = MAP_COORD_HEIGHT - 1;
+
+    return &game_my_big_map[MAP_TILE_WIDTH * MAPCOORD_TO_TILE(map_z) + MAPCOORD_TO_TILE(map_x)];
+}
+
 void lvdraw_do_floor(void)
 {
 #if 0
@@ -619,16 +634,10 @@ void lvdraw_do_floor(void)
         elcr_x = word_19CC64;
         while (shift_a < render_area_a + 1)
         {
-            int clip_elcr_x, elcr_y;
+            int elcr_y;
             short ambient;
 
-            if (elcr_x < 0)
-                clip_elcr_x = 0;
-            else if (elcr_x >= MAP_COORD_WIDTH)
-                clip_elcr_x = MAP_COORD_WIDTH - 1;
-            else
-                clip_elcr_x = elcr_x;
-            p_mapel = &game_my_big_map[MAP_TILE_WIDTH * (elcr_z >> 8) + (clip_elcr_x >> 8)];
+            p_mapel = map_element_for_clipped_cords(elcr_x, elcr_z);
             elcr_y = shpoint_compute_coord_y(p_spcr, p_mapel, elcr_x, elcr_z, 4);
             transform_shpoint(p_spcr, elcr_x - engn_xc, elcr_y - 8 * engn_yc, elcr_z - engn_zc);
 
@@ -659,15 +668,9 @@ void lvdraw_do_floor(void)
         elcr_x = word_19CC64;
         while (shift_a < render_area_a + 1)
         {
-            int clip_elcr_x, elcr_y;
+            int elcr_y;
 
-            if (elcr_x < 0)
-                clip_elcr_x = 0;
-            else if (elcr_x >= MAP_COORD_WIDTH)
-                clip_elcr_x = MAP_COORD_WIDTH - 1;
-            else
-                clip_elcr_x = elcr_x;
-            p_mapel = &game_my_big_map[MAP_TILE_WIDTH * (elcr_z >> 8) + (clip_elcr_x >> 8)];
+            p_mapel = map_element_for_clipped_cords(elcr_x, elcr_z);
             elcr_y = shpoint_compute_coord_y(p_spcr, p_mapel, elcr_x, elcr_z, 4);
             transform_shpoint(p_spcr, elcr_x - engn_xc, elcr_y - 8 * engn_yc, elcr_z - engn_zc);
             p_spcr->Shade = -1;
@@ -829,11 +832,14 @@ void lvdraw_do_floor(void)
 void lvdraw_do_floor_flyby(int cor_z_beg, int ranges_x_len, struct Range *smrang_x, struct Range *ranges_x)
 {
     struct ShEnginePoint loc_unknarrD[(RENDER_AREA_MAX+1)*4];
+    struct MyMapElement loc_mapel;
     int elcr_z, elpv_z; // Coord Z for current and previous map element
     int rn;
 
     word_19CC64 = (engn_xc & 0xFF00) - (render_area_a << 7);
     word_19CC66 = (engn_zc & 0xFF00) - (render_area_b << 7);
+
+    LbMemorySet(&loc_mapel, '\0', sizeof(loc_mapel));
 
     elcr_z = cor_z_beg;
     elpv_z = cor_z_beg - TILE_TO_MAPCOORD(1, 0);
@@ -846,19 +852,18 @@ void lvdraw_do_floor_flyby(int cor_z_beg, int ranges_x_len, struct Range *smrang
 
         elcr_x = smrang_x[rn].beg;
         p_spcr = &loc_unknarrD[2 * (elcr_x >> 8) + ((rn) & 1)];
-        p_mapel = &game_my_big_map[MAP_TILE_WIDTH * (elcr_z >> 8) + (elcr_x >> 8)];
         while (elcr_x <= smrang_x[rn].fin)
         {
             int elcr_y;
             short ambient;
 
+            p_mapel = map_element_for_clipped_cords(elcr_x, elcr_z);
             elcr_y = shpoint_compute_coord_y(p_spcr, p_mapel, elcr_x, elcr_z, 8);
             transform_shpoint_fpv(p_spcr, elcr_x - engn_xc, elcr_y - 8 * engn_yc, elcr_z - engn_zc);
             ambient = p_mapel->Ambient + p_spcr->ReflShade + 2;
             p_spcr->Shade = calculate_shpoint_shade_fading(ambient, p_mapel->Shade, p_spcr->Depth);
 
             p_spcr += 2;
-            p_mapel++;
             elcr_x += TILE_TO_MAPCOORD(1, 0);
         }
     }
@@ -872,18 +877,17 @@ void lvdraw_do_floor_flyby(int cor_z_beg, int ranges_x_len, struct Range *smrang
 
         elcr_x = smrang_x[rn].beg;
         p_spcr = &loc_unknarrD[2 * (elcr_x >> 8) + (rn & 1)];
-        p_mapel = &game_my_big_map[MAP_TILE_WIDTH * (elcr_z >> 8) + (elcr_x >> 8)];
         while (elcr_x <= smrang_x[rn].fin)
         {
             int elcr_y;
 
+            p_mapel = map_element_for_clipped_cords(elcr_x, elcr_z);
             elcr_y = shpoint_compute_coord_y(p_spcr, p_mapel, elcr_x, elcr_z, 8);
             transform_shpoint_fpv(p_spcr, elcr_x - engn_xc, elcr_y - 8 * engn_yc, elcr_z - engn_zc);
             p_spcr->Shade = -1;
 
             p_spcr += 2;
             elcr_x += TILE_TO_MAPCOORD(1, 0);
-            p_mapel++;
         }
 
         elcr_x = ranges_x[rn].beg;
@@ -893,6 +897,7 @@ void lvdraw_do_floor_flyby(int cor_z_beg, int ranges_x_len, struct Range *smrang
         {
             struct FloorTile *p_floortl;
             struct MyMapElement *p_mapel;
+            struct MyMapElement *p_mapel_p10, *p_mapel_p01, *p_mapel_p11;
             struct ShEnginePoint *p_spad;
             int depth, dpthalt;
             ushort floor_flags2;
@@ -952,16 +957,28 @@ void lvdraw_do_floor_flyby(int cor_z_beg, int ranges_x_len, struct Range *smrang
                 break;
             }
 
+            p_mapel_p10 = p_mapel + 1;
+            p_mapel_p01 = p_mapel + MAP_TILE_WIDTH;
+            p_mapel_p11 = p_mapel + MAP_TILE_WIDTH + 1;
+            if (elcr_z == MAP_COORD_HEIGHT - 1) {
+                p_mapel_p01 = &loc_mapel;
+                p_mapel_p11 = &loc_mapel;
+            }
+            if (elcr_x == MAP_COORD_WIDTH - 1) {
+                p_mapel_p10 = &loc_mapel;
+                p_mapel_p11 = &loc_mapel;
+            }
+
             fill_floor_tile_pos_and_shade_fading(p_floortl, p_mapel, p_spnx, 0, p_spnx);
 
             p_spnx += 2;
-            fill_floor_tile_pos_and_shade_fading(p_floortl, p_mapel + 1, p_spnx, 1, p_spnx);
+            fill_floor_tile_pos_and_shade_fading(p_floortl, p_mapel_p10, p_spnx, 1, p_spnx);
 
             p_spad = p_spcr + 2;
-            fill_floor_tile_pos_and_shade_fading(p_floortl, p_mapel + 128 + 1, p_spad, 2, p_spnx);
+            fill_floor_tile_pos_and_shade_fading(p_floortl, p_mapel_p11, p_spad, 2, p_spnx);
 
             p_spad = p_spcr;
-            fill_floor_tile_pos_and_shade_fading(p_floortl, p_mapel + 128, p_spad, 3, p_spnx);
+            fill_floor_tile_pos_and_shade_fading(p_floortl, p_mapel_p01, p_spad, 3, p_spnx);
 
             if (p_mapel->Texture != 0)
             {
@@ -972,7 +989,7 @@ void lvdraw_do_floor_flyby(int cor_z_beg, int ranges_x_len, struct Range *smrang
                     p_floortl->Flags = RendVec_mode21;
                 else
                     p_floortl->Flags = RendVec_mode05;
-                p_floortl->Page = (int)(ushort)p_mapel->ColumnHead >> 12;
+                p_floortl->Page = (ushort)p_mapel->ColumnHead >> 12;
             }
             else
             {
