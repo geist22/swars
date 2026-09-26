@@ -1153,6 +1153,11 @@ void fix_map_outranged_properties(void)
                 p_mapel->Texture &= 0xC000;
                 p_mapel->Texture |= texture % next_floor_texture;
             }
+            if (((tile_y == 0) || (tile_x == 0)) && (p_mapel->Ambient != 0)) {
+                LOGSYNC("Non-zero ambient light %d used in border mapel at %d,%d",
+                  (int)p_mapel->Ambient, (int)tile_x, (int)tile_y);
+                p_mapel->Ambient = 0;
+            }
         }
     }
     for (i = 0; i < next_object_face3; i++) {

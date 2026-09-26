@@ -22,6 +22,7 @@
 #include <limits.h>
 #include "bfendian.h"
 #include "bfmath.h"
+#include "bfmemut.h"
 #include "bfplanar.h"
 
 #include "enginbckt.h"
@@ -126,6 +127,10 @@ int shpoint_compute_coord_y(struct ShEnginePoint *p_sp, struct MyMapElement *p_m
         elcr_y += mag * wobble;
         p_sp->ReflShade = (wobble + 32) << 2;
     }
+    // Keep edges of the map black
+    if ((elcr_x <= 0) || (elcr_z <= 0) || (elcr_x >= MAP_COORD_WIDTH-1) || (elcr_z >= MAP_COORD_HEIGHT-1))
+        p_sp->ReflShade = 0;
+
     return elcr_y;
 }
 
@@ -562,17 +567,6 @@ void fill_floor_tile_pos_and_shade(struct FloorTile *p_floortl, struct MyMapElem
     p_mapel->ShadeR = p_sp->Shade >> 9;
 }
 
-void fill_floor_tile_pos_and_shade_at_border(struct FloorTile *p_floortl,
-  ubyte pt, short *p_sqlight, struct ShEnginePoint *p_sp)
-{
-    p_floortl->X[pt] = p_sp->X;
-    p_floortl->Y[pt] = p_sp->Y;
-    if (p_sp->Shade < 0) {
-        p_sp->Shade = calculate_shpoint_shade(0, 0, p_sqlight);
-    }
-    p_floortl->Shade[pt] = p_sp->Shade;
-}
-
 void fill_floor_tile_pos_and_shade_fading(struct FloorTile *p_floortl, struct MyMapElement *p_mapel,
   struct ShEnginePoint *p_dsp, ubyte pt, struct ShEnginePoint *p_ssp)
 {
@@ -597,6 +591,7 @@ void lvdraw_do_floor(void)
     return;
 #endif
     struct ShEnginePoint loc_unknarrD[(RENDER_AREA_MAX+1)*4];
+    struct MyMapElement loc_mapel;
     int shift_a, shift_b;
     int elcr_z, elpv_z; // Coord Z for current and previous map element
     short *p_sqlight;
@@ -607,6 +602,8 @@ void lvdraw_do_floor(void)
         word_19CC66 = 0;
     p_sqlight = super_quick_light;
 
+    LbMemorySet(&loc_mapel, '\0', sizeof(loc_mapel));
+
     elcr_z = word_19CC66;
     shift_b = 0;
     { // Separate first row from the rest as it has no previous
@@ -614,7 +611,10 @@ void lvdraw_do_floor(void)
         struct ShEnginePoint *p_spcr;
         int elcr_x;
 
-        p_spcr = &loc_unknarrD[shift_b & 1];
+        if (elcr_z >= MAP_COORD_HEIGHT)
+            elcr_z = MAP_COORD_HEIGHT - 1;
+
+        p_spcr = &loc_unknarrD[(shift_b) & 1];
         shift_a = 0;
         elcr_x = word_19CC64;
         while (shift_a < render_area_a + 1)
@@ -631,6 +631,7 @@ void lvdraw_do_floor(void)
             p_mapel = &game_my_big_map[MAP_TILE_WIDTH * (elcr_z >> 8) + (clip_elcr_x >> 8)];
             elcr_y = shpoint_compute_coord_y(p_spcr, p_mapel, elcr_x, elcr_z, 4);
             transform_shpoint(p_spcr, elcr_x - engn_xc, elcr_y - 8 * engn_yc, elcr_z - engn_zc);
+
             ambient = p_mapel->Ambient + p_spcr->ReflShade + 2;
             p_spcr->Shade = calculate_shpoint_shade(ambient, p_mapel->Shade, p_sqlight);
 
@@ -638,17 +639,20 @@ void lvdraw_do_floor(void)
             shift_a++;
             elcr_x += TILE_TO_MAPCOORD(1, 0);
         }
+        shift_b++;
+        elpv_z = elcr_z;
+        elcr_z += TILE_TO_MAPCOORD(1, 0);
     }
 
-    elpv_z = elcr_z;
-    elcr_z += TILE_TO_MAPCOORD(1, 0);
-    shift_b++;
-    while (shift_b < render_area_b && elcr_z < MAP_COORD_HEIGHT)
+    while (shift_b < render_area_b && elcr_z <= MAP_COORD_HEIGHT)
     {
         struct MyMapElement *p_mapel;
         struct ShEnginePoint *p_spcr;
         struct ShEnginePoint *p_spnx;
-        int elcr_x;
+        int elcr_x, elpv_x;
+
+        if (elcr_z >= MAP_COORD_HEIGHT)
+            elcr_z = MAP_COORD_HEIGHT - 1;
 
         p_spcr = &loc_unknarrD[(shift_b) & 1];
         shift_a = 0;
@@ -676,28 +680,37 @@ void lvdraw_do_floor(void)
         p_spnx = &loc_unknarrD[(shift_b + 1) & 1];
         p_spcr = &loc_unknarrD[(shift_b) & 1];
         shift_a = 0;
+        elpv_x = word_19CC64;
+        if (elpv_x >= MAP_COORD_WIDTH)
+            elpv_x = MAP_COORD_WIDTH - 1;
         elcr_x = word_19CC64;
         while (shift_a < render_area_a)
         {
             struct FloorTile *p_floortl;
+            struct MyMapElement *p_mapel_p10, *p_mapel_p01, *p_mapel_p11;
             int depth, dpthalt;
             ushort floor_flags2;
             ubyte ditype;
 
             dpthalt = 0;
 
+            if (elcr_x >= MAP_COORD_WIDTH) {
+                elcr_x = MAP_COORD_WIDTH - 1;
+                if (elcr_x == elpv_x) // Do not continue rendering last row to end of screen
+                    break;
+            }
             p_mapel = &game_my_big_map[MAP_TILE_WIDTH * (elpv_z >> 8) + (elcr_x >> 8)];
 
             if ( (((p_spcr[2].Flags | p_spnx[2].Flags | p_spcr[0].Flags | p_spnx[0].Flags) & 0x20) != 0)
               || (((p_spnx[2].Flags & p_spcr[0].Flags & p_spnx[0].Flags & p_spcr[2].Flags) & 0x0F) != 0)
-              || (elcr_x <= 0) || (elcr_x >= MAP_COORD_WIDTH)
-              || (elcr_z <= 0) || (elcr_z >= MAP_COORD_HEIGHT)
+              || (elcr_x < 0) || (elcr_z < 0)
               || ((game_perspective != ProjM_IsomNoBuildng) && ((p_mapel->Flags & 0x80) != 0)))
             {
                 p_sqlight++;
                 p_spcr += 2;
                 p_spnx += 2;
                 shift_a++;
+                elpv_x = elcr_x;
                 elcr_x += TILE_TO_MAPCOORD(1, 0);
                 continue;
             }
@@ -744,23 +757,31 @@ void lvdraw_do_floor(void)
                 break;
             }
 
-            {
-                fill_floor_tile_pos_and_shade(p_floortl, p_mapel, 0, p_sqlight, p_spnx);
-
-                {
-                    p_spnx += 2;
-                    p_sqlight += 1;
-                    fill_floor_tile_pos_and_shade(p_floortl, p_mapel + 1, 1, p_sqlight, p_spnx);
-
-                    p_spcr += 2;
-                    p_sqlight += render_area_a;
-                    fill_floor_tile_pos_and_shade(p_floortl, p_mapel + MAP_TILE_WIDTH + 1, 2, p_sqlight, p_spcr);
-                }
-
-                p_spcr -= 2;
-                p_sqlight -= 1;
-                fill_floor_tile_pos_and_shade(p_floortl, p_mapel + MAP_TILE_WIDTH, 3, p_sqlight, p_spcr);
+            p_mapel_p10 = p_mapel + 1;
+            p_mapel_p01 = p_mapel + MAP_TILE_WIDTH;
+            p_mapel_p11 = p_mapel + MAP_TILE_WIDTH + 1;
+            if (elcr_z == MAP_COORD_HEIGHT - 1) {
+                p_mapel_p01 = &loc_mapel;
+                p_mapel_p11 = &loc_mapel;
             }
+            if (elcr_x == MAP_COORD_WIDTH - 1) {
+                p_mapel_p10 = &loc_mapel;
+                p_mapel_p11 = &loc_mapel;
+            }
+
+            fill_floor_tile_pos_and_shade(p_floortl, p_mapel, 0, p_sqlight, p_spnx);
+
+            p_spnx += 2;
+            p_sqlight += 1;
+            fill_floor_tile_pos_and_shade(p_floortl, p_mapel_p10, 1, p_sqlight, p_spnx);
+
+            p_spcr += 2;
+            p_sqlight += render_area_a;
+            fill_floor_tile_pos_and_shade(p_floortl, p_mapel_p11, 2, p_sqlight, p_spcr);
+
+            p_spcr -= 2;
+            p_sqlight -= 1;
+            fill_floor_tile_pos_and_shade(p_floortl, p_mapel_p01, 3, p_sqlight, p_spcr);
 
             if (p_mapel->Texture != 0)
             {
@@ -796,6 +817,7 @@ void lvdraw_do_floor(void)
             p_sqlight += -render_area_a + 1;
             p_spcr += 2;
             shift_a++;
+            elpv_x = elcr_x;
             elcr_x += TILE_TO_MAPCOORD(1, 0);
         }
         shift_b++;
