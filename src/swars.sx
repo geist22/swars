@@ -130,11 +130,8 @@
 .global EXPORT_SYMBOL(scratch_buf1);		/* 0x19CB54 */
 .global EXPORT_SYMBOL(pop1_sprites);		/* 0x19CBDC */
 .global EXPORT_SYMBOL(colour_grey1);		/* 0x19CC5C */
-.global EXPORT_SYMBOL(colour_grey2);		/* 0x19CC5D */
-.global EXPORT_SYMBOL(colour_brown2);		/* 0x19CC5E */
 .global EXPORT_SYMBOL(word_19CC64);			/* 0x19CC64 */
 .global EXPORT_SYMBOL(word_19CC66);			/* 0x19CC66 */
-.global EXPORT_SYMBOL(engine_render_lights);/* 0x19ec6f */
 .global EXPORT_SYMBOL(game_perspective);	/* 0x19EC71 */
 .global EXPORT_SYMBOL(unkn_flags_01);		/* 0x19EC72 */
 .global EXPORT_SYMBOL(things_used);			/* 0x19EC7E */

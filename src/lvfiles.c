@@ -90,6 +90,10 @@ ulong stored_global3d_inuse;
 
 extern struct QuickLoad quick_load_pc[19];
 
+/** Quick load MAD file helper array.
+ *
+ * Entries here must match `mem_game[]` entries.
+ */
 struct QuickLoad quick_load_pc[] = {
   {NULL,				(void **)&game_my_big_map,	18, 16384},
   {&next_floor_texture,	(void **)&game_textures,		18, 800},
@@ -1479,6 +1483,54 @@ void load_map_dat_pc_handle(TbFileHandle fh)
       num_sthings, num_things, next_traffic_node, next_light_command, next_bezier_pt);
 }
 
+void save_mad_pc_handle(TbFileHandle mad_fh)
+{
+    u32 fmtver;
+    ushort tmp;
+    int i;
+
+    assert(sizeof(struct MyMapElement) == 18);
+
+    fmtver = 1;
+    LbFileWrite(mad_fh, &fmtver, sizeof(u32));
+
+    // Store amounts of quick_load array items
+    for (i = 0; quick_load_pc[i].Size != 0; i++)
+    {
+        ushort *p_numb;
+        p_numb = quick_load_pc[i].Numb;
+        if (p_numb != NULL) {
+            LbFileWrite(mad_fh, p_numb, sizeof(ushort));
+        }
+    }
+
+    // Save the quick_load items
+    for (i = 0; quick_load_pc[i].Size != 0; i++)
+    {
+        int entsize, nentries;
+        ushort *p_numb;
+
+        p_numb = quick_load_pc[i].Numb;
+        if (p_numb != NULL) {
+            entsize = quick_load_pc[i].Size;
+            nentries = quick_load_pc[i].Extra + *p_numb;
+        } else {
+            nentries = quick_load_pc[i].Size;
+            entsize = quick_load_pc[i].Extra;
+        }
+
+        LbFileWrite(mad_fh, *quick_load_pc[i].Ptr, nentries * entsize);
+        tmp = 0;
+        LbFileWrite(mad_fh, &tmp, sizeof(ushort));
+    }
+
+    LbFileWrite(mad_fh, &selected_triangulation_no, sizeof(selected_triangulation_no));
+    LbFileWrite(mad_fh, &triangulation_initied, sizeof(triangulation_initied));
+    LbFileWrite(mad_fh, triangulation, sizeof(struct Triangulation) * 4);
+
+    //TODO finish the save implementation
+}
+
 void load_mad_pc_buffer(ubyte *mad_ptr, long rdsize)
 {
     short shut_h;
@@ -1523,6 +1575,8 @@ void load_mad_pc_buffer(ubyte *mad_ptr, long rdsize)
     for (i = 1; i < 17; i++)
     {
         ushort *p_numb;
+
+        assert(quick_load_pc[i].Ptr == mem_game[i].BufferPtr);
         p_numb = quick_load_pc[i].Numb;
         mem_game[i].N = quick_load_pc[i].Extra + *p_numb;
     }
