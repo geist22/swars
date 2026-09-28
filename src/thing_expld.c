@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include "bfutility.h"
 
+#include "engincam.h"
 #include "enginfexpl.h"
 #include "enginprops.h"
 #include "enginshrapn.h"
@@ -37,6 +38,8 @@
 
 /******************************************************************************/
 #pragma pack(1)
+
+#define EXPLODE_FACE_MAX_ON_MAP_SIZE TILE_TO_MAPCOORD(16,0)
 
 struct rectangle { // sizeof=4
     ubyte x1;
@@ -862,6 +865,10 @@ void draw_explode(void)
             break;
 
         if (p_exface->Timer == 0)
+            continue;
+
+        if (!area_overlaps_render_area(p_exface->X, p_exface->Z,
+          EXPLODE_FACE_MAX_ON_MAP_SIZE/2))
             continue;
 
         switch (p_exface->Type)

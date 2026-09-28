@@ -114,7 +114,7 @@ void draw_frame_on_map_coords(MapCoord cor_x, MapCoord cor_y, MapCoord cor_z,
     struct ShEnginePoint sp;
     int cor_dt_x, cor_dt_y, cor_dt_z;
 
-    if (!coords_within_render_area(cor_x, cor_z)) {
+    if (!area_overlaps_render_area(cor_x, cor_z, TILE_TO_MAPCOORD(1,0)/2)) {
         return;
     }
     cor_dt_x = cor_x - engn_xc;

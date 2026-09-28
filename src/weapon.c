@@ -1204,9 +1204,9 @@ struct SimpleThing *init_spark(int x, int y, int z)
     if ((z < 0) || (z >= MAP_COORD_HEIGHT))
         return NULL;
 
-    // limit sparks to player view area - verify if this won't cause packet desync
+    // limit sparks to player view area - use future value of Radius for size
     if (!in_network_game && (pktrec_mode == PktR_NONE)) {
-        if (!coords_within_render_area(x, z))
+        if (!area_overlaps_render_area(x, z, (5 * overall_scale) >> 8))
             return NULL;
     }
 

@@ -112,19 +112,19 @@ void camera_setup_view(int *p_pos_beg_x, int *p_pos_beg_z,
     *p_tlcount_z = tlcount_z;
 }
 
-TbBool coords_within_render_area(int cor_x, int cor_z)
+TbBool area_overlaps_render_area(int cor_x, int cor_z, int radius)
 {
     int rend_beg_x, rend_beg_z;
     int rend_end_x, rend_end_z;
 
-    rend_beg_x = (engn_xc & 0xFF00) + (render_area_a << 7);
-    rend_beg_z = (engn_zc & 0xFF00) - (render_area_b << 7);
+    rend_beg_x = (engn_xc & 0xFF00) + (render_area_a << 7) + radius;
+    rend_beg_z = (engn_zc & 0xFF00) - (render_area_b << 7) - radius;
 
     if ((cor_x > rend_beg_x) || (cor_z < rend_beg_z))
         return false;
 
-    rend_end_x = rend_beg_x - (render_area_a << 8);
-    rend_end_z = rend_beg_z + (render_area_b << 8);
+    rend_end_x = rend_beg_x - (render_area_a << 8) - radius;
+    rend_end_z = rend_beg_z + (render_area_b << 8) + radius;
 
     if ((cor_x < rend_end_x) || (cor_z > rend_end_z))
         return false;
