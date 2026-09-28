@@ -712,35 +712,8 @@ void object_explode_faces(short obj)
     obj_cor.Y = p_gobj->OffsetY;
     obj_cor.Z = p_gobj->MapZ;
 
-    for (k = 0; k < p_gobj->NumbFaces; k++)
-    {
-        struct SingleObjectFace3 *p_face3;
-
-        p_face3 = &game_object_faces3[p_gobj->StartFace + k];
-
-        p_pt0 = &game_object_points[p_face3->PointNo[0]];
-        face_pt0.X = obj_cor.X + p_pt0->X;
-        face_pt0.Y = obj_cor.Y + p_pt0->Y;
-        face_pt0.Z = obj_cor.Z + p_pt0->Z;
-
-        p_pt1 = &game_object_points[p_face3->PointNo[1]];
-        face_pt1.X = obj_cor.X + p_pt1->X;
-        face_pt1.Y = obj_cor.Y + p_pt1->Y;
-        face_pt1.Z = obj_cor.Z + p_pt1->Z;
-
-        p_pt2 = &game_object_points[p_face3->PointNo[2]];
-        face_pt2.X = obj_cor.X + p_pt2->X;
-        face_pt2.Y = obj_cor.Y + p_pt2->Y;
-        face_pt2.Z = obj_cor.Z + p_pt2->Z;
-
-        eface = create_explode_face_tri(&face_pt0, &face_pt1, &face_pt2,
-          p_face3->Texture, p_face3->Flags, p_face3->ExCol);
-
-        if (eface == 0)
-            continue;
-
-        explode_face_setup_move_from_epicenter(eface, &obj_cor);
-    }
+    // Allocate quad explode faces first - seeing flat surfaces of the object
+    // is more important to the eye, and we may run out of explode faces later
 
     for (k = 0; k < p_gobj->NumbFaces4; k++)
     {
@@ -776,6 +749,37 @@ void object_explode_faces(short obj)
 
         explode_face_setup_move_from_epicenter(eface, &obj_cor);
     }
+
+    for (k = 0; k < p_gobj->NumbFaces; k++)
+    {
+        struct SingleObjectFace3 *p_face3;
+
+        p_face3 = &game_object_faces3[p_gobj->StartFace + k];
+
+        p_pt0 = &game_object_points[p_face3->PointNo[0]];
+        face_pt0.X = obj_cor.X + p_pt0->X;
+        face_pt0.Y = obj_cor.Y + p_pt0->Y;
+        face_pt0.Z = obj_cor.Z + p_pt0->Z;
+
+        p_pt1 = &game_object_points[p_face3->PointNo[1]];
+        face_pt1.X = obj_cor.X + p_pt1->X;
+        face_pt1.Y = obj_cor.Y + p_pt1->Y;
+        face_pt1.Z = obj_cor.Z + p_pt1->Z;
+
+        p_pt2 = &game_object_points[p_face3->PointNo[2]];
+        face_pt2.X = obj_cor.X + p_pt2->X;
+        face_pt2.Y = obj_cor.Y + p_pt2->Y;
+        face_pt2.Z = obj_cor.Z + p_pt2->Z;
+
+        eface = create_explode_face_tri(&face_pt0, &face_pt1, &face_pt2,
+          p_face3->Texture, p_face3->Flags, p_face3->ExCol);
+
+        if (eface == 0)
+            continue;
+
+        explode_face_setup_move_from_epicenter(eface, &obj_cor);
+    }
+
 }
 
 void thing_explode_faces(struct Thing *p_thing)
