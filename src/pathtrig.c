@@ -455,7 +455,7 @@ s32 route_to_path(int ax8, int ay8, int bx8, int by8, s32 *p_treert,
 
 void path_init8_unkn3(struct Path *p_path, int ax8, int ay8, int bx8, int by8, int a6)
 {
-#if 1
+#if 0
     // Pushed through a register holding them: a "g" operand may be placed
     // relative to the stack pointer, which each push moves.
     int stkargs[2];
