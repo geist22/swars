@@ -1971,10 +1971,40 @@ TbBool setup_host(void)
     return ret;
 }
 
+void calc_bul_offsets(void)
+{
+#if 1
+    asm volatile ("call ASM_calc_bul_offsets\n"
+        :  :  : "eax", "cc", "memory" );
+    return;
+#endif
+}
+
 void init_engine(void)
 {
+#if 0
     asm volatile ("call ASM_init_engine\n"
         :  :  : "eax" );
+    return;
+#endif
+    p_current_sort_sprite = game_sort_sprites;
+    p_current_draw_item = game_draw_list + 1;
+
+    calc_bul_offsets();
+
+    engn_xc = TILE_TO_MAPCOORD(60, 128);
+    engn_zc = TILE_TO_MAPCOORD(55, 128);
+    engn_yc = 0;
+    ingame.TrackX = engn_xc;
+    ingame.TrackZ = engn_zc;
+#if 0 // delete pending - no need to set those earlier
+    drwfloor_start_cor_x = (engn_xc & 0xFF00) - (render_area_a << 7);
+    drwfloor_start_cor_z = (engn_zc & 0xFF00) - (render_area_b << 7);
+#endif
+    ingame.NextRocket = 0;
+    setup_vecs(lbDisplay.WScreen, vec_tmap[0], lbDisplay.PhysicalScreenWidth,
+      lbDisplay.PhysicalScreenWidth, lbDisplay.PhysicalScreenHeight);
+    ingame.Flags |= GamF_HUDPanel | TngF_ProgressAction | GamF_RenderScene;
 }
 
 void net_player_colors_reassign(void)

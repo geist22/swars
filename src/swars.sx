@@ -130,8 +130,8 @@
 .global EXPORT_SYMBOL(scratch_buf1);		/* 0x19CB54 */
 .global EXPORT_SYMBOL(pop1_sprites);		/* 0x19CBDC */
 .global EXPORT_SYMBOL(colour_grey1);		/* 0x19CC5C */
-.global EXPORT_SYMBOL(word_19CC64);			/* 0x19CC64 */
-.global EXPORT_SYMBOL(word_19CC66);			/* 0x19CC66 */
+.global EXPORT_SYMBOL(drwfloor_start_cor_x);			/* 0x19CC64 */
+.global EXPORT_SYMBOL(drwfloor_start_cor_z);			/* 0x19CC66 */
 .global EXPORT_SYMBOL(game_perspective);	/* 0x19EC71 */
 .global EXPORT_SYMBOL(unkn_flags_01);		/* 0x19EC72 */
 .global EXPORT_SYMBOL(things_used);			/* 0x19EC7E */
@@ -1096,7 +1096,7 @@ GLOBAL_FUNC (ASM_init_engine)	/* 0x1260C */
 		add    $0x5,%eax
 		xor    %ecx,%ecx
 		mov    %eax,EXPORT_SYMBOL(p_current_draw_item)
-		call   calc_bul_offsets
+		call   ac_calc_bul_offsets
 		mov    EXPORT_SYMBOL(lbDisplay)+28,%esi # lbDisplay.PhysicalScreenHeight
 		mov    %edx,EXPORT_SYMBOL(engn_xc)
 		mov    %ebx,EXPORT_SYMBOL(engn_zc)
@@ -1112,14 +1112,14 @@ GLOBAL_FUNC (ASM_init_engine)	/* 0x1260C */
 		mov    EXPORT_SYMBOL(lbDisplay)+24,%ebx # lbDisplay.PhysicalScreenWidth
 		sub    %eax,%edx
 		mov    EXPORT_SYMBOL(render_area_b),%ax
-		mov    %dx,EXPORT_SYMBOL(word_19CC64)
+		mov    %dx,EXPORT_SYMBOL(drwfloor_start_cor_x)
 		mov    EXPORT_SYMBOL(engn_zc),%dx
 		shl    $0x7,%eax
 		xor    %dl,%dl
 		push   %esi
 		sub    %eax,%edx
 		mov    %ebx,%ecx
-		mov    %dx,EXPORT_SYMBOL(word_19CC66)
+		mov    %dx,EXPORT_SYMBOL(drwfloor_start_cor_z)
 		xor    %edx,%edx
 		mov    EXPORT_SYMBOL(lbDisplay)+4,%eax # lbDisplay.WScreen
 		mov    %dx,EXPORT_SYMBOL(ingame)+0x957 # ingame.NextRocket
@@ -47412,7 +47412,7 @@ GLOBAL_FUNC(ASM_track_angle)	/* 0x060D18 */
 
 
 /*----------------------------------------------------------------*/
-calc_bul_offsets:	/* 0x060FD4 */
+GLOBAL_FUNC (ASM_calc_bul_offsets)	/* 0x060FD4 */
 /*----------------------------------------------------------------*/
 		push   %ebx
 		push   %ecx

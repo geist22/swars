@@ -72,8 +72,8 @@ s32 dword_152E58 = 410;
 
 s32 dword_176CBC = 0;
 
-short word_19CC64;
-short word_19CC66;
+short drwfloor_start_cor_x;
+short drwfloor_start_cor_z;
 TbBool nuclear_overexposure = false;
 ubyte byte_1C8444 = 0;
 
@@ -611,15 +611,14 @@ void lvdraw_do_floor(void)
     int elcr_z, elpv_z; // Coord Z for current and previous map element
     short *p_sqlight;
 
-    word_19CC64 = (engn_xc & 0xFF00) - (render_area_a << 7);
-    word_19CC66 = (engn_zc & 0xFF00) - (render_area_b << 7);
-    if (word_19CC66 < 0)
-        word_19CC66 = 0;
-    p_sqlight = super_quick_light;
+    drwfloor_start_cor_x = (engn_xc & 0xFF00) - (render_area_a << 7);
+    drwfloor_start_cor_z = (engn_zc & 0xFF00) - (render_area_b << 7);
+    if (drwfloor_start_cor_z < 0)
+        drwfloor_start_cor_z = 0;
 
     LbMemorySet(&loc_mapel, '\0', sizeof(loc_mapel));
 
-    elcr_z = word_19CC66;
+    elcr_z = drwfloor_start_cor_z;
     shift_b = 0;
     { // Separate first row from the rest as it has no previous
         struct MyMapElement *p_mapel;
@@ -629,9 +628,10 @@ void lvdraw_do_floor(void)
         if (elcr_z >= MAP_COORD_HEIGHT)
             elcr_z = MAP_COORD_HEIGHT - 1;
 
+        p_sqlight = &super_quick_light[shift_b * render_area_a];
         p_spcr = &loc_unknarrD[(shift_b) & 1];
         shift_a = 0;
-        elcr_x = word_19CC64;
+        elcr_x = drwfloor_start_cor_x;
         while (shift_a < render_area_a + 1)
         {
             int elcr_y;
@@ -644,6 +644,7 @@ void lvdraw_do_floor(void)
             ambient = p_mapel->Ambient + p_spcr->ReflShade + 2;
             p_spcr->Shade = calculate_shpoint_shade(ambient, p_mapel->Shade, p_sqlight);
 
+            p_sqlight++;
             p_spcr += 2;
             shift_a++;
             elcr_x += TILE_TO_MAPCOORD(1, 0);
@@ -665,7 +666,7 @@ void lvdraw_do_floor(void)
 
         p_spcr = &loc_unknarrD[(shift_b) & 1];
         shift_a = 0;
-        elcr_x = word_19CC64;
+        elcr_x = drwfloor_start_cor_x;
         while (shift_a < render_area_a + 1)
         {
             int elcr_y;
@@ -680,13 +681,14 @@ void lvdraw_do_floor(void)
             elcr_x += TILE_TO_MAPCOORD(1, 0);
         }
 
+        p_sqlight = &super_quick_light[shift_b * render_area_a];
         p_spnx = &loc_unknarrD[(shift_b + 1) & 1];
         p_spcr = &loc_unknarrD[(shift_b) & 1];
         shift_a = 0;
-        elpv_x = word_19CC64;
+        elpv_x = drwfloor_start_cor_x;
         if (elpv_x >= MAP_COORD_WIDTH)
             elpv_x = MAP_COORD_WIDTH - 1;
-        elcr_x = word_19CC64;
+        elcr_x = drwfloor_start_cor_x;
         while (shift_a < render_area_a)
         {
             struct FloorTile *p_floortl;
@@ -772,7 +774,7 @@ void lvdraw_do_floor(void)
                 p_mapel_p11 = &loc_mapel;
             }
 
-            fill_floor_tile_pos_and_shade(p_floortl, p_mapel, 0, p_sqlight, p_spnx);
+            fill_floor_tile_pos_and_shade(p_floortl, p_mapel,     0, p_sqlight, p_spnx);
 
             p_spnx += 2;
             p_sqlight += 1;
@@ -785,6 +787,7 @@ void lvdraw_do_floor(void)
             p_spcr -= 2;
             p_sqlight -= 1;
             fill_floor_tile_pos_and_shade(p_floortl, p_mapel_p01, 3, p_sqlight, p_spcr);
+            p_sqlight -= render_area_a;
 
             if (p_mapel->Texture != 0)
             {
@@ -817,7 +820,8 @@ void lvdraw_do_floor(void)
             p_floortl->Offset = p_mapel - game_my_big_map;
             p_floortl->Page = p_mapel->ColumnHead >> 12;
 
-            p_sqlight += -render_area_a + 1;
+            p_sqlight++;
+            // p_spnx += 2; -- already done earlier
             p_spcr += 2;
             shift_a++;
             elpv_x = elcr_x;
@@ -836,8 +840,8 @@ void lvdraw_do_floor_flyby(int cor_z_beg, int ranges_x_len, struct Range *smrang
     int elcr_z, elpv_z; // Coord Z for current and previous map element
     int rn;
 
-    word_19CC64 = (engn_xc & 0xFF00) - (render_area_a << 7);
-    word_19CC66 = (engn_zc & 0xFF00) - (render_area_b << 7);
+    drwfloor_start_cor_x = (engn_xc & 0xFF00) - (render_area_a << 7);
+    drwfloor_start_cor_z = (engn_zc & 0xFF00) - (render_area_b << 7);
 
     LbMemorySet(&loc_mapel, '\0', sizeof(loc_mapel));
 
@@ -1026,6 +1030,7 @@ void apply_super_quick_light(short lx, short lz, ushort b)
     short tile_z_beg, tile_z_end;
     short tile_x, tile_z;
     int mapcor_x, mapcor_z;
+    short sqlight_start_cor_x, sqlight_start_cor_z;
     short ratile_x_beg, ratile_z_beg;
     short ratile_x, ratile_z;
 
@@ -1043,21 +1048,26 @@ void apply_super_quick_light(short lx, short lz, ushort b)
     if ((lx <= engn_xc - mapcor_x) || (lx >= engn_xc + mapcor_x))
         return;
 
-    ratile_z_beg = (render_area_b >> 1) - MAPCOORD_TO_TILE(engn_zc);
-    if (ratile_z_beg > 0) // required to avoid shifting light to terrain near map border
-        ratile_z_beg = 0;
-    ratile_z_beg += tile_z_beg;
-    ratile_x_beg = (render_area_a >> 1) - MAPCOORD_TO_TILE(engn_xc);
-    ratile_x_beg += tile_x_beg;
+    // Calculate start in the same way as floor drawing function does it
+    sqlight_start_cor_x = (engn_xc & 0xFF00) - (render_area_a << 7);
+    sqlight_start_cor_z = (engn_zc & 0xFF00) - (render_area_b << 7);
+    if (sqlight_start_cor_z < 0)
+        sqlight_start_cor_z = 0;
+
+
+    ratile_z_beg = tile_z_beg - MAPCOORD_TO_TILE(sqlight_start_cor_z) + 1;
+    ratile_x_beg = tile_x_beg - MAPCOORD_TO_TILE(sqlight_start_cor_x);
     tile_x_end = tile_x_beg + SUPER_QUICK_RADIUS;
     tile_z_end = tile_z_beg + SUPER_QUICK_RADIUS;
 
     for (tile_z = tile_z_beg, ratile_z = ratile_z_beg; tile_z < tile_z_end; tile_z++, ratile_z++)
     {
+        short *p_sqlight;
+
+        p_sqlight = &super_quick_light[render_area_a * ratile_z + ratile_x_beg];
         mapcor_z = TILE_TO_MAPCOORD(tile_z,0);
         for (tile_x = tile_x_beg, ratile_x = ratile_x_beg; tile_x < tile_x_end; tile_x++, ratile_x++)
         {
-            short *p_sqlight;
             int f, dist;
             short intensity;
 
@@ -1072,8 +1082,6 @@ void apply_super_quick_light(short lx, short lz, ushort b)
             if (tile_z < 0 || tile_z >= MAP_TILE_HEIGHT)
                 continue;
 
-            p_sqlight = &super_quick_light[ratile_x + render_area_a * ratile_z];
-
             dist = (mapcor_x - lx) * (mapcor_x - lx)
                 + (mapcor_z - lz) * (mapcor_z - lz);
             if (dist > 0)
@@ -1084,6 +1092,7 @@ void apply_super_quick_light(short lx, short lz, ushort b)
             if (intensity > 32)
                 intensity = 32;
             *p_sqlight += intensity;
+            p_sqlight++;
         }
     }
 }

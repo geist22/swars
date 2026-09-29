@@ -6671,7 +6671,8 @@ void person_burning(struct Thing *p_person)
     return;
 #endif
     p_person->U.UPerson.Brightness = 32;
-    apply_super_quick_light(p_person->X >> 8, p_person->Z >> 8, 16 + (LbRandomAnyShort() & 0xF));
+    apply_super_quick_light(PRCCOORD_TO_MAPCOORD(p_person->X),
+      PRCCOORD_TO_MAPCOORD(p_person->Z), 16 + (LbRandomAnyShort() & 0xF));
 
     if (((gameturn + p_person->ThingOffset) & 0xF) == 0)
     {
