@@ -82141,7 +82141,7 @@ ma_triangle_route:
 		push   %edi
 		mov    EXPORT_SYMBOL(tree_Ax8),%eax
 		mov    EXPORT_SYMBOL(tree_Bx8),%ebx
-		call   route_to_path
+		call   ac_route_to_path
 		cmp    $0xffffffff,%eax
 		je     jump_8382a
 		mov    EXPORT_SYMBOL(tree_Ax8),%edx
@@ -82170,7 +82170,7 @@ ma_triangle_route:
 		push   $EXPORT_SYMBOL(route_bak)
 		mov    EXPORT_SYMBOL(tree_Ay8),%edx
 		mov    EXPORT_SYMBOL(tree_Ax8),%eax
-		call   route_to_path
+		call   ac_route_to_path
 		cmp    $0xffffffff,%eax
 		je     jump_8382a
 		mov    0x4(%esp),%ecx
@@ -83286,7 +83286,7 @@ ma_triangle_route_5:	/* 0x0846FC */
 		push   %edi
 		mov    EXPORT_SYMBOL(tree_Ax8),%eax
 		mov    EXPORT_SYMBOL(tree_Bx8),%ebx
-		call   route_to_path
+		call   ac_route_to_path
 		cmp    $0xffffffff,%eax
 		je     jump_8482e
 		mov    EXPORT_SYMBOL(tree_Ax8),%edx
@@ -83315,7 +83315,7 @@ ma_triangle_route_5:	/* 0x0846FC */
 		push   $EXPORT_SYMBOL(route_bak)
 		mov    EXPORT_SYMBOL(tree_Ay8),%edx
 		mov    EXPORT_SYMBOL(tree_Ax8),%eax
-		call   route_to_path
+		call   ac_route_to_path
 		cmp    $0xffffffff,%eax
 		je     jump_8482e
 		mov    0x4(%esp),%ecx
@@ -84939,7 +84939,7 @@ ma_triangle_route_3:	/* 0x085F18 */
 		push   $EXPORT_SYMBOL(route_bak)
 		mov    EXPORT_SYMBOL(tree_Ay8),%edx
 		mov    EXPORT_SYMBOL(tree_Ax8),%eax
-		call   route_to_path
+		call   ac_route_to_path
 		cmp    $0xffffffff,%eax
 		je     jump_86061
 		mov    EXPORT_SYMBOL(tree_Ax8),%ebx
@@ -84970,7 +84970,7 @@ ma_triangle_route_3:	/* 0x085F18 */
 		push   %esi
 		mov    EXPORT_SYMBOL(tree_Ay8),%edx
 		mov    EXPORT_SYMBOL(tree_Ax8),%eax
-		call   route_to_path
+		call   ac_route_to_path
 		cmp    $0xffffffff,%eax
 		je     jump_86061
 	jump_86027:
@@ -85007,7 +85007,7 @@ ma_triangle_route_3:	/* 0x085F18 */
 
 
 /*----------------------------------------------------------------*/
-ma_triangle_route_4:	/* 0x086068 */
+GLOBAL_FUNC(ASM_ma_triangle_route_4)	/* 0x086068 */
 /*----------------------------------------------------------------*/
 		push   %esi
 		push   %edi
@@ -85040,7 +85040,7 @@ ma_triangle_route_4:	/* 0x086068 */
 		push   $EXPORT_SYMBOL(route_bak)
 		mov    EXPORT_SYMBOL(tree_Ay8),%edx
 		mov    EXPORT_SYMBOL(tree_Ax8),%eax
-		call   route_to_path
+		call   ac_route_to_path
 		cmp    $0xffffffff,%eax
 		je     jump_8613c
 		mov    EXPORT_SYMBOL(tree_Ax8),%eax
@@ -85718,7 +85718,7 @@ fov_region:	/* 0x86A14 */
 
 
 /*----------------------------------------------------------------*/
-route_to_path:
+GLOBAL_FUNC(ASM_route_to_path)	/* 0x086AB0 */
 /*----------------------------------------------------------------*/
 		push   %esi
 		push   %edi
@@ -86079,7 +86079,7 @@ jump_86e7a:
 		push   $EXPORT_SYMBOL(tree_route)
 		mov    0x18(%esp),%edx
 		mov    %ebp,%eax
-		call   route_to_path
+		call   ac_route_to_path
 		mov    %eax,0x10(%esi)
 	jump_86ef8:
 		add    $0xc,%esp
@@ -86171,7 +86171,7 @@ path_init8_wide:
 		push   $EXPORT_SYMBOL(tree_route)
 		mov    %esi,%edx
 		mov    0x58(%esp),%eax
-		call   route_to_path
+		call   ac_route_to_path
 		mov    %eax,0x10(%ebp)
 	jump_8701e:
 		add    $0x4c,%esp
@@ -86246,7 +86246,7 @@ path_init8_tank:	/* 0x087028 */
 		push   $EXPORT_SYMBOL(tree_route)
 		mov    0x18(%esp),%edx
 		mov    %ebp,%eax
-		call   route_to_path
+		call   ac_route_to_path
 		mov    %eax,0x10(%esi)
 	jump_8710d:
 		add    $0xc,%esp
@@ -86310,7 +86310,7 @@ GLOBAL_FUNC(ASM_path_init8_unkn3)	/* 0x087118 */
 		mov    %eax,%edx
 		mov    $EXPORT_SYMBOL(tree_route),%ebx
 		mov    0x4(%esp),%eax
-		call   ma_triangle_route_4
+		call   ac_ma_triangle_route_4
 		mov    %eax,EXPORT_SYMBOL(tree_routelen)
 		cmp    $0xffffffff,%eax
 		je     jump_87204
@@ -86323,7 +86323,7 @@ GLOBAL_FUNC(ASM_path_init8_unkn3)	/* 0x087118 */
 		push   $EXPORT_SYMBOL(tree_route)
 		mov    0x18(%esp),%edx
 		mov    %ebp,%eax
-		call   route_to_path
+		call   ac_route_to_path
 		mov    %eax,0x10(%esi)
 	jump_87204:
 		add    $0xc,%esp
@@ -86416,7 +86416,7 @@ tri_path_init8:	/* 0x08723C */
 		push   $EXPORT_SYMBOL(tree_route)
 		mov    0x2c(%esp),%edx
 		mov    %edi,%eax
-		call   route_to_path
+		call   ac_route_to_path
 		mov    %eax,0x10(%esi)
 	jump_8734d:
 		add    $0xc,%esp
