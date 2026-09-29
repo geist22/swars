@@ -30,27 +30,35 @@ int triangulation_initied = 0;
 
 /******************************************************************************/
 
+static void triangulation_init_single(int trglno)
+{
+    struct Triangulation *p_trgl;
+    p_trgl = &triangulation[trglno];
+
+    p_trgl->tri_allocated = 0;
+    p_trgl->tri_initialised = 0;
+    p_trgl->last_tri = -1;
+    p_trgl->ix_Triangles = 0;
+    p_trgl->count_Triangles = 0;
+    p_trgl->free_Triangles = -1;
+    p_trgl->triangle_top = 0;
+    p_trgl->max_Triangles = 0;
+    p_trgl->Triangles = 0;
+    p_trgl->ix_Points = 0;
+    p_trgl->count_Points = 0;
+    p_trgl->free_Points = -1;
+    p_trgl->point_top = 0;
+    p_trgl->max_Points = 0;
+    p_trgl->Points = 0;
+}
+
 void triangulation_initialize(void)
 {
     int n;
 
     for (n = 0; n < TRIANGULATIONS_COUNT; n++)
     {
-        triangulation[n].tri_allocated = 0;
-        triangulation[n].tri_initialised = 0;
-        triangulation[n].last_tri = -1;
-        triangulation[n].ix_Triangles = 0;
-        triangulation[n].count_Triangles = 0;
-        triangulation[n].free_Triangles = -1;
-        triangulation[n].triangle_top = 0;
-        triangulation[n].max_Triangles = 0;
-        triangulation[n].Triangles = 0;
-        triangulation[n].ix_Points = 0;
-        triangulation[n].count_Points = 0;
-        triangulation[n].free_Points = -1;
-        triangulation[n].point_top = 0;
-        triangulation[n].max_Points = 0;
-        triangulation[n].Points = 0;
+        triangulation_init_single(n);
     }
 
     triangulation_initied = 1;
