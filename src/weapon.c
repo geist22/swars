@@ -53,6 +53,7 @@
 #include "plyr_net.h"
 #include "research.h"
 #include "thing_search.h"
+#include "tngcolisn.h"
 #include "wadfile.h"
 #include "sound.h"
 #include "swlog.h"
@@ -2168,30 +2169,169 @@ void init_rocket(struct Thing *p_owner)
     shot_alerts_peeps(p_shot);
 }
 
-void init_razor_wire(struct Thing *p_person, ubyte flag)
+static TbBool person_moved_lay_wire(struct Thing *p_person, struct Thing *p_wire)
 {
+    return  (p_wire->VX != PRCCOORD_TO_MAPCOORD(p_person->X))
+     || (p_wire->VY != PRCCOORD_TO_MAPCOORD(p_person->Y))
+     || (p_wire->VZ != PRCCOORD_TO_MAPCOORD(p_person->Z));
+}
+
+static TbBool razor_wire_length_too_small(struct Thing *p_wire)
+{
+    return  (p_wire->VX == PRCCOORD_TO_MAPCOORD(p_wire->X))
+     && (p_wire->VY == PRCCOORD_TO_MAPCOORD(p_wire->Y))
+     && (p_wire->VZ == PRCCOORD_TO_MAPCOORD(p_wire->Z));
+}
+
+static void update_razor_wire_end_to_thing(struct Thing *p_wire, struct Thing *p_thing)
+{
+    p_wire->VX = PRCCOORD_TO_MAPCOORD(p_thing->X);
+    p_wire->VY = PRCCOORD_TO_MAPCOORD(p_thing->Y);
+    p_wire->VZ = PRCCOORD_TO_MAPCOORD(p_thing->Z);
+    p_wire->U.UEffect.Group = p_thing->U.UPerson.EffectiveGroup;
+}
+
+void init_razor_wire(struct Thing *p_person, ubyte subtype)
+{
+#if 0
     asm volatile ("call ASM_init_razor_wire\n"
-        : : "a" (p_person), "d" (flag));
+        : : "a" (p_person), "d" (subtype));
+    return;
+#endif
+    struct Thing *p_wire;
+    ThingIdx wiretng;
+
+    wiretng = get_new_thing();
+    if (wiretng == 0)
+        return;
+
+    p_wire = &things[wiretng];
+    p_wire->Type = TT_RAZOR_WIRE;
+    p_wire->Flag = TngF_Unkn0004;
+    p_wire->SubType = subtype;
+    p_wire->X = p_person->X;
+    p_wire->Z = p_person->Z;
+    p_wire->Y = p_person->Y;
+    p_wire->Health = -100;
+    p_wire->Owner = p_person->ThingOffset;
+    p_person->U.UPerson.SpecialOwner = wiretng;
+    update_razor_wire_end_to_thing(p_wire, p_person);
+
+    add_node_thing(p_wire->ThingOffset);
+
+    play_dist_sample(p_person, 67, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_4EVER, 1);
+    p_person->Flag2 |= TgF2_Unkn0001;
 }
 
 void finalise_razor_wire(struct Thing *p_person)
 {
+#if 0
     asm volatile ("call ASM_finalise_razor_wire\n"
         : : "a" (p_person));
+    return;
+#endif
+    struct Thing *p_wire;
+    s32 vec_x, vec_y, vec_z;
+    short new_vect;
+
+    p_person->Flag2 &= ~(TgF2_Unkn0001|TgF2_Unkn0004);
+    stop_sample_using_heap(p_person->ThingOffset, 67);
+
+    p_wire = &things[p_person->U.UPerson.SpecialOwner];
+
+    if (razor_wire_length_too_small(p_wire)) {
+        remove_thing(p_wire->ThingOffset);
+        delete_node(p_wire);
+        return;
+    }
+
+    vec_x = PRCCOORD_TO_MAPCOORD(p_wire->X);
+    vec_y = PRCCOORD_TO_YCOORD(p_wire->Y);
+    vec_z = PRCCOORD_TO_MAPCOORD(p_wire->Z);
+
+    // Insert a collision vector spanning the wire,
+    // from its origin point to where it was dragged to
+    new_vect = dynamic_insert_vect(vec_x, vec_y + 60, vec_z,
+      p_wire->VX + 50, p_wire->VY * 8 + 60, p_wire->VZ,
+      -p_wire->ThingOffset, 2);
+    if (new_vect == 0) {
+        remove_thing(p_wire->ThingOffset);
+        delete_node(p_wire);
+        return;
+    }
+
+    p_wire->Timer1 = 2000;
+    p_wire->Health = 20;
+    p_wire->U.UEffect.Group = p_person->U.UPerson.EffectiveGroup;
+    p_wire->Frame = new_vect;
 }
 
 void init_lay_razor(struct Thing *p_thing, short x, short y, short z, int flag)
 {
+#if 0
     asm volatile (
       "push %4\n"
       "call ASM_init_lay_razor\n"
         : : "a" (p_thing), "d" (x), "b" (y), "c" (z), "g" ((u32)flag));
+    return;
+#endif
+    (void)y;
+    p_thing->State = PerSt_GOTO_POINT;
+    p_thing->U.UPerson.ComTimer = -1;
+    p_thing->Timer1 = 0x30;
+    p_thing->StartTimer1 = 0x30;
+    p_thing->SubState = 0;
+    p_thing->U.UPerson.ComRange = 1;
+    p_thing->U.UPerson.GotoX = x;
+    p_thing->U.UPerson.GotoZ = z;
+
+    if (p_thing->U.UPerson.PathIndex != 0) {
+        remove_path(p_thing);
+        p_thing->U.UPerson.PathIndex = 0;
+    }
+
+    if ((p_thing->Flag2 & TgF2_Unkn0001) != 0) {
+        finalise_razor_wire(p_thing);
+    }
+
+    init_razor_wire(p_thing, flag);
+    p_thing->Flag2 |= TgF2_Unkn0004;
+}
+
+TbBool person_collect_energy_from_lay_wire(struct Thing *p_person, struct Thing *p_wire)
+{
+    // No energy cost for NPCs
+    if ((p_person->Flag & TngF_PlayerAgent) == 0) {
+        return true;
+    }
+
+    p_person->U.UPerson.Energy -= 15;
+    if (p_wire->SubType == 0)
+        p_person->U.UPerson.Energy -= 30;
+
+    return (p_person->U.UPerson.Energy >= 0);
 }
 
 void update_razor_wire(struct Thing *p_person)
 {
+#if 0
     asm volatile ("call ASM_update_razor_wire\n"
         : : "a" (p_person));
+    return;
+#endif
+    struct Thing *p_wire;
+
+    p_wire = &things[p_person->U.UPerson.SpecialOwner];
+
+    if (person_moved_lay_wire(p_person, p_wire))
+    {
+        if (!person_collect_energy_from_lay_wire(p_person, p_wire)) {
+            finalise_razor_wire(p_person);
+            return;
+        }
+    }
+
+    update_razor_wire_end_to_thing(p_wire, p_person);
 }
 
 void init_laser_beam(struct Thing *p_owner, ushort start_age, ubyte stype)
