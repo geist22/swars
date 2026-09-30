@@ -66,6 +66,7 @@
 .global EXPORT_SYMBOL(mem_game);	/* 0x1539c4 */
 .global EXPORT_SYMBOL(people_frames);	/* 0x153D5C */
 .global EXPORT_SYMBOL(follow_dist);	/* 0x153398 */
+.global EXPORT_SYMBOL(burning_timer_delatas);	/* 0x154F6C */
 
 .global EXPORT_SYMBOL(target_old_frameno);	/* 0x176CB8 */
 .global EXPORT_SYMBOL(mouse_over_unkn2_tng);	/* 0x176CC8 */
@@ -128482,23 +128483,6 @@ data_153919:
 		.ascii  "\x04\x00\xfc\x00\x04\x00\xfc"
 		.fill   0xc
 		.align  4
-
-GLOBAL (ASM_byte_154BB4)	/* 0x154BB4 */
-		.ascii  "\xdc\xe0\xe0\xde\xdc\xdc\x00\x00"
-
-GLOBAL (pers_subtype_to_shpak)	/* 0x154F2C */
-		.byte	0x0
-		.ascii  "\x00\x00\x01\x02\x02\x03\x04\x09"
-		.ascii  "\x09\x0a\x0b\x05\x06\x00\x00\x00"
-		.ascii  "\x01\x05\x06\x00\x01\x07\x08\x02"
-		.ascii  "\x02\x0a\x0b\x05\x06\x0a\x0b"
-GLOBAL (ASM_pers_anims_wth_shadows)
-		.ascii  "\x01\x00\x21\x00\x71\x00\xf1\x00"
-		.ascii  "\x11\x01\xa1\x00\xc1\x00\xd1\x02"
-		.ascii  "\xf1\x02\x41\x01\x91\x01\xb1\x01"
-		.ascii  "\x21\x00\x00\x00"
-GLOBAL(burning_timer_delatas)
-		.ascii  "\x00\x00\x01\x00\x01\x00\x00\x00"
 
 /* TODO check function unused_create_effects_52_circle at 0x06750C, maybe this is something interesting */
 effect_52_angle_div:	/* 0x154F78, used in unused_create_effects_52_circle */

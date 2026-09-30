@@ -222,7 +222,9 @@ ushort word_1531DA = 1;
 
 ushort word_17FA58[400];
 
-extern sbyte burning_timer_delatas[8];
+sbyte burning_timer_delatas[] = {
+  0, 0, 1, 0, 1, 0, 0, 0,
+};
 extern short word_1AA38E;
 extern short word_1AA390;
 extern short word_1AA392;

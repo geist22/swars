@@ -52,7 +52,7 @@
 
 #define PURPLE_APPS_EMAIL_ICONS_LIMIT 10
 
-ubyte byte_155124[] = {
+ubyte app_icons_spr_id[] = {
   1, 17, 33, 39, 63, 148, 0, 0,
 };
 
@@ -77,10 +77,10 @@ void draw_app_icon_hilight(short x, short y, ubyte iconid, ubyte aframe)
     struct TbSprite *spr;
 
     lbDisplay.DrawFlags |= 0x8000;
-    spr = &fe_icons_sprites[aframe + byte_155124[iconid] + byte_15512C[iconid]];
+    spr = &fe_icons_sprites[aframe + app_icons_spr_id[iconid] + byte_15512C[iconid]];
     draw_sprite_purple_list(x, y, spr);
     lbDisplay.DrawFlags = 0;
-    spr = &fe_icons_sprites[aframe + byte_155124[iconid]];
+    spr = &fe_icons_sprites[aframe + app_icons_spr_id[iconid]];
     draw_sprite_purple_list(x, y, spr);
     lbDisplay.DrawFlags = 0;
 }
@@ -90,7 +90,7 @@ void draw_app_icon_normal(short x, short y, ubyte iconid, ubyte aframe)
     struct TbSprite *spr;
 
     lbDisplay.DrawFlags |= 0x8000;
-    spr = &fe_icons_sprites[aframe + byte_155124[iconid] + byte_15512C[iconid]];
+    spr = &fe_icons_sprites[aframe + app_icons_spr_id[iconid] + byte_15512C[iconid]];
     draw_sprite_purple_list(x, y, spr);
     lbDisplay.DrawFlags = 0;
 }
@@ -194,14 +194,14 @@ TbBool get_purple_apps_icon_rect(struct ScreenRect *p_rect, short iconid)
                 p_rect->Height = 0;
                 return false;
             }
-            spr = &fe_icons_sprites[byte_155124[cicnid]];
+            spr = &fe_icons_sprites[app_icons_spr_id[cicnid]];
             p_rect->Width = spr->SWidth;
             p_rect->Height = spr->SHeight;
             return true;
         }
         if (is_purple_apps_utility_space_reserved(cicnid))
         {
-            spr = &fe_icons_sprites[byte_155124[cicnid]];
+            spr = &fe_icons_sprites[app_icons_spr_id[cicnid]];
             cx += spr->SWidth + 3;
         }
     }
