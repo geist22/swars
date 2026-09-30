@@ -66,6 +66,7 @@
 .global EXPORT_SYMBOL(mem_game);	/* 0x1539c4 */
 .global EXPORT_SYMBOL(people_frames);	/* 0x153D5C */
 .global EXPORT_SYMBOL(follow_dist);	/* 0x153398 */
+.global EXPORT_SYMBOL(door_anim_page);	/* 0x153914 */
 .global EXPORT_SYMBOL(burning_timer_delatas);	/* 0x154F6C */
 
 .global EXPORT_SYMBOL(target_old_frameno);	/* 0x176CB8 */
@@ -35964,15 +35965,15 @@ apply_texture_to_face:	/* 0x056ADC */
 		add    %edx,%eax
 		lea    0x0(,%ebx,4),%edx
 		add    %ebx,%edx
-		movzbl data_153917(,%edx,2),%esi
+		movzbl EXPORT_SYMBOL(door_anim_page)+3(,%edx,2),%esi
 		and    $0xffff,%ecx
 		imul   %esi,%ecx
 		xor    %ebx,%ebx
 		mov    %esi,(%esp)
-		mov    data_153915(,%edx,2),%bl
-		movzbl data_153918(,%edx,2),%esi
+		mov    EXPORT_SYMBOL(door_anim_page)+1(,%edx,2),%bl
+		movzbl EXPORT_SYMBOL(door_anim_page)+4(,%edx,2),%esi
 		add    %ecx,%ebx
-		mov    data_153916(,%edx,2),%cl
+		mov    EXPORT_SYMBOL(door_anim_page)+2(,%edx,2),%cl
 		mov    EXPORT_SYMBOL(door_anim_page)(,%edx,2),%dl
 		mov    %dl,0x8(%eax)
 		mov    %bl,0x2(%eax)
@@ -36034,7 +36035,7 @@ GLOBAL_FUNC(ASM_process_intelligent_door)	/* 0x056B88 */
 		add    %edx,%eax
 		xor    %edx,%edx
 		inc    %ecx
-		mov    data_153919(,%eax,2),%dl
+		mov    EXPORT_SYMBOL(door_anim_page)+5(,%eax,2),%dl
 		xor    %eax,%eax
 		mov    %cx,%ax
 		mov    %cx,0x24(%esi)
@@ -36064,7 +36065,7 @@ GLOBAL_FUNC(ASM_process_intelligent_door)	/* 0x056B88 */
 		add    %edx,%eax
 		xor    %edx,%edx
 		dec    %ebx
-		mov    data_153919(,%eax,2),%dl
+		mov    EXPORT_SYMBOL(door_anim_page)+5(,%eax,2),%dl
 		xor    %eax,%eax
 		mov    %bx,%ax
 		mov    %bx,0x24(%esi)
@@ -128454,35 +128455,6 @@ GLOBAL (master_glare)	/* 0x153774 */
 		.ascii  "\x26\x01"
 		.long	0x0
 		.ascii  "\x27\x02"
-
-GLOBAL (door_anim_page)	/* 0x153914 */
-		.byte	0x2
-data_153915:
-		.byte	0x0
-data_153916:
-		.byte	0x20
-data_153917:
-		.byte	0x20
-data_153918:
-		.byte	0x20
-data_153919:
-		.byte	0x5
-		.long	0x0
-		.ascii  "\x02\x60\x60\x10\x20\x05"
-		.long	0x0
-		.ascii  "\x02\x60\x60\x10\x20\x05"
-		.fill   0x6
-		.ascii  "\x05\x00\x00\x00\x0c\xff\x0c\xff"
-		.ascii  "\xf4\x00\xf4"
-		.fill   0x21
-		.ascii  "\x58\x00\xa8\xff\x58\x00\xa8\xff"
-		.fill   0xa
-		.ascii  "\x0c\x00\x0e\x00\x0d\x00\x0d\x00"
-		.byte	0xe
-		.fill   0xe
-		.ascii  "\x04\x00\xfc\x00\x04\x00\xfc"
-		.fill   0xc
-		.align  4
 
 /* TODO check function unused_create_effects_52_circle at 0x06750C, maybe this is something interesting */
 effect_52_angle_div:	/* 0x154F78, used in unused_create_effects_52_circle */

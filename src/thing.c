@@ -61,6 +61,16 @@ struct UnkFLight { // sizeof=0x0A
     ubyte unfulgt_9;
 };
 
+struct AnimPage { // sizeof=0x0A
+	ubyte PageNo;
+	ubyte X;
+	ubyte Y;
+	ubyte Width;
+	ubyte Height;
+	ubyte No;
+	u32 apunknfld_6;
+};
+
 #pragma pack()
 /******************************************************************************/
 
@@ -84,6 +94,12 @@ short static_radii[] = {
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+};
+
+struct AnimPage door_anim_page[] = {
+  {2,    0, 0x20, 0x20, 0x20, 5, 0},
+  {2, 0x60, 0x60, 0x10, 0x20, 5, 0},
+  {2, 0x60, 0x60, 0x10, 0x20, 5, 0},
 };
 
 const char *thing_type_names[] = {
