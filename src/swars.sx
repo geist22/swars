@@ -68,6 +68,7 @@
 .global EXPORT_SYMBOL(follow_dist);	/* 0x153398 */
 .global EXPORT_SYMBOL(door_anim_page);	/* 0x153914 */
 .global EXPORT_SYMBOL(burning_timer_delatas);	/* 0x154F6C */
+.global EXPORT_SYMBOL(scanner_arrow_mode);	/* 0x155308 */
 
 .global EXPORT_SYMBOL(target_old_frameno);	/* 0x176CB8 */
 .global EXPORT_SYMBOL(mouse_over_unkn2_tng);	/* 0x176CC8 */
@@ -128535,8 +128536,6 @@ GLOBAL (turn_last)	/* 0x155300 */
 		.ascii  "\xe7\x03\x00\x00"
 rand_c:	/* 0x155304 */
 		.ascii  "\x93\xa0\x69\x3f"
-GLOBAL (scanner_arrow_mode)	/* 0x155308 */
-		.ascii  "\x01\x00\x00\x00"
 		.align  4
 
 GLOBAL (scrollinfo_text)	/* 0x1553C8 */

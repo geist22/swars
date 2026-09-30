@@ -81,6 +81,8 @@ ushort SCANNER_base_zoom_factor = 180;
 ushort SCANNER_user_zoom_factor = 192;
 ubyte SCANNER_scale_dots = true;
 
+s32 scanner_arrow_mode = 1;
+
 /******************************************************************************/
 
 void SCANNER_set_zoom(int zoom)

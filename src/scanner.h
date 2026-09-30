@@ -106,7 +106,7 @@ extern ushort SCANNER_base_zoom_factor;
 extern ushort SCANNER_user_zoom_factor;
 extern ubyte SCANNER_scale_dots;
 extern u32 dword_1DB1A0;
-extern s32 scanner_arrow_mode; // = 1;
+extern s32 scanner_arrow_mode;
 
 void SCANNER_clear(void);
 void SCANNER_init(void);
