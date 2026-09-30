@@ -69,6 +69,7 @@
 .global EXPORT_SYMBOL(door_anim_page);	/* 0x153914 */
 .global EXPORT_SYMBOL(burning_timer_delatas);	/* 0x154F6C */
 .global EXPORT_SYMBOL(scanner_arrow_mode);	/* 0x155308 */
+.global EXPORT_SYMBOL(proj_origin);	/* 0x1553D0 */
 
 .global EXPORT_SYMBOL(target_old_frameno);	/* 0x176CB8 */
 .global EXPORT_SYMBOL(mouse_over_unkn2_tng);	/* 0x176CC8 */
@@ -128540,12 +128541,6 @@ rand_c:	/* 0x155304 */
 
 GLOBAL (scrollinfo_text)	/* 0x1553C8 */
 		.long   aNoObjective
-
-/* struct ScreenPoint proj_origin;
- */
-GLOBAL (proj_origin)	/* 0x1553D0 */
-		.ascii  "\x3f\x01\x0d\x01"
-		.long	0x0
 
 rand_d:	/* 0x1554F4 */
 		.ascii  "\x93\xa0\x69\x3f"

@@ -37,6 +37,8 @@
 #include "swlog.h"
 /******************************************************************************/
 
+struct ScreenPoint proj_origin = {319, 269};
+
 struct PurpleDrawItem *purple_draw_list = NULL;
 ushort purple_draw_index = 0;
 
