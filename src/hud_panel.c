@@ -20,7 +20,6 @@
 
 #include <assert.h>
 #include "bfanywnd.h"
-#include "bfbox.h"
 #include "bffont.h"
 #include "bfgentab.h"
 #include "bfline.h"
@@ -33,6 +32,7 @@
 #include "bfutility.h"
 #include "ssampply.h"
 
+#include "app_sprite.h"
 #include "engincam.h"
 #include "engincolour.h"
 #include "enginpeff.h"
@@ -41,7 +41,6 @@
 #include "render_gpoly.h"
 #include "huddrwlstm.h"
 
-#include "app_sprite.h"
 #include "engintext.h"
 #include "bigmap.h"
 #include "engintrns.h"
@@ -887,16 +886,24 @@ void draw_new_panel_sprite_scaled_dark(int px, int py, ulong spr_id, int dest_wi
 void draw_new_panel_sprite_prealp(int px, int py, ulong spr_id)
 {
     struct TbSprite *p_spr;
+    ushort drwflags;
+    short brig;
 
     p_spr = &pop1_sprites[spr_id];
-    low_trans_grey_brightness = ingame.Scanner.Brightness;
 
     if (ingame.PanelPermutation == -1) {
-        lbDisplay.DrawFlags |= Lb_SPRITE_TRANSPAR4;
-        ApSpriteDrawLowTransGreyRemap(px, py, p_spr,
-          &pixmap.fade_table[0 * PALETTE_8b_COLORS]);
-        lbDisplay.DrawFlags &= ~Lb_SPRITE_TRANSPAR4;
+        brig = ingame.Scanner.Brightness;
+        drwflags = Lb_SPRITE_TRANSPAR4;
+    } else {
+        // not sure why the sprite is not drawn at all here
+        return;
     }
+
+    lbDisplay.DrawFlags |= drwflags;
+
+    enlist_hud_draw_sprite(px, py, p_spr, brig);
+
+    lbDisplay.DrawFlags &= ~drwflags;
 }
 
 /**
@@ -909,12 +916,13 @@ void draw_new_panel_sprite_prealp(int px, int py, ulong spr_id)
 void draw_fourpack_amount(short x, ushort y, ushort amount)
 {
     int i;
-    TbPixel col;
+    TbPixel colour;
 
+    // TODO make configurable via panel config file
     if (ingame.PanelPermutation == -3)
-        col = 26;
+        colour = 26;
     else
-        col = 247;
+        colour = 247;
 
     for (i = 0; i < min(amount,8); i++)
     {
@@ -923,7 +931,7 @@ void draw_fourpack_amount(short x, ushort y, ushort amount)
 
         p_shift = &game_panel_shifts[PaSh_WEP_FOURPACK_SLOTS + i];
         p_size = &game_panel_shifts[PaSh_WEP_FOURPACK_SIZE];
-        LbDrawBox(x + p_shift->x, y + p_shift->y, p_size->x, p_size->y, col);
+        enlist_hud_draw_box(x + p_shift->x, y + p_shift->y, p_size->x, p_size->y, colour);
     }
 }
 
@@ -977,17 +985,19 @@ TbBool draw_panel_pickable_thing_below_agent(struct Thing *p_agent)
         short x, y;
         ushort spr;
 
+        spr = 12;
         {
             struct TbSprite *p_spr;
 
-            p_spr = &pop1_sprites[12];
+            p_spr = &pop1_sprites[spr];
             x = lbDisplay.GraphicsScreenWidth - 8 * pop1_sprites_scale - p_spr->SWidth;
             y = lbDisplay.GraphicsScreenHeight - 8 * pop1_sprites_scale - p_spr->SHeight;
         }
         lbDisplay.DrawFlags = 0;
         wtype = p_pickup->U.UWeapon.WeaponType;
 
-        draw_new_panel_sprite_std(x, y, 12);
+        draw_new_panel_sprite_std(x, y, spr);
+
         if (wtype)
             spr = weapon_sprite_index(wtype, false);
         else
@@ -1022,17 +1032,19 @@ TbBool draw_panel_pickable_thing_player_targeted(PlayerInfo *p_locplayer)
         short x, y;
         ushort spr;
 
+        spr = 12;
         {
             struct TbSprite *p_spr;
 
-            p_spr = &pop1_sprites[12];
+            p_spr = &pop1_sprites[spr];
             x = lbDisplay.GraphicsScreenWidth - 8 * pop1_sprites_scale - p_spr->SWidth;
             y = lbDisplay.GraphicsScreenHeight - 8 * pop1_sprites_scale - p_spr->SHeight;
         }
         lbDisplay.DrawFlags = 0;
         wtype = p_pickup->U.UWeapon.WeaponType;
 
-        draw_new_panel_sprite_std(x, y, 12);
+        draw_new_panel_sprite_std(x, y, spr);
+
         if (wtype)
             spr = weapon_sprite_index(wtype, false);
         else
@@ -1145,7 +1157,8 @@ void draw_agent_carried_weapon(PlayerIdx plyr, ushort plagent, short slot, TbBoo
     draw_fourpack_items(x, y, plagent, wtype);
 }
 
-void draw_agent_current_weapon(PlayerIdx plyr, ushort plagent, short slot, TbBool darkened, TbBool ready, WeaponType wtype, short cx, short cy)
+void draw_agent_current_weapon(PlayerIdx plyr, ushort plagent, short slot, TbBool darkened,
+  TbBool ready, WeaponType wtype, short cx, short cy)
 {
     TbBool wep_highlight;
     TbBool recharging;
@@ -1179,7 +1192,8 @@ void draw_agent_current_weapon(PlayerIdx plyr, ushort plagent, short slot, TbBoo
     draw_fourpack_items(x, y, plagent, wtype);
 }
 
-void draw_agent_carried_weapon_prealp_list(PlayerIdx plyr, ushort plagent, short slot, TbBool ready, WeaponType wtype, short cx, short cy)
+void draw_agent_carried_weapon_prealp_list(PlayerIdx plyr, ushort plagent, short slot,
+  TbBool ready, WeaponType wtype, short cx, short cy)
 {
     TbBool wep_highlight;
     TbBool recharging;
@@ -1710,20 +1724,20 @@ void draw_agent_grouping_bars(short panel)
     }
 }
 
-void func_702c0(int a1, int a2, int a3, int a4, int a5, ubyte a6)
+void func_702c0(int cor_x, int cor_y, int cor_z, int width, int height, TbPixel colour)
 {
     // Pushed through a register holding them: a "g" operand may be placed
     // relative to the stack pointer, which each push moves.
     int stkargs[2];
 
-    stkargs[0] = (int)(intptr_t)a5;
-    stkargs[1] = (int)(intptr_t)a6;
+    stkargs[0] = (int)(intptr_t)height;
+    stkargs[1] = (int)(intptr_t)colour;
 
     asm volatile (
       "push 4(%4)\n"
       "push 0(%4)\n"
       "call ASM_func_702c0\n"
-        : : "a" (a1), "d" (a2), "b" (a3), "c" (a4), "S" (stkargs)
+        : : "a" (cor_x), "d" (cor_y), "b" (cor_z), "c" (width), "S" (stkargs)
         : "cc", "memory");
 }
 

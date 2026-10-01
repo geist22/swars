@@ -32,6 +32,8 @@ extern "C" {
 #pragma pack()
 /******************************************************************************/
 
+void enlist_hud_draw_box(short px, short py, short width, short height, TbPixel colour);
+
 void enlist_hud_draw_sprite(short px, short py, struct TbSprite *p_spr, short brig);
 
 void enlist_hud_draw_sprite_scaled(short px, short py, struct TbSprite *p_spr,

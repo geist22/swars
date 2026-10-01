@@ -18,6 +18,7 @@
 /******************************************************************************/
 #include "huddrwlstm.h"
 
+#include "bfbox.h"
 #include "bfscreen.h"
 #include "bfsprite.h"
 #include "bfgentab.h"
@@ -31,6 +32,12 @@
 
 #pragma pack()
 /******************************************************************************/
+
+void enlist_hud_draw_box(short px, short py, short width, short height, TbPixel colour)
+{
+    //TODO enlist instead of drawing directly
+    LbDrawBox(px, py, width, height, colour);
+}
 
 void enlist_hud_draw_sprite(short px, short py, struct TbSprite *p_spr, short brig)
 {
