@@ -29,6 +29,7 @@ libswrender_a_headers_src = \
   include/engintxtrmap.h \
   include/enginzoom.h \
   include/frame_sprani.h \
+  include/holodrwlstx.h \
   include/privrdlog.h \
   include/render_gpoly.h
 
@@ -68,6 +69,7 @@ libswrender_a_SOURCES = \
   src/engintxtrmap.c \
   src/enginzoom.c \
   src/frame_sprani.c \
+  src/holodrwlstx.c \
   src/render_gpoly.c
 
 libswrender_a_CPPFLAGS = \
