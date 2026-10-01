@@ -39,6 +39,7 @@
 #include "enginprops.h"
 #include "engintxtrmap.h"
 #include "render_gpoly.h"
+#include "huddrwlstm.h"
 
 #include "app_sprite.h"
 #include "engintext.h"
@@ -756,19 +757,31 @@ TbBool check_scanner_input(void)
 void draw_new_panel_sprite_std(int px, int py, ulong spr_id)
 {
     struct TbSprite *p_spr;
+    ushort drwflags;
+    short brig;
 
     p_spr = &pop1_sprites[spr_id];
-    low_trans_grey_brightness = ingame.Scanner.Brightness;
 
     if (ingame.PanelPermutation == -1) {
-        lbDisplay.DrawFlags |= Lb_SPRITE_TRANSPAR4;
-        ApSpriteDrawLowTransGreyRemap(px, py, p_spr,
-          &pixmap.fade_table[0 * PALETTE_8b_COLORS]);
-        lbDisplay.DrawFlags &= ~Lb_SPRITE_TRANSPAR4;
+        brig = ingame.Scanner.Brightness;
+        drwflags = Lb_SPRITE_TRANSPAR4;
     } else {
-        // We do not want to scale brightness of non-transparent panels - using a standard function
-        LbSpriteDraw(px, py, p_spr);
+#if 0 // TODO maybe a cmdline option to change panel bringness with scanner?
+        if (ingame.Scanner.Brightness >= 8)
+            brig = 28 + ingame.Scanner.Brightness / 2;
+        else
+            brig = 16 + 2 * ingame.Scanner.Brightness;
+#else
+        brig = 32;
+#endif
+        drwflags = 0;
     }
+
+    lbDisplay.DrawFlags |= drwflags;
+
+    enlist_hud_draw_sprite(px, py, p_spr, brig);
+
+    lbDisplay.DrawFlags &= ~drwflags;
 }
 
 /**
@@ -780,18 +793,31 @@ void draw_new_panel_sprite_std(int px, int py, ulong spr_id)
 void draw_new_panel_sprite_scaled_std(int px, int py, ulong spr_id, int dest_width, int dest_height)
 {
     struct TbSprite *p_spr;
+    ushort drwflags;
+    short brig;
 
     p_spr = &pop1_sprites[spr_id];
-    low_trans_grey_brightness = ingame.Scanner.Brightness;
 
     if (ingame.PanelPermutation == -1) {
-        lbDisplay.DrawFlags |= Lb_SPRITE_TRANSPAR4;
-        ApSpriteDrawScaledLowTransGreyRemap(px, py, p_spr, dest_width, dest_height,
-          &pixmap.fade_table[0 * PALETTE_8b_COLORS]);
-        lbDisplay.DrawFlags &= ~Lb_SPRITE_TRANSPAR4;
+        brig = ingame.Scanner.Brightness;
+        drwflags = Lb_SPRITE_TRANSPAR4;
     } else {
-        LbSpriteDrawScaled(px, py, p_spr, dest_width, dest_height);
+#if 0 // TODO maybe a cmdline option to change panel bringness with scanner?
+        if (ingame.Scanner.Brightness >= 8)
+            brig = 28 + ingame.Scanner.Brightness / 2;
+        else
+            brig = 16 + 2 * ingame.Scanner.Brightness;
+#else
+        brig = 32;
+#endif
+        drwflags = 0;
     }
+
+    lbDisplay.DrawFlags |= drwflags;
+
+    enlist_hud_draw_sprite_scaled(px, py, p_spr, dest_width, dest_height, brig);
+
+    lbDisplay.DrawFlags &= ~drwflags;
 }
 
 /**
@@ -803,18 +829,24 @@ void draw_new_panel_sprite_scaled_std(int px, int py, ulong spr_id, int dest_wid
 void draw_new_panel_sprite_dark(int px, int py, ulong spr_id)
 {
     struct TbSprite *p_spr;
+    ushort drwflags;
+    short brig;
 
     p_spr = &pop1_sprites[spr_id];
-    low_trans_grey_brightness = 8;
 
     if (ingame.PanelPermutation == -1) {
-        lbDisplay.DrawFlags |= Lb_SPRITE_TRANSPAR4;
-        ApSpriteDrawLowTransGreyRemap(px, py, p_spr,
-          &pixmap.fade_table[0 * PALETTE_8b_COLORS]);
-        lbDisplay.DrawFlags &= ~Lb_SPRITE_TRANSPAR4;
+        brig = 8;
+        drwflags = Lb_SPRITE_TRANSPAR4;
     } else {
-        LbSpriteDrawRemap(px, py, p_spr, &pixmap.fade_table[16 * PALETTE_8b_COLORS]);
+        brig = 16;
+        drwflags = 0;
     }
+
+    lbDisplay.DrawFlags |= drwflags;
+
+    enlist_hud_draw_sprite(px, py, p_spr, brig);
+
+    lbDisplay.DrawFlags &= ~drwflags;
 }
 
 /**
@@ -826,19 +858,24 @@ void draw_new_panel_sprite_dark(int px, int py, ulong spr_id)
 void draw_new_panel_sprite_scaled_dark(int px, int py, ulong spr_id, int dest_width, int dest_height)
 {
     struct TbSprite *p_spr;
+    ushort drwflags;
+    short brig;
 
     p_spr = &pop1_sprites[spr_id];
-    low_trans_grey_brightness = 8;
 
     if (ingame.PanelPermutation == -1) {
-        lbDisplay.DrawFlags |= Lb_SPRITE_TRANSPAR4;
-        ApSpriteDrawScaledLowTransGreyRemap(px, py, p_spr, dest_width, dest_height,
-          &pixmap.fade_table[0 * PALETTE_8b_COLORS]);
-        lbDisplay.DrawFlags &= ~Lb_SPRITE_TRANSPAR4;
+        brig = 8;
+        drwflags = Lb_SPRITE_TRANSPAR4;
     } else {
-        LbSpriteDrawScaledRemap(px, py, p_spr, dest_width, dest_height,
-          &pixmap.fade_table[16 * PALETTE_8b_COLORS]);
+        brig = 16;
+        drwflags = 0;
     }
+
+    lbDisplay.DrawFlags |= drwflags;
+
+    enlist_hud_draw_sprite_scaled(px, py, p_spr, dest_width, dest_height, brig);
+
+    lbDisplay.DrawFlags &= ~drwflags;
 }
 
 /**
