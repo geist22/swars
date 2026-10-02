@@ -33,6 +33,7 @@
 #include "ssampply.h"
 
 #include "app_sprite.h"
+#include "app_text_rc.h"
 #include "engincam.h"
 #include "engincolour.h"
 #include "enginpeff.h"
@@ -324,67 +325,36 @@ void SCANNER_unkn_func_203(int scr_x1, int scr_y1, int scr_x2, int scr_y2, ubyte
     }
 }
 
-int SCANNER_text_draw(const char *text, int start_x, int height)
+void SCANNER_text_draw(const char *text, int start_x, int height)
 {
-    const ubyte *str;
+    char loc_text[256];
     int x, y;
-    short fnt_height, height_base;
-    ubyte sel_c1;
+    short units_per_px;
+    TbPixel def_colour;
+
+    strncpy(loc_text, text, sizeof(loc_text)-1);
+    loc_text[sizeof(loc_text)-1] = '\0';
+    my_str_to_upper(loc_text);
 
     lbFontPtr = small_font;
-    fnt_height = my_char_height('A');
-     // detail 0 font has height equal 6
-    height_base = 9 * fnt_height / 6;
-    y = 0;
-    str = (const ubyte *)text;
-    sel_c1 = SCANNER_colour[ScnClr_Text];
-    x = start_x;
-    if (height != height_base)
     {
-        while (*str != '\0')
-        {
-            const struct TbSprite *p_spr;
-            int chr_width, chr_height;
-            ubyte ch;
-            TbPixel col;
-
-            if (*str == '\1') {
-              str++;
-              sel_c1 = *str;
-            } else {
-              ch = my_char_to_upper(*str);
-              col = pixmap.fade_table[56 * PALETTE_8b_COLORS + sel_c1];
-              p_spr = LbFontCharSprite(lbFontPtr, ch);
-              chr_width = p_spr->SWidth * height / height_base;
-              chr_height = p_spr->SHeight * height / height_base;
-              LbSpriteDrawScaledOneColour(x, y, p_spr, chr_width, chr_height, col);
-              x += chr_width;
-            }
-            str++;
-        }
+        short fnt_height, height_base;
+        fnt_height = my_char_height('A');
+        // detail 0 font has height equal 6
+        height_base = 9 * fnt_height / 6;
+        units_per_px = 16 * height / height_base;
+    }
+    y = 0;
+    def_colour = SCANNER_colour[ScnClr_Text];
+    x = start_x;
+    if (units_per_px != 16)
+    {
+        AppTextDrawLineRichWthPartsResized(x, y, units_per_px, def_colour, 56, text);
     }
     else
     {
-        while (*str != '\0')
-        {
-            const struct TbSprite *p_spr;
-            ubyte ch;
-            TbPixel col;
-
-            if (*str == '\1') {
-              str++;
-              sel_c1 = *str;
-            } else {
-              ch = my_char_to_upper(*str);
-              col = pixmap.fade_table[56 * PALETTE_8b_COLORS + sel_c1];
-              p_spr = LbFontCharSprite(lbFontPtr, ch);
-              LbSpriteDrawOneColour(x, y, p_spr, col);
-              x += p_spr->SWidth;
-            }
-            str++;
-        }
+        AppTextDrawLineRichWthParts(x, y, def_colour, 56, text);
     }
-    return x;
 }
 
 int SCANNER_text_width(const char *text, int height)

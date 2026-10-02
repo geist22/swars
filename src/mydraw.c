@@ -44,6 +44,14 @@ u32 my_str_len(const char *t)
     return strlen(t);
 }
 
+void my_str_to_upper(char *t)
+{
+    while (*t != '\0') {
+        *t = fontchrtoupper(*t);
+        t++;
+    }
+}
+
 int font_word_length(const char *text)
 {
     const ubyte *p;
