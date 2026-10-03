@@ -237,7 +237,7 @@ TbBool LbIAlignMethodSet(ushort fdflags)
     return false;
 }
 
-long LbTextStringPartWidth(const char *text, long part)
+int LbTextStringPartWidth(const char *text, int part)
 {
     const char *ebuf;
     long chr;
@@ -285,13 +285,65 @@ long LbTextStringPartWidth(const char *text, long part)
     return max_len;
 }
 
-long LbTextStringWidth(const char *text)
+int LbTextStringPartWidthResized(const char *text, int units_per_px, int part)
+{
+    const char *ebuf;
+    s32 chr;
+    int len;
+    int max_len;
+
+    if (lbFontPtr == NULL)
+        return 0;
+    max_len = 0;
+    len = 0;
+    for (ebuf = text; *ebuf != '\0'; ebuf++)
+    {
+        if (part <= 0) break;
+        part--;
+        chr = (ubyte)*ebuf;
+        if (is_wide_charcode(chr))
+        {
+            ebuf++;
+            if (*ebuf == '\0') break;
+            chr = (chr << 8) + (ubyte)*ebuf;
+        }
+        if (chr > 31)
+        {
+            len += LbTextCharWidth(chr) * units_per_px / 16;
+        } else
+        if (chr == '\r')
+        {
+            if (len > max_len)
+                max_len = len;
+            len = 0;
+        } else
+        if (chr == '\t')
+        {
+            len += lbSpacesPerTab * LbTextCharWidth(' ') * units_per_px / 16;
+        } else
+        if ((chr == 6) || (chr == 7) || (chr == 8) || (chr == 9) || (chr == 14))
+        {
+            ebuf++;
+            if (*ebuf == '\0')
+                break;
+        }
+    }
+    if (len > max_len)
+        max_len = len;
+    return max_len;
+}
+
+int LbTextStringWidth(const char *text)
 {
     return LbTextStringPartWidth(text, LONG_MAX);
 }
 
+int LbTextStringResized(const char *text, int units_per_px)
+{
+    return LbTextStringPartWidthResized(text, units_per_px, LONG_MAX);
+}
 
-long LbSprFontWordWidth(const struct TbSprite *font, const char *text)
+int LbSprFontWordWidth(const struct TbSprite *font, const char *text)
 {
     long len;
     const char *c;
@@ -308,12 +360,12 @@ long LbSprFontWordWidth(const struct TbSprite *font, const char *text)
     return len;
 }
 
-long LbTextWordWidth(const char *text)
+int LbTextWordWidth(const char *text)
 {
     return LbSprFontWordWidth(lbFontPtr, text);
 }
 
-long LbTextStringHeight(const char *text)
+int LbTextStringHeight(const char *text)
 {
     long i, h, lines;
     lines = 1;
