@@ -497,7 +497,6 @@ void SCANNER_map_line_sample_blend(void)
     u32 frac_x, frac_z;
     ubyte step_int_x, step_int_z;
     u32 step_frac_x, step_frac_z;
-    ubyte base_brig;
     TbPixel *p_out;
     s32 n, i;
 
@@ -510,27 +509,18 @@ void SCANNER_map_line_sample_blend(void)
     step_frac_z = SCANNER_hip_sh_x;
     step_int_x = SCANNER_lop_sh_y;
     step_int_z = SCANNER_lop_sh_x;
-    base_brig = SCANNER_brig;
+    low_trans_grey_brightness = SCANNER_brig;
 
     p_out = SCANNER_screenptr;
     n = SCANNER_ln_width;
 
     for (i = 0; i < n; i++)
     {
-        TbPixel col1, col2;
-        short k0, k1;
-        ubyte bri;
+        TbPixel col1;
         u32 new_frac;
 
-        col2 = SCANNER_data[tile_x][tile_z];
-        col1 = *p_out;
-
-        k1 = low_trans_grey_pal_bright[col2];
-        k0 = (low_trans_grey_pal_bright[col1] >> 1);
-        bri = base_brig + k0 + k1;
-        bri = low_trans_grey_bright_limit[bri];
-
-        *p_out = pixmap.fade_table[256 * bri + col2];
+        col1 = SCANNER_data[tile_x][tile_z];
+        *p_out = LbBlendPixelLowTrans4Remap(pixmap.fade_table, 0, 1, col1, *p_out);
         p_out++;
 
         new_frac = frac_x + step_frac_x;
@@ -575,28 +565,20 @@ void SCANNER_map_line_dim(void)
 {
     s32 cu_x, cu_y;
     TbPixel *p_out;
-    ubyte base_brig;
     s32 n, i;
 
     cu_x = SCANNER_scr_x;
     cu_y = SCANNER_scr_y;
     p_out = SCANNER_screenptr;
     n = SCANNER_ln_width;
-    base_brig = SCANNER_brig;
+    low_trans_grey_brightness = SCANNER_brig;
 
     for (i = 0; i < n; i++)
     {
-        TbPixel col1, col2;
-        short k0;
-        ubyte bri;
+        TbPixel col1;
 
-        col1 = *p_out;
-        col2 = 0x49;
-
-        k0 = (low_trans_grey_pal_bright[col1] >> 1);
-        bri = base_brig + k0;
-        // this dims the pixel so much, no need for low_trans_grey_bright_limit[bri]
-        *p_out = pixmap.fade_table[256 * bri + col2];
+        col1 = 0x49;
+        *p_out = LbBlendPixelLowTrans4Remap(pixmap.fade_table, 4, 1, col1, *p_out);
         p_out++;
 
         cu_x += SCANNER_nrp_sh_y;
@@ -658,21 +640,18 @@ static void SCANNER_map_line_dim_while_oob(ushort flags2)
 {
     s32 cu_x, cu_y;
     TbPixel *p_out;
-    ubyte base_brig;
     s32 n;
 
     cu_x = SCANNER_scr_x;
     cu_y = SCANNER_scr_y;
     p_out = SCANNER_screenptr;
     n = SCANNER_ln_width;
-    base_brig = SCANNER_brig;
+    low_trans_grey_brightness = SCANNER_brig;
 
     while (n > 0)
     {
-        TbPixel col1, col2;
+        TbPixel col1;
         TbBool oob;
-        short k0;
-        ubyte bri;
 
         oob = true;
         if ((flags2 & 0x01) != 0)
@@ -687,13 +666,8 @@ static void SCANNER_map_line_dim_while_oob(ushort flags2)
         if (!oob)
             break;
 
-        col1 = *p_out;
-        col2 = 0x49;
-
-        k0 = (low_trans_grey_pal_bright[col1] >> 1);
-        bri = base_brig + k0;
-        // this dims the pixel so much, no need for low_trans_grey_bright_limit[bri]
-        *p_out = pixmap.fade_table[256 * bri + col2];
+        col1 = 0x49;
+        *p_out = LbBlendPixelLowTrans4Remap(pixmap.fade_table, 4, 1, col1, *p_out);
         p_out++;
 
         cu_x += SCANNER_nrp_sh_y;

@@ -289,7 +289,7 @@ void SCANNER_unkn_func_203(int scr_x1, int scr_y1, int scr_x2, int scr_y2, ubyte
         o = &lbDisplay.WScreen[scr_y1 * lbDisplay.PhysicalScreenWidth + x1];
         for (i = 0; i <= x2 - x1; i++)
         {
-            *o = LbBlendPixelLowTrans4Remap(pixmap.fade_table, col1, *o);
+            *o = LbBlendPixelLowTrans4Remap(pixmap.fade_table, 1, 1, col1, *o);
             o++;
         }
     }
@@ -309,7 +309,7 @@ void SCANNER_unkn_func_203(int scr_x1, int scr_y1, int scr_x2, int scr_y2, ubyte
         o = &lbDisplay.WScreen[y1 * lbDisplay.PhysicalScreenWidth + scr_x1];
         for (i = 0; i <= y2 - y1; i++)
         {
-            *o = LbBlendPixelLowTrans4Remap(pixmap.fade_table, col1, *o);
+            *o = LbBlendPixelLowTrans4Remap(pixmap.fade_table, 1, 1, col1, *o);
             o += lbDisplay.PhysicalScreenWidth;
         }
     }

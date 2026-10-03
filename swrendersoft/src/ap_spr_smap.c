@@ -115,7 +115,7 @@ TbResult ApSpriteDrawLTGreyRemapUsingScalingUpDataTrans1RL(uchar *outbuf, int sc
                                 col1 = *sprdata;
                                 for (;xdup > 0; xdup--)
                                 {
-                                    *out_end = LbBlendPixelLowTrans4Remap(transmap, col1, *out_end);
+                                    *out_end = LbBlendPixelLowTrans4Remap(transmap, 1, 1, col1, *out_end);
                                     out_end--;
                                 }
                                 // App-specific code ends
@@ -224,7 +224,7 @@ TbResult ApSpriteDrawLTGreyRemapUsingScalingUpDataTrans1LR(uchar *outbuf, int sc
                                 col1 = *sprdata;
                                 for (;xdup > 0; xdup--)
                                 {
-                                    *out_end = LbBlendPixelLowTrans4Remap(transmap, col1, *out_end);
+                                    *out_end = LbBlendPixelLowTrans4Remap(transmap, 1, 1, col1, *out_end);
                                     out_end++;
                                 }
                                 // App-specific code ends
@@ -333,7 +333,7 @@ TbResult ApSpriteDrawLTGreyRemapUsingScalingUpDataTrans2RL(uchar *outbuf, int sc
                                 col1 = *sprdata;
                                 for (;xdup > 0; xdup--)
                                 {
-                                    *out_end = LbBlendPixelLowTrans8Remap(transmap, col1, *out_end);
+                                    *out_end = LbBlendPixelLowTrans8Remap(transmap, 1, 1, col1, *out_end);
                                     out_end--;
                                 }
                                 // App-specific code ends
@@ -442,7 +442,7 @@ TbResult ApSpriteDrawLTGreyRemapUsingScalingUpDataTrans2LR(uchar *outbuf, int sc
                                 col1 = *sprdata;
                                 for (;xdup > 0; xdup--)
                                 {
-                                    *out_end = LbBlendPixelLowTrans8Remap(transmap, col1, *out_end);
+                                    *out_end = LbBlendPixelLowTrans8Remap(transmap, 1, 1, col1, *out_end);
                                     out_end++;
                                 }
                                 // App-specific code ends
@@ -538,7 +538,7 @@ TbResult ApSpriteDrawLTGreyRemapUsingScalingDownDataTrans1RL(uchar *outbuf, int 
 
                             col1 = *sprdata;
                             {
-                                *out_end = LbBlendPixelLowTrans4Remap(transmap, col1, *out_end);
+                                *out_end = LbBlendPixelLowTrans4Remap(transmap, 1, 1, col1, *out_end);
                                 out_end--;
                             }
                             // App-specific code ends
@@ -632,7 +632,7 @@ TbResult ApSpriteDrawLTGreyRemapUsingScalingDownDataTrans1LR(uchar *outbuf, int 
 
                             col1 = *sprdata;
                             {
-                                *out_end = LbBlendPixelLowTrans4Remap(transmap, col1, *out_end);
+                                *out_end = LbBlendPixelLowTrans4Remap(transmap, 1, 1, col1, *out_end);
                                 out_end++;
                             }
                             // App-specific code ends
@@ -726,7 +726,7 @@ TbResult ApSpriteDrawLTGreyRemapUsingScalingDownDataTrans2RL(uchar *outbuf, int 
 
                             col1 = *sprdata;
                             {
-                                *out_end = LbBlendPixelLowTrans8Remap(transmap, col1, *out_end);
+                                *out_end = LbBlendPixelLowTrans8Remap(transmap, 1, 1, col1, *out_end);
                                 out_end--;
                             }
                             // App-specific code ends
@@ -820,7 +820,7 @@ TbResult ApSpriteDrawLTGreyRemapUsingScalingDownDataTrans2LR(uchar *outbuf, int 
 
                             col1 = *sprdata;
                             {
-                                *out_end = LbBlendPixelLowTrans8Remap(transmap, col1, *out_end);
+                                *out_end = LbBlendPixelLowTrans8Remap(transmap, 1, 1, col1, *out_end);
                                 out_end++;
                             }
                             // App-specific code ends

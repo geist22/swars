@@ -56,7 +56,7 @@ static inline void LbDrawBufferTrRemap(unsigned char **buf_out, const char *buf_
 
             col1 = *(const ubyte *)buf_inp;
             col2 = **buf_out;
-            **buf_out = LbBlendPixelLowTrans4Remap(transmap, col1, col2);
+            **buf_out = LbBlendPixelLowTrans4Remap(transmap, 1, 1, col1, col2);
             // App-specific code ends
             buf_inp++;
             (*buf_out)--;
@@ -70,7 +70,7 @@ static inline void LbDrawBufferTrRemap(unsigned char **buf_out, const char *buf_
 
             col1 = *(const ubyte *)buf_inp;
             col2 = **buf_out;
-            **buf_out = LbBlendPixelLowTrans8Remap(transmap, col1, col2);
+            **buf_out = LbBlendPixelLowTrans8Remap(transmap, 1, 1, col1, col2);
             // App-specific code ends
             buf_inp++;
             (*buf_out)--;
@@ -87,7 +87,7 @@ static inline void LbDrawBufferTrRemap(unsigned char **buf_out, const char *buf_
 
             col1 = *(const ubyte *)buf_inp;
             col2 = **buf_out;
-            **buf_out = LbBlendPixelLowTrans4Remap(transmap, col1, col2);
+            **buf_out = LbBlendPixelLowTrans4Remap(transmap, 1, 1, col1, col2);
             // App-specific code ends
             buf_inp++;
             (*buf_out)++;
@@ -101,7 +101,7 @@ static inline void LbDrawBufferTrRemap(unsigned char **buf_out, const char *buf_
 
             col1 = *(const ubyte *)buf_inp;
             col2 = **buf_out;
-            **buf_out = LbBlendPixelLowTrans8Remap(transmap, col1, col2);
+            **buf_out = LbBlendPixelLowTrans8Remap(transmap, 1, 1, col1, col2);
             // App-specific code ends
             buf_inp++;
             (*buf_out)++;
