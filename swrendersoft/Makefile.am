@@ -4,6 +4,7 @@ lib_LIBRARIES = libswrender.a
 
 libswrender_a_headers_src = \
   include/app_gentab.h \
+  include/app_line.h \
   include/app_sprite.h \
   include/app_text_ba.h \
   include/app_text_cw.h \
@@ -43,6 +44,7 @@ libswrender_a_SOURCES = \
   src/ap_gspr_map.c \
   src/ap_spr_smap.c \
   src/app_gengh.c \
+  src/app_hvline_lt.c \
   src/app_spr_init.c \
   src/app_text_ba.c \
   src/app_text_cw.c \
