@@ -101983,7 +101983,7 @@ SCANNER_draw_new_transparent_sub9:	/* 0xAFAF3 */
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC(ASM_SCANNER_unkn_func_203)	/* 0x0B00E8 */
+GLOBAL_FUNC(ASM_SCANNER_draw_hv_line)	/* 0x0B00E8 */
 /*----------------------------------------------------------------*/
 		push   %esi
 		push   %edi

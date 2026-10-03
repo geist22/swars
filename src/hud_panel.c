@@ -32,6 +32,7 @@
 #include "bfutility.h"
 #include "ssampply.h"
 
+#include "app_line.h"
 #include "app_sprite.h"
 #include "app_text_ba.h"
 #include "engincam.h"
@@ -261,58 +262,20 @@ void init_scanner(void)
     SCANNER_init();
 }
 
-void SCANNER_unkn_func_203(int scr_x1, int scr_y1, int scr_x2, int scr_y2, ubyte col1, int a6, int brig)
+void SCANNER_draw_hv_line(int scr_x1, int scr_y1, int scr_x2, int scr_y2, ubyte col1, int a6, int brig)
 {
 #if 0
     asm volatile (
       "push %6\n"
       "push %5\n"
       "push %4\n"
-      "call ASM_SCANNER_unkn_func_203\n"
+      "call ASM_SCANNER_draw_hv_line\n"
         : : "a" (scr_x1), "d" (scr_y1), "b" (scr_x2), "c" (scr_y2), "g" (col1), "g" (a6), "g" (base_bri));
 #endif
-    ubyte *o;
 
-    if (scr_y1 == scr_y2)
-    {
-        int x1, x2;
-        int i;
-
-        if (scr_x2 < scr_x1) {
-            x1 = scr_x2;
-            x2 = scr_x1;
-        } else {
-            x1 = scr_x1;
-            x2 = scr_x2;
-        }
-        low_trans_grey_brightness = brig;
-        o = &lbDisplay.WScreen[scr_y1 * lbDisplay.PhysicalScreenWidth + x1];
-        for (i = 0; i <= x2 - x1; i++)
-        {
-            *o = LbBlendPixelLowTrans4Remap(pixmap.fade_table, 1, 1, col1, *o);
-            o++;
-        }
-    }
-    else
-    {
-        int y1, y2;
-        int i;
-
-        if (scr_y2 < scr_y1) {
-            y1 = scr_y2;
-            y2 = scr_y1;
-        } else {
-            y1 = scr_y1;
-            y2 = scr_y2;
-        }
-        low_trans_grey_brightness = brig;
-        o = &lbDisplay.WScreen[y1 * lbDisplay.PhysicalScreenWidth + scr_x1];
-        for (i = 0; i <= y2 - y1; i++)
-        {
-            *o = LbBlendPixelLowTrans4Remap(pixmap.fade_table, 1, 1, col1, *o);
-            o += lbDisplay.PhysicalScreenWidth;
-        }
-    }
+    lbDisplay.DrawFlags = Lb_SPRITE_TRANSPAR4;
+    low_trans_grey_brightness = brig;
+    LbDrawHVLineLowTransGrey(scr_x1, scr_y1, scr_x2, scr_y2, col1);
 }
 
 void SCANNER_text_draw(const char *text, int shift_x, int height)
@@ -506,7 +469,7 @@ static void draw_objective_info_background(int scr_x, int scr_y, int width, int 
     y = scr_y;
     for (i = 0; i < height; i++)
     {
-        SCANNER_unkn_func_203(scr_x, y, scr_x + width - 1, y, SCANNER_colour[ScnClr_Text],
+        SCANNER_draw_hv_line(scr_x, y, scr_x + width - 1, y, SCANNER_colour[ScnClr_Text],
           ingame.Scanner.Brightness, ingame.Scanner.Contrast);
         ++y;
     }
@@ -1748,7 +1711,7 @@ void draw_wep_energy_level(short x, short y, ushort w, ushort h, short lv, ushor
 
         cy1 = h + cy;
         cy2 = h + cy - ch;
-        SCANNER_unkn_func_203(cx, cy1, cx, cy2, col,
+        SCANNER_draw_hv_line(cx, cy1, cx, cy2, col,
             ingame.Scanner.Contrast, ingame.Scanner.Brightness);
         ++cx;
         ++cy;
@@ -1776,7 +1739,7 @@ void draw_mood_level(short x, short y, ushort w, int h, short value)
 
     for (i = h; i > 0; i--)
     {
-        SCANNER_unkn_func_203(x1, y1, x2, y1,
+        SCANNER_draw_hv_line(x1, y1, x2, y1,
             col, ingame.Scanner.Contrast, ingame.Scanner.Brightness);
         x1--;
         x2--;
