@@ -88,6 +88,31 @@ TbBool LbIApplyControlCharToDrawSettings(const char **c)
     return true;
 }
 
+TbBool LbIApplyControlCharToAlignSettings(const char **c)
+{
+    ubyte chr;
+
+    chr = (ubyte)(**c);
+    switch (chr)
+    {
+      case 6:
+        lbDisplay.DrawFlags ^= Lb_TEXT_HALIGN_LEFT;
+        break;
+      case 7:
+        lbDisplay.DrawFlags ^= Lb_TEXT_HALIGN_RIGHT;
+        break;
+      case 8:
+        lbDisplay.DrawFlags ^= Lb_TEXT_HALIGN_CENTER;
+        break;
+      case 9:
+        lbDisplay.DrawFlags ^= Lb_TEXT_HALIGN_JUSTIFY;
+        break;
+      default:
+        return false;
+    }
+    return true;
+}
+
 /** @internal
  * Puts simple text sprites on screen.
  * @param sbuf
@@ -526,21 +551,7 @@ TbBool LbTextDrawResized(int posx, int posy, int units_per_px, const char *text)
               count = 0;
               starty += h;
             }
-            switch (*ebuf)
-            {
-            case 6:
-              lbDisplay.DrawFlags ^= Lb_TEXT_HALIGN_LEFT;
-              break;
-            case 7:
-              lbDisplay.DrawFlags ^= Lb_TEXT_HALIGN_RIGHT;
-              break;
-            case 8:
-              lbDisplay.DrawFlags ^= Lb_TEXT_HALIGN_CENTER;
-              break;
-            case 9:
-              lbDisplay.DrawFlags ^= Lb_TEXT_HALIGN_JUSTIFY;
-              break;
-            }
+            LbIApplyControlCharToAlignSettings(&ebuf);
         } else
 
         if (chr == 14)
