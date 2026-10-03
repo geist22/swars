@@ -330,7 +330,30 @@ void SCANNER_text_draw(const char *text, int start_x, int height)
     char loc_text[256];
     int x, y;
     short units_per_px;
-    TbPixel def_colour;
+
+    strncpy(loc_text, text, sizeof(loc_text)-1);
+    loc_text[sizeof(loc_text)-1] = '\0';
+    my_str_to_upper(loc_text);
+
+    lbFontPtr = small_font;
+    lbDisplay.DrawColour = SCANNER_colour[ScnClr_Text];
+    lbDisplay.DrawFlags = Lb_TEXT_ONE_COLOR;
+    {
+        short fnt_height, height_base;
+        fnt_height = my_char_height('A');
+        // detail 0 font has height equal 6
+        height_base = 9 * fnt_height / 6;
+        units_per_px = 16 * height / height_base;
+    }
+    y = 0;
+    x = start_x;
+    AppTextDrawLineBrigAdjWthPartsResized(x, y, units_per_px, 56, text);
+}
+
+int SCANNER_text_width(const char *text, int height)
+{
+    char loc_text[256];
+    short units_per_px;
 
     strncpy(loc_text, text, sizeof(loc_text)-1);
     loc_text[sizeof(loc_text)-1] = '\0';
@@ -344,49 +367,8 @@ void SCANNER_text_draw(const char *text, int start_x, int height)
         height_base = 9 * fnt_height / 6;
         units_per_px = 16 * height / height_base;
     }
-    y = 0;
-    def_colour = SCANNER_colour[ScnClr_Text];
-    x = start_x;
-    if (units_per_px != 16)
-    {
-        AppTextDrawLineBrigAdjWthPartsResized(x, y, units_per_px, def_colour, 56, text);
-    }
-    else
-    {
-        AppTextDrawLineBrigAdjWthParts(x, y, def_colour, 56, text);
-    }
-}
 
-int SCANNER_text_width(const char *text, int height)
-{
-    const ubyte *str;
-    int x;
-    short fnt_height, height_base;
-
-    lbFontPtr = small_font;
-    fnt_height = my_char_height('A');
-    height_base = 9 * fnt_height / 6;
-    str = (const ubyte *)text;
-    x = 0;
-    {
-        while (*str != '\0')
-        {
-            const struct TbSprite *p_spr;
-            int chr_width;
-            ubyte ch;
-
-            if (*str == '\1') {
-              str++;
-            } else {
-              ch = my_char_to_upper(*str);
-              p_spr = LbFontCharSprite(lbFontPtr, ch);
-              chr_width = p_spr->SWidth * height / height_base;
-              x += chr_width;
-            }
-            str++;
-        }
-    }
-    return x;
+    return LbTextStringWidthResized(text, units_per_px);
 }
 
 short panel_state_to_player_agent(ushort panstate)

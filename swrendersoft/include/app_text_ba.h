@@ -37,13 +37,12 @@ extern "C" {
  *
  * @param posx Position of the text, X coord. Can be negative.
  * @param posy Position of the text, Y coord.
- * @param def_colour Default colour, before a tag in text changes it.
- * @param bri Brightness of the colours drawn.
+ * @param brig Brightness of the colours drawn.
  * @param text The text to be drawn.
  * @return
  */
 TbBool AppTextDrawLineBrigAdjWthParts(int posx, int posy,
-  TbPixel def_colour, ubyte bri, const char *text);
+  short brig, const char *text);
 
 /**
  * Draws a string in the current text window in given scale.
@@ -56,13 +55,12 @@ TbBool AppTextDrawLineBrigAdjWthParts(int posx, int posy,
  * @param posx Position of the text, X coord.
  * @param posy Position of the text, Y coord.
  * @param units_per_px Scale in pixels; 16 is 100%.
- * @param def_colour Default colour, before a tag in text changes it.
- * @param bri Brightness of the colours drawn.
+ * @param brig Brightness of the colours drawn.
  * @param text The text to be drawn.
  * @return
  */
 TbBool AppTextDrawLineBrigAdjWthPartsResized(int posx, int posy,
-  int units_per_px, TbPixel def_colour, ubyte bri, const char *text);
+  int units_per_px, short brig, const char *text);
 
 #ifdef __cplusplus
 };

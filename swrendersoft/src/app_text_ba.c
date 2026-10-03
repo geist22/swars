@@ -18,6 +18,7 @@
  */
 /******************************************************************************/
 #include <stdio.h>
+#include <string.h>
 #include <limits.h>
 #include "bftext.h"
 
@@ -210,80 +211,26 @@ void put_down_ba_sprites(const char *sbuf, const char *ebuf,
     }
 }
 
-TbBool AppTextDrawLineBrigAdjWthParts(int posx, int posy,
-  TbPixel def_colour, ubyte bri, const char *text)
+TbBool AppTextDrawLineBrigAdjWthPartsResized(int posx, int posy,
+  int units_per_px, short brig, const char *text)
 {
-    const ubyte *str;
-    int x, y;
-    TbPixel sel_c1;
+    const char *text_end;
+    int len;
 
     if ((lbFontPtr == NULL) || (text == NULL))
         return true;
 
-    y = posy;
-    x = posx;
-    str = (const ubyte *)text;
-    sel_c1 = def_colour;
-
-    while (*str != '\0')
-    {
-        const struct TbSprite *p_spr;
-        ubyte ch;
-        TbPixel col;
-
-        if (*str == '\1') {
-          str++;
-          sel_c1 = *str;
-        } else {
-          ch = *str;
-          col = pixmap.fade_table[bri * PALETTE_8b_COLORS + sel_c1];
-          p_spr = LbFontCharSprite(lbFontPtr, ch);
-          LbSpriteDrawOneColour(x, y, p_spr, col);
-          x += p_spr->SWidth;
-        }
-        str++;
-    }
+    text_end = text + strlen(text);
+    len = LbTextCharWidth(' ') * units_per_px / 16;
+    put_down_ba_sprites(text, text_end, posx, posy, len, units_per_px, brig);
     return true;
 }
 
-TbBool AppTextDrawLineBrigAdjWthPartsResized(int posx, int posy,
-  int units_per_px, TbPixel def_colour, ubyte bri, const char *text)
+TbBool AppTextDrawLineBrigAdjWthParts(int posx, int posy,
+  short brig, const char *text)
 {
-    const ubyte *str;
-    int x, y;
-    TbPixel sel_c1;
-
-    if ((lbFontPtr == NULL) || (text == NULL))
-        return true;
-
-    y = posy;
-    x = posx;
-    str = (const ubyte *)text;
-    sel_c1 = def_colour;
-
-    while (*str != '\0')
-    {
-        const struct TbSprite *p_spr;
-        int chr_width, chr_height;
-        ubyte ch;
-        TbPixel col;
-
-        //TODO in standard LbTextDrawResized(), we use code 14 to change colour; unify
-        if (*str == '\1') {
-          str++;
-          sel_c1 = *str;
-        } else {
-          ch = *str;
-          col = pixmap.fade_table[bri * PALETTE_8b_COLORS + sel_c1];
-          p_spr = LbFontCharSprite(lbFontPtr, ch);
-          chr_width = p_spr->SWidth * units_per_px >> 4;
-          chr_height = p_spr->SHeight * units_per_px >> 4;
-          LbSpriteDrawScaledOneColour(x, y, p_spr, chr_width, chr_height, col);
-          x += chr_width;
-        }
-        str++;
-    }
-    return true;
+    // Using resized version - it will end up with version optimized for no resize anyway
+    return AppTextDrawLineBrigAdjWthPartsResized(posx, posy, 16, brig, text);
 }
 
 /******************************************************************************/
