@@ -214,15 +214,19 @@ void put_down_ba_sprites(const char *sbuf, const char *ebuf,
 TbBool AppTextDrawLineBrigAdjWthPartsResized(int posx, int posy,
   int units_per_px, short brig, const char *text)
 {
+    struct TbAnyWindow grwnd;
     const char *text_end;
     int len;
 
     if ((lbFontPtr == NULL) || (text == NULL))
         return true;
+    LbScreenStoreGraphicsWindow(&grwnd);
+    LbScreenLoadGraphicsWindow(&lbTextClipWindow);
 
     text_end = text + strlen(text);
     len = LbTextCharWidth(' ') * units_per_px / 16;
     put_down_ba_sprites(text, text_end, posx, posy, len, units_per_px, brig);
+    LbScreenLoadGraphicsWindow(&grwnd);
     return true;
 }
 

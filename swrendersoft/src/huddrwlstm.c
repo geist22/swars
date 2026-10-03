@@ -18,13 +18,16 @@
 /******************************************************************************/
 #include "huddrwlstm.h"
 
+#include <assert.h>
+#include "bfanywnd.h"
 #include "bfbox.h"
+#include "bfgentab.h"
 #include "bfscreen.h"
 #include "bfsprite.h"
-#include "bfgentab.h"
-#include <assert.h>
+#include "bftext.h"
 
 #include "app_sprite.h"
+#include "app_text_ba.h"
 
 /******************************************************************************/
 #pragma pack(1)
@@ -33,20 +36,24 @@
 #pragma pack()
 /******************************************************************************/
 
-void enlist_hud_draw_box(short px, short py, short width, short height, TbPixel colour)
+void enlist_hud_draw_box(short px, short py, short width, short height, ushort drwflags, TbPixel colour)
 {
     //TODO enlist instead of drawing directly
+    lbDisplay.DrawFlags = drwflags;
+
     LbDrawBox(px, py, width, height, colour);
 }
 
-void enlist_hud_draw_sprite(short px, short py, struct TbSprite *p_spr, short brig)
+void enlist_hud_draw_sprite(short px, short py, struct TbSprite *p_spr, ushort drwflags, short brig)
 {
+    if (brig > PALETTE_FADE_LEVELS-1)
+        brig = PALETTE_FADE_LEVELS-1;
     if (brig < 0)
         brig = 0;
-    if (brig > 63)
-        brig = 63;
 
     //TODO enlist instead of drawing directly
+    lbDisplay.DrawFlags = drwflags;
+
     if ((lbDisplay.DrawFlags & (Lb_SPRITE_TRANSPAR4|Lb_SPRITE_TRANSPAR8)) != 0)
     {
         low_trans_grey_brightness = brig;
@@ -64,14 +71,16 @@ void enlist_hud_draw_sprite(short px, short py, struct TbSprite *p_spr, short br
 }
 
 void enlist_hud_draw_sprite_scaled(short px, short py, struct TbSprite *p_spr,
-  short dest_width, short dest_height, short brig)
+  short dest_width, short dest_height, ushort drwflags, short brig)
 {
+    if (brig > PALETTE_FADE_LEVELS-1)
+        brig = PALETTE_FADE_LEVELS-1;
     if (brig < 0)
         brig = 0;
-    if (brig > 63)
-        brig = 63;
 
     //TODO enlist instead of drawing directly
+    lbDisplay.DrawFlags = drwflags;
+
     if ((lbDisplay.DrawFlags & (Lb_SPRITE_TRANSPAR4|Lb_SPRITE_TRANSPAR8)) != 0)
     {
         low_trans_grey_brightness = brig;
@@ -87,6 +96,27 @@ void enlist_hud_draw_sprite_scaled(short px, short py, struct TbSprite *p_spr,
     {
         LbSpriteDrawScaled(px, py, p_spr, dest_width, dest_height);
     }
+}
+
+void enlist_hud_draw_clipped_text(short px, short py, short width, short height,
+  short shift_x, short shift_y, struct TbSprite *p_font, const char *text,
+  short units_per_px, short brig, TbPixel colour)
+{
+    if (brig > PALETTE_FADE_LEVELS-1)
+        brig = PALETTE_FADE_LEVELS-1;
+    if (brig < 0)
+        brig = 0;
+
+    //TODO enlist instead of drawing directly
+    LbTextSetWindow(px, py, width, height);
+
+    lbFontPtr = p_font;
+    lbDisplay.DrawColour = colour;
+    lbDisplay.DrawFlags = Lb_TEXT_ONE_COLOR;
+    AppTextDrawLineBrigAdjWthPartsResized(shift_x, shift_y, units_per_px, brig, text);
+
+    LbTextSetWindow(lbDisplay.GraphicsWindowX, lbDisplay.GraphicsWindowY,
+      lbDisplay.GraphicsWindowWidth, lbDisplay.GraphicsWindowHeight);
 }
 
 /******************************************************************************/

@@ -325,10 +325,9 @@ void SCANNER_unkn_func_203(int scr_x1, int scr_y1, int scr_x2, int scr_y2, ubyte
     }
 }
 
-void SCANNER_text_draw(const char *text, int start_x, int height)
+void SCANNER_text_draw(const char *text, int shift_x, int height)
 {
     char loc_text[256];
-    int x, y;
     short units_per_px;
 
     strncpy(loc_text, text, sizeof(loc_text)-1);
@@ -345,9 +344,7 @@ void SCANNER_text_draw(const char *text, int start_x, int height)
         height_base = 9 * fnt_height / 6;
         units_per_px = 16 * height / height_base;
     }
-    y = 0;
-    x = start_x;
-    AppTextDrawLineBrigAdjWthPartsResized(x, y, units_per_px, 56, text);
+    AppTextDrawLineBrigAdjWthPartsResized(shift_x, 0, units_per_px, 56, text);
 }
 
 int SCANNER_text_width(const char *text, int height)
@@ -367,7 +364,6 @@ int SCANNER_text_width(const char *text, int height)
         height_base = 9 * fnt_height / 6;
         units_per_px = 16 * height / height_base;
     }
-
     return LbTextStringWidthResized(text, units_per_px);
 }
 
@@ -528,14 +524,12 @@ static void draw_objective_info_background(int scr_x, int scr_y, int width, int 
 
 static void draw_objective_info_text(int scr_x, int scr_y, int width, int height)
 {
-    struct TbAnyWindow bkpwnd;
-
-    LbScreenStoreGraphicsWindow(&bkpwnd);
-    LbScreenSetGraphicsWindow(scr_x + 1, scr_y, width - 2, height);
+    LbTextSetWindow(scr_x + 1, scr_y, width - 2, height);
 
     SCANNER_text_draw(scrollinfo_text, scrollinfo_pos, height);
 
-    LbScreenLoadGraphicsWindow(&bkpwnd);
+    LbTextSetWindow(lbDisplay.GraphicsWindowX, lbDisplay.GraphicsWindowY,
+      lbDisplay.GraphicsWindowWidth, lbDisplay.GraphicsWindowHeight);
 }
 
 void draw_players_chat(void)
@@ -728,11 +722,7 @@ void draw_new_panel_sprite_std(int px, int py, ulong spr_id)
         drwflags = 0;
     }
 
-    lbDisplay.DrawFlags |= drwflags;
-
-    enlist_hud_draw_sprite(px, py, p_spr, brig);
-
-    lbDisplay.DrawFlags &= ~drwflags;
+    enlist_hud_draw_sprite(px, py, p_spr, drwflags, brig);
 }
 
 /**
@@ -764,11 +754,7 @@ void draw_new_panel_sprite_scaled_std(int px, int py, ulong spr_id, int dest_wid
         drwflags = 0;
     }
 
-    lbDisplay.DrawFlags |= drwflags;
-
-    enlist_hud_draw_sprite_scaled(px, py, p_spr, dest_width, dest_height, brig);
-
-    lbDisplay.DrawFlags &= ~drwflags;
+    enlist_hud_draw_sprite_scaled(px, py, p_spr, dest_width, dest_height, drwflags, brig);
 }
 
 /**
@@ -793,11 +779,7 @@ void draw_new_panel_sprite_dark(int px, int py, ulong spr_id)
         drwflags = 0;
     }
 
-    lbDisplay.DrawFlags |= drwflags;
-
-    enlist_hud_draw_sprite(px, py, p_spr, brig);
-
-    lbDisplay.DrawFlags &= ~drwflags;
+    enlist_hud_draw_sprite(px, py, p_spr, drwflags, brig);
 }
 
 /**
@@ -822,11 +804,7 @@ void draw_new_panel_sprite_scaled_dark(int px, int py, ulong spr_id, int dest_wi
         drwflags = 0;
     }
 
-    lbDisplay.DrawFlags |= drwflags;
-
-    enlist_hud_draw_sprite_scaled(px, py, p_spr, dest_width, dest_height, brig);
-
-    lbDisplay.DrawFlags &= ~drwflags;
+    enlist_hud_draw_sprite_scaled(px, py, p_spr, dest_width, dest_height, drwflags, brig);
 }
 
 /**
@@ -851,11 +829,7 @@ void draw_new_panel_sprite_prealp(int px, int py, ulong spr_id)
         return;
     }
 
-    lbDisplay.DrawFlags |= drwflags;
-
-    enlist_hud_draw_sprite(px, py, p_spr, brig);
-
-    lbDisplay.DrawFlags &= ~drwflags;
+    enlist_hud_draw_sprite(px, py, p_spr, drwflags, brig);
 }
 
 /**
@@ -868,6 +842,7 @@ void draw_new_panel_sprite_prealp(int px, int py, ulong spr_id)
 void draw_fourpack_amount(short x, ushort y, ushort amount)
 {
     int i;
+    ushort drwflags;
     TbPixel colour;
 
     // TODO make configurable via panel config file
@@ -875,6 +850,8 @@ void draw_fourpack_amount(short x, ushort y, ushort amount)
         colour = 26;
     else
         colour = 247;
+    // Solid, even for transparent panel - full color is less confusing
+    drwflags = 0;
 
     for (i = 0; i < min(amount,8); i++)
     {
@@ -883,7 +860,8 @@ void draw_fourpack_amount(short x, ushort y, ushort amount)
 
         p_shift = &game_panel_shifts[PaSh_WEP_FOURPACK_SLOTS + i];
         p_size = &game_panel_shifts[PaSh_WEP_FOURPACK_SIZE];
-        enlist_hud_draw_box(x + p_shift->x, y + p_shift->y, p_size->x, p_size->y, colour);
+        enlist_hud_draw_box(x + p_shift->x, y + p_shift->y, p_size->x, p_size->y,
+          drwflags, colour);
     }
 }
 
@@ -1059,7 +1037,6 @@ void draw_agent_carried_weapon(PlayerIdx plyr, ushort plagent, short slot, TbBoo
     recharging = (player_agent_weapon_delay(plyr, plagent, wtype) != 0);
     wep_highlight = panel_agents_weapon_highlighted(plyr, plagent, wtype);
 
-    lbDisplay.DrawFlags = 0;
     if (!recharging || (gameturn & 1))
     {
         if (slot == 1) { // First weapon on list entry starts its sprite a bit earlier
@@ -1085,7 +1062,6 @@ void draw_agent_carried_weapon(PlayerIdx plyr, ushort plagent, short slot, TbBoo
 
     if (wep_highlight)
     {
-        lbDisplay.DrawFlags = 0;
         if (slot == 1) {// The first on list longer sprite has its own highlight
             x = cx + game_panel_shifts[PaSh_WEP_FRST_BTN_TO_DECOR].x;
             y = cy + game_panel_shifts[PaSh_WEP_FRST_BTN_TO_DECOR].y;
