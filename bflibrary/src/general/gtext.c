@@ -338,7 +338,7 @@ int LbTextStringWidth(const char *text)
     return LbTextStringPartWidth(text, LONG_MAX);
 }
 
-int LbTextStringResized(const char *text, int units_per_px)
+int LbTextStringWidthResized(const char *text, int units_per_px)
 {
     return LbTextStringPartWidthResized(text, units_per_px, LONG_MAX);
 }
