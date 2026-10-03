@@ -1710,8 +1710,7 @@ void draw_wep_energy_level(short x, short y, ushort w, ushort h, short lv, ushor
 
         cy1 = h + cy;
         cy2 = h + cy - ch;
-        SCANNER_draw_hv_line(cx, cy1, cx, cy2, col,
-            ingame.Scanner.Contrast, ingame.Scanner.Brightness);
+        SCANNER_draw_hv_line(cx, cy1, cx, cy2, col, 5, 8);
         ++cx;
         ++cy;
     }
@@ -1738,8 +1737,7 @@ void draw_mood_level(short x, short y, ushort w, int h, short value)
 
     for (i = h; i > 0; i--)
     {
-        SCANNER_draw_hv_line(x1, y1, x2, y1,
-            col, ingame.Scanner.Contrast, ingame.Scanner.Brightness);
+        SCANNER_draw_hv_line(x1, y1, x2, y1, col, 5, 8);
         x1--;
         x2--;
         y1++;
