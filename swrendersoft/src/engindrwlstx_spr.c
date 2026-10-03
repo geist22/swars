@@ -53,8 +53,8 @@ s32 dword_176CF4;
 s32 dword_176D00;
 s32 dword_176D04;
 
-short word_1A5834 = 0;
-short word_1A5836 = 0;
+short anim_el_pos_min_x = 0;
+short anim_el_pos_min_y = 0;
 
 TbBool sprite_over_16x16 = false;
 
@@ -74,6 +74,20 @@ ScreenSortSpriteRenderCallback screen_sorted_sprite_statc_render_cb = NULL;
 ScreenSortSpriteRenderCallback screen_sorted_sprite_persn_render_cb = NULL;
 
 /******************************************************************************/
+
+static void anim_elem_pos_min_set(short x, short y)
+{
+    anim_el_pos_min_x = x;
+    anim_el_pos_min_y = y;
+}
+
+static void anim_elem_pos_mark(struct Element *p_elem)
+{
+    if (anim_el_pos_min_x > p_elem->X >> 1)
+        anim_el_pos_min_x = p_elem->X >> 1;
+    if (anim_el_pos_min_y > p_elem->Y >> 1)
+        anim_el_pos_min_y = p_elem->Y >> 1;
+}
 
 void draw_sort_line(struct SortLine *p_sline)
 {
@@ -227,10 +241,7 @@ void draw_frame_on_screen(short scr_x, short scr_y, ushort frm)
             LbSpriteDrawResized(el_x, el_y, (16 * overall_scale) >> 8, p_spr);
         }
 
-        if (word_1A5834 > p_elem->X >> 1)
-            word_1A5834 = p_elem->X >> 1;
-        if (word_1A5836 > p_elem->Y >> 1)
-            word_1A5836 = p_elem->Y >> 1;
+        anim_elem_pos_mark(p_elem);
     }
     lbDisplay.DrawFlags = 0;
 }
@@ -262,10 +273,7 @@ void draw_frame_unscaled_alpha_force(short scr_x, short scr_y, ushort frm, ubyte
             LbSpriteDrawRemap(el_x, el_y, p_spr, &pixmap.fade_table[bri * PALETTE_8b_COLORS]);
         }
 
-        if (word_1A5834 > p_elem->X >> 1)
-            word_1A5834 = p_elem->X >> 1;
-        if (word_1A5836 > p_elem->Y >> 1)
-            word_1A5836 = p_elem->Y >> 1;
+        anim_elem_pos_mark(p_elem);
     }
     lbDisplay.DrawFlags = 0;
 }
@@ -303,10 +311,7 @@ void draw_frame_unscaled_alpha(short scr_x, short scr_y, ubyte *frv, ushort frm,
             LbSpriteDrawRemap(el_x, el_y, p_spr, &pixmap.fade_table[bri * PALETTE_8b_COLORS]);
         }
 
-        if (word_1A5834 > p_elem->X >> 1)
-            word_1A5834 = p_elem->X >> 1;
-        if (word_1A5836 > p_elem->Y >> 1)
-            word_1A5836 = p_elem->Y >> 1;
+        anim_elem_pos_mark(p_elem);
     }
     lbDisplay.DrawFlags = 0;
 }
@@ -394,27 +399,22 @@ void draw_frame_scaled_alpha(int scr_x, int scr_y, ushort frm,
 {
     struct Frame *p_frm;
     struct Element *p_el;
-    int pos_x, pos_y;
     int swidth, sheight;
+    ushort el;
 
     p_frm = &frame[frm];
     assert(p_frm < frame_end);
     lbSpriteReMapPtr = &pixmap.fade_table[256 * alpha];
 
-    pos_x = 99999;
-    pos_y = 99999;
-    for (p_el = &melement_ani[p_frm->FirstElement]; p_el > melement_ani; p_el = &melement_ani[p_el->Next])
+    el = p_frm->FirstElement;
+    anim_elem_pos_min_set(INT16_MAX, INT16_MAX);
+    for (p_el = &melement_ani[el]; p_el > melement_ani; p_el = &melement_ani[p_el->Next])
     {
-        if (pos_x > p_el->X >> 1)
-            pos_x = p_el->X >> 1;
-        if (pos_y > p_el->Y >> 1)
-            pos_y = p_el->Y >> 1;
+        anim_elem_pos_mark(p_el);
     }
 
     swidth = p_frm->SWidth;
     sheight = p_frm->SHeight;
-    word_1A5834 = pos_x;
-    word_1A5836 = pos_y;
     if ((scale * swidth) >> 9 <= 1)
         return;
     if ((scale * sheight) >> 9 <= 1)
@@ -422,12 +422,12 @@ void draw_frame_scaled_alpha(int scr_x, int scr_y, ushort frm,
 
     dword_176CF0 = (scale * swidth) >> 9;
     dword_176CF4 = (scale * sheight) >> 9;
-    dword_176CE0 = scr_x + ((scale * pos_x) >> 8);
-    dword_176CE4 = scr_y + ((scale * pos_y) >> 8);
+    dword_176CE0 = scr_x + ((scale * anim_el_pos_min_x) >> 8);
+    dword_176CE4 = scr_y + ((scale * anim_el_pos_min_y) >> 8);
     dword_176CE8 = swidth >> 1;
     dword_176CEC = sheight >> 1;
 
-    draw_frame_glb_scale_alpha(-pos_x, -pos_y, frm);
+    draw_frame_glb_scale_alpha(-anim_el_pos_min_x, -anim_el_pos_min_y, frm);
 }
 
 void draw_frame_scaled_alpha_frv(short x, short y, ubyte *frv, ushort frm,
@@ -443,8 +443,8 @@ void draw_frame_scaled_alpha_frv(short x, short y, ubyte *frv, ushort frm,
     really_draw = 0;
     max_x = -99999;
     max_y = -99999;
-    min_x = 99999;
-    min_y = 99999;
+    min_x = INT16_MAX;
+    min_y = INT16_MAX;
     p_frm = &frame[frm];
     assert(p_frm < frame_end);
 
@@ -476,8 +476,7 @@ void draw_frame_scaled_alpha_frv(short x, short y, ubyte *frv, ushort frm,
         return;
 
     lbSpriteReMapPtr = &pixmap.fade_table[256 * bri];
-    word_1A5834 = min_x;
-    word_1A5836 = min_y;
+    anim_elem_pos_min_set(min_x, min_y);
 
     range_x = max_x - min_x;
     range_y = max_y - min_y;
@@ -579,8 +578,8 @@ void draw_sort_sprite1a(ushort sspr)
 
     p_sspr = &game_sort_sprites[sspr];
 
-    word_1A5834 = 120;
-    word_1A5836 = 120;
+    anim_elem_pos_min_set(120, 120);
+
     draw_sorted_sprite1a(p_sspr->Frame, p_sspr->X, p_sspr->Y, p_sspr->Brightness);
     screen_sorted_sprite_statc_render_cb(sspr);
 }
@@ -592,8 +591,7 @@ void draw_sort_sprite_frame_pers_v(int sspr)
 
     p_sspr = &game_sort_sprites[sspr];
 
-    word_1A5834 = 120;
-    word_1A5836 = 120;
+    anim_elem_pos_min_set(120, 120);
 
     SPR_FRAME_VERSIONS_UNPACK(frv, p_sspr->Scale);
 
@@ -608,8 +606,7 @@ void draw_sort_sprite_frame_pers_b(int sspr)
 
     p_sspr = &game_sort_sprites[sspr];
 
-    word_1A5834 = 120;
-    word_1A5836 = 120;
+    anim_elem_pos_min_set(120, 120);
 
     draw_sorted_sprite1a(p_sspr->Frame, p_sspr->X, p_sspr->Y, p_sspr->Brightness);
 

@@ -186,8 +186,8 @@
 .global EXPORT_SYMBOL(game_special_obj_faces3);	/* 0x1a09f4 */
 .global EXPORT_SYMBOL(game_special_obj_faces4);	/* 0x1a09f8 */
 
-.global EXPORT_SYMBOL(word_1A5834);			/* 0x1A5834 */
-.global EXPORT_SYMBOL(word_1A5836);			/* 0x1A5836 */
+.global EXPORT_SYMBOL(anim_el_pos_min_x);		/* 0x1A5834 */
+.global EXPORT_SYMBOL(anim_el_pos_min_y);		/* 0x1A5836 */
 .global EXPORT_SYMBOL(pointer_sprites);		/* 0x1A5840 */
 .global EXPORT_SYMBOL(small_font);			/* 0x1A5848 */
 .global EXPORT_SYMBOL(display_palette);		/* 0x1A5878 */
@@ -3499,12 +3499,12 @@ GLOBAL_FUNC(ASM_check_mouse_overlap)	/* 0x250A0 */
 		shl    $0x4,%eax
 		mov    EXPORT_SYMBOL(overall_scale)-2,%edx
 		add    %eax,%esi
-		mov    EXPORT_SYMBOL(word_1A5834)-2,%eax
+		mov    EXPORT_SYMBOL(anim_el_pos_min_x)-2,%eax
 		sar    $0x10,%edx
 		sar    $0x10,%eax
 		imul   %edx,%eax
 		mov    %edx,-0x4(%ebp)
-		mov    EXPORT_SYMBOL(word_1A5834),%edx
+		mov    EXPORT_SYMBOL(anim_el_pos_min_x),%edx
 		mov    -0x4(%ebp),%ebx
 		sar    $0x10,%edx
 		imul   %ebx,%edx
@@ -3678,13 +3678,13 @@ GLOBAL_FUNC(ASM_check_mouse_over_unkn2)
 		cwtl
 		mov    EXPORT_SYMBOL(game_sort_sprites),%edx
 		shl    $0x4,%eax
-		mov    EXPORT_SYMBOL(word_1A5834)-2,%edi
+		mov    EXPORT_SYMBOL(anim_el_pos_min_x)-2,%edi
 		add    %edx,%eax
 		mov    EXPORT_SYMBOL(overall_scale)-2,%edx
 		sar    $0x10,%edi
 		sar    $0x10,%edx
 		imul   %edx,%edi
-		mov    EXPORT_SYMBOL(word_1A5834),%esi
+		mov    EXPORT_SYMBOL(anim_el_pos_min_x),%esi
 		sar    $0x10,%esi
 		imul   %edx,%esi
 		movswl (%eax),%ebx
@@ -3837,13 +3837,13 @@ GLOBAL_FUNC(ASM_check_mouse_overlap_corpse)	/* 0x25428 */
 		shl    $0x4,%esi
 		mov    EXPORT_SYMBOL(overall_scale)-2,%ebx
 		add    %eax,%esi
-		mov    EXPORT_SYMBOL(word_1A5834)-2,%eax
+		mov    EXPORT_SYMBOL(anim_el_pos_min_x)-2,%eax
 		sar    $0x10,%ebx
 		sar    $0x10,%eax
 		imul   %ebx,%eax
 		sar    $0x8,%eax
 		mov    %eax,%edx
-		mov    EXPORT_SYMBOL(word_1A5834),%eax
+		mov    EXPORT_SYMBOL(anim_el_pos_min_x),%eax
 		sar    $0x10,%eax
 		imul   %ebx,%eax
 		add    (%esi),%dx
@@ -4021,13 +4021,13 @@ GLOBAL_FUNC(ASM_check_mouse_overlap_item)	/* 0x25624 */
 		shl    $0x4,%esi
 		mov    EXPORT_SYMBOL(overall_scale)-2,%edx
 		add    %eax,%esi
-		mov    EXPORT_SYMBOL(word_1A5834)-2,%eax
+		mov    EXPORT_SYMBOL(anim_el_pos_min_x)-2,%eax
 		sar    $0x10,%edx
 		sar    $0x10,%eax
 		imul   %edx,%eax
 		sar    $0x8,%eax
 		mov    %eax,%ebx
-		mov    EXPORT_SYMBOL(word_1A5834),%eax
+		mov    EXPORT_SYMBOL(anim_el_pos_min_x),%eax
 		sar    $0x10,%eax
 		imul   %edx,%eax
 		mov    %edx,-0x8(%ebp)

@@ -117,8 +117,8 @@ extern TbPixel face_transp_tinted_line_col;
 
 extern ubyte engine_render_lights;
 
-extern short word_1A5834;
-extern short word_1A5836;
+extern short anim_el_pos_min_x;
+extern short anim_el_pos_min_y;
 
 extern ScreenTriangleRenderCallback screen_position_face_render_cb;
 extern ScreenSortSpriteRenderCallback screen_sorted_sprite_statc_render_cb;

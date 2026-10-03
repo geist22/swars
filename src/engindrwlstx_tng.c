@@ -61,9 +61,6 @@
 
 extern ubyte byte_176D49;
 
-extern short word_1A5834;
-extern short word_1A5836;
-
 /******************************************************************************/
 // from engindrwlstx_spr
 void draw_hud_frame_on_screen_unscaled_but_scale_pos(short scr_x, short scr_y, ushort frm, int sscale);

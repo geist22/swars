@@ -38,9 +38,6 @@ struct Thing *mouse_over_unkn2_tng = NULL;
 int mouse_over_unkn2_x;
 int mouse_over_unkn2_y;
 
-extern short word_1A5834;
-extern short word_1A5836;
-
 /******************************************************************************/
 
 ubyte check_mouse_overlap(ushort sspr)
@@ -57,8 +54,8 @@ ubyte check_mouse_overlap(ushort sspr)
     struct Frame *p_frm;
 
     p_sspr = &game_sort_sprites[sspr];
-    box.X = p_sspr->X + ((word_1A5834 * overall_scale) >> 8);
-    box.Y = p_sspr->Y + ((word_1A5836 * overall_scale) >> 8);
+    box.X = p_sspr->X + ((anim_el_pos_min_x * overall_scale) >> 8);
+    box.Y = p_sspr->Y + ((anim_el_pos_min_y * overall_scale) >> 8);
 
     p_frm = &frame[p_sspr->Frame];
     box.Width = (p_frm->SWidth * overall_scale) >> 9;
@@ -101,8 +98,8 @@ ubyte check_mouse_overlap_item(ushort sspr)
     PlayerInfo *p_locplayer;
 
     p_sspr = &game_sort_sprites[sspr];
-    box.X = p_sspr->X + ((word_1A5834 * overall_scale) >> 8);
-    box.Y = p_sspr->Y + ((word_1A5836 * overall_scale) >> 8);
+    box.X = p_sspr->X + ((anim_el_pos_min_x * overall_scale) >> 8);
+    box.Y = p_sspr->Y + ((anim_el_pos_min_y * overall_scale) >> 8);
 
     p_frm = &frame[p_sspr->Frame];
     box.Width = (p_frm->SWidth * overall_scale) >> 9;
@@ -151,8 +148,8 @@ ubyte check_mouse_overlap_corpse(ushort sspr)
     PlayerInfo *p_locplayer;
 
     p_sspr = &game_sort_sprites[sspr];
-    box.X = p_sspr->X + ((word_1A5834 * overall_scale) >> 8);
-    box.Y = p_sspr->Y + ((word_1A5836 * overall_scale) >> 8);
+    box.X = p_sspr->X + ((anim_el_pos_min_x * overall_scale) >> 8);
+    box.Y = p_sspr->Y + ((anim_el_pos_min_y * overall_scale) >> 8);
 
     p_frm = &frame[p_sspr->Frame];
     box.Width = (p_frm->SWidth * overall_scale) >> 9;
@@ -194,8 +191,8 @@ ubyte check_mouse_over_unkn2(ushort sspr, struct Thing *p_thing)
     struct Frame *p_frm;
 
     p_sspr = &game_sort_sprites[sspr];
-    box.X = p_sspr->X + ((word_1A5834 * overall_scale) >> 8);
-    box.Y = p_sspr->Y + ((word_1A5836 * overall_scale) >> 8);
+    box.X = p_sspr->X + ((anim_el_pos_min_x * overall_scale) >> 8);
+    box.Y = p_sspr->Y + ((anim_el_pos_min_y * overall_scale) >> 8);
 
     p_frm = &frame[p_sspr->Frame];
     box.Width = (p_frm->SWidth * overall_scale) >> 9;

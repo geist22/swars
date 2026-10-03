@@ -442,9 +442,8 @@ void draw_players_chat_talk(int x, int y)
 #pragma GCC diagnostic pop
         LbStringToUpper(locstr);
 
-        lbDisplay.DrawColour = net_player_colours[plyr];
-        AppTextDrawMissionChatMessage(base_x, &pos_y, plyr,
-          player_message_timer[plyr], locstr);
+        AppTextDrawMissionChatMessage(base_x, &pos_y,
+          net_player_colours[plyr], player_message_timer[plyr], locstr);
     }
 }
 

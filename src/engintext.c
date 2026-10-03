@@ -86,8 +86,8 @@ TbBool AppTextDrawMissionStatus(int posx, int posy, const char *text)
 }
 
 
-TbBool AppTextDrawMissionChatMessage(int posx, int *posy, int plyr, int timer,
-  const char *text)
+TbBool AppTextDrawMissionChatMessage(int posx, int *posy,
+  TbPixel colour, int timer, const char *text)
 {
     ushort space_bkp;
     int tx_height;
@@ -102,6 +102,7 @@ TbBool AppTextDrawMissionChatMessage(int posx, int *posy, int plyr, int timer,
     // Do not allow any scale, only n * 50%
     units_per_px = (units_per_px + 4) & ~0x07;
 
+    lbDisplay.DrawColour = colour;
     lbDisplay.DrawFlags = Lb_TEXT_ONE_COLOR | Lb_TEXT_HALIGN_LEFT;
 #if defined(LB_ENABLE_SHADOW_COLOUR)
     lbDisplay.ShadowColour = colour_lookup[ColLU_GREYLT];
