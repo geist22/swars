@@ -43,6 +43,7 @@
 #endif
 
 TbBool LbIApplyControlCharToDrawSettings(const char **c);
+TbBool LbIApplyControlCharToAlignSettings(const char **c);
 TbBool LbIAlignMethodSet(ushort fdflags);
 TbBool is_wide_charcode(ulong chr);
 
@@ -470,21 +471,7 @@ TbBool AppTextDrawColourWaveResized(int posx, int posy, int units_per_px, const 
               count = 0;
               starty += h;
             }
-            switch (*ebuf)
-            {
-            case 6:
-              lbDisplay.DrawFlags ^= Lb_TEXT_HALIGN_LEFT;
-              break;
-            case 7:
-              lbDisplay.DrawFlags ^= Lb_TEXT_HALIGN_RIGHT;
-              break;
-            case 8:
-              lbDisplay.DrawFlags ^= Lb_TEXT_HALIGN_CENTER;
-              break;
-            case 9:
-              lbDisplay.DrawFlags ^= Lb_TEXT_HALIGN_JUSTIFY;
-              break;
-            }
+            LbIApplyControlCharToAlignSettings(&ebuf);
         } else
 
         if (chr == 14)
