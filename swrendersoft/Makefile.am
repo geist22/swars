@@ -5,8 +5,8 @@ lib_LIBRARIES = libswrender.a
 libswrender_a_headers_src = \
   include/app_gentab.h \
   include/app_sprite.h \
+  include/app_text_ba.h \
   include/app_text_cw.h \
-  include/app_text_rc.h \
   include/app_text_sf.h \
   include/drawshape.h \
   include/drawtext.h \
@@ -44,8 +44,8 @@ libswrender_a_SOURCES = \
   src/ap_spr_smap.c \
   src/app_gengh.c \
   src/app_spr_init.c \
+  src/app_text_ba.c \
   src/app_text_cw.c \
-  src/app_text_rc.c \
   src/app_text_sf.c \
   src/drawshape.c \
   src/drawtext.c \

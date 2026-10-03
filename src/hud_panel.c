@@ -33,7 +33,7 @@
 #include "ssampply.h"
 
 #include "app_sprite.h"
-#include "app_text_rc.h"
+#include "app_text_ba.h"
 #include "engincam.h"
 #include "engincolour.h"
 #include "enginpeff.h"
@@ -349,11 +349,11 @@ void SCANNER_text_draw(const char *text, int start_x, int height)
     x = start_x;
     if (units_per_px != 16)
     {
-        AppTextDrawLineRichWthPartsResized(x, y, units_per_px, def_colour, 56, text);
+        AppTextDrawLineBrigAdjWthPartsResized(x, y, units_per_px, def_colour, 56, text);
     }
     else
     {
-        AppTextDrawLineRichWthParts(x, y, def_colour, 56, text);
+        AppTextDrawLineBrigAdjWthParts(x, y, def_colour, 56, text);
     }
 }
 
