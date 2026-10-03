@@ -261,7 +261,7 @@ void init_scanner(void)
     SCANNER_init();
 }
 
-void SCANNER_unkn_func_203(int scr_x1, int scr_y1, int scr_x2, int scr_y2, ubyte col1, int a6, int base_bri)
+void SCANNER_unkn_func_203(int scr_x1, int scr_y1, int scr_x2, int scr_y2, ubyte col1, int a6, int brig)
 {
 #if 0
     asm volatile (
@@ -276,7 +276,6 @@ void SCANNER_unkn_func_203(int scr_x1, int scr_y1, int scr_x2, int scr_y2, ubyte
     if (scr_y1 == scr_y2)
     {
         int x1, x2;
-        short k0, k1;
         int i;
 
         if (scr_x2 < scr_x1) {
@@ -286,22 +285,17 @@ void SCANNER_unkn_func_203(int scr_x1, int scr_y1, int scr_x2, int scr_y2, ubyte
             x1 = scr_x1;
             x2 = scr_x2;
         }
+        low_trans_grey_brightness = brig;
         o = &lbDisplay.WScreen[scr_y1 * lbDisplay.PhysicalScreenWidth + x1];
-        k0 = (low_trans_grey_pal_bright[col1] >> 1);
         for (i = 0; i <= x2 - x1; i++)
         {
-            ubyte bri;
-            k1 = (low_trans_grey_pal_bright[*o] >> 1);
-            bri = base_bri + k0 + k1;
-            bri = low_trans_grey_bright_limit[bri];
-            *o = pixmap.fade_table[256 * bri + col1];
+            *o = LbBlendPixelLowTrans4Remap(pixmap.fade_table, col1, *o);
             o++;
         }
     }
     else
     {
         int y1, y2;
-        short k0, k1;
         int i;
 
         if (scr_y2 < scr_y1) {
@@ -311,15 +305,11 @@ void SCANNER_unkn_func_203(int scr_x1, int scr_y1, int scr_x2, int scr_y2, ubyte
             y1 = scr_y1;
             y2 = scr_y2;
         }
+        low_trans_grey_brightness = brig;
         o = &lbDisplay.WScreen[y1 * lbDisplay.PhysicalScreenWidth + scr_x1];
-        k0 = (low_trans_grey_pal_bright[col1] >> 1);
         for (i = 0; i <= y2 - y1; i++)
         {
-            ubyte bri;
-            k1 = (low_trans_grey_pal_bright[*o] >> 1);
-            bri = base_bri + k0 + k1;
-            bri = low_trans_grey_bright_limit[bri];
-            *o = pixmap.fade_table[256 * bri + col1];
+            *o = LbBlendPixelLowTrans4Remap(pixmap.fade_table, col1, *o);
             o += lbDisplay.PhysicalScreenWidth;
         }
     }
