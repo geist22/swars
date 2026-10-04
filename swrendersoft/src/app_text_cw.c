@@ -495,14 +495,4 @@ TbBool AppTextDrawColourWave(int posx, int posy, const char *text)
     return AppTextDrawColourWaveResized(posx, posy, 16, text);
 }
 
-struct TbSprite *AppFontCharSpriteRW(struct TbSprite *font,
-  const ulong chr)
-{
-    if (font == NULL)
-        return NULL;
-    if ((chr >= 31) && (chr < 256))
-        return &font[(chr-31)];
-    return NULL;
-}
-
 /******************************************************************************/

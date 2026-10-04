@@ -35,7 +35,8 @@ libswrender_a_headers_src = \
   include/huddrwlstm.h \
   include/huddrwlstx.h \
   include/privrdlog.h \
-  include/render_gpoly.h
+  include/render_gpoly.h \
+  include/sprfontut.h
 
 libswrender_a_headers_bld = \
   include/swrendconf.h
@@ -78,7 +79,8 @@ libswrender_a_SOURCES = \
   src/holodrwlstx.c \
   src/huddrwlstm.c \
   src/huddrwlstx.c \
-  src/render_gpoly.c
+  src/render_gpoly.c \
+  src/sprfontut.c
 
 libswrender_a_CPPFLAGS = \
   -I"$(top_srcdir)/include" -I"$(builddir)/include"

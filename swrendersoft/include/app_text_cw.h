@@ -56,11 +56,6 @@ TbBool AppTextDrawColourWave(int posx, int posy, const char *text);
  */
 TbBool AppTextDrawColourWaveResized(int posx, int posy, int units_per_px, const char *text);
 
-/** Altered version of LbFontCharSprite() which returns non-const reference.
- */
-struct TbSprite *AppFontCharSpriteRW(struct TbSprite *font,
-  const ulong chr);
-
 #ifdef __cplusplus
 };
 #endif
