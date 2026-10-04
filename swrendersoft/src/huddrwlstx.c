@@ -57,6 +57,24 @@ void hud_draw_slant_box(struct DIHudBox *p_diBox)
       p_diBox->Rect.Width, p_diBox->Rect.Height, p_diBox->Col);
 }
 
+void hud_draw_low_trans_grey_box(struct DIHudBox *p_diBox)
+{
+    low_trans_grey_brightness = p_diBox->Bright;
+    lbDisplay.DrawFlags = p_diBox->DrwFlags;
+
+    AppDrawBoxLowTransGrey(p_diBox->Rect.X, p_diBox->Rect.Y,
+      p_diBox->Rect.Width, p_diBox->Rect.Height, p_diBox->Col);
+}
+
+void hud_draw_low_trans_grey_slant_box(struct DIHudBox *p_diBox)
+{
+    low_trans_grey_brightness = p_diBox->Bright;
+    lbDisplay.DrawFlags = p_diBox->DrwFlags;
+
+    AppDrawSlantBoxLowTransGrey(p_diBox->Rect.X, p_diBox->Rect.Y,
+      p_diBox->Rect.Width, p_diBox->Rect.Height, p_diBox->Col);
+}
+
 void hud_draw_clipped_text(struct DIHudClippedText *p_diClpText)
 {
     LbTextSetWindow(p_diClpText->Rect.X, p_diClpText->Rect.Y,

@@ -88,6 +88,9 @@ struct DrawItemHud {
 void hud_draw_box(struct DIHudBox *p_diBox);
 void hud_draw_slant_box(struct DIHudBox *p_diBox);
 
+void hud_draw_low_trans_grey_box(struct DIHudBox *p_diBox);
+void hud_draw_low_trans_grey_slant_box(struct DIHudBox *p_diBox);
+
 void hud_draw_clipped_text(struct DIHudClippedText *p_diClpText);
 void hud_draw_colour_wave_wrapped_text(struct DIHudWrappedText *p_diWrpText);
 void hud_draw_shad_cl_flash_wrapped_text(struct DIHudWrappedText *p_diWrpText);
