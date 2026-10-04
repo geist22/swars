@@ -85,7 +85,7 @@ TbBool AppTextDrawMissionStatus(int posx, int posy, const char *text)
     return ret;
 }
 
-TbBool AppTextDrawMissionChatMessage(int posx, int *posy,
+TbBool AppTextDrawMissionChatMessage(int posx, int posy,
   TbPixel colour, int timer, const char *text)
 {
     ushort space_bkp;
@@ -107,10 +107,28 @@ TbBool AppTextDrawMissionChatMessage(int posx, int *posy,
     lbDisplay.ShadowColour = colour_lookup[ColLU_GREYLT];
 #endif
     space_bkp = FontSpacingAlter(small_font, 12);
-    ret = AppTextDrawShadClFlashResized(posx, *posy, units_per_px, timer, text);
-    *posy += LbTextWrapStringHeightResized(posx, *posy, units_per_px, text);
+    ret = AppTextDrawShadClFlashResized(posx, posy, units_per_px, timer, text);
     FontSpacingRestore(small_font, space_bkp);
     return ret;
+}
+
+int AppTextHeightMissionChatMessage(int posx, int posy, const char *text)
+{
+    ushort space_bkp;
+    int tx_height;
+    int units_per_px;
+    int height;
+
+    lbFontPtr = small_font;
+    tx_height = my_char_height('A');
+    units_per_px = (lbDisplay.GraphicsWindowWidth * 5 / tx_height)  / (320 / 16);
+    units_per_px = (units_per_px + 4) & ~0x07;
+
+    lbDisplay.DrawFlags = Lb_TEXT_ONE_COLOR | Lb_TEXT_HALIGN_LEFT;
+    space_bkp = FontSpacingAlter(small_font, 12);
+    height = LbTextWrapStringHeightResized(posx, posy, units_per_px, text);
+    FontSpacingRestore(small_font, space_bkp);
+    return height;
 }
 
 /******************************************************************************/

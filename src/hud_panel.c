@@ -442,8 +442,9 @@ void draw_players_chat_talk(int x, int y)
 #pragma GCC diagnostic pop
         LbStringToUpper(locstr);
 
-        AppTextDrawMissionChatMessage(base_x, &pos_y,
+        AppTextDrawMissionChatMessage(base_x, pos_y,
           net_player_colours[plyr], player_message_timer[plyr], locstr);
+        pos_y += AppTextHeightMissionChatMessage(base_x, pos_y, locstr);
     }
 }
 
@@ -491,13 +492,9 @@ void draw_players_chat(void)
     if (!in_network_game)
         return;
 
-    if (lbDisplay.GraphicsScreenHeight >= 400) {
-        x = 22;
-        y = 51;
-    } else {
-        x = 11;
-        y = 26;
-    }
+    //TODO compute real panel end position
+    x = 11 * lbDisplay.GraphicsScreenWidth / 320;
+    y = 26 * lbDisplay.GraphicsScreenHeight / 200;
     draw_players_chat_talk(x, y);
 }
 
