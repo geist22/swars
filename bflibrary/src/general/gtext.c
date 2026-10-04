@@ -408,19 +408,147 @@ int LbTextStringHeight(const char *text)
     return h * lines;
 }
 
+int LbTextWrapStringHeightResized(int posx, int posy, int units_per_px, const char *text)
+{
+    // Counter for amount of blank characters in a line
+    s32 count;
+    int justifyx, justifyy;
+    s32 startx,starty;
+    const char *ebuf;
+    const char *prev_ebuf;
+    s32 chr;
+    s32 len;
+    s32 w, h;
+
+    if ((lbFontPtr == NULL) || (text == NULL))
+        return true;
+    count = 0;
+    justifyx = lbTextJustifyWindow.x - lbTextClipWindow.x;
+    justifyy = lbTextJustifyWindow.y - lbTextClipWindow.y;
+    posx += justifyx;
+    startx = posx;
+    starty = posy + justifyy;
+
+    h = LbTextLineHeight() * units_per_px / 16;
+    for (ebuf=text; *ebuf != '\0'; ebuf++)
+    {
+        prev_ebuf=ebuf-1;
+        chr = (ubyte)*ebuf;
+        if (is_wide_charcode(chr))
+        {
+            ebuf++;
+            if (*ebuf == '\0') break;
+            chr = (chr<<8) + (ubyte)*ebuf;
+        }
+
+        if (chr > 32)
+        {
+            w = LbTextCharWidth(chr) * units_per_px / 16;
+            if ((posx+w-justifyx <= lbTextJustifyWindow.width) || (count > 0) ||
+              !LbIAlignMethodSet(lbDisplay.DrawFlags))
+            {
+                posx += w;
+                continue;
+            }
+            // If the char exceeds screen, and there were no spaces in that line,
+            // and alignment is set - divide the line here
+            w = LbTextCharWidth(' ') * units_per_px / 16;
+            posx += w;
+            ebuf = prev_ebuf;
+            // We already know that alignment is set - don't re-check
+            {
+                posx = startx;
+                starty += h;
+            }
+            count = 0;
+        } else
+
+        if (chr == ' ')
+        {
+            w = LbTextCharWidth(' ') * units_per_px / 16;
+            len = LbSprFontWordWidth(lbFontPtr,ebuf+1) * units_per_px / 16;
+            if (posx+w+len-justifyx <= lbTextJustifyWindow.width)
+            {
+                count++;
+                posx += w;
+                continue;
+            }
+            posx += w;
+            // End the line only if align method is set
+            if (LbIAlignMethodSet(lbDisplay.DrawFlags))
+            {
+              posx = startx;
+              starty += h;
+            }
+            count = 0;
+        } else
+
+        if (chr == '\n')
+        {
+            w = 0;
+            // We've got EOL sign - end the line
+            posx = startx;
+            starty += h;
+            count = 0;
+        } else
+
+        if (chr == '\t')
+        {
+            w = LbTextCharWidth(' ') * units_per_px / 16;
+            posx += lbSpacesPerTab*w;
+            len = LbSprFontWordWidth(lbFontPtr,ebuf+1) * units_per_px / 16;
+            if (posx+len-justifyx <= lbTextJustifyWindow.width)
+            {
+              count += lbSpacesPerTab;
+              continue;
+            }
+            if (LbIAlignMethodSet(lbDisplay.DrawFlags))
+            {
+              posx = startx;
+              starty += h;
+            }
+            count = 0;
+            continue;
+
+        } else
+
+        if ((chr == 6) || (chr == 7) || (chr == 8) || (chr == 9))
+        {
+            if (posx-justifyx > lbTextJustifyWindow.width)
+            {
+              posx = startx;
+              count = 0;
+              starty += h;
+            }
+            LbIApplyControlCharToAlignSettings(&ebuf);
+        } else
+
+        if (chr == 14)
+        {
+            ebuf++;
+            if (*ebuf == '\0')
+              break;
+        }
+    }
+    // Add the last line height only if it was actually started (has non-zero width)
+    if (posx != startx)
+        starty += h;
+    return starty - posy - justifyy;
+}
+
 TbBool LbTextDrawResized(int posx, int posy, int units_per_px, const char *text)
 {
     struct TbAnyWindow grwnd;
     // Counter for amount of blank characters in a line
-    long count;
-    long justifyx,justifyy;
-    long startx,starty;
+    s32 count;
+    int justifyx, justifyy;
+    s32 startx,starty;
     const char *sbuf;
     const char *ebuf;
     const char *prev_ebuf;
-    long chr;
-    long x, y, len;
-    long w, h;
+    s32 chr;
+    s32 x, y, len;
+    s32 w, h;
 
     if ((lbFontPtr == NULL) || (text == NULL))
         return true;

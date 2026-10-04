@@ -58,13 +58,25 @@ int LbTextStringWidth(const char *text);
 int LbTextStringWidthResized(const char *text, int units_per_px);
 
 /**
- * Computes height of given text if drawn on screen.
+ * Computes height of given multi-line text if drawn on screen unbound (no wraps).
  * The currently set font is used for the computations.
  *
  * @param text The text to be probed.
  * @return Height of the text image, in pixels.
  */
 int LbTextStringHeight(const char *text);
+
+/**
+ * Computes height of given multi-line text if drawn on screen, with wraps on clip window.
+ * The currently set font is used for the computations.
+ *
+ * This recreates line wrapping from LbTextDrawResized(), returning
+ * height of the text if that function is called.
+ *
+ * @param text The text to be probed.
+ * @return Height of the text image, in pixels.
+ */
+int LbTextWrapStringHeightResized(int posx, int posy, int units_per_px, const char *text);
 
 /**
  * Draws a string in the current text window.
