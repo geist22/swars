@@ -29,6 +29,7 @@
 
 #include "app_sprite.h"
 #include "app_text_ba.h"
+#include "app_text_cw.h"
 #include "app_text_sf.h"
 #include "sprfontut.h"
 
@@ -54,6 +55,20 @@ void hud_draw_clipped_text(struct DIHudClippedText *p_diClpText)
       lbDisplay.GraphicsWindowWidth, lbDisplay.GraphicsWindowHeight);
 }
 
+int hud_width_shad_cl_flash_wrapped_text(short px, short py,
+  struct TbSprite *p_font, const char *text, ushort drwflags, short units_per_px)
+{
+    ushort space_bkp;
+    int height;
+
+    lbFontPtr = p_font;
+    lbDisplay.DrawFlags = drwflags;
+    space_bkp = FontSpacingAlter(p_font, 12);
+    height = LbTextWrapStringHeightResized(px, py, units_per_px, text);
+    FontSpacingRestore(p_font, space_bkp);
+    return height;
+}
+
 void hud_draw_shad_cl_flash_wrapped_text(struct DIHudWrappedText *p_diWrpText)
 {
     ushort space_bkp;
@@ -66,7 +81,23 @@ void hud_draw_shad_cl_flash_wrapped_text(struct DIHudWrappedText *p_diWrpText)
 #endif
     space_bkp = FontSpacingAlter(p_diWrpText->pFont, 12);
     AppTextDrawShadClFlashResized(p_diWrpText->Rect.X, p_diWrpText->Rect.Y,
-      p_diWrpText->Scale, p_diWrpText->Bright, p_diWrpText->Text);
+      p_diWrpText->Scale, p_diWrpText->Timer, p_diWrpText->Text);
+    FontSpacingRestore(p_diWrpText->pFont, space_bkp);
+}
+
+void hud_draw_colour_wave_wrapped_text(struct DIHudWrappedText *p_diWrpText)
+{
+    ushort space_bkp;
+
+    lbFontPtr = p_diWrpText->pFont;
+    lbDisplay.DrawColour = p_diWrpText->Col;
+    lbDisplay.DrawFlags = p_diWrpText->DrwFlags;
+#if defined(LB_ENABLE_SHADOW_COLOUR)
+    lbDisplay.ShadowColour = p_diWrpText->Shade;
+#endif
+    space_bkp = FontSpacingAlter(p_diWrpText->pFont, 12);
+    AppTextDrawColourWaveResized(p_diWrpText->Rect.X, p_diWrpText->Rect.Y,
+      p_diWrpText->Scale, p_diWrpText->Text);
     FontSpacingRestore(p_diWrpText->pFont, space_bkp);
 }
 

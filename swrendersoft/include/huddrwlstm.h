@@ -32,18 +32,35 @@ extern "C" {
 #pragma pack()
 /******************************************************************************/
 
-void enlist_hud_draw_box(short px, short py, short width, short height,
+TbBool enlist_hud_draw_box(short px, short py, short width, short height,
   ushort drwflags, TbPixel colour);
 
-void enlist_hud_draw_sprite(short px, short py, struct TbSprite *p_spr,
+TbBool enlist_hud_draw_sprite(short px, short py, struct TbSprite *p_spr,
   ushort drwflags, short brig);
 
-void enlist_hud_draw_sprite_scaled(short px, short py, struct TbSprite *p_spr,
+TbBool enlist_hud_draw_sprite_scaled(short px, short py, struct TbSprite *p_spr,
   short dest_width, short dest_height, ushort drwflags, short brig);
 
-void enlist_hud_draw_clipped_text(short px, short py, short width, short height,
+TbBool enlist_hud_draw_clipped_text(short px, short py, short width, short height,
   short shift_x, short shift_y, struct TbSprite *p_font, const char *text,
   short units_per_px, short brig, TbPixel colour);
+
+/** Check height of line-wrapped text with shadow colour flash effect.
+ */
+int get_width_shad_cl_flash_wrapped_text(short px, short py,
+  struct TbSprite *p_font, const char *text, short units_per_px);
+
+/** Enlist drawing line-wrapped text with shadow colour flash effect.
+ */
+TbBool enlist_hud_draw_shad_cl_flash_wrapped_text(short px, short py,
+  short width, short height, struct TbSprite *p_font, const char *text,
+  short units_per_px, short timer, TbPixel colour, TbPixel shcolour);
+
+/** Enlist drawing line-wrapped text with colour brightness wave effect.
+ */
+TbBool enlist_hud_draw_colour_wave_wrapped_text(short px, short py,
+  short width, short height, struct TbSprite *p_font, const char *text,
+  short units_per_px, TbPixel colour, TbPixel shcolour);
 
 /******************************************************************************/
 #ifdef __cplusplus

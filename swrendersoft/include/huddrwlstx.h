@@ -77,7 +77,11 @@ struct DrawItemHud {
 /******************************************************************************/
 
 void hud_draw_clipped_text(struct DIHudClippedText *p_diClpText);
+void hud_draw_colour_wave_wrapped_text(struct DIHudWrappedText *p_diWrpText);
 void hud_draw_shad_cl_flash_wrapped_text(struct DIHudWrappedText *p_diWrpText);
+
+int hud_width_shad_cl_flash_wrapped_text(short px, short py,
+  struct TbSprite *p_font, const char *text, ushort drwflags, short units_per_px);
 
 /******************************************************************************/
 #ifdef __cplusplus

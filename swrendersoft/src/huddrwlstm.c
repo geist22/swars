@@ -37,15 +37,18 @@
 #pragma pack()
 /******************************************************************************/
 
-void enlist_hud_draw_box(short px, short py, short width, short height, ushort drwflags, TbPixel colour)
+TbBool enlist_hud_draw_box(short px, short py, short width, short height,
+  ushort drwflags, TbPixel colour)
 {
     //TODO enlist instead of drawing directly
     lbDisplay.DrawFlags = drwflags;
 
     LbDrawBox(px, py, width, height, colour);
+    return true;
 }
 
-void enlist_hud_draw_sprite(short px, short py, struct TbSprite *p_spr, ushort drwflags, short brig)
+TbBool enlist_hud_draw_sprite(short px, short py, struct TbSprite *p_spr,
+  ushort drwflags, short brig)
 {
     if (brig > PALETTE_FADE_LEVELS-1)
         brig = PALETTE_FADE_LEVELS-1;
@@ -69,9 +72,10 @@ void enlist_hud_draw_sprite(short px, short py, struct TbSprite *p_spr, ushort d
     {
         LbSpriteDraw(px, py, p_spr);
     }
+    return true;
 }
 
-void enlist_hud_draw_sprite_scaled(short px, short py, struct TbSprite *p_spr,
+TbBool enlist_hud_draw_sprite_scaled(short px, short py, struct TbSprite *p_spr,
   short dest_width, short dest_height, ushort drwflags, short brig)
 {
     if (brig > PALETTE_FADE_LEVELS-1)
@@ -97,9 +101,10 @@ void enlist_hud_draw_sprite_scaled(short px, short py, struct TbSprite *p_spr,
     {
         LbSpriteDrawScaled(px, py, p_spr, dest_width, dest_height);
     }
+    return true;
 }
 
-void enlist_hud_draw_clipped_text(short px, short py, short width, short height,
+TbBool enlist_hud_draw_clipped_text(short px, short py, short width, short height,
   short shift_x, short shift_y, struct TbSprite *p_font, const char *text,
   short units_per_px, short brig, TbPixel colour)
 {
@@ -128,11 +133,20 @@ void enlist_hud_draw_clipped_text(short px, short py, short width, short height,
 
     //TODO enlist instead of drawing directly
     hud_draw_clipped_text(&p_di->U.ClpText);
+    return true;
 }
 
-/** Enlist drawing line-wrapped text with shadow colour flash effect.
- */
-void enlist_hud_draw_shad_cl_flash_wrapped_text(short px, short py,
+int get_width_shad_cl_flash_wrapped_text(short px, short py,
+  struct TbSprite *p_font, const char *text, short units_per_px)
+{
+    ushort drwflags;
+
+    drwflags = Lb_TEXT_ONE_COLOR | Lb_TEXT_HALIGN_LEFT;
+    return hud_width_shad_cl_flash_wrapped_text(px, py,
+      p_font, text, drwflags, units_per_px);
+}
+
+TbBool enlist_hud_draw_shad_cl_flash_wrapped_text(short px, short py,
   short width, short height, struct TbSprite *p_font, const char *text,
   short units_per_px, short timer, TbPixel colour, TbPixel shcolour)
 {
@@ -156,6 +170,34 @@ void enlist_hud_draw_shad_cl_flash_wrapped_text(short px, short py,
 
     //TODO enlist instead of drawing directly
     hud_draw_shad_cl_flash_wrapped_text(&p_di->U.WrpText);
+    return true;
+}
+
+TbBool enlist_hud_draw_colour_wave_wrapped_text(short px, short py,
+  short width, short height, struct TbSprite *p_font, const char *text,
+  short units_per_px, TbPixel colour, TbPixel shcolour)
+{
+    struct DrawItemHud dih;
+    struct DrawItemHud *p_di;
+
+    p_di = &dih;
+
+    p_di->U.WrpText.Rect.X = px;
+    p_di->U.WrpText.Rect.Y = py;
+    p_di->U.WrpText.Rect.Width = width;
+    p_di->U.WrpText.Rect.Height = height;
+    p_di->U.WrpText.pFont = p_font;
+    p_di->U.WrpText.Text = text;
+    p_di->U.WrpText.Timer = 0;
+    p_di->U.WrpText.DrwFlags = Lb_TEXT_ONE_COLOR | Lb_TEXT_HALIGN_LEFT;
+    p_di->U.WrpText.Scale = units_per_px;
+    p_di->U.WrpText.Bright = 32;
+    p_di->U.WrpText.Col = colour;
+    p_di->U.WrpText.Shade = shcolour;
+
+    //TODO enlist instead of drawing directly
+    hud_draw_colour_wave_wrapped_text(&p_di->U.WrpText);
+    return true;
 }
 
 /******************************************************************************/
