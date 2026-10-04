@@ -27,6 +27,7 @@
 #include "bfsprite.h"
 #include "bftext.h"
 
+#include "app_box.h"
 #include "app_sprite.h"
 #include "app_text_ba.h"
 #include "app_text_cw.h"
@@ -39,6 +40,22 @@
 
 #pragma pack()
 /******************************************************************************/
+
+void hud_draw_box(struct DIHudBox *p_diBox)
+{
+    lbDisplay.DrawFlags = p_diBox->DrwFlags;
+
+    LbDrawBox(p_diBox->Rect.X, p_diBox->Rect.Y,
+      p_diBox->Rect.Width, p_diBox->Rect.Height, p_diBox->Col);
+}
+
+void hud_draw_slant_box(struct DIHudBox *p_diBox)
+{
+    lbDisplay.DrawFlags = p_diBox->DrwFlags;
+
+    AppDrawSlantBox(p_diBox->Rect.X, p_diBox->Rect.Y,
+      p_diBox->Rect.Width, p_diBox->Rect.Height, p_diBox->Col);
+}
 
 void hud_draw_clipped_text(struct DIHudClippedText *p_diClpText)
 {

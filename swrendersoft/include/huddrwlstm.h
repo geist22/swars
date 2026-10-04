@@ -33,7 +33,10 @@ extern "C" {
 /******************************************************************************/
 
 TbBool enlist_hud_draw_box(short px, short py, short width, short height,
-  ushort drwflags, TbPixel colour);
+  ushort drwflags, short brig, TbPixel colour);
+
+TbBool enlist_hud_draw_slant_box(short px, short py, short width, short height,
+  ushort drwflags, short brig, TbPixel colour);
 
 TbBool enlist_hud_draw_sprite(short px, short py, struct TbSprite *p_spr,
   ushort drwflags, short brig);

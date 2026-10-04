@@ -41,6 +41,14 @@ struct DIScrRect {
     short Height;
 };
 
+struct DIHudBox {
+    struct DIScrRect Rect;
+    short Timer;
+    ushort DrwFlags;
+    ubyte Bright;
+    ubyte Col;
+};
+
 struct DIHudClippedText {
     struct DIScrRect Rect;
     struct TbSprite *pFont;
@@ -66,6 +74,7 @@ struct DIHudWrappedText {
 
 struct DrawItemHud {
 	union {
+        struct DIHudBox Box;
 		struct DIHudClippedText ClpText;
 		struct DIHudWrappedText WrpText;
 	} U;
@@ -75,6 +84,9 @@ struct DrawItemHud {
 
 #pragma pack()
 /******************************************************************************/
+
+void hud_draw_box(struct DIHudBox *p_diBox);
+void hud_draw_slant_box(struct DIHudBox *p_diBox);
 
 void hud_draw_clipped_text(struct DIHudClippedText *p_diClpText);
 void hud_draw_colour_wave_wrapped_text(struct DIHudWrappedText *p_diWrpText);

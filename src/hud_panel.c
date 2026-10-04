@@ -265,15 +265,6 @@ void init_scanner(void)
 
 void SCANNER_draw_hv_line(int scr_x1, int scr_y1, int scr_x2, int scr_y2, ubyte col1, int a6, int brig)
 {
-#if 0
-    asm volatile (
-      "push %6\n"
-      "push %5\n"
-      "push %4\n"
-      "call ASM_SCANNER_draw_hv_line\n"
-        : : "a" (scr_x1), "d" (scr_y1), "b" (scr_x2), "c" (scr_y2), "g" (col1), "g" (a6), "g" (base_bri));
-#endif
-
     lbDisplay.DrawFlags = Lb_SPRITE_TRANSPAR4;
     low_trans_grey_brightness = brig;
     LbDrawHVLineLowTransGrey(scr_x1, scr_y1, scr_x2, scr_y2, col1);
@@ -520,11 +511,13 @@ static void draw_objective_info_background(int scr_x, int scr_y, int width, int 
     int y;
     int i;
 
+    lbDisplay.DrawFlags = Lb_SPRITE_TRANSPAR4;
+    low_trans_grey_brightness = ingame.Scanner.Contrast;
+
     y = scr_y;
     for (i = 0; i < height; i++)
     {
-        SCANNER_draw_hv_line(scr_x, y, scr_x + width - 1, y, SCANNER_colour[ScnClr_Text],
-          ingame.Scanner.Brightness, ingame.Scanner.Contrast);
+        LbDrawHVLineLowTransGrey(scr_x, y, scr_x + width - 1, y, SCANNER_colour[ScnClr_Text]);
         ++y;
     }
 }
@@ -865,7 +858,7 @@ void draw_fourpack_amount(short x, ushort y, ushort amount)
         p_shift = &game_panel_shifts[PaSh_WEP_FOURPACK_SLOTS + i];
         p_size = &game_panel_shifts[PaSh_WEP_FOURPACK_SIZE];
         enlist_hud_draw_box(x + p_shift->x, y + p_shift->y, p_size->x, p_size->y,
-          drwflags, colour);
+          drwflags, 32, colour);
     }
 }
 
@@ -1751,6 +1744,9 @@ void draw_wep_energy_level(short x, short y, ushort w, ushort h, short lv, ushor
     if ((lv <= 0) || (lvmax == 0))
         return;
 
+    lbDisplay.DrawFlags = Lb_SPRITE_TRANSPAR4;
+    low_trans_grey_brightness = 8;
+
     ch = h * lv / lvmax;
 
     short cx, cy;
@@ -1762,7 +1758,7 @@ void draw_wep_energy_level(short x, short y, ushort w, ushort h, short lv, ushor
 
         cy1 = h + cy;
         cy2 = h + cy - ch;
-        SCANNER_draw_hv_line(cx, cy1, cx, cy2, col, 5, 8);
+        LbDrawHVLineLowTransGrey(cx, cy1, cx, cy2, col);
         ++cx;
         ++cy;
     }
@@ -1781,6 +1777,8 @@ void draw_mood_level(short x, short y, ushort w, int h, short value)
         col = pixmap.fade_table[PALETTE_8b_COLORS * (63 - fade) + colour_lookup[ColLU_RED]];
     else
         col = pixmap.fade_table[PALETTE_8b_COLORS * (63 + fade) + colour_lookup[ColLU_BLUE]];
+    lbDisplay.DrawFlags = Lb_SPRITE_TRANSPAR4;
+    low_trans_grey_brightness = 8;
 
     cent_x = x + (w >> 1);
     x1 = cent_x;
@@ -1789,7 +1787,7 @@ void draw_mood_level(short x, short y, ushort w, int h, short value)
 
     for (i = h; i > 0; i--)
     {
-        SCANNER_draw_hv_line(x1, y1, x2, y1, col, 5, 8);
+        LbDrawHVLineLowTransGrey(x1, y1, x2, y1, col);
         x1--;
         x2--;
         y1++;

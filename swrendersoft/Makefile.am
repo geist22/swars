@@ -3,6 +3,7 @@ ACLOCAL_AMFLAGS = --install -I m4
 lib_LIBRARIES = libswrender.a
 
 libswrender_a_headers_src = \
+  include/app_box.h \
   include/app_gentab.h \
   include/app_line.h \
   include/app_sprite.h \
@@ -45,6 +46,8 @@ libswrender_a_SOURCES = \
   $(libswrender_a_headers_src) \
   src/ap_gspr_map.c \
   src/ap_spr_smap.c \
+  src/app_box.c \
+  src/app_box_lt.c \
   src/app_gengh.c \
   src/app_hvline_lt.c \
   src/app_spr_init.c \
