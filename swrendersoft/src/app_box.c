@@ -19,18 +19,19 @@
 /******************************************************************************/
 #include "app_box.h"
 
-#include <string.h>
 #include <assert.h>
+#include <stdlib.h>
+#include <string.h>
 #include "bfscreen.h"
 #include "bfline.h"
 
 /******************************************************************************/
 
-TbResult AppDrawSlantBoxClip(s32 destX, s32 destY, u32 width, u32 height,
+TbResult AppDrawSlantBoxClip(s32 destX, s32 destY, s32 width, s32 height,
   TbPixel colour)
 {
-    short cx, cy;
-    short ch;
+    s32 cx, cy;
+    s32 ch;
 
     cx = destX;
     cy = destY;
@@ -43,27 +44,44 @@ TbResult AppDrawSlantBoxClip(s32 destX, s32 destY, u32 width, u32 height,
     return Lb_SUCCESS;
 }
 
-TbResult AppDrawSlantBox(s32 X, s32 Y, s32 Width, s32 Height, TbPixel colour)
+TbResult AppDrawSlantBoxOutline(s32 destX, s32 destY, s32 width, s32 height,
+  TbPixel colour)
 {
-    if (lbDisplay.DrawFlags & Lb_SPRITE_OUTLINE)
-    {
-        s32 dtWidth;
+    s32 dtWidth;
 
-        if (Width < 1 || Height < 1)
-            return Lb_FAIL;
-        dtWidth = Height; // Skew at 45 degrees
-        LbDrawHVLine(X + dtWidth, Y, X + Width - 1 + dtWidth, Y, colour);
-        LbDrawHVLine(X, Y + Height - 1, X + Width - 1, Y + Height - 1, colour);
-        if (Height > 2)
-        {
-            LbDrawLine(X + dtWidth - 1, Y + 1, X + 1, Y + Height - 2, colour);
-            LbDrawLine(X + Width + dtWidth - 2, Y + 1, X + Width, Y + Height - 2, colour);
-        }
-    } else
+    if (width == 0)
+        width++;
+    if (height == 0)
+        height++;
+
+    dtWidth = height - 1; // Skew at 45 degrees
+    LbDrawHVLine(destX, destY,
+      destX + width - 1, destY, colour);
+    if (height != 1)
+        LbDrawHVLine(destX - dtWidth, destY + height - 1,
+          destX + width - dtWidth - 1, destY + height - 1, colour);
+    if (abs(height) > 2)
     {
-        AppDrawSlantBoxClip(X, Y, Width, Height, colour);
+        LbDrawLine(destX - 1, destY + 1,
+          destX + 1 - dtWidth, destY + height - 2, colour);
+        if (width != 1)
+            LbDrawLine(destX + width - 2, destY + 1,
+              destX + width - dtWidth, destY + height - 2, colour);
     }
     return Lb_SUCCESS;
+}
+
+TbResult AppDrawSlantBox(s32 X, s32 Y, s32 Width, s32 Height, TbPixel colour)
+{
+    TbResult ret;
+    if (lbDisplay.DrawFlags & Lb_SPRITE_OUTLINE)
+    {
+        ret = AppDrawSlantBoxOutline(X, Y, Width, Height, colour);
+    } else
+    {
+        ret = AppDrawSlantBoxClip(X, Y, Width, Height, colour);
+    }
+    return ret;
 }
 
 /******************************************************************************/
