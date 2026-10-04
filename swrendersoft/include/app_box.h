@@ -34,6 +34,10 @@ extern "C" {
  */
 TbResult AppDrawSlantBox(s32 X, s32 Y, s32 Width, s32 Height, TbPixel colour);
 
+TbResult AppDrawBoxLowTransGrey(s32 X, s32 Y, s32 Width, s32 Height, TbPixel colour);
+
+TbResult AppDrawSlantBoxLowTransGrey(s32 X, s32 Y, s32 Width, s32 Height, TbPixel colour);
+
 #ifdef __cplusplus
 };
 #endif

@@ -21,6 +21,7 @@
 
 #include <string.h>
 #include <assert.h>
+#include "bfbox.h"
 #include "bfscreen.h"
 #include "bfline.h"
 
@@ -29,10 +30,59 @@
 
 /******************************************************************************/
 
+TbResult AppDrawBoxLowTransGreyClip(s32 destX, s32 destY, u32 width, u32 height,
+  TbPixel colour)
+{
+    short cx, cy;
+    short ch;
+
+    cx = destX;
+    cy = destY;
+    for (ch = height; ch > 0; ch--)
+    {
+        LbDrawHVLineLowTransGrey(cx, cy, cx + width, cy, colour);
+        ++cy;
+    }
+    return Lb_SUCCESS;
+}
+
 TbResult AppDrawBoxLowTransGrey(s32 X, s32 Y, s32 Width, s32 Height, TbPixel colour)
 {
-    //TODO implement
+    if ((lbDisplay.DrawFlags & (Lb_SPRITE_TRANSPAR4|Lb_SPRITE_TRANSPAR8)) != 0)
+    {
+        return AppDrawBoxLowTransGreyClip(X, Y, Width, Height, colour);
+    } else
+    {
+        return LbDrawBox(X, Y, Width, Height, colour);
+    }
+}
+
+TbResult AppDrawSlantBoxLowTransGreyClip(s32 destX, s32 destY, u32 width, u32 height,
+  TbPixel colour)
+{
+    short cx, cy;
+    short ch;
+
+    cx = destX;
+    cy = destY;
+    for (ch = height; ch > 0; ch--)
+    {
+        LbDrawHVLineLowTransGrey(cx, cy, cx + width, cy, colour);
+        --cx;
+        ++cy;
+    }
     return Lb_SUCCESS;
+}
+
+TbResult AppDrawSlantBoxLowTransGrey(s32 X, s32 Y, s32 Width, s32 Height, TbPixel colour)
+{
+    if ((lbDisplay.DrawFlags & (Lb_SPRITE_TRANSPAR4|Lb_SPRITE_TRANSPAR8)) != 0)
+    {
+        return AppDrawSlantBoxLowTransGreyClip(X, Y, Width, Height, colour);
+    } else
+    {
+        return AppDrawSlantBox(X, Y, Width, Height, colour);
+    }
 }
 
 /******************************************************************************/
