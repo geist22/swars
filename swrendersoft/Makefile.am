@@ -33,6 +33,7 @@ libswrender_a_headers_src = \
   include/frame_sprani.h \
   include/holodrwlstx.h \
   include/huddrwlstm.h \
+  include/huddrwlstx.h \
   include/privrdlog.h \
   include/render_gpoly.h
 
@@ -76,6 +77,7 @@ libswrender_a_SOURCES = \
   src/frame_sprani.c \
   src/holodrwlstx.c \
   src/huddrwlstm.c \
+  src/huddrwlstx.c \
   src/render_gpoly.c
 
 libswrender_a_CPPFLAGS = \

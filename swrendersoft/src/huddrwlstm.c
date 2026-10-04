@@ -28,6 +28,7 @@
 
 #include "app_sprite.h"
 #include "app_text_ba.h"
+#include "huddrwlstx.h"
 
 /******************************************************************************/
 #pragma pack(1)
@@ -117,6 +118,15 @@ void enlist_hud_draw_clipped_text(short px, short py, short width, short height,
 
     LbTextSetWindow(lbDisplay.GraphicsWindowX, lbDisplay.GraphicsWindowY,
       lbDisplay.GraphicsWindowWidth, lbDisplay.GraphicsWindowHeight);
+}
+
+/** Enlist drawing line-wrapped text with shadow colour flash effect.
+ */
+void enlist_hud_draw_shad_cl_flash_wrapped_text(short px, short py,
+  short width, short height, struct TbSprite *p_font, const char *text,
+  short units_per_px, short timer, TbPixel colour, TbPixel shcolour)
+{
+    //TODO enlist instead of drawing directly
 }
 
 /******************************************************************************/
