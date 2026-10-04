@@ -89,6 +89,32 @@ TbBool enlist_hud_draw_slant_box(short px, short py, short width, short height,
     return true;
 }
 
+TbBool enlist_hud_draw_vslant_box(short px, short py, short width, short height,
+  ushort drwflags, short brig, TbPixel colour)
+{
+    struct DrawItemHud dih;
+    struct DrawItemHud *p_di;
+
+    if (brig > PALETTE_FADE_LEVELS-1)
+        brig = PALETTE_FADE_LEVELS-1;
+    if (brig < 0)
+        brig = 0;
+
+    p_di = &dih;
+
+    p_di->U.Box.Rect.X = px;
+    p_di->U.Box.Rect.Y = py;
+    p_di->U.Box.Rect.Width = width;
+    p_di->U.Box.Rect.Height = height;
+    p_di->U.Box.DrwFlags = drwflags;
+    p_di->U.Box.Bright = brig;
+    p_di->U.Box.Col = colour;
+
+    //TODO enlist instead of drawing directly
+    hud_draw_vslant_box(&p_di->U.Box);
+    return true;
+}
+
 TbBool enlist_hud_draw_low_trans_grey_box(short px, short py,
   short width, short height, ushort drwflags, short brig, TbPixel colour)
 {
@@ -138,6 +164,32 @@ TbBool enlist_hud_draw_low_trans_grey_slant_box(short px, short py,
 
     //TODO enlist instead of drawing directly
     hud_draw_low_trans_grey_slant_box(&p_di->U.Box);
+    return true;
+}
+
+TbBool enlist_hud_draw_low_trans_grey_vslant_box(short px, short py,
+  short width, short height, ushort drwflags, short brig, TbPixel colour)
+{
+    struct DrawItemHud dih;
+    struct DrawItemHud *p_di;
+
+    if (brig > PALETTE_FADE_LEVELS-1)
+        brig = PALETTE_FADE_LEVELS-1;
+    if (brig < 0)
+        brig = 0;
+
+    p_di = &dih;
+
+    p_di->U.Box.Rect.X = px;
+    p_di->U.Box.Rect.Y = py;
+    p_di->U.Box.Rect.Width = width;
+    p_di->U.Box.Rect.Height = height;
+    p_di->U.Box.DrwFlags = drwflags;
+    p_di->U.Box.Bright = brig;
+    p_di->U.Box.Col = colour;
+
+    //TODO enlist instead of drawing directly
+    hud_draw_low_trans_grey_vslant_box(&p_di->U.Box);
     return true;
 }
 

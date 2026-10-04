@@ -85,4 +85,32 @@ TbResult AppDrawSlantBoxLowTransGrey(s32 X, s32 Y, s32 Width, s32 Height, TbPixe
     }
 }
 
+TbResult AppDrawVSlantBoxLowTransGreyClip(s32 destX, s32 destY, s32 width, s32 height,
+  TbPixel colour)
+{
+    s32 cx, cy;
+    s32 cw;
+
+    cx = destX;
+    cy = destY;
+    for (cw = width; cw > 0; cw--)
+    {
+        LbDrawHVLineLowTransGrey(cx, cy, cx, cy + height, colour);
+        ++cx;
+        ++cy;
+    }
+    return Lb_SUCCESS;
+}
+
+TbResult AppDrawVSlantBoxLowTransGrey(s32 X, s32 Y, s32 Width, s32 Height, TbPixel colour)
+{
+    if ((lbDisplay.DrawFlags & (Lb_SPRITE_TRANSPAR4|Lb_SPRITE_TRANSPAR8)) != 0)
+    {
+        return AppDrawVSlantBoxLowTransGreyClip(X, Y, Width, Height, colour);
+    } else
+    {
+        return AppDrawVSlantBox(X, Y, Width, Height, colour);
+    }
+}
+
 /******************************************************************************/

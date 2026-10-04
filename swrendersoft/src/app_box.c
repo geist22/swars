@@ -84,4 +84,61 @@ TbResult AppDrawSlantBox(s32 X, s32 Y, s32 Width, s32 Height, TbPixel colour)
     return ret;
 }
 
+TbResult AppDrawVSlantBoxClip(s32 destX, s32 destY, s32 width, s32 height,
+  TbPixel colour)
+{
+    s32 cx, cy;
+    s32 cw;
+
+    cx = destX;
+    cy = destY;
+    for (cw = width; cw > 0; cw--)
+    {
+        LbDrawLine(cx, cy, cx, cy + height, colour);
+        ++cx;
+        ++cy;
+    }
+    return Lb_SUCCESS;
+}
+
+TbResult AppDrawVSlantBoxOutline(s32 destX, s32 destY, s32 width, s32 height,
+  TbPixel colour)
+{
+    s32 dtHeight;
+
+    if (width == 0)
+        width++;
+    if (height == 0)
+        height++;
+
+    dtHeight = width - 1; // Skew at 45 degrees
+    LbDrawHVLine(destX, destY,
+      destX, destY + height, colour);
+    if (height != 1)
+        LbDrawHVLine(destX + width - 1, destY + dtHeight,
+          destX + width - 1, destY + height + dtHeight, colour);
+    if (abs(width) > 2)
+    {
+        LbDrawLine(destX + 1, destY + 1,
+          destX + width - 2, destY + dtHeight - 1, colour);
+        if (width != 1)
+            LbDrawLine(destX + 1, destY + height + 1,
+              destX + width - 2, destY + height + dtHeight - 1, colour);
+    }
+    return Lb_SUCCESS;
+}
+
+TbResult AppDrawVSlantBox(s32 X, s32 Y, s32 Width, s32 Height, TbPixel colour)
+{
+    TbResult ret;
+    if (lbDisplay.DrawFlags & Lb_SPRITE_OUTLINE)
+    {
+        ret = AppDrawVSlantBoxOutline(X, Y, Width, Height, colour);
+    } else
+    {
+        ret = AppDrawVSlantBoxClip(X, Y, Width, Height, colour);
+    }
+    return ret;
+}
+
 /******************************************************************************/

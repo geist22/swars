@@ -1726,7 +1726,7 @@ void draw_health_level(short x, short y, ushort w, ushort h, short lv, ushort lv
 void draw_wep_energy_level(short x, short y, ushort w, ushort h, short lv, ushort lvmax, TbPixel colour, ubyte transp)
 {
     ushort drwflags;
-    short cw, ch;
+    short ch;
 
     if ((lv <= 0) || (lvmax == 0))
         return;
@@ -1735,23 +1735,7 @@ void draw_wep_energy_level(short x, short y, ushort w, ushort h, short lv, ushor
 
     ch = h * lv / lvmax;
 
-    lbDisplay.DrawFlags = drwflags;
-    low_trans_grey_brightness = 8;
-
-    short cx, cy;
-    cx = x;
-    cy = y;
-
-    for (cw = w; cw > 0; cw--)
-    {
-        short cy1, cy2;
-
-        cy1 = h + cy;
-        cy2 = h + cy - ch;
-        LbDrawHVLineLowTransGrey(cx, cy1, cx, cy2, colour);
-        ++cx;
-        ++cy;
-    }
+    enlist_hud_draw_low_trans_grey_vslant_box(x, y + h, w, -ch, drwflags, 8, colour);
 }
 
 void draw_mood_level(short x, short y, ushort w, int h, short value)
