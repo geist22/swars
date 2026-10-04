@@ -27,11 +27,57 @@ extern "C" {
 /******************************************************************************/
 #pragma pack(1)
 
- struct TbSprite;
+struct TbSprite;
+
+struct DIScrPoint {
+    short X;
+    short Y;
+};
+
+struct DIScrRect {
+    short X;
+    short Y;
+    short Width;
+    short Height;
+};
+
+struct DIHudClippedText {
+    struct DIScrRect Rect;
+    struct TbSprite *pFont;
+    const char *Text;
+    struct DIScrPoint Shift;
+    ubyte Scale;
+    ubyte Bright;
+    ubyte Col;
+    ubyte Shade;
+};
+
+struct DIHudWrappedText {
+    struct DIScrRect Rect;
+    struct TbSprite *pFont;
+    const char *Text;
+    short Timer;
+    ushort DrwFlags;
+    ubyte Scale;
+    ubyte Bright;
+    ubyte Col;
+    ubyte Shade;
+};
+
+struct DrawItemHud {
+	union {
+		struct DIHudClippedText ClpText;
+		struct DIHudWrappedText WrpText;
+	} U;
+	ubyte Type;
+	ushort Flags;
+};
 
 #pragma pack()
 /******************************************************************************/
 
+void hud_draw_clipped_text(struct DIHudClippedText *p_diClpText);
+void hud_draw_shad_cl_flash_wrapped_text(struct DIHudWrappedText *p_diWrpText);
 
 /******************************************************************************/
 #ifdef __cplusplus

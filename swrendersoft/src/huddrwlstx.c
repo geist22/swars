@@ -29,6 +29,8 @@
 
 #include "app_sprite.h"
 #include "app_text_ba.h"
+#include "app_text_sf.h"
+#include "sprfontut.h"
 
 /******************************************************************************/
 #pragma pack(1)
@@ -37,5 +39,35 @@
 #pragma pack()
 /******************************************************************************/
 
+void hud_draw_clipped_text(struct DIHudClippedText *p_diClpText)
+{
+    LbTextSetWindow(p_diClpText->Rect.X, p_diClpText->Rect.Y,
+      p_diClpText->Rect.Width, p_diClpText->Rect.Height);
+
+    lbFontPtr = p_diClpText->pFont;
+    lbDisplay.DrawColour = p_diClpText->Col;
+    lbDisplay.DrawFlags = Lb_TEXT_ONE_COLOR;
+    AppTextDrawLineBrigAdjWthPartsResized(p_diClpText->Shift.X, p_diClpText->Shift.Y,
+      p_diClpText->Scale, p_diClpText->Bright, p_diClpText->Text);
+
+    LbTextSetWindow(lbDisplay.GraphicsWindowX, lbDisplay.GraphicsWindowY,
+      lbDisplay.GraphicsWindowWidth, lbDisplay.GraphicsWindowHeight);
+}
+
+void hud_draw_shad_cl_flash_wrapped_text(struct DIHudWrappedText *p_diWrpText)
+{
+    ushort space_bkp;
+
+    lbFontPtr = p_diWrpText->pFont;
+    lbDisplay.DrawColour = p_diWrpText->Col;
+    lbDisplay.DrawFlags = p_diWrpText->DrwFlags;
+#if defined(LB_ENABLE_SHADOW_COLOUR)
+    lbDisplay.ShadowColour = p_diWrpText->Shade;
+#endif
+    space_bkp = FontSpacingAlter(p_diWrpText->pFont, 12);
+    AppTextDrawShadClFlashResized(p_diWrpText->Rect.X, p_diWrpText->Rect.Y,
+      p_diWrpText->Scale, p_diWrpText->Bright, p_diWrpText->Text);
+    FontSpacingRestore(p_diWrpText->pFont, space_bkp);
+}
 
 /******************************************************************************/

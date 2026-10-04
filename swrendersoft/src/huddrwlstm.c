@@ -103,21 +103,31 @@ void enlist_hud_draw_clipped_text(short px, short py, short width, short height,
   short shift_x, short shift_y, struct TbSprite *p_font, const char *text,
   short units_per_px, short brig, TbPixel colour)
 {
+    struct DrawItemHud dih;
+    struct DrawItemHud *p_di;
+
     if (brig > PALETTE_FADE_LEVELS-1)
         brig = PALETTE_FADE_LEVELS-1;
     if (brig < 0)
         brig = 0;
 
+    p_di = &dih;
+
+    p_di->U.ClpText.Rect.X = px;
+    p_di->U.ClpText.Rect.Y = py;
+    p_di->U.ClpText.Rect.Width = width;
+    p_di->U.ClpText.Rect.Height = height;
+    p_di->U.ClpText.pFont = p_font;
+    p_di->U.ClpText.Text = text;
+    p_di->U.ClpText.Shift.X = shift_x;
+    p_di->U.ClpText.Shift.Y = shift_y;
+    p_di->U.ClpText.Scale = units_per_px;
+    p_di->U.ClpText.Bright = brig;
+    p_di->U.ClpText.Col = colour;
+    p_di->U.ClpText.Shade = 0;
+
     //TODO enlist instead of drawing directly
-    LbTextSetWindow(px, py, width, height);
-
-    lbFontPtr = p_font;
-    lbDisplay.DrawColour = colour;
-    lbDisplay.DrawFlags = Lb_TEXT_ONE_COLOR;
-    AppTextDrawLineBrigAdjWthPartsResized(shift_x, shift_y, units_per_px, brig, text);
-
-    LbTextSetWindow(lbDisplay.GraphicsWindowX, lbDisplay.GraphicsWindowY,
-      lbDisplay.GraphicsWindowWidth, lbDisplay.GraphicsWindowHeight);
+    hud_draw_clipped_text(&p_di->U.ClpText);
 }
 
 /** Enlist drawing line-wrapped text with shadow colour flash effect.
@@ -126,7 +136,26 @@ void enlist_hud_draw_shad_cl_flash_wrapped_text(short px, short py,
   short width, short height, struct TbSprite *p_font, const char *text,
   short units_per_px, short timer, TbPixel colour, TbPixel shcolour)
 {
+    struct DrawItemHud dih;
+    struct DrawItemHud *p_di;
+
+    p_di = &dih;
+
+    p_di->U.WrpText.Rect.X = px;
+    p_di->U.WrpText.Rect.Y = py;
+    p_di->U.WrpText.Rect.Width = width;
+    p_di->U.WrpText.Rect.Height = height;
+    p_di->U.WrpText.pFont = p_font;
+    p_di->U.WrpText.Text = text;
+    p_di->U.WrpText.Timer = timer;
+    p_di->U.WrpText.DrwFlags = Lb_TEXT_ONE_COLOR | Lb_TEXT_HALIGN_LEFT;
+    p_di->U.WrpText.Scale = units_per_px;
+    p_di->U.WrpText.Bright = 32;
+    p_di->U.WrpText.Col = colour;
+    p_di->U.WrpText.Shade = shcolour;
+
     //TODO enlist instead of drawing directly
+    hud_draw_shad_cl_flash_wrapped_text(&p_di->U.WrpText);
 }
 
 /******************************************************************************/
