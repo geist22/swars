@@ -263,13 +263,6 @@ void init_scanner(void)
     SCANNER_init();
 }
 
-void SCANNER_draw_hv_line(int scr_x1, int scr_y1, int scr_x2, int scr_y2, ubyte col1, int a6, int brig)
-{
-    lbDisplay.DrawFlags = Lb_SPRITE_TRANSPAR4;
-    low_trans_grey_brightness = brig;
-    LbDrawHVLineLowTransGrey(scr_x1, scr_y1, scr_x2, scr_y2, col1);
-}
-
 void SCANNER_text_draw(const char *text, int shift_x, int height)
 {
     char loc_text[256];
@@ -508,18 +501,11 @@ void players_chat_talk_process_turn(void)
 
 static void draw_objective_info_background(int scr_x, int scr_y, int width, int height)
 {
-    int y;
-    int i;
+    ushort drwflags;
 
-    lbDisplay.DrawFlags = Lb_SPRITE_TRANSPAR4;
-    low_trans_grey_brightness = ingame.Scanner.Contrast;
-
-    y = scr_y;
-    for (i = 0; i < height; i++)
-    {
-        LbDrawHVLineLowTransGrey(scr_x, y, scr_x + width - 1, y, SCANNER_colour[ScnClr_Text]);
-        ++y;
-    }
+    drwflags = Lb_SPRITE_TRANSPAR4;
+    enlist_hud_draw_low_trans_grey_box(scr_x, scr_y, width, height,
+      drwflags, ingame.Scanner.Contrast, SCANNER_colour[ScnClr_Text]);
 }
 
 static void draw_objective_info_text(int scr_x, int scr_y, int width, int height)
@@ -1737,28 +1723,32 @@ void draw_health_level(short x, short y, ushort w, ushort h, short lv, ushort lv
     }
 }
 
-void draw_wep_energy_level(short x, short y, ushort w, ushort h, short lv, ushort lvmax, ubyte col, ubyte transp)
+void draw_wep_energy_level(short x, short y, ushort w, ushort h, short lv, ushort lvmax, TbPixel colour, ubyte transp)
 {
+    ushort drwflags;
     short cw, ch;
 
     if ((lv <= 0) || (lvmax == 0))
         return;
 
-    lbDisplay.DrawFlags = Lb_SPRITE_TRANSPAR4;
-    low_trans_grey_brightness = 8;
+    drwflags = Lb_SPRITE_TRANSPAR4;
 
     ch = h * lv / lvmax;
+
+    lbDisplay.DrawFlags = drwflags;
+    low_trans_grey_brightness = 8;
 
     short cx, cy;
     cx = x;
     cy = y;
+
     for (cw = w; cw > 0; cw--)
     {
         short cy1, cy2;
 
         cy1 = h + cy;
         cy2 = h + cy - ch;
-        LbDrawHVLineLowTransGrey(cx, cy1, cx, cy2, col);
+        LbDrawHVLineLowTransGrey(cx, cy1, cx, cy2, colour);
         ++cx;
         ++cy;
     }
@@ -1767,31 +1757,22 @@ void draw_wep_energy_level(short x, short y, ushort w, ushort h, short lv, ushor
 void draw_mood_level(short x, short y, ushort w, int h, short value)
 {
     short cent_x;
-    short x1, y1, x2;
-    TbPixel col;
+    short box_x, box_w;
+    ushort drwflags;
     short fade;
-    short i;
+    TbPixel colour;
 
     fade = value >> 2;
     if (value >= 0)
-        col = pixmap.fade_table[PALETTE_8b_COLORS * (63 - fade) + colour_lookup[ColLU_RED]];
+        colour = pixmap.fade_table[PALETTE_8b_COLORS * (63 - fade) + colour_lookup[ColLU_RED]];
     else
-        col = pixmap.fade_table[PALETTE_8b_COLORS * (63 + fade) + colour_lookup[ColLU_BLUE]];
-    lbDisplay.DrawFlags = Lb_SPRITE_TRANSPAR4;
-    low_trans_grey_brightness = 8;
+        colour = pixmap.fade_table[PALETTE_8b_COLORS * (63 + fade) + colour_lookup[ColLU_BLUE]];
+    drwflags = Lb_SPRITE_TRANSPAR4;
 
     cent_x = x + (w >> 1);
-    x1 = cent_x;
-    x2 = x1 + (w >> 1) * value / 88;
-    y1 = y;
-
-    for (i = h; i > 0; i--)
-    {
-        LbDrawHVLineLowTransGrey(x1, y1, x2, y1, col);
-        x1--;
-        x2--;
-        y1++;
-    }
+    box_x = cent_x;
+    box_w = (w >> 1) * value / 88;
+    enlist_hud_draw_low_trans_grey_slant_box(box_x, y, box_w, h, drwflags, 8, colour);
 }
 
 void draw_mood_limits(short x, short y, short w, short h, short value, short maxval)
