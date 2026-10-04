@@ -89,7 +89,6 @@
 #include "enginsngtxtr.h"
 #include "enginpeff.h"
 #include "enginshadws.h"
-#include "engintext.h"
 #include "engintrns.h"
 #include "enginzoom.h"
 #include "game_data.h"
@@ -292,8 +291,6 @@ struct LevelDef level_def;
 
 sbyte mission_result;
 char mission_status_text[100];
-
-char *data_15319c = mission_status_text;
 
 ubyte net_player_teams[8];
 ubyte group_factions[8];
@@ -6590,7 +6587,7 @@ void draw_mission_concluded(void)
     {
         sprintf(mission_status_text, "%s %s: %s ", gui_strings[GSTR_CHK_MISSION_STA_PRE],
           gui_strings[GSTR_ENM_MISSION_STATUS + 1 + ingame.MissionStatus], scrollinfo_text);
-        data_15319c = mission_status_text;
+        panel_conclusion_info_set(mission_status_text);
     }
     else
     {
@@ -6605,19 +6602,10 @@ void draw_mission_concluded(void)
           gui_strings[GSTR_CHK_MISSION_STA_SUF_KEYS], gui_strings[GSTR_CHK_MISSION_STA_TIME],
           tm_h, tm_m % 60, tm_s);
         LbStringToUpper(mission_status_text);
-        data_15319c = mission_status_text;
+        panel_conclusion_info_set(mission_status_text);
         scrollinfo_text = mission_status_text;
     }
-    {
-        int scr_x, scr_y;
-
-        // TODO the text position should be computed based on position of panels loaded from file
-        scr_x = 11 * pop1_sprites_scale;
-        scr_y = 26 * pop1_sprites_scale;
-
-        AppTextDrawMissionStatus(scr_x, scr_y, data_15319c,
-          SCANNER_colour[ScnClr_Text], colour_lookup[ColLU_BLACK]);
-    }
+    panel_conclusion_info_draw();
 }
 
 void input_mission_concluded(void)

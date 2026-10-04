@@ -154,6 +154,9 @@ extern ubyte byte_153198;
  */
 extern short gui_scale;
 
+void panel_conclusion_info_set(const char *text);
+void panel_conclusion_info_draw(void);
+
 /** Resets panel text scrolling to the beginning.
  */
 void panel_objective_info_start(void);

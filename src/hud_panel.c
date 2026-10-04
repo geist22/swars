@@ -43,7 +43,6 @@
 #include "render_gpoly.h"
 #include "huddrwlstm.h"
 
-#include "engintext.h"
 #include "bigmap.h"
 #include "engintrns.h"
 #include "game_data.h"
@@ -83,6 +82,8 @@ int scrollinfo_vel = 0;
  * so switching resolution changes the range of this value.
  */
 int scrollinfo_pos = 90;
+
+const char *conclusion_text = NULL;
 
 /** Momentary flags - filled and used only while updating the panel, then forgitten.
  */
@@ -327,6 +328,49 @@ short panel_state_to_player_agent(ushort panstate)
     return -1;
 }
 
+short font_hud_message_text_scale(struct TbSprite *font)
+{
+    int tx_height;
+    int units_per_px;
+
+    lbFontPtr = small_font;
+    tx_height = my_char_height('A');
+    // For window width=320, expect text height=5; so that should
+    // produce unscaled sprite, which is 16 units per px.
+    units_per_px = (lbDisplay.GraphicsWindowWidth * 5 / tx_height)  / (320 / 16);
+    // Do not allow any scale, only n * 50%
+    units_per_px = (units_per_px + 4) & ~0x07;
+
+    return units_per_px;
+}
+
+void panel_conclusion_info_draw(void)
+{
+    int scr_x, scr_y;
+    int width, height;
+    short units_per_px;
+
+    if (conclusion_text == NULL)
+        return;
+
+    // TODO the text position should be computed based on position of panels loaded from file
+    scr_x = 11 * pop1_sprites_scale;
+    scr_y = 26 * pop1_sprites_scale;
+
+    units_per_px = font_hud_message_text_scale(small_font);
+    width = lbTextJustifyWindow.x + lbTextJustifyWindow.width - scr_x;
+    height = lbTextJustifyWindow.y + lbTextJustifyWindow.height - scr_y;
+
+    enlist_hud_draw_colour_wave_wrapped_text(scr_x, scr_y, width, height,
+      small_font, conclusion_text, units_per_px,
+      SCANNER_colour[ScnClr_Text], colour_lookup[ColLU_BLACK]);
+}
+
+void panel_conclusion_info_set(const char *text)
+{
+    conclusion_text = text;
+}
+
 void panel_objective_info_start(void)
 {
     scrollinfo_vel = 0;
@@ -414,9 +458,11 @@ void draw_players_chat_talk(int x, int y)
     int plyr;
     int base_x, pos_y;
     int width, height;
+    short units_per_px;
 
     base_x = x;
     pos_y = y;
+    units_per_px = font_hud_message_text_scale(small_font);
 
     for (plyr = 0; plyr < PLAYERS_LIMIT; plyr++)
     {
@@ -444,10 +490,13 @@ void draw_players_chat_talk(int x, int y)
         LbStringToUpper(locstr);
 
         width = lbTextJustifyWindow.x + lbTextJustifyWindow.width - base_x;
-        height = AppTextHeightMissionChatMessage(base_x, pos_y, locstr);
+        height = get_width_shad_cl_flash_wrapped_text(base_x, pos_y,
+          small_font, locstr, units_per_px);
 
-        AppTextDrawMissionChatMessage(base_x, pos_y, width, height,
-          net_player_colours[plyr], player_message_timer[plyr], locstr);
+        enlist_hud_draw_shad_cl_flash_wrapped_text(base_x, pos_y, width, height,
+          small_font, locstr, units_per_px, player_message_timer[plyr],
+          net_player_colours[plyr], colour_lookup[ColLU_GREYLT]);
+
 
         pos_y += height;
     }
@@ -492,15 +541,16 @@ static void draw_objective_info_text(int scr_x, int scr_y, int width, int height
 
 void draw_players_chat(void)
 {
-    short x, y;
+    int scr_x, scr_y;
 
     if (!in_network_game)
         return;
 
-    //TODO compute real panel end position
-    x = 11 * lbDisplay.GraphicsScreenWidth / 320;
-    y = 26 * lbDisplay.GraphicsScreenHeight / 200;
-    draw_players_chat_talk(x, y);
+    // TODO the text position should be computed based on position of panels loaded from file
+    scr_x = 11 * pop1_sprites_scale;
+    scr_y = 26 * pop1_sprites_scale;
+
+    draw_players_chat_talk(scr_x, scr_y);
 }
 
 void SCANNER_unkn_func_205(void)
