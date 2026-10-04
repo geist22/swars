@@ -332,15 +332,15 @@ TbBool AppTextDrawColourWaveResized(int posx, int posy, int units_per_px, const 
 {
     struct TbAnyWindow grwnd;
     // Counter for amount of blank characters in a line
-    long count;
-    long justifyx,justifyy;
-    long startx,starty;
+    s32 count;
+    int justifyx, justifyy;
+    s32 startx,starty;
     const char *sbuf;
     const char *ebuf;
     const char *prev_ebuf;
-    long chr;
-    long x, y, len;
-    long w, h;
+    s32 chr;
+    s32 x, y, len;
+    s32 w, h;
 
     if ((lbFontPtr == NULL) || (text == NULL))
         return true;
