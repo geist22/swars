@@ -18,6 +18,7 @@
 /******************************************************************************/
 #include "engintext.h"
 
+#include "bfanywnd.h"
 #include "bfmemut.h"
 #include "bftext.h"
 #include "bfscreen.h"
@@ -27,6 +28,7 @@
 #include "app_text_sf.h"
 #include "engincolour.h"
 #include "enginprops.h"
+#include "huddrwlstm.h"
 #include "sprfontut.h"
 
 #include "game_sprts.h"
@@ -52,60 +54,40 @@ short FontOnscreenMessageTextScale(struct TbSprite *font)
 }
 
 
-TbBool AppTextDrawMissionStatus(int posx, int posy, const char *text)
+TbBool AppTextDrawMissionStatus(int posx, int posy, const char *text,
+  TbPixel colour, TbPixel shcolour)
 {
-    ushort space_bkp;
     short units_per_px;
-    TbBool ret;
+    int width, height;
 
     units_per_px = FontOnscreenMessageTextScale(small_font);
+    width = lbTextJustifyWindow.x + lbTextJustifyWindow.width - posx;
+    height = lbTextJustifyWindow.y + lbTextJustifyWindow.height - posy;
 
-    lbFontPtr = small_font;
-    lbDisplay.DrawFlags = Lb_TEXT_ONE_COLOR | Lb_TEXT_HALIGN_LEFT;
-#if defined(LB_ENABLE_SHADOW_COLOUR)
-    lbDisplay.ShadowColour = colour_lookup[ColLU_BLACK];
-#endif
-    space_bkp = FontSpacingAlter(small_font, 12);
-    ret = AppTextDrawColourWaveResized(posx, posy, units_per_px, text);
-    FontSpacingRestore(small_font, space_bkp);
-    return ret;
+    return enlist_hud_draw_colour_wave_wrapped_text(posx, posy, width, height,
+      small_font, text, units_per_px, colour, shcolour);
 }
 
 TbBool AppTextDrawMissionChatMessage(int posx, int posy, int width, int height,
   TbPixel colour, int timer, const char *text)
 {
-    ushort space_bkp;
     short units_per_px;
-    TbBool ret;
 
     units_per_px = FontOnscreenMessageTextScale(small_font);
 
-    lbFontPtr = small_font;
-    lbDisplay.DrawColour = colour;
-    lbDisplay.DrawFlags = Lb_TEXT_ONE_COLOR | Lb_TEXT_HALIGN_LEFT;
-#if defined(LB_ENABLE_SHADOW_COLOUR)
-    lbDisplay.ShadowColour = colour_lookup[ColLU_GREYLT];
-#endif
-    space_bkp = FontSpacingAlter(small_font, 12);
-    ret = AppTextDrawShadClFlashResized(posx, posy, units_per_px, timer, text);
-    FontSpacingRestore(small_font, space_bkp);
-    return ret;
+    return enlist_hud_draw_shad_cl_flash_wrapped_text(posx, posy, width, height,
+      small_font, text, units_per_px, timer,
+      colour, colour_lookup[ColLU_GREYLT]);
 }
 
 int AppTextHeightMissionChatMessage(int posx, int posy, const char *text)
 {
-    ushort space_bkp;
     short units_per_px;
-    int height;
 
     units_per_px = FontOnscreenMessageTextScale(small_font);
 
-    lbFontPtr = small_font;
-    lbDisplay.DrawFlags = Lb_TEXT_ONE_COLOR | Lb_TEXT_HALIGN_LEFT;
-    space_bkp = FontSpacingAlter(small_font, 12);
-    height = LbTextWrapStringHeightResized(posx, posy, units_per_px, text);
-    FontSpacingRestore(small_font, space_bkp);
-    return height;
+    return get_width_shad_cl_flash_wrapped_text(posx, posy,
+      small_font, text, units_per_px);
 }
 
 /******************************************************************************/

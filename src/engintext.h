@@ -36,7 +36,8 @@ TbBool AppTextDrawMissionChatMessage(int posx, int posy, int width, int height,
 
 int AppTextHeightMissionChatMessage(int posx, int posy, const char *text);
 
-TbBool AppTextDrawMissionStatus(int posx, int posy, const char *text);
+TbBool AppTextDrawMissionStatus(int posx, int posy, const char *text,
+  TbPixel colour, TbPixel shcolour);
 /******************************************************************************/
 #ifdef __cplusplus
 }
