@@ -413,6 +413,7 @@ void draw_players_chat_talk(int x, int y)
     char locstr[164];
     int plyr;
     int base_x, pos_y;
+    int width, height;
 
     base_x = x;
     pos_y = y;
@@ -442,9 +443,13 @@ void draw_players_chat_talk(int x, int y)
 #pragma GCC diagnostic pop
         LbStringToUpper(locstr);
 
-        AppTextDrawMissionChatMessage(base_x, pos_y,
+        width = lbTextJustifyWindow.x + lbTextJustifyWindow.width - base_x;
+        height = AppTextHeightMissionChatMessage(base_x, pos_y, locstr);
+
+        AppTextDrawMissionChatMessage(base_x, pos_y, width, height,
           net_player_colours[plyr], player_message_timer[plyr], locstr);
-        pos_y += AppTextHeightMissionChatMessage(base_x, pos_y, locstr);
+
+        pos_y += height;
     }
 }
 

@@ -27,6 +27,7 @@
 #include "app_text_sf.h"
 #include "engincolour.h"
 #include "enginprops.h"
+#include "sprfontut.h"
 
 #include "game_sprts.h"
 #include "hud_panel.h"
@@ -34,38 +35,10 @@
 #include "swlog.h"
 /******************************************************************************/
 
-/** Modifies spacing of given font, by altering width of space character.
- */
-ushort FontSpacingAlter(struct TbSprite *font, int units_per_px)
+short FontOnscreenMessageTextScale(struct TbSprite *font)
 {
-    struct TbSprite *p_spr;
-    ushort space_bkp;
-
-    p_spr = AppFontCharSpriteRW(font, ' ');
-    if (p_spr == NULL)
-        return 0;
-    space_bkp = p_spr->SWidth;
-    p_spr->SWidth = (space_bkp * units_per_px) / 16;
-    return space_bkp;
-}
-
-void FontSpacingRestore(struct TbSprite *font, ushort space_bkp)
-{
-    struct TbSprite *p_spr;
-
-    p_spr = AppFontCharSpriteRW(font, ' ');
-    if (p_spr == NULL)
-        return;
-    p_spr->SWidth = space_bkp;
-}
-
-
-TbBool AppTextDrawMissionStatus(int posx, int posy, const char *text)
-{
-    ushort space_bkp;
     int tx_height;
     int units_per_px;
-    TbBool ret;
 
     lbFontPtr = small_font;
     tx_height = my_char_height('A');
@@ -75,6 +48,19 @@ TbBool AppTextDrawMissionStatus(int posx, int posy, const char *text)
     // Do not allow any scale, only n * 50%
     units_per_px = (units_per_px + 4) & ~0x07;
 
+    return units_per_px;
+}
+
+
+TbBool AppTextDrawMissionStatus(int posx, int posy, const char *text)
+{
+    ushort space_bkp;
+    short units_per_px;
+    TbBool ret;
+
+    units_per_px = FontOnscreenMessageTextScale(small_font);
+
+    lbFontPtr = small_font;
     lbDisplay.DrawFlags = Lb_TEXT_ONE_COLOR | Lb_TEXT_HALIGN_LEFT;
 #if defined(LB_ENABLE_SHADOW_COLOUR)
     lbDisplay.ShadowColour = colour_lookup[ColLU_BLACK];
@@ -85,22 +71,16 @@ TbBool AppTextDrawMissionStatus(int posx, int posy, const char *text)
     return ret;
 }
 
-TbBool AppTextDrawMissionChatMessage(int posx, int posy,
+TbBool AppTextDrawMissionChatMessage(int posx, int posy, int width, int height,
   TbPixel colour, int timer, const char *text)
 {
     ushort space_bkp;
-    int tx_height;
-    int units_per_px;
+    short units_per_px;
     TbBool ret;
 
-    lbFontPtr = small_font;
-    tx_height = my_char_height('A');
-    // For window width=320, expect text height=5; so that should
-    // produce unscaled sprite, which is 16 units per px.
-    units_per_px = (lbDisplay.GraphicsWindowWidth * 5 / tx_height)  / (320 / 16);
-    // Do not allow any scale, only n * 50%
-    units_per_px = (units_per_px + 4) & ~0x07;
+    units_per_px = FontOnscreenMessageTextScale(small_font);
 
+    lbFontPtr = small_font;
     lbDisplay.DrawColour = colour;
     lbDisplay.DrawFlags = Lb_TEXT_ONE_COLOR | Lb_TEXT_HALIGN_LEFT;
 #if defined(LB_ENABLE_SHADOW_COLOUR)
@@ -115,15 +95,12 @@ TbBool AppTextDrawMissionChatMessage(int posx, int posy,
 int AppTextHeightMissionChatMessage(int posx, int posy, const char *text)
 {
     ushort space_bkp;
-    int tx_height;
-    int units_per_px;
+    short units_per_px;
     int height;
 
-    lbFontPtr = small_font;
-    tx_height = my_char_height('A');
-    units_per_px = (lbDisplay.GraphicsWindowWidth * 5 / tx_height)  / (320 / 16);
-    units_per_px = (units_per_px + 4) & ~0x07;
+    units_per_px = FontOnscreenMessageTextScale(small_font);
 
+    lbFontPtr = small_font;
     lbDisplay.DrawFlags = Lb_TEXT_ONE_COLOR | Lb_TEXT_HALIGN_LEFT;
     space_bkp = FontSpacingAlter(small_font, 12);
     height = LbTextWrapStringHeightResized(posx, posy, units_per_px, text);

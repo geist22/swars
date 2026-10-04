@@ -31,7 +31,7 @@ extern "C" {
 #pragma pack()
 /******************************************************************************/
 
-TbBool AppTextDrawMissionChatMessage(int posx, int posy,
+TbBool AppTextDrawMissionChatMessage(int posx, int posy, int width, int height,
   TbPixel colour, int timer, const char *text);
 
 int AppTextHeightMissionChatMessage(int posx, int posy, const char *text);
