@@ -1725,14 +1725,14 @@ void draw_transparent_slant_bar(short x, short y, ushort w, ushort h)
     wafty = waft_table[(anim_speed_y + 16) & 0x1F];
     tmx = ((waftx + 30) >> 1);
     tmy = ((wafty + 30) >> 3);
-    point1.pp.U = (tmx +  0) << 16;
-    point4.pp.U = (tmx + 64) << 16;
-    point2.pp.U = (tmx + 64) << 16;
-    point1.pp.V = (tmy + 64) << 16;
-    point4.pp.V = (tmy + 64) << 16;
-    point2.pp.V = (tmy + 72) << 16;
-    point3.pp.U = (tmx +  0) << 16;
-    point3.pp.V = (tmy + 72) << 16;
+    point1.pp.U = ((SINGLE_TEXTURE_DIM * 0) + tmx) << 16;
+    point4.pp.U = ((SINGLE_TEXTURE_DIM * 2) + tmx) << 16;
+    point2.pp.U = ((SINGLE_TEXTURE_DIM * 2) + tmx) << 16;
+    point1.pp.V = ((SINGLE_TEXTURE_DIM * 2) + tmy) << 16;
+    point4.pp.V = ((SINGLE_TEXTURE_DIM * 2) + tmy) << 16;
+    point2.pp.V = ((SINGLE_TEXTURE_DIM * 2) + tmy + 8) << 16;
+    point3.pp.U = ((SINGLE_TEXTURE_DIM * 0) + tmx) << 16;
+    point3.pp.V = ((SINGLE_TEXTURE_DIM * 2) + tmy + 8) << 16;
 
     point1.pp.S = 0;
     point2.pp.S = 0;
