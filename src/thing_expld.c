@@ -92,7 +92,7 @@ ushort create_explode_face_tri(struct SortMapPoint *p_face_pt0,
 
     p_exface = &ex_faces[eface];
 
-    p_exface->Type = 5;
+    p_exface->Type = EXPL_FACE_TRI_REL;
     p_exface->Texture = txtr;
     p_exface->Flags = flags;
     p_exface->Col = (ubyte)excol;
@@ -141,7 +141,7 @@ ushort create_explode_face_quad(struct SortMapPoint *p_face_pt0,
 
     p_exface = &ex_faces[eface];
 
-    p_exface->Type = 6;
+    p_exface->Type = EXPL_FACE_QUAD_REL;
     p_exface->Texture = txtr;
     p_exface->Flags = flags;
     p_exface->Col = (ubyte)excol;
@@ -181,7 +181,7 @@ ushort create_explode_face_tri_by_div(struct SortMapPoint *p_face_pt0,
     }
 
     p_neface = &ex_faces[eface];
-    p_neface->Type = 3;
+    p_neface->Type = EXPL_FACE_TRI_ABS;
     p_neface->Texture = p_exface->Texture;
     p_neface->Flags = p_exface->Flags;
     p_neface->Col = p_exface->Col;
@@ -195,6 +195,8 @@ ushort create_explode_face_tri_by_div(struct SortMapPoint *p_face_pt0,
     p_neface->X2 = p_face_pt2->X;
     p_neface->Y2 = p_face_pt2->Y;
     p_neface->Z2 = p_face_pt2->Z;
+
+    // Note that p_neface->(X,Y,Z) remain unset for this type
 
     p_neface->DX = p_exface->DX;
     p_neface->DY = p_exface->DY;
@@ -254,7 +256,7 @@ ushort create_explode_face_quad_by_div(struct SortMapPoint *p_face_pt0,
     }
 
     p_neface = &ex_faces[eface];
-    p_neface->Type = 4;
+    p_neface->Type = EXPL_FACE_QUAD_ABS;
     p_neface->Texture = p_exface->Texture;
     p_neface->Flags = p_exface->Flags;
     p_neface->Col = p_exface->Col;
@@ -271,6 +273,8 @@ ushort create_explode_face_quad_by_div(struct SortMapPoint *p_face_pt0,
     p_neface->X3 = p_face_pt3->X;
     p_neface->Y3 = p_face_pt3->Y;
     p_neface->Z3 = p_face_pt3->Z;
+
+    // Note that p_neface->(X,Y,Z) remain unset for this type
 
     p_neface->DX = p_exface->DX;
     p_neface->DY = p_exface->DY;
@@ -618,27 +622,27 @@ void animate_explode(void)
 
         switch (p_exface->Type)
         {
-        case 1:
+        case EXPL_FACE_TRI_TYP1:
             animate_explode_face1(i, 3);
             break;
 
-        case 2:
+        case EXPL_FACE_QUAD_TYP2:
             animate_explode_face1(i, 4);
             break;
 
-        case 3:
+        case EXPL_FACE_TRI_ABS:
             animate_explode_face3_tri(i);
             break;
 
-        case 4:
+        case EXPL_FACE_QUAD_ABS:
             animate_explode_face3_quad(i);
             break;
 
-        case 5:
+        case EXPL_FACE_TRI_REL:
             animate_explode_face5(i, 3);
             break;
 
-        case 6:
+        case EXPL_FACE_QUAD_REL:
             animate_explode_face5(i, 4);
             break;
         }
@@ -867,28 +871,38 @@ void draw_explode(void)
         if (p_exface->Timer == 0)
             continue;
 
-        if (!area_overlaps_render_area(p_exface->X, p_exface->Z,
-          EXPLODE_FACE_MAX_ON_MAP_SIZE/2))
-            continue;
+        if ((p_exface->Type == EXPL_FACE_TRI_ABS) ||
+          (p_exface->Type == EXPL_FACE_QUAD_ABS))
+        {
+            if (!area_overlaps_render_area(p_exface->X0, p_exface->Z0,
+              EXPLODE_FACE_MAX_ON_MAP_SIZE))
+                continue;
+        }
+        else
+        {
+            if (!area_overlaps_render_area(p_exface->X, p_exface->Z,
+              EXPLODE_FACE_MAX_ON_MAP_SIZE/2))
+                continue;
+        }
 
         switch (p_exface->Type)
         {
-        case 1:
+        case EXPL_FACE_TRI_TYP1:
             enlist_draw_explode_type1(exface, 3);
             break;
-        case 2:
+        case EXPL_FACE_QUAD_TYP2:
             enlist_draw_explode_type1(exface, 4);
             break;
-        case 3:
+        case EXPL_FACE_TRI_ABS:
             enlist_draw_explode_type3(exface, 3);
             break;
-        case 4:
+        case EXPL_FACE_QUAD_ABS:
             enlist_draw_explode_type3(exface, 4);
             break;
-        case 5:
+        case EXPL_FACE_TRI_REL:
             enlist_draw_explode_type5(exface, 3);
             break;
-        case 6:
+        case EXPL_FACE_QUAD_REL:
             enlist_draw_explode_type5(exface, 4);
             break;
         case 0:
