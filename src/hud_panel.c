@@ -1049,7 +1049,8 @@ int count_weapons_in_flags(int *p_ncarr_below, int *p_ncarr_above, ulong weapons
     return ncarried;
 }
 
-void draw_agent_carried_weapon(PlayerIdx plyr, ushort plagent, short slot, TbBool ready, WeaponType wtype, short cx, short cy)
+void draw_agent_carried_weapon(PlayerIdx plyr, ushort plagent, short slot,
+  TbBool ready, WeaponType wtype, short cx, short cy)
 {
     TbBool wep_highlight;
     TbBool recharging;
@@ -1177,7 +1178,8 @@ void draw_agent_carried_weapon_prealp_list(PlayerIdx plyr, ushort plagent, short
     draw_fourpack_items(x, y, plagent, wtype);
 }
 
-TbBool panel_mouse_over_weapon(short box_x, short box_y, short box_w, short box_h, int panstate, short box_no)
+TbBool panel_mouse_over_weapon(short box_x, short box_y,
+  short box_w, short box_h, int panstate, short box_no)
 {
     short msx, msy;
 
@@ -1204,7 +1206,8 @@ TbBool panel_mouse_over_weapon(short box_x, short box_y, short box_w, short box_
  * This function is intended to loop through weapons in the same way
  * as draw_weapons_list_prealp(), but update state instead of drawing.
  */
-TbBool update_weapons_list_prealp(PlayerIdx plyr, ushort plagent, ulong weapons_carried, short current_weapon)
+TbBool update_weapons_list_prealp(PlayerIdx plyr, ushort plagent,
+  ulong weapons_carried, short current_weapon)
 {
     struct GamePanel *p_panel;
     ushort nshown;
@@ -1304,7 +1307,8 @@ void draw_weapons_list_prealp(PlayerIdx plyr, ushort plagent, ulong weapons_carr
             continue;
         if (nshown >= ncarr_below)
         {
-            draw_agent_carried_weapon_prealp_list(plyr, plagent, nshown, (wtype == current_weapon), wtype, cx, cy);
+            draw_agent_carried_weapon_prealp_list(plyr, plagent,
+              nshown, (wtype == current_weapon), wtype, cx, cy);
 
             cx += game_panel_shifts[PaSh_WEP_NEXT_DISTANCE].x;
             cy += game_panel_shifts[PaSh_WEP_NEXT_DISTANCE].y;
@@ -1744,7 +1748,8 @@ void draw_transparent_slant_bar(short x, short y, ushort w, ushort h)
     draw_trigpoly(&point4.pp, &point2.pp, &point3.pp);
 }
 
-void draw_health_level(short x, short y, ushort w, ushort h, short lv, ushort lvmax, ubyte col, ubyte transp)
+void draw_health_level(short x, short y, ushort w, ushort h,
+  short lv, ushort lvmax, ubyte col, ubyte transp)
 {
     short cw;
 
@@ -1762,7 +1767,8 @@ void draw_health_level(short x, short y, ushort w, ushort h, short lv, ushort lv
     }
 }
 
-void draw_wep_energy_level(short x, short y, ushort w, ushort h, short lv, ushort lvmax, TbPixel colour, ubyte transp)
+void draw_wep_energy_level(short x, short y, ushort w, ushort h,
+  short lv, ushort lvmax, TbPixel colour, ubyte transp)
 {
     ushort drwflags;
     short ch;
