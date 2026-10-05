@@ -38,7 +38,6 @@
 #include "render_gpoly.h"
 #include "privrdlog.h"
 /******************************************************************************/
-#define SINGLE_TEXTURE_DIM 32
 
 const sbyte byte_153014[] = {
   1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -131,6 +130,54 @@ void set_face_texture_uv(ushort stex, struct PolyPoint *p_pt1,
     p_pt3->V = p_stex->TMapY3 << 16;
 }
 
+static void polypoint_uv_set_txtr_ubeg_vbeg(struct PolyPoint *p_pt,
+  ubyte txUa_n, ubyte txVb_n)
+{
+    p_pt->U = (SINGLE_TEXTURE_DIM * (txUa_n)) << 16;
+    p_pt->V = (SINGLE_TEXTURE_DIM * (txVb_n)) << 16;
+}
+
+static void polypoint_uv_set_txtr_ubeg_vend(struct PolyPoint *p_pt,
+  ubyte txUa_n, ubyte txVb_n)
+{
+    p_pt->U = (SINGLE_TEXTURE_DIM * (txUa_n)) << 16;
+    p_pt->V = (SINGLE_TEXTURE_DIM * (txVb_n + 1) - 1) << 16;
+}
+
+static void polypoint_uv_set_txtr_uend_vbeg(struct PolyPoint *p_pt,
+  ubyte txUa_n, ubyte txVb_n)
+{
+    p_pt->U = (SINGLE_TEXTURE_DIM * (txUa_n + 1) - 1) << 16;
+    p_pt->V = (SINGLE_TEXTURE_DIM * (txVb_n)) << 16;
+}
+
+static void polypoint_uv_set_txtr_uend_vend(struct PolyPoint *p_pt,
+  ubyte txUa_n, ubyte txVb_n)
+{
+    p_pt->U = (SINGLE_TEXTURE_DIM * (txUa_n + 1) - 1) << 16;
+    p_pt->V = (SINGLE_TEXTURE_DIM * (txVb_n + 1) - 1) << 16;
+}
+
+void set_polypoints_uv_txtr_rotA(struct PolyPoint *p_pt1,
+  struct PolyPoint *p_pt2, struct PolyPoint *p_pt3, struct PolyPoint *p_pt4,
+  ubyte txUa_n, ubyte txVb_n)
+{
+    polypoint_uv_set_txtr_ubeg_vbeg(p_pt1, txUa_n, txVb_n);
+    polypoint_uv_set_txtr_ubeg_vend(p_pt2, txUa_n, txVb_n);
+    polypoint_uv_set_txtr_uend_vbeg(p_pt3, txUa_n, txVb_n);
+    polypoint_uv_set_txtr_uend_vend(p_pt4, txUa_n, txVb_n);
+}
+
+void set_polypoints_uv_txtr_rotB(struct PolyPoint *p_pt1,
+  struct PolyPoint *p_pt2, struct PolyPoint *p_pt3, struct PolyPoint *p_pt4,
+  ubyte txUa_n, ubyte txVb_n)
+{
+    polypoint_uv_set_txtr_uend_vbeg(p_pt1, txUa_n, txVb_n);
+    polypoint_uv_set_txtr_uend_vend(p_pt2, txUa_n, txVb_n);
+    polypoint_uv_set_txtr_ubeg_vbeg(p_pt3, txUa_n, txVb_n);
+    polypoint_uv_set_txtr_ubeg_vend(p_pt4, txUa_n, txVb_n);
+}
+
 /** Sets UV coordinates for damaged ground, given index with neighbors definitions.
  */
 void set_floor_texture_uv_damaged_ground(struct PolyPoint *p_pt1,
@@ -141,124 +188,61 @@ void set_floor_texture_uv_damaged_ground(struct PolyPoint *p_pt1,
     switch (neighbrs)
     {
     case 1:
-        p_pt1->U = (SINGLE_TEXTURE_DIM * 5) << 16;
-        p_pt1->V = (SINGLE_TEXTURE_DIM * 2) << 16;
-        p_pt2->U = (SINGLE_TEXTURE_DIM * 5) << 16;
-        p_pt2->V = (SINGLE_TEXTURE_DIM * 3 - 1) << 16;
-        p_pt3->U = (SINGLE_TEXTURE_DIM * 6 - 1) << 16;
-        p_pt3->V = (SINGLE_TEXTURE_DIM * 2) << 16;
-        p_pt4->U = (SINGLE_TEXTURE_DIM * 6 - 1) << 16;
-        p_pt4->V = (SINGLE_TEXTURE_DIM * 3 - 1) << 16;
+        set_polypoints_uv_txtr_rotA(p_pt1, p_pt2, p_pt3, p_pt4, 5, 2);
         break;
     case 2:
-        p_pt1->U = (SINGLE_TEXTURE_DIM * 5 - 1) << 16;
-        p_pt1->V = (SINGLE_TEXTURE_DIM * 2) << 16;
-        p_pt2->U = (SINGLE_TEXTURE_DIM * 5 - 1) << 16;
-        p_pt2->V = (SINGLE_TEXTURE_DIM * 3 - 1) << 16;
-        p_pt3->U = (SINGLE_TEXTURE_DIM * 4) << 16;
-        p_pt3->V = (SINGLE_TEXTURE_DIM * 2) << 16;
-        p_pt4->U = (SINGLE_TEXTURE_DIM * 4) << 16;
-        p_pt4->V = (SINGLE_TEXTURE_DIM * 3 - 1) << 16;
+        set_polypoints_uv_txtr_rotB(p_pt1, p_pt2, p_pt3, p_pt4, 4, 2);
         break;
     case 3:
-        p_pt1->U = (SINGLE_TEXTURE_DIM * 7 - 1) << 16;
-        p_pt1->V = (SINGLE_TEXTURE_DIM * 2) << 16;
-        p_pt2->U = (SINGLE_TEXTURE_DIM * 7 - 1) << 16;
-        p_pt2->V = (SINGLE_TEXTURE_DIM * 3 - 1) << 16;
-        p_pt3->U = (SINGLE_TEXTURE_DIM * 6) << 16;
-        p_pt3->V = (SINGLE_TEXTURE_DIM * 2) << 16;
-        p_pt4->U = (SINGLE_TEXTURE_DIM * 6) << 16;
-        p_pt4->V = (SINGLE_TEXTURE_DIM * 3 - 1) << 16;
+        set_polypoints_uv_txtr_rotB(p_pt1, p_pt2, p_pt3, p_pt4, 6, 2);
         break;
     case 4:
-        p_pt1->U = (SINGLE_TEXTURE_DIM * 5) << 16;
-        p_pt1->V = (SINGLE_TEXTURE_DIM * 3 - 1) << 16;
-        p_pt2->U = (SINGLE_TEXTURE_DIM * 6 - 1) << 16;
-        p_pt2->V = (SINGLE_TEXTURE_DIM * 3 - 1) << 16;
-        p_pt3->U = (SINGLE_TEXTURE_DIM * 5) << 16;
-        p_pt3->V = (SINGLE_TEXTURE_DIM * 2) << 16;
-        p_pt4->U = (SINGLE_TEXTURE_DIM * 6 - 1) << 16;
-        p_pt4->V = (SINGLE_TEXTURE_DIM * 2) << 16;
+        polypoint_uv_set_txtr_ubeg_vend(p_pt1, 5, 2);
+        polypoint_uv_set_txtr_uend_vend(p_pt2, 5, 2);
+        polypoint_uv_set_txtr_ubeg_vbeg(p_pt3, 5, 2);
+        polypoint_uv_set_txtr_uend_vbeg(p_pt4, 5, 2);
         break;
     case 5:
-        p_pt1->U = (SINGLE_TEXTURE_DIM * 5 - 1) << 16;
-        p_pt1->V = (SINGLE_TEXTURE_DIM * 3 - 1) << 16;
-        p_pt2->U = (SINGLE_TEXTURE_DIM * 5 - 1) << 16;
-        p_pt2->V = (SINGLE_TEXTURE_DIM * 2) << 16;
-        p_pt3->U = (SINGLE_TEXTURE_DIM * 4) << 16;
-        p_pt3->V = (SINGLE_TEXTURE_DIM * 3 - 1) << 16;
-        p_pt4->U = (SINGLE_TEXTURE_DIM * 4) << 16;
-        p_pt4->V = (SINGLE_TEXTURE_DIM * 2) << 16;
+        polypoint_uv_set_txtr_uend_vend(p_pt1, 4, 2);
+        polypoint_uv_set_txtr_uend_vbeg(p_pt2, 4, 2);
+        polypoint_uv_set_txtr_ubeg_vend(p_pt3, 4, 2);
+        polypoint_uv_set_txtr_ubeg_vbeg(p_pt4, 4, 2);
         break;
     case 6:
-        p_pt1->U = (SINGLE_TEXTURE_DIM * 7 - 1) << 16;
-        p_pt1->V = (SINGLE_TEXTURE_DIM * 3 - 1) << 16;
-        p_pt2->U = (SINGLE_TEXTURE_DIM * 7 - 1) << 16;
-        p_pt2->V = (SINGLE_TEXTURE_DIM * 2) << 16;
-        p_pt3->U = (SINGLE_TEXTURE_DIM * 6) << 16;
-        p_pt3->V = (SINGLE_TEXTURE_DIM * 3 - 1) << 16;
-        p_pt4->U = (SINGLE_TEXTURE_DIM * 6) << 16;
-        p_pt4->V = (SINGLE_TEXTURE_DIM * 2) << 16;
+        polypoint_uv_set_txtr_uend_vend(p_pt1, 6, 2);
+        polypoint_uv_set_txtr_uend_vbeg(p_pt2, 6, 2);
+        polypoint_uv_set_txtr_ubeg_vend(p_pt3, 6, 2);
+        polypoint_uv_set_txtr_ubeg_vbeg(p_pt4, 6, 2);
         break;
     case 7:
-        p_pt1->U = (SINGLE_TEXTURE_DIM * 6 - 1) << 16;
-        p_pt1->V = (SINGLE_TEXTURE_DIM * 3 - 1) << 16;
-        p_pt2->U = (SINGLE_TEXTURE_DIM * 6 - 1) << 16;
-        p_pt2->V = (SINGLE_TEXTURE_DIM * 2) << 16;
-        p_pt3->U = (SINGLE_TEXTURE_DIM * 5) << 16;
-        p_pt3->V = (SINGLE_TEXTURE_DIM * 3 - 1) << 16;
-        p_pt4->U = (SINGLE_TEXTURE_DIM * 5) << 16;
-        p_pt4->V = (SINGLE_TEXTURE_DIM * 2) << 16;
+        polypoint_uv_set_txtr_uend_vend(p_pt1, 5, 2);
+        polypoint_uv_set_txtr_uend_vbeg(p_pt2, 5, 2);
+        polypoint_uv_set_txtr_ubeg_vend(p_pt3, 5, 2);
+        polypoint_uv_set_txtr_ubeg_vbeg(p_pt4, 5, 2);
         break;
     case 8:
-        p_pt1->U = (SINGLE_TEXTURE_DIM * 4) << 16;
-        p_pt1->V = (SINGLE_TEXTURE_DIM * 3 - 1) << 16;
-        p_pt2->U = (SINGLE_TEXTURE_DIM * 4) << 16;
-        p_pt2->V = (SINGLE_TEXTURE_DIM * 2) << 16;
-        p_pt3->U = (SINGLE_TEXTURE_DIM * 5 - 1) << 16;
-        p_pt3->V = (SINGLE_TEXTURE_DIM * 3 - 1) << 16;
-        p_pt4->U = (SINGLE_TEXTURE_DIM * 5 - 1) << 16;
-        p_pt4->V = (SINGLE_TEXTURE_DIM * 2) << 16;
+        polypoint_uv_set_txtr_ubeg_vend(p_pt1, 4, 2);
+        polypoint_uv_set_txtr_ubeg_vbeg(p_pt2, 4, 2);
+        polypoint_uv_set_txtr_uend_vend(p_pt3, 4, 2);
+        polypoint_uv_set_txtr_uend_vbeg(p_pt4, 4, 2);
         break;
     case 9:
-        p_pt1->U = (SINGLE_TEXTURE_DIM * 6) << 16;
-        p_pt1->V = (SINGLE_TEXTURE_DIM * 3 - 1) << 16;
-        p_pt2->U = (SINGLE_TEXTURE_DIM * 6) << 16;
-        p_pt2->V = (SINGLE_TEXTURE_DIM * 2) << 16;
-        p_pt3->U = (SINGLE_TEXTURE_DIM * 7 - 1) << 16;
-        p_pt3->V = (SINGLE_TEXTURE_DIM * 3 - 1) << 16;
-        p_pt4->U = (SINGLE_TEXTURE_DIM * 7 - 1) << 16;
-        p_pt4->V = (SINGLE_TEXTURE_DIM * 2) << 16;
+        polypoint_uv_set_txtr_ubeg_vend(p_pt1, 6, 2);
+        polypoint_uv_set_txtr_ubeg_vbeg(p_pt2, 6, 2);
+        polypoint_uv_set_txtr_uend_vend(p_pt3, 6, 2);
+        polypoint_uv_set_txtr_uend_vbeg(p_pt4, 6, 2);
         break;
     case 10:
-        p_pt1->U = (SINGLE_TEXTURE_DIM * 6 - 1) << 16;
-        p_pt1->V = (SINGLE_TEXTURE_DIM * 2) << 16;
-        p_pt2->U = (SINGLE_TEXTURE_DIM * 5) << 16;
-        p_pt2->V = (SINGLE_TEXTURE_DIM * 2) << 16;
-        p_pt3->U = (SINGLE_TEXTURE_DIM * 6 - 1) << 16;
-        p_pt3->V = (SINGLE_TEXTURE_DIM * 3 - 1) << 16;
-        p_pt4->U = (SINGLE_TEXTURE_DIM * 5) << 16;
-        p_pt4->V = (SINGLE_TEXTURE_DIM * 3 - 1) << 16;
+        polypoint_uv_set_txtr_uend_vbeg(p_pt1, 5, 2);
+        polypoint_uv_set_txtr_ubeg_vbeg(p_pt2, 5, 2);
+        polypoint_uv_set_txtr_uend_vend(p_pt3, 5, 2);
+        polypoint_uv_set_txtr_ubeg_vend(p_pt4, 5, 2);
         break;
     case 11:
-        p_pt1->U = (SINGLE_TEXTURE_DIM * 4) << 16;
-        p_pt1->V = (SINGLE_TEXTURE_DIM * 2) << 16;
-        p_pt2->U = (SINGLE_TEXTURE_DIM * 4) << 16;
-        p_pt2->V = (SINGLE_TEXTURE_DIM * 3 - 1) << 16;
-        p_pt3->U = (SINGLE_TEXTURE_DIM * 5 - 1) << 16;
-        p_pt3->V = (SINGLE_TEXTURE_DIM * 2) << 16;
-        p_pt4->U = (SINGLE_TEXTURE_DIM * 5 - 1) << 16;
-        p_pt4->V = (SINGLE_TEXTURE_DIM * 3 - 1) << 16;
+        set_polypoints_uv_txtr_rotA(p_pt1, p_pt2, p_pt3, p_pt4, 4, 2);
         break;
     case 12:
-        p_pt1->U = (SINGLE_TEXTURE_DIM * 6) << 16;
-        p_pt1->V = (SINGLE_TEXTURE_DIM * 2) << 16;
-        p_pt2->U = (SINGLE_TEXTURE_DIM * 6) << 16;
-        p_pt2->V = (SINGLE_TEXTURE_DIM * 3 - 1) << 16;
-        p_pt3->U = (SINGLE_TEXTURE_DIM * 7 - 1) << 16;
-        p_pt3->V = (SINGLE_TEXTURE_DIM * 2) << 16;
-        p_pt4->U = (SINGLE_TEXTURE_DIM * 7 - 1) << 16;
-        p_pt4->V = (SINGLE_TEXTURE_DIM * 3 - 1) << 16;
+        set_polypoints_uv_txtr_rotA(p_pt1, p_pt2, p_pt3, p_pt4, 6, 2);
         break;
     }
 }
