@@ -158,7 +158,7 @@ static void polypoint_uv_set_txtr_uend_vend(struct PolyPoint *p_pt,
     p_pt->V = (SINGLE_TEXTURE_DIM * (txVb_n + 1) - 1) << 16;
 }
 
-void set_polypoints_uv_txtr_rotA(struct PolyPoint *p_pt1,
+static void set_polypoints_uv_txtr_rotA(struct PolyPoint *p_pt1,
   struct PolyPoint *p_pt2, struct PolyPoint *p_pt3, struct PolyPoint *p_pt4,
   ubyte txUa_n, ubyte txVb_n)
 {
@@ -168,13 +168,53 @@ void set_polypoints_uv_txtr_rotA(struct PolyPoint *p_pt1,
     polypoint_uv_set_txtr_uend_vend(p_pt4, txUa_n, txVb_n);
 }
 
-void set_polypoints_uv_txtr_rotB(struct PolyPoint *p_pt1,
+static void set_polypoints_uv_txtr_rotB(struct PolyPoint *p_pt1,
   struct PolyPoint *p_pt2, struct PolyPoint *p_pt3, struct PolyPoint *p_pt4,
   ubyte txUa_n, ubyte txVb_n)
 {
     polypoint_uv_set_txtr_uend_vbeg(p_pt1, txUa_n, txVb_n);
     polypoint_uv_set_txtr_uend_vend(p_pt2, txUa_n, txVb_n);
     polypoint_uv_set_txtr_ubeg_vbeg(p_pt3, txUa_n, txVb_n);
+    polypoint_uv_set_txtr_ubeg_vend(p_pt4, txUa_n, txVb_n);
+}
+
+static void set_polypoints_uv_txtr_rotC(struct PolyPoint *p_pt1,
+  struct PolyPoint *p_pt2, struct PolyPoint *p_pt3, struct PolyPoint *p_pt4,
+  ubyte txUa_n, ubyte txVb_n)
+{
+    polypoint_uv_set_txtr_ubeg_vend(p_pt1, txUa_n, txVb_n);
+    polypoint_uv_set_txtr_uend_vend(p_pt2, txUa_n, txVb_n);
+    polypoint_uv_set_txtr_ubeg_vbeg(p_pt3, txUa_n, txVb_n);
+    polypoint_uv_set_txtr_uend_vbeg(p_pt4, txUa_n, txVb_n);
+}
+
+static void set_polypoints_uv_txtr_rotD(struct PolyPoint *p_pt1,
+  struct PolyPoint *p_pt2, struct PolyPoint *p_pt3, struct PolyPoint *p_pt4,
+  ubyte txUa_n, ubyte txVb_n)
+{
+    polypoint_uv_set_txtr_uend_vend(p_pt1, txUa_n, txVb_n);
+    polypoint_uv_set_txtr_uend_vbeg(p_pt2, txUa_n, txVb_n);
+    polypoint_uv_set_txtr_ubeg_vend(p_pt3, txUa_n, txVb_n);
+    polypoint_uv_set_txtr_ubeg_vbeg(p_pt4, txUa_n, txVb_n);
+}
+
+static void set_polypoints_uv_txtr_rotE(struct PolyPoint *p_pt1,
+  struct PolyPoint *p_pt2, struct PolyPoint *p_pt3, struct PolyPoint *p_pt4,
+  ubyte txUa_n, ubyte txVb_n)
+{
+    polypoint_uv_set_txtr_ubeg_vend(p_pt1, txUa_n, txVb_n);
+    polypoint_uv_set_txtr_ubeg_vbeg(p_pt2, txUa_n, txVb_n);
+    polypoint_uv_set_txtr_uend_vend(p_pt3, txUa_n, txVb_n);
+    polypoint_uv_set_txtr_uend_vbeg(p_pt4, txUa_n, txVb_n);
+}
+
+static void set_polypoints_uv_txtr_rotF(struct PolyPoint *p_pt1,
+  struct PolyPoint *p_pt2, struct PolyPoint *p_pt3, struct PolyPoint *p_pt4,
+  ubyte txUa_n, ubyte txVb_n)
+{
+    polypoint_uv_set_txtr_uend_vbeg(p_pt1, txUa_n, txVb_n);
+    polypoint_uv_set_txtr_ubeg_vbeg(p_pt2, txUa_n, txVb_n);
+    polypoint_uv_set_txtr_uend_vend(p_pt3, txUa_n, txVb_n);
     polypoint_uv_set_txtr_ubeg_vend(p_pt4, txUa_n, txVb_n);
 }
 
@@ -197,46 +237,25 @@ void set_floor_texture_uv_damaged_ground(struct PolyPoint *p_pt1,
         set_polypoints_uv_txtr_rotB(p_pt1, p_pt2, p_pt3, p_pt4, 6, 2);
         break;
     case 4:
-        polypoint_uv_set_txtr_ubeg_vend(p_pt1, 5, 2);
-        polypoint_uv_set_txtr_uend_vend(p_pt2, 5, 2);
-        polypoint_uv_set_txtr_ubeg_vbeg(p_pt3, 5, 2);
-        polypoint_uv_set_txtr_uend_vbeg(p_pt4, 5, 2);
+        set_polypoints_uv_txtr_rotC(p_pt1, p_pt2, p_pt3, p_pt4, 5, 2);
         break;
     case 5:
-        polypoint_uv_set_txtr_uend_vend(p_pt1, 4, 2);
-        polypoint_uv_set_txtr_uend_vbeg(p_pt2, 4, 2);
-        polypoint_uv_set_txtr_ubeg_vend(p_pt3, 4, 2);
-        polypoint_uv_set_txtr_ubeg_vbeg(p_pt4, 4, 2);
+        set_polypoints_uv_txtr_rotD(p_pt1, p_pt2, p_pt3, p_pt4, 4, 2);
         break;
     case 6:
-        polypoint_uv_set_txtr_uend_vend(p_pt1, 6, 2);
-        polypoint_uv_set_txtr_uend_vbeg(p_pt2, 6, 2);
-        polypoint_uv_set_txtr_ubeg_vend(p_pt3, 6, 2);
-        polypoint_uv_set_txtr_ubeg_vbeg(p_pt4, 6, 2);
+        set_polypoints_uv_txtr_rotD(p_pt1, p_pt2, p_pt3, p_pt4, 6, 2);
         break;
     case 7:
-        polypoint_uv_set_txtr_uend_vend(p_pt1, 5, 2);
-        polypoint_uv_set_txtr_uend_vbeg(p_pt2, 5, 2);
-        polypoint_uv_set_txtr_ubeg_vend(p_pt3, 5, 2);
-        polypoint_uv_set_txtr_ubeg_vbeg(p_pt4, 5, 2);
+        set_polypoints_uv_txtr_rotD(p_pt1, p_pt2, p_pt3, p_pt4, 5, 2);
         break;
     case 8:
-        polypoint_uv_set_txtr_ubeg_vend(p_pt1, 4, 2);
-        polypoint_uv_set_txtr_ubeg_vbeg(p_pt2, 4, 2);
-        polypoint_uv_set_txtr_uend_vend(p_pt3, 4, 2);
-        polypoint_uv_set_txtr_uend_vbeg(p_pt4, 4, 2);
+        set_polypoints_uv_txtr_rotE(p_pt1, p_pt2, p_pt3, p_pt4, 4, 2);
         break;
     case 9:
-        polypoint_uv_set_txtr_ubeg_vend(p_pt1, 6, 2);
-        polypoint_uv_set_txtr_ubeg_vbeg(p_pt2, 6, 2);
-        polypoint_uv_set_txtr_uend_vend(p_pt3, 6, 2);
-        polypoint_uv_set_txtr_uend_vbeg(p_pt4, 6, 2);
+        set_polypoints_uv_txtr_rotE(p_pt1, p_pt2, p_pt3, p_pt4, 6, 2);
         break;
     case 10:
-        polypoint_uv_set_txtr_uend_vbeg(p_pt1, 5, 2);
-        polypoint_uv_set_txtr_ubeg_vbeg(p_pt2, 5, 2);
-        polypoint_uv_set_txtr_uend_vend(p_pt3, 5, 2);
-        polypoint_uv_set_txtr_ubeg_vend(p_pt4, 5, 2);
+        set_polypoints_uv_txtr_rotF(p_pt1, p_pt2, p_pt3, p_pt4, 5, 2);
         break;
     case 11:
         set_polypoints_uv_txtr_rotA(p_pt1, p_pt2, p_pt3, p_pt4, 4, 2);
