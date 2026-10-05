@@ -263,50 +263,6 @@ void init_scanner(void)
     SCANNER_init();
 }
 
-short SCANNER_text_scale(int height)
-{
-    short fnt_height, height_base;
-    short units_per_px;
-
-    fnt_height = my_char_height('A');
-    // detail 0 font has height equal 6
-    height_base = 9 * fnt_height / 6;
-    units_per_px = 16 * height / height_base;
-    return units_per_px;
-}
-
-void SCANNER_text_draw(const char *text, int shift_x, int height)
-{
-    char loc_text[256];
-    short units_per_px;
-
-    strncpy(loc_text, text, sizeof(loc_text)-1);
-    loc_text[sizeof(loc_text)-1] = '\0';
-    my_str_to_upper(loc_text);
-
-    lbFontPtr = small_font;
-    lbDisplay.DrawColour = SCANNER_colour[ScnClr_Text];
-    lbDisplay.DrawFlags = Lb_TEXT_ONE_COLOR;
-    units_per_px = SCANNER_text_scale(height);
-
-    AppTextDrawLineBrigAdjWthPartsResized(shift_x, 0, units_per_px, 56, text);
-}
-
-int SCANNER_text_width(const char *text, int height)
-{
-    char loc_text[256];
-    short units_per_px;
-
-    strncpy(loc_text, text, sizeof(loc_text)-1);
-    loc_text[sizeof(loc_text)-1] = '\0';
-    my_str_to_upper(loc_text);
-
-    lbFontPtr = small_font;
-    units_per_px = SCANNER_text_scale(height);
-
-    return LbTextStringWidthResized(text, units_per_px);
-}
-
 short panel_state_to_player_agent(ushort panstate)
 {
     if ((panstate >= PANEL_STATE_WEP_SEL_ONE) && (panstate <= PANEL_STATE_MOOD_SET_GRP + 3))
@@ -363,7 +319,34 @@ void panel_objective_info_start(void)
     scrollinfo_pos = 0;
 }
 
-void SCANNER_objective_info_move(int width, int height, int end_pos)
+short panel_objective_text_scale(int height)
+{
+    short fnt_height, height_base;
+    short units_per_px;
+
+    fnt_height = my_char_height('A');
+    // detail 0 font has height equal 6
+    height_base = 9 * fnt_height / 6;
+    units_per_px = 16 * height / height_base;
+    return units_per_px;
+}
+
+int panel_objective_text_width(const char *text, int height)
+{
+    char loc_text[256];
+    short units_per_px;
+
+    strncpy(loc_text, text, sizeof(loc_text)-1);
+    loc_text[sizeof(loc_text)-1] = '\0';
+    my_str_to_upper(loc_text);
+
+    lbFontPtr = small_font;
+    units_per_px = panel_objective_text_scale(height);
+
+    return LbTextStringWidthResized(text, units_per_px);
+}
+
+void panel_objective_info_move(int width, int height, int end_pos)
 {
     PlayerInfo *p_locplayer;
 
@@ -393,6 +376,85 @@ void SCANNER_objective_info_move(int width, int height, int end_pos)
             scrollinfo_pos = width;
         scrollinfo_pos -= 2 * height / 9;
     }
+}
+
+static void draw_objective_info_background(int scr_x, int scr_y, int width, int height)
+{
+    ushort drwflags;
+
+    drwflags = Lb_SPRITE_TRANSPAR4;
+    enlist_hud_draw_low_trans_grey_box(scr_x, scr_y, width, height,
+      drwflags, ingame.Scanner.Contrast, SCANNER_colour[ScnClr_Text]);
+}
+
+static void draw_objective_info_text(int scr_x, int scr_y, int width, int height)
+{
+    char loc_text[256];
+    short units_per_px;
+
+    strncpy(loc_text, scrollinfo_text, sizeof(loc_text)-1);
+    loc_text[sizeof(loc_text)-1] = '\0';
+    my_str_to_upper(loc_text);
+
+    units_per_px = panel_objective_text_scale(height);
+
+    enlist_hud_draw_clipped_text(scr_x + 1, scr_y, width - 2, height,
+      scrollinfo_pos, 0, small_font, loc_text,
+      units_per_px, 56, SCANNER_colour[ScnClr_Text]);
+}
+
+/** Objective text, or net players list.
+ */
+void draw_panel_objective_info(short panel)
+{
+    struct GamePanel *p_panel;
+    short bkgd_x, text_x;
+    short bkgd_w, text_w;
+
+    p_panel = &game_panel[panel];
+
+    if (in_network_game) {
+        bkgd_x = 0;
+        text_x = bkgd_x + 1;
+        bkgd_w = lbDisplay.GraphicsScreenWidth;
+        text_w = bkgd_w - 2;
+    } else {
+        // original width 67 low res, 132 high res
+        bkgd_x = p_panel->pos.X;
+        text_x = p_panel->dyn.X;
+        bkgd_w = p_panel->pos.Width;
+        text_w = p_panel->dyn.Width;
+    }
+
+    draw_objective_info_background(bkgd_x, p_panel->pos.Y, bkgd_w, p_panel->pos.Height);
+    draw_objective_info_text(text_x, p_panel->dyn.Y, text_w, p_panel->dyn.Height);
+}
+
+void SCANNER_unkn_func_205(void)
+{
+    asm volatile ("call ASM_SCANNER_unkn_func_205\n"
+        :  :  : "eax" );
+}
+
+void panel_objective_info_process_turn(short panel)
+{
+    struct GamePanel *p_panel;
+    int end_pos;
+    short bkgd_w, text_w;
+
+    p_panel = &game_panel[panel];
+
+    if (in_network_game) {
+        SCANNER_unkn_func_205();
+        bkgd_w = lbDisplay.GraphicsScreenWidth;
+        text_w = bkgd_w - 2;
+    } else {
+        bkgd_w = p_panel->pos.Width;
+        text_w = p_panel->dyn.Width;
+    }
+
+    end_pos = scrollinfo_pos + panel_objective_text_width(scrollinfo_text, p_panel->dyn.Height);
+    panel_objective_info_move(text_w, p_panel->dyn.Height, end_pos);
 }
 
 void player_message_clear(PlayerIdx plyr)
@@ -501,25 +563,6 @@ void players_chat_talk_process_turn(void)
     }
 }
 
-static void draw_objective_info_background(int scr_x, int scr_y, int width, int height)
-{
-    ushort drwflags;
-
-    drwflags = Lb_SPRITE_TRANSPAR4;
-    enlist_hud_draw_low_trans_grey_box(scr_x, scr_y, width, height,
-      drwflags, ingame.Scanner.Contrast, SCANNER_colour[ScnClr_Text]);
-}
-
-static void draw_objective_info_text(int scr_x, int scr_y, int width, int height)
-{
-    LbTextSetWindow(scr_x + 1, scr_y, width - 2, height);
-
-    SCANNER_text_draw(scrollinfo_text, scrollinfo_pos, height);
-
-    LbTextSetWindow(lbDisplay.GraphicsWindowX, lbDisplay.GraphicsWindowY,
-      lbDisplay.GraphicsWindowWidth, lbDisplay.GraphicsWindowHeight);
-}
-
 void draw_players_chat(void)
 {
     int scr_x, scr_y;
@@ -532,12 +575,6 @@ void draw_players_chat(void)
     scr_y = 26 * pop1_sprites_scale;
 
     draw_players_chat_talk(scr_x, scr_y);
-}
-
-void SCANNER_unkn_func_205(void)
-{
-    asm volatile ("call ASM_SCANNER_unkn_func_205\n"
-        :  :  : "eax" );
 }
 
 TbBool check_scanner_input(void)
@@ -2029,54 +2066,6 @@ void draw_panel_thermal_button(short panel)
         y += game_panel_shifts[PaSh_GROUP_PANE_TO_THERMAL_SPR].y;
         draw_new_panel_sprite_std(x, y, 91);
     }
-}
-
-/** Objective text, or net players list.
- */
-void draw_panel_objective_info(short panel)
-{
-    struct GamePanel *p_panel;
-    short bkgd_x, text_x;
-    short bkgd_w, text_w;
-
-    p_panel = &game_panel[panel];
-
-    if (in_network_game) {
-        bkgd_x = 0;
-        text_x = bkgd_x + 1;
-        bkgd_w = lbDisplay.GraphicsScreenWidth;
-        text_w = bkgd_w - 2;
-    } else {
-        // original width 67 low res, 132 high res
-        bkgd_x = p_panel->pos.X;
-        text_x = p_panel->dyn.X;
-        bkgd_w = p_panel->pos.Width;
-        text_w = p_panel->dyn.Width;
-    }
-
-    draw_objective_info_background(bkgd_x, p_panel->pos.Y, bkgd_w, p_panel->pos.Height);
-    draw_objective_info_text(text_x, p_panel->dyn.Y, text_w, p_panel->dyn.Height);
-}
-
-void panel_objective_info_process_turn(short panel)
-{
-    struct GamePanel *p_panel;
-    int end_pos;
-    short bkgd_w, text_w;
-
-    p_panel = &game_panel[panel];
-
-    if (in_network_game) {
-        SCANNER_unkn_func_205();
-        bkgd_w = lbDisplay.GraphicsScreenWidth;
-        text_w = bkgd_w - 2;
-    } else {
-        bkgd_w = p_panel->pos.Width;
-        text_w = p_panel->dyn.Width;
-    }
-
-    end_pos = scrollinfo_pos + SCANNER_text_width(scrollinfo_text, p_panel->dyn.Height);
-    SCANNER_objective_info_move(text_w, p_panel->dyn.Height, end_pos);
 }
 
 void draw_weapon_energy_bar(short panel)
