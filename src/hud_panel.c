@@ -263,6 +263,18 @@ void init_scanner(void)
     SCANNER_init();
 }
 
+short SCANNER_text_scale(int height)
+{
+    short fnt_height, height_base;
+    short units_per_px;
+
+    fnt_height = my_char_height('A');
+    // detail 0 font has height equal 6
+    height_base = 9 * fnt_height / 6;
+    units_per_px = 16 * height / height_base;
+    return units_per_px;
+}
+
 void SCANNER_text_draw(const char *text, int shift_x, int height)
 {
     char loc_text[256];
@@ -275,13 +287,8 @@ void SCANNER_text_draw(const char *text, int shift_x, int height)
     lbFontPtr = small_font;
     lbDisplay.DrawColour = SCANNER_colour[ScnClr_Text];
     lbDisplay.DrawFlags = Lb_TEXT_ONE_COLOR;
-    {
-        short fnt_height, height_base;
-        fnt_height = my_char_height('A');
-        // detail 0 font has height equal 6
-        height_base = 9 * fnt_height / 6;
-        units_per_px = 16 * height / height_base;
-    }
+    units_per_px = SCANNER_text_scale(height);
+
     AppTextDrawLineBrigAdjWthPartsResized(shift_x, 0, units_per_px, 56, text);
 }
 
@@ -295,13 +302,8 @@ int SCANNER_text_width(const char *text, int height)
     my_str_to_upper(loc_text);
 
     lbFontPtr = small_font;
-    {
-        short fnt_height, height_base;
-        fnt_height = my_char_height('A');
-        // detail 0 font has height equal 6
-        height_base = 9 * fnt_height / 6;
-        units_per_px = 16 * height / height_base;
-    }
+    units_per_px = SCANNER_text_scale(height);
+
     return LbTextStringWidthResized(text, units_per_px);
 }
 
