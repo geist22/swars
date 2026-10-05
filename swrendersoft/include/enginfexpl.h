@@ -29,6 +29,16 @@ extern "C" {
 
 #define EXPLODE_FACES_COUNT 1024
 
+enum ExplodeFaceType {
+    EXPL_FACE_NONE = 0,
+    EXPL_FACE_TRI_TYP1,
+    EXPL_FACE_QUAD_TYP2,
+    EXPL_FACE_TRI_ABS,
+    EXPL_FACE_QUAD_ABS,
+    EXPL_FACE_TRI_REL,
+    EXPL_FACE_QUAD_REL,
+};
+
 struct SortMapPoint;
 
 /** Remaining face from an exploded 3D object.
