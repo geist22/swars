@@ -1704,61 +1704,14 @@ void draw_rect_around_map_coords(int cor_x, int cor_y, int cor_z, int width, int
     cor_beg_z = cor_z - height;
     cor_end_z = cor_z + height;
 
-    ep1.X3d = cor_beg_x - engn_xc;
-    ep1.Y3d = cor_y - engn_yc;
-    ep1.Z3d = cor_beg_z - engn_zc;
-    ep1.Flags = 0;
-    transform_point(&ep1);
-
-    ep2.X3d = cor_end_x - engn_xc;
-    ep2.Y3d = cor_y - engn_yc;
-    ep2.Z3d = cor_beg_z - engn_zc;
-    ep2.Flags = 0;
-    transform_point(&ep2);
-
-    LbDrawLine(ep1.pp.X, ep1.pp.Y, ep2.pp.X, ep2.pp.Y, colour);
-
-    ep1.X3d = cor_end_x - engn_xc;
-    ep1.Y3d = cor_y - engn_yc;
-    ep1.Z3d = cor_beg_z - engn_zc;
-    ep1.Flags = 0;
-    transform_point(&ep1);
-
-    ep2.X3d = cor_end_x - engn_xc;
-    ep2.Y3d = cor_y - engn_yc;
-    ep2.Z3d = cor_end_z - engn_zc;
-    ep2.Flags = 0;
-    transform_point(&ep2);
-
-    LbDrawLine(ep1.pp.X, ep1.pp.Y, ep2.pp.X, ep2.pp.Y, colour);
-
-    ep1.X3d = cor_end_x - engn_xc;
-    ep1.Y3d = cor_y - engn_yc;
-    ep1.Z3d = cor_end_z - engn_zc;
-    ep1.Flags = 0;
-    transform_point(&ep1);
-
-    ep2.X3d = cor_beg_x - engn_xc;
-    ep2.Y3d = cor_y - engn_yc;
-    ep2.Z3d = cor_end_z - engn_zc;
-    ep2.Flags = 0;
-    transform_point(&ep2);
-
-    LbDrawLine(ep1.pp.X, ep1.pp.Y, ep2.pp.X, ep2.pp.Y, colour);
-
-    ep1.X3d = cor_beg_x - engn_xc;
-    ep1.Y3d = cor_y - engn_yc;
-    ep1.Z3d = height + cor_z - engn_zc;
-    ep1.Flags = 0;
-    transform_point(&ep1);
-
-    ep2.X3d = cor_beg_x - engn_xc;
-    ep2.Y3d = cor_y - engn_yc;
-    ep2.Z3d = cor_beg_z - engn_zc;
-    ep2.Flags = 0;
-    transform_point(&ep2);
-
-    LbDrawLine(ep1.pp.X, ep1.pp.Y, ep2.pp.X, ep2.pp.Y, colour);
+    enlist_hud_draw_mapcoord_line(cor_beg_x, cor_y, cor_beg_z,
+      cor_end_x, cor_y, cor_end_z, 1, colour);
+    enlist_hud_draw_mapcoord_line(cor_end_x, cor_y, cor_beg_z,
+      cor_end_x, cor_y, cor_end_z, 1, colour);
+    enlist_hud_draw_mapcoord_line(cor_end_x, cor_y, cor_end_z,
+      cor_beg_x, cor_y, cor_end_z, 1, colour);
+    enlist_hud_draw_mapcoord_line(cor_beg_x, cor_y, cor_end_z,
+      cor_beg_x, cor_y, cor_beg_z, 1, colour);
 }
 
 void draw_health_level(short x, short y, ushort w, ushort h,
