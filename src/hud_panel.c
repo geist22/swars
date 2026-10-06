@@ -1695,61 +1695,8 @@ void func_702c0(int cor_x, int cor_y, int cor_z, int width, int height, TbPixel 
         : "cc", "memory");
 }
 
-void draw_transparent_slant_bar(short x, short y, ushort w, ushort h)
-{
-    struct EnginePoint point4;
-    struct EnginePoint point2;
-    struct EnginePoint point1;
-    struct EnginePoint point3;
-    u32 waftx, wafty;
-    uint anim_speed_x, anim_speed_y;
-    ushort tmx, tmy;
-    short sh_x;
-
-    sh_x = 3;
-    if (lbDisplay.GraphicsScreenHeight < 400)
-        sh_x /= 2;
-    point1.pp.X = x;
-    point1.pp.Y = y;
-    point4.pp.X = (x + w);
-    point4.pp.Y = y;
-    point2.pp.Y = (y + h);
-    point2.pp.X = (x + w - sh_x);
-    point3.pp.Y = (y + h);
-    point3.pp.X = (x - sh_x);
-
-    // The shield bar is animated, even if it's not possible to see
-    anim_speed_x = (render_anim_turn >> (RENDER_ANIM_TURN_SHIFT + 3));
-    anim_speed_y = (render_anim_turn >> RENDER_ANIM_TURN_SHIFT);
-    waftx = waft_table[(anim_speed_x) & 0x1F];
-    wafty = waft_table[(anim_speed_y + 16) & 0x1F];
-    tmx = ((waftx + 30) >> 1);
-    tmy = ((wafty + 30) >> 3);
-    point1.pp.U = ((SINGLE_TEXTURE_DIM * 0) + tmx) << 16;
-    point4.pp.U = ((SINGLE_TEXTURE_DIM * 2) + tmx) << 16;
-    point2.pp.U = ((SINGLE_TEXTURE_DIM * 2) + tmx) << 16;
-    point1.pp.V = ((SINGLE_TEXTURE_DIM * 2) + tmy) << 16;
-    point4.pp.V = ((SINGLE_TEXTURE_DIM * 2) + tmy) << 16;
-    point2.pp.V = ((SINGLE_TEXTURE_DIM * 2) + tmy + 8) << 16;
-    point3.pp.U = ((SINGLE_TEXTURE_DIM * 0) + tmx) << 16;
-    point3.pp.V = ((SINGLE_TEXTURE_DIM * 2) + tmy + 8) << 16;
-
-    point1.pp.S = 0;
-    point2.pp.S = 0;
-    point3.pp.S = 0;
-    point4.pp.S = 0;
-
-    vec_mode = 18;
-    assert(vec_tmap[2] != NULL);
-    vec_map = vec_tmap[2];
-    draw_trigpoly(&point1.pp, &point4.pp, &point3.pp);
-    if (vec_mode == 2)
-        vec_mode = 27;
-    draw_trigpoly(&point4.pp, &point2.pp, &point3.pp);
-}
-
 void draw_health_level(short x, short y, ushort w, ushort h,
-  short lv, ushort lvmax, ubyte col, ubyte transp)
+  short lv, ushort lvmax, TbPixel colour, ubyte transp)
 {
     short cw;
 
@@ -1759,11 +1706,13 @@ void draw_health_level(short x, short y, ushort w, ushort h,
     cw = w * lv / lvmax;
     if (transp)
     {
-        draw_transparent_slant_bar(x, y, cw, h);
+        // The shield bar is animated, even if it's not possible to see
+        enlist_hud_draw_textured_flow_slant_box(x, y, cw, h,
+          18, 0x3F, 2, 0, 2);
     }
     else
     {
-        ApDrawSlantBox(x, y, cw, h, col);
+        enlist_hud_draw_slant_box(x, y, cw, h, 0, 32, colour);
     }
 }
 
