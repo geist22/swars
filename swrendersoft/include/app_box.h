@@ -42,6 +42,9 @@ TbResult AppDrawSlantBoxLowTransGrey(s32 X, s32 Y, s32 Width, s32 Height, TbPixe
 
 TbResult AppDrawVSlantBoxLowTransGrey(s32 X, s32 Y, s32 Width, s32 Height, TbPixel colour);
 
+TbResult AppDrawTexturedFlowSlantBox(s32 X, s32 Y, s32 Width, s32 Height,
+  ubyte vecMode, ubyte brig, ubyte tmapNo, ushort nUa, ushort nVb);
+
 #ifdef __cplusplus
 };
 #endif

@@ -50,6 +50,10 @@ TbBool enlist_hud_draw_low_trans_grey_slant_box(short px, short py,
 TbBool enlist_hud_draw_low_trans_grey_vslant_box(short px, short py,
   short width, short height, ushort drwflags, short brig, TbPixel colour);
 
+TbBool enlist_hud_draw_textured_flow_slant_box(short px, short py,
+  short width, short height, ubyte vecmode,
+  ubyte brig, ubyte tmapno, ushort num_ua, ushort num_vb);
+
 TbBool enlist_hud_draw_sprite(short px, short py, struct TbSprite *p_spr,
   ushort drwflags, short brig);
 

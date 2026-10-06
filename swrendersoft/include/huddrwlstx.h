@@ -49,6 +49,15 @@ struct DIHudBox {
     ubyte Col;
 };
 
+struct DIHudTexturedBox {
+    struct DIScrRect Rect;
+    ubyte VecMode;
+    ubyte Bright;
+    ubyte TMapNo;
+    ushort NumUa;
+    ushort NumVb;
+};
+
 struct DIHudClippedText {
     struct DIScrRect Rect;
     struct TbSprite *pFont;
@@ -75,6 +84,7 @@ struct DIHudWrappedText {
 struct DrawItemHud {
 	union {
         struct DIHudBox Box;
+        struct DIHudTexturedBox TxtrdBox;
 		struct DIHudClippedText ClpText;
 		struct DIHudWrappedText WrpText;
 	} U;
@@ -92,6 +102,7 @@ void hud_draw_vslant_box(struct DIHudBox *p_diBox);
 void hud_draw_low_trans_grey_box(struct DIHudBox *p_diBox);
 void hud_draw_low_trans_grey_slant_box(struct DIHudBox *p_diBox);
 void hud_draw_low_trans_grey_vslant_box(struct DIHudBox *p_diBox);
+void hud_draw_textured_flow_slant_box(struct DIHudTexturedBox *p_diBox);
 
 void hud_draw_clipped_text(struct DIHudClippedText *p_diClpText);
 void hud_draw_colour_wave_wrapped_text(struct DIHudWrappedText *p_diWrpText);

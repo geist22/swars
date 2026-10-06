@@ -92,6 +92,14 @@ void hud_draw_low_trans_grey_vslant_box(struct DIHudBox *p_diBox)
       p_diBox->Rect.Width, p_diBox->Rect.Height, p_diBox->Col);
 }
 
+void hud_draw_textured_flow_slant_box(struct DIHudTexturedBox *p_diTxtrdBox)
+{
+    AppDrawTexturedFlowSlantBox(p_diTxtrdBox->Rect.X, p_diTxtrdBox->Rect.Y,
+      p_diTxtrdBox->Rect.Width, p_diTxtrdBox->Rect.Height, p_diTxtrdBox->VecMode,
+      p_diTxtrdBox->Bright, p_diTxtrdBox->TMapNo,
+      p_diTxtrdBox->NumUa, p_diTxtrdBox->NumVb);
+}
+
 void hud_draw_clipped_text(struct DIHudClippedText *p_diClpText)
 {
     LbTextSetWindow(p_diClpText->Rect.X, p_diClpText->Rect.Y,

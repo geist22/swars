@@ -193,6 +193,30 @@ TbBool enlist_hud_draw_low_trans_grey_vslant_box(short px, short py,
     return true;
 }
 
+TbBool enlist_hud_draw_textured_flow_slant_box(short px, short py,
+  short width, short height, ubyte vecmode,
+  ubyte brig, ubyte tmapno, ushort num_ua, ushort num_vb)
+{
+    struct DrawItemHud dih;
+    struct DrawItemHud *p_di;
+
+    p_di = &dih;
+
+    p_di->U.TxtrdBox.Rect.X = px;
+    p_di->U.TxtrdBox.Rect.Y = py;
+    p_di->U.TxtrdBox.Rect.Width = width;
+    p_di->U.TxtrdBox.Rect.Height = height;
+    p_di->U.TxtrdBox.VecMode = vecmode;
+    p_di->U.TxtrdBox.Bright = brig;
+    p_di->U.TxtrdBox.TMapNo = tmapno;
+    p_di->U.TxtrdBox.NumUa = num_ua;
+    p_di->U.TxtrdBox.NumVb = num_vb;
+
+    //TODO enlist instead of drawing directly
+    hud_draw_textured_flow_slant_box(&p_di->U.TxtrdBox);
+    return true;
+}
+
 TbBool enlist_hud_draw_sprite(short px, short py, struct TbSprite *p_spr,
   ushort drwflags, short brig)
 {

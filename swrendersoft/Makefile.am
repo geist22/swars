@@ -48,6 +48,7 @@ libswrender_a_SOURCES = \
   src/ap_spr_smap.c \
   src/app_box.c \
   src/app_box_lt.c \
+  src/app_box_tx.c \
   src/app_gengh.c \
   src/app_hvline_lt.c \
   src/app_spr_init.c \
