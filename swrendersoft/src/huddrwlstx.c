@@ -32,6 +32,7 @@
 #include "app_text_ba.h"
 #include "app_text_cw.h"
 #include "app_text_sf.h"
+#include "drawshape.h"
 #include "sprfontut.h"
 
 /******************************************************************************/
@@ -159,6 +160,14 @@ void hud_draw_colour_wave_wrapped_text(struct DIHudWrappedText *p_diWrpText)
     AppTextDrawColourWaveResized(p_diWrpText->Rect.X, p_diWrpText->Rect.Y,
       p_diWrpText->Scale, p_diWrpText->Text);
     FontSpacingRestore(p_diWrpText->pFont, space_bkp);
+}
+
+void hud_draw_mapcoord_line(struct DIHudMapCoordLine *p_diMapCorLine)
+{
+    draw_line_transformed_col(
+      p_diMapCorLine->PtBeg.X, p_diMapCorLine->PtBeg.Y, p_diMapCorLine->PtBeg.Z,
+      p_diMapCorLine->PtEnd.X, p_diMapCorLine->PtEnd.Y, p_diMapCorLine->PtEnd.Z,
+      p_diMapCorLine->Col);
 }
 
 /******************************************************************************/

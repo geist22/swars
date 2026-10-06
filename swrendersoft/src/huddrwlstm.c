@@ -27,7 +27,6 @@
 #include "bftext.h"
 
 #include "app_sprite.h"
-#include "app_text_ba.h"
 #include "huddrwlstx.h"
 
 /******************************************************************************/
@@ -367,6 +366,29 @@ TbBool enlist_hud_draw_colour_wave_wrapped_text(short px, short py,
 
     //TODO enlist instead of drawing directly
     hud_draw_colour_wave_wrapped_text(&p_di->U.WrpText);
+    return true;
+}
+
+TbBool enlist_hud_draw_mapcoord_line(short cor1_x, short cor1_y,
+  short cor1_z, short cor2_x, short cor2_y, short cor2_z,
+  ubyte thickness, TbPixel colour)
+{
+    struct DrawItemHud dih;
+    struct DrawItemHud *p_di;
+
+    p_di = &dih;
+
+    p_di->U.MapCorLine.PtBeg.X = cor1_x;
+    p_di->U.MapCorLine.PtBeg.Y = cor1_y;
+    p_di->U.MapCorLine.PtBeg.Z = cor1_z;
+    p_di->U.MapCorLine.PtEnd.X = cor2_x;
+    p_di->U.MapCorLine.PtEnd.Y = cor2_y;
+    p_di->U.MapCorLine.PtEnd.Z = cor2_z;
+    p_di->U.MapCorLine.Thick = thickness;
+    p_di->U.MapCorLine.Col = colour;
+
+    //TODO enlist instead of drawing directly
+    hud_draw_mapcoord_line(&p_di->U.MapCorLine);
     return true;
 }
 

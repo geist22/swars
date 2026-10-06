@@ -41,6 +41,12 @@ struct DIScrRect {
     short Height;
 };
 
+struct DIMapPoint {
+    short X;
+    short Y;
+    short Z;
+};
+
 struct DIHudBox {
     struct DIScrRect Rect;
     short Timer;
@@ -81,12 +87,20 @@ struct DIHudWrappedText {
     ubyte Shade;
 };
 
+struct DIHudMapCoordLine {
+    struct DIMapPoint PtBeg;
+    struct DIMapPoint PtEnd;
+    ubyte Thick;
+    ubyte Col;
+};
+
 struct DrawItemHud {
 	union {
         struct DIHudBox Box;
         struct DIHudTexturedBox TxtrdBox;
 		struct DIHudClippedText ClpText;
 		struct DIHudWrappedText WrpText;
+        struct DIHudMapCoordLine MapCorLine;
 	} U;
 	ubyte Type;
 	ushort Flags;
@@ -110,6 +124,8 @@ void hud_draw_shad_cl_flash_wrapped_text(struct DIHudWrappedText *p_diWrpText);
 
 int hud_width_shad_cl_flash_wrapped_text(short px, short py,
   struct TbSprite *p_font, const char *text, ushort drwflags, short units_per_px);
+
+void hud_draw_mapcoord_line(struct DIHudMapCoordLine *p_diMapCorLine);
 
 /******************************************************************************/
 #ifdef __cplusplus
