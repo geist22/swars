@@ -1708,7 +1708,7 @@ void draw_rect_around_map_coords(int cor_x, int cor_y, int cor_z, int width, int
     thickness = 1;
 
     enlist_hud_draw_mapcoord_line(cor_beg_x, cor_y, cor_beg_z,
-      cor_end_x, cor_y, cor_end_z, drwflags, thickness, colour);
+      cor_end_x, cor_y, cor_beg_z, drwflags, thickness, colour);
     enlist_hud_draw_mapcoord_line(cor_end_x, cor_y, cor_beg_z,
       cor_end_x, cor_y, cor_end_z, drwflags, thickness, colour);
     enlist_hud_draw_mapcoord_line(cor_end_x, cor_y, cor_end_z,
@@ -1779,21 +1779,27 @@ void draw_mood_limits(short x, short y, short w, short h, short value, short max
 {
     short scaled_val;
     short curr_x, sh_x;
-    TbPixel col;
+    short thickness;
+    ushort drwflags;
+    TbPixel colour;
 
     if (value <= 0)
         return;
 
     sh_x = h;
 
-    col = colour_lookup[ColLU_WHITE];
+    drwflags = 0;
+    colour = colour_lookup[ColLU_WHITE];
     scaled_val = (w * value / maxval) >> 1;
+    thickness = 1;
 
     curr_x = x + (w >> 1) - scaled_val;
-    LbDrawLine(curr_x, y, curr_x - sh_x, (y + h), col);
+    enlist_hud_draw_line(curr_x, y, curr_x - sh_x, (y + h),
+      drwflags, thickness, 32, colour);
 
     curr_x = x + (w >> 1) + scaled_val;
-    LbDrawLine(curr_x, y, curr_x - sh_x, (y + h), col);
+    enlist_hud_draw_line(curr_x, y, curr_x - sh_x, (y + h),
+      drwflags, thickness, 32, colour);
 }
 
 void draw_energy_bar(int x1, int y1, short w, short h, int value, int maxval)
