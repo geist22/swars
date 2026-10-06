@@ -32,6 +32,9 @@ extern "C" {
 #pragma pack()
 /******************************************************************************/
 
+TbBool enlist_hud_draw_line(short beg_x, short beg_y, short end_x, short end_y,
+  ushort drwflags, ubyte thickness, short brig, TbPixel colour);
+
 TbBool enlist_hud_draw_box(short px, short py, short width, short height,
   ushort drwflags, short brig, TbPixel colour);
 

@@ -23,6 +23,7 @@
 #include "bfanywnd.h"
 #include "bfbox.h"
 #include "bfgentab.h"
+#include "bfline.h"
 #include "bfscreen.h"
 #include "bfsprite.h"
 #include "bftext.h"
@@ -41,6 +42,14 @@
 
 #pragma pack()
 /******************************************************************************/
+
+void hud_draw_line(struct DIHudLine *p_diLine)
+{
+    lbDisplay.DrawFlags = p_diLine->DrwFlags;
+
+    LbDrawLine(p_diLine->Beg.X, p_diLine->Beg.Y,
+      p_diLine->End.X, p_diLine->End.Y, p_diLine->Col);
+}
 
 void hud_draw_box(struct DIHudBox *p_diBox)
 {
@@ -165,6 +174,7 @@ void hud_draw_colour_wave_wrapped_text(struct DIHudWrappedText *p_diWrpText)
 void hud_draw_mapcoord_line(struct DIHudMapCoordLine *p_diMapCorLine)
 {
     lbDisplay.DrawFlags = p_diMapCorLine->DrwFlags;
+
     draw_line_transformed_col(
       p_diMapCorLine->PtBeg.X, p_diMapCorLine->PtBeg.Y, p_diMapCorLine->PtBeg.Z,
       p_diMapCorLine->PtEnd.X, p_diMapCorLine->PtEnd.Y, p_diMapCorLine->PtEnd.Z,

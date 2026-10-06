@@ -47,6 +47,16 @@ struct DIMapPoint {
     short Z;
 };
 
+struct DIHudLine {
+    struct DIScrPoint Beg;
+    struct DIScrPoint End;
+    short Timer;
+    ushort DrwFlags;
+    ubyte Thick;
+    ubyte Bright;
+    ubyte Col;
+};
+
 struct DIHudBox {
     struct DIScrRect Rect;
     short Timer;
@@ -97,6 +107,7 @@ struct DIHudMapCoordLine {
 
 struct DrawItemHud {
 	union {
+        struct DIHudLine Line;
         struct DIHudBox Box;
         struct DIHudTexturedBox TxtrdBox;
 		struct DIHudClippedText ClpText;
@@ -109,6 +120,8 @@ struct DrawItemHud {
 
 #pragma pack()
 /******************************************************************************/
+
+void hud_draw_line(struct DIHudLine *p_diLine);
 
 void hud_draw_box(struct DIHudBox *p_diBox);
 void hud_draw_slant_box(struct DIHudBox *p_diBox);

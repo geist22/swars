@@ -36,6 +36,33 @@
 #pragma pack()
 /******************************************************************************/
 
+TbBool enlist_hud_draw_line(short beg_x, short beg_y, short end_x, short end_y,
+  ushort drwflags, ubyte thickness, short brig, TbPixel colour)
+{
+    struct DrawItemHud dih;
+    struct DrawItemHud *p_di;
+
+    if (brig > PALETTE_FADE_LEVELS-1)
+        brig = PALETTE_FADE_LEVELS-1;
+    if (brig < 0)
+        brig = 0;
+
+    p_di = &dih;
+
+    p_di->U.Line.Beg.X = beg_x;
+    p_di->U.Line.Beg.Y = beg_y;
+    p_di->U.Line.End.X = end_x;
+    p_di->U.Line.End.Y = end_y;
+    p_di->U.Line.DrwFlags = drwflags;
+    p_di->U.Line.Thick = thickness;
+    p_di->U.Line.Bright = brig;
+    p_di->U.Line.Col = colour;
+
+    //TODO enlist instead of drawing directly
+    hud_draw_line(&p_di->U.Line);
+    return true;
+}
+
 TbBool enlist_hud_draw_box(short px, short py, short width, short height,
   ushort drwflags, short brig, TbPixel colour)
 {
