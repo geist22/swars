@@ -60953,7 +60953,7 @@ GLOBAL_FUNC(ASM_func_6fe80)	/* 0x6fe80 */
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC(ASM_func_702c0)	/* 0x702c0 */
+GLOBAL_FUNC(ASM_draw_rect_around_map_coords)	/* 0x702c0 */
 /*----------------------------------------------------------------*/
 		push   %esi
 		push   %edi

@@ -1678,8 +1678,9 @@ void draw_agent_grouping_bars(short panel)
     }
 }
 
-void func_702c0(int cor_x, int cor_y, int cor_z, int width, int height, TbPixel colour)
+void draw_rect_around_map_coords(int cor_x, int cor_y, int cor_z, int width, int height, TbPixel colour)
 {
+#if 0
     // Pushed through a register holding them: a "g" operand may be placed
     // relative to the stack pointer, which each push moves.
     int stkargs[2];
@@ -1690,9 +1691,74 @@ void func_702c0(int cor_x, int cor_y, int cor_z, int width, int height, TbPixel 
     asm volatile (
       "push 4(%4)\n"
       "push 0(%4)\n"
-      "call ASM_func_702c0\n"
+      "call ASM_draw_rect_around_map_coords\n"
         : : "a" (cor_x), "d" (cor_y), "b" (cor_z), "c" (width), "S" (stkargs)
         : "cc", "memory");
+#endif
+    struct EnginePoint ep1, ep2;
+    int cor_beg_x, cor_beg_z;
+    int cor_end_x, cor_end_z;
+
+    cor_beg_x = cor_x - width;
+    cor_end_x = cor_x + width;
+    cor_beg_z = cor_z - height;
+    cor_end_z = cor_z + height;
+
+    ep1.X3d = cor_beg_x - engn_xc;
+    ep1.Y3d = cor_y - engn_yc;
+    ep1.Z3d = cor_beg_z - engn_zc;
+    ep1.Flags = 0;
+    transform_point(&ep1);
+
+    ep2.X3d = cor_end_x - engn_xc;
+    ep2.Y3d = cor_y - engn_yc;
+    ep2.Z3d = cor_beg_z - engn_zc;
+    ep2.Flags = 0;
+    transform_point(&ep2);
+
+    LbDrawLine(ep1.pp.X, ep1.pp.Y, ep2.pp.X, ep2.pp.Y, colour);
+
+    ep1.X3d = cor_end_x - engn_xc;
+    ep1.Y3d = cor_y - engn_yc;
+    ep1.Z3d = cor_beg_z - engn_zc;
+    ep1.Flags = 0;
+    transform_point(&ep1);
+
+    ep2.X3d = cor_end_x - engn_xc;
+    ep2.Y3d = cor_y - engn_yc;
+    ep2.Z3d = cor_end_z - engn_zc;
+    ep2.Flags = 0;
+    transform_point(&ep2);
+
+    LbDrawLine(ep1.pp.X, ep1.pp.Y, ep2.pp.X, ep2.pp.Y, colour);
+
+    ep1.X3d = cor_end_x - engn_xc;
+    ep1.Y3d = cor_y - engn_yc;
+    ep1.Z3d = cor_end_z - engn_zc;
+    ep1.Flags = 0;
+    transform_point(&ep1);
+
+    ep2.X3d = cor_beg_x - engn_xc;
+    ep2.Y3d = cor_y - engn_yc;
+    ep2.Z3d = cor_end_z - engn_zc;
+    ep2.Flags = 0;
+    transform_point(&ep2);
+
+    LbDrawLine(ep1.pp.X, ep1.pp.Y, ep2.pp.X, ep2.pp.Y, colour);
+
+    ep1.X3d = cor_beg_x - engn_xc;
+    ep1.Y3d = cor_y - engn_yc;
+    ep1.Z3d = height + cor_z - engn_zc;
+    ep1.Flags = 0;
+    transform_point(&ep1);
+
+    ep2.X3d = cor_beg_x - engn_xc;
+    ep2.Y3d = cor_y - engn_yc;
+    ep2.Z3d = cor_beg_z - engn_zc;
+    ep2.Flags = 0;
+    transform_point(&ep2);
+
+    LbDrawLine(ep1.pp.X, ep1.pp.Y, ep2.pp.X, ep2.pp.Y, colour);
 }
 
 void draw_health_level(short x, short y, ushort w, ushort h,
@@ -2428,7 +2494,8 @@ void draw_new_panel(void)
             ctlmode = user_input_control_mode_get(local_player_no, 0);
             if (ctlmode == UInpCtr_Mouse && !PacketRecord_IsPlayback()) {
                 y = alt_at_point(mouse_map_x, mouse_map_z);
-                func_702c0(mouse_map_x, PRCCOORD_TO_YCOORD(y), mouse_map_z, 64, 64, colour_lookup[ColLU_RED]);
+                draw_rect_around_map_coords(mouse_map_x, PRCCOORD_TO_YCOORD(y), mouse_map_z,
+                  64, 64, colour_lookup[ColLU_RED]);
             }
         }
     }
