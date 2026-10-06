@@ -1695,23 +1695,26 @@ void draw_rect_around_map_coords(int cor_x, int cor_y, int cor_z, int width, int
         : : "a" (cor_x), "d" (cor_y), "b" (cor_z), "c" (width), "S" (stkargs)
         : "cc", "memory");
 #endif
-    struct EnginePoint ep1, ep2;
     int cor_beg_x, cor_beg_z;
     int cor_end_x, cor_end_z;
+    int thickness;
+    ushort drwflags;
 
     cor_beg_x = cor_x - width;
     cor_end_x = cor_x + width;
     cor_beg_z = cor_z - height;
     cor_end_z = cor_z + height;
+    drwflags = 0;
+    thickness = 1;
 
     enlist_hud_draw_mapcoord_line(cor_beg_x, cor_y, cor_beg_z,
-      cor_end_x, cor_y, cor_end_z, 1, colour);
+      cor_end_x, cor_y, cor_end_z, drwflags, thickness, colour);
     enlist_hud_draw_mapcoord_line(cor_end_x, cor_y, cor_beg_z,
-      cor_end_x, cor_y, cor_end_z, 1, colour);
+      cor_end_x, cor_y, cor_end_z, drwflags, thickness, colour);
     enlist_hud_draw_mapcoord_line(cor_end_x, cor_y, cor_end_z,
-      cor_beg_x, cor_y, cor_end_z, 1, colour);
+      cor_beg_x, cor_y, cor_end_z, drwflags, thickness, colour);
     enlist_hud_draw_mapcoord_line(cor_beg_x, cor_y, cor_end_z,
-      cor_beg_x, cor_y, cor_beg_z, 1, colour);
+      cor_beg_x, cor_y, cor_beg_z, drwflags, thickness, colour);
 }
 
 void draw_health_level(short x, short y, ushort w, ushort h,

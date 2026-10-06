@@ -371,7 +371,7 @@ TbBool enlist_hud_draw_colour_wave_wrapped_text(short px, short py,
 
 TbBool enlist_hud_draw_mapcoord_line(short cor1_x, short cor1_y,
   short cor1_z, short cor2_x, short cor2_y, short cor2_z,
-  ubyte thickness, TbPixel colour)
+  ushort drwflags, ubyte thickness, TbPixel colour)
 {
     struct DrawItemHud dih;
     struct DrawItemHud *p_di;
@@ -384,6 +384,7 @@ TbBool enlist_hud_draw_mapcoord_line(short cor1_x, short cor1_y,
     p_di->U.MapCorLine.PtEnd.X = cor2_x;
     p_di->U.MapCorLine.PtEnd.Y = cor2_y;
     p_di->U.MapCorLine.PtEnd.Z = cor2_z;
+    p_di->U.MapCorLine.DrwFlags = drwflags;
     p_di->U.MapCorLine.Thick = thickness;
     p_di->U.MapCorLine.Col = colour;
 

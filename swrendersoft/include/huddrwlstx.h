@@ -90,6 +90,7 @@ struct DIHudWrappedText {
 struct DIHudMapCoordLine {
     struct DIMapPoint PtBeg;
     struct DIMapPoint PtEnd;
+    ushort DrwFlags;
     ubyte Thick;
     ubyte Col;
 };

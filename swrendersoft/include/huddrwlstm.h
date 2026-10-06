@@ -81,9 +81,11 @@ TbBool enlist_hud_draw_colour_wave_wrapped_text(short px, short py,
   short width, short height, struct TbSprite *p_font, const char *text,
   short units_per_px, TbPixel colour, TbPixel shcolour);
 
+/** Enlist drawing line between the provided map coordinates.
+ */
 TbBool enlist_hud_draw_mapcoord_line(short cor1_x, short cor1_y,
   short cor1_z, short cor2_x, short cor2_y, short cor2_z,
-  ubyte thickness, TbPixel colour);
+  ushort drwflags, ubyte thickness, TbPixel colour);
 
 /******************************************************************************/
 #ifdef __cplusplus
