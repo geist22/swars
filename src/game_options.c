@@ -237,7 +237,7 @@ int game_option_min(int option_no)
     case GOpt_ScannerPulse:
         return 0;
     case GOpt_PanelPermutation:
-        if (ingame.PanelPermutation < 0)
+        if ((ingame.PanelPermutation < 0) || (ingame.UserFlags & UsrF_Cheats) != 0)
             return OPT_PANEL_PERMUT_MIN;
         else
             return OPT_PANEL_PERMUT_ALPHA_MIN;
@@ -281,7 +281,7 @@ int game_option_max(int option_no)
     case GOpt_ScannerPulse:
         return 1;
     case GOpt_PanelPermutation:
-        if (ingame.PanelPermutation < 0)
+        if ((ingame.PanelPermutation < 0) && (ingame.UserFlags & UsrF_Cheats) == 0)
             return OPT_PANEL_PERMUT_MAX;
         else
             return OPT_PANEL_PERMUT_ALPHA_MAX;
