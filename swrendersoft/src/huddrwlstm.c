@@ -26,7 +26,7 @@
 #include "bfsprite.h"
 #include "bftext.h"
 
-#include "app_sprite.h"
+#include "engincolour.h"
 #include "huddrwlstx.h"
 
 /******************************************************************************/
@@ -246,57 +246,56 @@ TbBool enlist_hud_draw_textured_flow_slant_box(short px, short py,
 TbBool enlist_hud_draw_sprite(short px, short py, struct TbSprite *p_spr,
   ushort drwflags, short brig)
 {
+    struct DrawItemHud dih;
+    struct DrawItemHud *p_di;
+
     if (brig > PALETTE_FADE_LEVELS-1)
         brig = PALETTE_FADE_LEVELS-1;
     if (brig < 0)
         brig = 0;
 
-    //TODO enlist instead of drawing directly
-    lbDisplay.DrawFlags = drwflags;
+    p_di = &dih;
 
-    if ((lbDisplay.DrawFlags & (Lb_SPRITE_TRANSPAR4|Lb_SPRITE_TRANSPAR8)) != 0)
-    {
-        low_trans_grey_brightness = brig;
-        ApSpriteDrawLowTransGreyRemap(px, py, p_spr,
-          &pixmap.fade_table[0 * PALETTE_8b_COLORS]);
-    }
-    else if (brig != 32)
-    {
-        LbSpriteDrawRemap(px, py, p_spr, &pixmap.fade_table[brig * PALETTE_8b_COLORS]);
-    }
-    else
-    {
-        LbSpriteDraw(px, py, p_spr);
-    }
+    p_di->U.Sprite.Rect.X = px;
+    p_di->U.Sprite.Rect.Y = py;
+    p_di->U.Sprite.Rect.Width = p_spr->SWidth;
+    p_di->U.Sprite.Rect.Height = p_spr->SHeight;
+    p_di->U.Sprite.pSpr = p_spr;
+    p_di->U.Sprite.Timer = 0;
+    p_di->U.Sprite.DrwFlags = drwflags;
+    p_di->U.Sprite.Bright = brig;
+    p_di->U.Sprite.Col = colour_lookup[ColLU_WHITE];
+
+    //TODO enlist instead of drawing directly
+    hud_draw_sprite(&p_di->U.Sprite);
     return true;
 }
 
 TbBool enlist_hud_draw_sprite_scaled(short px, short py, struct TbSprite *p_spr,
   short dest_width, short dest_height, ushort drwflags, short brig)
 {
+    struct DrawItemHud dih;
+    struct DrawItemHud *p_di;
+
     if (brig > PALETTE_FADE_LEVELS-1)
         brig = PALETTE_FADE_LEVELS-1;
     if (brig < 0)
         brig = 0;
 
-    //TODO enlist instead of drawing directly
-    lbDisplay.DrawFlags = drwflags;
+    p_di = &dih;
 
-    if ((lbDisplay.DrawFlags & (Lb_SPRITE_TRANSPAR4|Lb_SPRITE_TRANSPAR8)) != 0)
-    {
-        low_trans_grey_brightness = brig;
-        ApSpriteDrawScaledLowTransGreyRemap(px, py, p_spr, dest_width, dest_height,
-          &pixmap.fade_table[0 * PALETTE_8b_COLORS]);
-    }
-    else if (brig != 32)
-    {
-        LbSpriteDrawScaledRemap(px, py, p_spr, dest_width, dest_height,
-          &pixmap.fade_table[brig * PALETTE_8b_COLORS]);
-    }
-    else
-    {
-        LbSpriteDrawScaled(px, py, p_spr, dest_width, dest_height);
-    }
+    p_di->U.Sprite.Rect.X = px;
+    p_di->U.Sprite.Rect.Y = py;
+    p_di->U.Sprite.Rect.Width = dest_width;
+    p_di->U.Sprite.Rect.Height = dest_height;
+    p_di->U.Sprite.pSpr = p_spr;
+    p_di->U.Sprite.Timer = 0;
+    p_di->U.Sprite.DrwFlags = drwflags;
+    p_di->U.Sprite.Bright = brig;
+    p_di->U.Sprite.Col = colour_lookup[ColLU_WHITE];
+
+    //TODO enlist instead of drawing directly
+    hud_draw_sprite_scaled(&p_di->U.Sprite);
     return true;
 }
 

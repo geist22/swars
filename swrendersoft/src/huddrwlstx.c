@@ -104,10 +104,60 @@ void hud_draw_low_trans_grey_vslant_box(struct DIHudBox *p_diBox)
 
 void hud_draw_textured_flow_slant_box(struct DIHudTexturedBox *p_diTxtrdBox)
 {
+    lbDisplay.DrawFlags = 0;
+
     AppDrawTexturedFlowSlantBox(p_diTxtrdBox->Rect.X, p_diTxtrdBox->Rect.Y,
       p_diTxtrdBox->Rect.Width, p_diTxtrdBox->Rect.Height, p_diTxtrdBox->VecMode,
       p_diTxtrdBox->Bright, p_diTxtrdBox->TMapNo,
       p_diTxtrdBox->NumUa, p_diTxtrdBox->NumVb);
+}
+
+void hud_draw_sprite(struct DIHudSprite *p_diSprite)
+{
+    lbDisplay.DrawFlags = p_diSprite->DrwFlags;
+
+    if ((lbDisplay.DrawFlags & (Lb_SPRITE_TRANSPAR4|Lb_SPRITE_TRANSPAR8)) != 0)
+    {
+        low_trans_grey_brightness = p_diSprite->Bright;
+        ApSpriteDrawLowTransGreyRemap(p_diSprite->Rect.X, p_diSprite->Rect.Y,
+          p_diSprite->pSpr,
+          &pixmap.fade_table[0 * PALETTE_8b_COLORS]);
+    }
+    else if (p_diSprite->Bright != 32)
+    {
+        LbSpriteDrawRemap(p_diSprite->Rect.X, p_diSprite->Rect.Y,
+          p_diSprite->pSpr,
+          &pixmap.fade_table[p_diSprite->Bright * PALETTE_8b_COLORS]);
+    }
+    else
+    {
+        LbSpriteDraw(p_diSprite->Rect.X, p_diSprite->Rect.Y,
+          p_diSprite->pSpr);
+    }
+}
+
+void hud_draw_sprite_scaled(struct DIHudSprite *p_diSprite)
+{
+    lbDisplay.DrawFlags = p_diSprite->DrwFlags;
+
+    if ((lbDisplay.DrawFlags & (Lb_SPRITE_TRANSPAR4|Lb_SPRITE_TRANSPAR8)) != 0)
+    {
+        low_trans_grey_brightness = p_diSprite->Bright;
+        ApSpriteDrawScaledLowTransGreyRemap(p_diSprite->Rect.X, p_diSprite->Rect.Y,
+          p_diSprite->pSpr, p_diSprite->Rect.Width, p_diSprite->Rect.Height,
+          &pixmap.fade_table[0 * PALETTE_8b_COLORS]);
+    }
+    else if (p_diSprite->Bright != 32)
+    {
+        LbSpriteDrawScaledRemap(p_diSprite->Rect.X, p_diSprite->Rect.Y,
+          p_diSprite->pSpr, p_diSprite->Rect.Width, p_diSprite->Rect.Height,
+          &pixmap.fade_table[p_diSprite->Bright * PALETTE_8b_COLORS]);
+    }
+    else
+    {
+        LbSpriteDrawScaled(p_diSprite->Rect.X, p_diSprite->Rect.Y,
+          p_diSprite->pSpr, p_diSprite->Rect.Width, p_diSprite->Rect.Height);
+    }
 }
 
 void hud_draw_clipped_text(struct DIHudClippedText *p_diClpText)

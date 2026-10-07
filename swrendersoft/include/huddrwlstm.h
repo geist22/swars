@@ -60,11 +60,13 @@ TbBool enlist_hud_draw_textured_flow_slant_box(short px, short py,
 TbBool enlist_hud_draw_sprite(short px, short py, struct TbSprite *p_spr,
   ushort drwflags, short brig);
 
-TbBool enlist_hud_draw_sprite_scaled(short px, short py, struct TbSprite *p_spr,
-  short dest_width, short dest_height, ushort drwflags, short brig);
+TbBool enlist_hud_draw_sprite_scaled(short px, short py,
+  struct TbSprite *p_spr, short dest_width, short dest_height,
+  ushort drwflags, short brig);
 
-TbBool enlist_hud_draw_clipped_text(short px, short py, short width, short height,
-  short shift_x, short shift_y, struct TbSprite *p_font, const char *text,
+TbBool enlist_hud_draw_clipped_text(short px, short py,
+  short width, short height, short shift_x, short shift_y,
+  struct TbSprite *p_font, const char *text,
   short units_per_px, short brig, TbPixel colour);
 
 /** Check height of line-wrapped text with shadow colour flash effect.
