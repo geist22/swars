@@ -1805,24 +1805,15 @@ void draw_mood_limits(short x, short y, short w, short h, short value, short max
 void draw_energy_bar(int x1, int y1, short w, short h, int value, int maxval)
 {
     short scaled_val;
-    short x2, y2;
-    short i;
-    TbPixel col;
+    TbPixel colour;
 
     if (maxval == 0)
         return;
 
-    col = colour_lookup[ColLU_WHITE];
+    colour = colour_lookup[ColLU_WHITE];
     scaled_val = h * value / maxval;
-
-    x2 = x1 + scaled_val;
-    y2 = y1 - scaled_val;
-    for (i = w; i > 0; i--)
-    {
-        LbDrawLine(x1, y1, x2, y2, col);
-        x1++;
-        x2++;
-    }
+    enlist_hud_draw_slant_box(x1, y1, w, -scaled_val,
+      0, 32, colour);
 }
 
 
