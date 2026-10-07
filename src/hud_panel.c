@@ -776,7 +776,8 @@ void draw_new_panel_sprite_scaled_std(int px, int py, ulong spr_id, int dest_wid
         drwflags = 0;
     }
 
-    enlist_hud_draw_sprite_scaled(px, py, p_spr, dest_width, dest_height, drwflags, brig);
+    enlist_hud_draw_sprite_scaled(px, py, p_spr, dest_width, dest_height,
+      drwflags, brig);
 }
 
 /**
@@ -826,7 +827,8 @@ void draw_new_panel_sprite_scaled_dark(int px, int py, ulong spr_id, int dest_wi
         drwflags = 0;
     }
 
-    enlist_hud_draw_sprite_scaled(px, py, p_spr, dest_width, dest_height, drwflags, brig);
+    enlist_hud_draw_sprite_scaled(px, py, p_spr, dest_width, dest_height,
+      drwflags, brig);
 }
 
 /**
@@ -945,7 +947,6 @@ TbBool draw_panel_pickable_thing_below_agent(struct Thing *p_agent)
             x = lbDisplay.GraphicsScreenWidth - 8 * pop1_sprites_scale - p_spr->SWidth;
             y = lbDisplay.GraphicsScreenHeight - 8 * pop1_sprites_scale - p_spr->SHeight;
         }
-        lbDisplay.DrawFlags = 0;
         wtype = p_pickup->U.UWeapon.WeaponType;
 
         draw_new_panel_sprite_std(x, y, spr);
@@ -992,7 +993,6 @@ TbBool draw_panel_pickable_thing_player_targeted(PlayerInfo *p_locplayer)
             x = lbDisplay.GraphicsScreenWidth - 8 * pop1_sprites_scale - p_spr->SWidth;
             y = lbDisplay.GraphicsScreenHeight - 8 * pop1_sprites_scale - p_spr->SHeight;
         }
-        lbDisplay.DrawFlags = 0;
         wtype = p_pickup->U.UWeapon.WeaponType;
 
         draw_new_panel_sprite_std(x, y, spr);
@@ -1156,7 +1156,6 @@ void draw_agent_carried_weapon_prealp_list(PlayerIdx plyr, ushort plagent, short
     x = cx + game_panel_shifts[PaSh_WEP_NEXT_BTN_TO_SYMBOL].x;
     y = cy + game_panel_shifts[PaSh_WEP_NEXT_BTN_TO_SYMBOL].y;
 
-    lbDisplay.DrawFlags = 0;
     if (!recharging || (gameturn & 1))
     {
         if (slot == 6)
@@ -1641,7 +1640,6 @@ TbBool draw_weapons_panel(ubyte *panel_wep)
         }
     }
 
-    lbDisplay.DrawFlags = 0;
     return ret;
 }
 
@@ -1815,7 +1813,6 @@ void draw_energy_bar(int x1, int y1, short w, short h, int value, int maxval)
     enlist_hud_draw_slant_box(x1, y1, w, -scaled_val,
       0, 32, colour);
 }
-
 
 TbBool panel_active_based_on_target(short panel)
 {
@@ -2208,7 +2205,6 @@ void draw_new_panel(void)
         p_panel = &game_panel[panel];
         if (p_panel->Spr[0] < 0)
           break;
-        lbDisplay.DrawFlags = 0;
 
         if (!panel_for_specific_agent(panel))
         {
@@ -2433,8 +2429,6 @@ void draw_new_panel(void)
 
     players_chat_talk_process_turn();
     draw_players_chat();
-
-    lbDisplay.DrawFlags = 0;
 
     draw_panel_pickable_item();
 
