@@ -35,11 +35,21 @@ TbResult AppDrawSlantBoxClip(s32 destX, s32 destY, s32 width, s32 height,
 
     cx = destX;
     cy = destY;
-    for (ch = height; ch > 0; ch--)
+    if (height >= 0)
     {
-        LbDrawLine(cx, cy, cx + width, cy, colour);
-        --cx;
-        ++cy;
+        for (ch = height; ch > 0; ch--) {
+            LbDrawLine(cx, cy, cx + width, cy, colour);
+            --cx;
+            ++cy;
+        }
+    }
+    else
+    {
+        for (ch = height; ch < 0; ch++) {
+            LbDrawLine(cx, cy, cx + width, cy, colour);
+            ++cx;
+            --cy;
+        }
     }
     return Lb_SUCCESS;
 }
@@ -54,19 +64,35 @@ TbResult AppDrawSlantBoxOutline(s32 destX, s32 destY, s32 width, s32 height,
     if (height == 0)
         height++;
 
-    dtWidth = height - 1; // Skew at 45 degrees
+    // Skew at 45 degrees
+    if (height >= 0)
+        dtWidth = height - 1;
+    else
+        dtWidth = height + 1;
+
     LbDrawHVLine(destX, destY,
-      destX + width - 1, destY, colour);
-    if (height != 1)
+      destX + width, destY, colour);
+    if (height > 1)
         LbDrawHVLine(destX - dtWidth, destY + height - 1,
-          destX + width - dtWidth - 1, destY + height - 1, colour);
-    if (abs(height) > 2)
+          destX + width - dtWidth, destY + height - 1, colour);
+    else if (height < -1)
+        LbDrawHVLine(destX - dtWidth, destY + height + 1,
+          destX + width - dtWidth, destY + height + 1, colour);
+    if (height > 2)
     {
         LbDrawLine(destX - 1, destY + 1,
           destX + 1 - dtWidth, destY + height - 2, colour);
         if (width != 1)
-            LbDrawLine(destX + width - 2, destY + 1,
-              destX + width - dtWidth, destY + height - 2, colour);
+            LbDrawLine(destX + width - 1, destY + 1,
+              destX + width - dtWidth + 1, destY + height - 2, colour);
+    }
+    else if (height < -2)
+    {
+        LbDrawLine(destX + 1, destY - 1,
+          destX - 1 - dtWidth, destY + height + 2, colour);
+        if (width != 1)
+            LbDrawLine(destX + width + 1, destY - 1,
+              destX + width - dtWidth - 1, destY + height + 2, colour);
     }
     return Lb_SUCCESS;
 }
