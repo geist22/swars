@@ -54,8 +54,14 @@
 static char data_path_user[DISKPATH_SIZE] = "";
 static char data_path_hdd[DISKPATH_SIZE] = "";
 static char game_dir_language[64] = "language/eng";
+char cd_drive[52];
+char language_3str[4] = "eng";
 
+void *scratch_malloc_mem = NULL;
 u32 scratch_malloc_size = 0;
+
+void *engine_mem_alloc_ptr = NULL;
+u32 engine_mem_alloc_size = 5900000;
 
 ubyte *game_user_heap = NULL;
 

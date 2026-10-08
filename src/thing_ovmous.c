@@ -28,18 +28,12 @@
 #include "engindrwlstx.h"
 
 #include "guiboxes.h"
+#include "hud_draw.h"
 #include "player.h"
 #include "swlog.h"
 #include "thing.h"
 
 /******************************************************************************/
-
-extern struct Thing *dword_176CC8;
-extern int dword_176CCC;
-extern int dword_176CD0;
-
-extern short word_1A5834;
-extern short word_1A5836;
 
 /******************************************************************************/
 
@@ -57,8 +51,8 @@ ubyte check_mouse_overlap(ushort sspr)
     struct Frame *p_frm;
 
     p_sspr = &game_sort_sprites[sspr];
-    box.X = p_sspr->X + ((word_1A5834 * overall_scale) >> 8);
-    box.Y = p_sspr->Y + ((word_1A5836 * overall_scale) >> 8);
+    box.X = p_sspr->X + ((anim_el_pos_min_x * overall_scale) >> 8);
+    box.Y = p_sspr->Y + ((anim_el_pos_min_y * overall_scale) >> 8);
 
     p_frm = &frame[p_sspr->Frame];
     box.Width = (p_frm->SWidth * overall_scale) >> 9;
@@ -101,8 +95,8 @@ ubyte check_mouse_overlap_item(ushort sspr)
     PlayerInfo *p_locplayer;
 
     p_sspr = &game_sort_sprites[sspr];
-    box.X = p_sspr->X + ((word_1A5834 * overall_scale) >> 8);
-    box.Y = p_sspr->Y + ((word_1A5836 * overall_scale) >> 8);
+    box.X = p_sspr->X + ((anim_el_pos_min_x * overall_scale) >> 8);
+    box.Y = p_sspr->Y + ((anim_el_pos_min_y * overall_scale) >> 8);
 
     p_frm = &frame[p_sspr->Frame];
     box.Width = (p_frm->SWidth * overall_scale) >> 9;
@@ -151,8 +145,8 @@ ubyte check_mouse_overlap_corpse(ushort sspr)
     PlayerInfo *p_locplayer;
 
     p_sspr = &game_sort_sprites[sspr];
-    box.X = p_sspr->X + ((word_1A5834 * overall_scale) >> 8);
-    box.Y = p_sspr->Y + ((word_1A5836 * overall_scale) >> 8);
+    box.X = p_sspr->X + ((anim_el_pos_min_x * overall_scale) >> 8);
+    box.Y = p_sspr->Y + ((anim_el_pos_min_y * overall_scale) >> 8);
 
     p_frm = &frame[p_sspr->Frame];
     box.Width = (p_frm->SWidth * overall_scale) >> 9;
@@ -180,12 +174,12 @@ ubyte check_mouse_overlap_corpse(ushort sspr)
     return 0;
 }
 
-ubyte check_mouse_over_unkn2(ushort sspr, struct Thing *p_thing)
+ubyte check_mouse_over_netgame_enemy(ushort sspr, struct Thing *p_thing)
 {
 #if 0
     ubyte ret;
     asm volatile (
-      "call ASM_check_mouse_over_unkn2\n"
+      "call ASM_check_mouse_over_netgame_enemy\n"
         : "=r" (ret) : "a" (sspr), "d" (p_thing));
     return ret;
 #endif
@@ -194,8 +188,8 @@ ubyte check_mouse_over_unkn2(ushort sspr, struct Thing *p_thing)
     struct Frame *p_frm;
 
     p_sspr = &game_sort_sprites[sspr];
-    box.X = p_sspr->X + ((word_1A5834 * overall_scale) >> 8);
-    box.Y = p_sspr->Y + ((word_1A5836 * overall_scale) >> 8);
+    box.X = p_sspr->X + ((anim_el_pos_min_x * overall_scale) >> 8);
+    box.Y = p_sspr->Y + ((anim_el_pos_min_y * overall_scale) >> 8);
 
     p_frm = &frame[p_sspr->Frame];
     box.Width = (p_frm->SWidth * overall_scale) >> 9;
@@ -213,9 +207,7 @@ ubyte check_mouse_over_unkn2(ushort sspr, struct Thing *p_thing)
 
     if (in_box(lbDisplay.MMouseX, lbDisplay.MMouseY, box.X, box.Y, box.Width, box.Height))
     {
-        dword_176CC8 = p_thing;
-        dword_176CD0 = box.Y - 8;
-        dword_176CCC = box.X + (box.Height >> 1);
+        set_netplayer_name_text_over_thing(box.X + (box.Height >> 1), box.Y - 8, p_thing);
         return 1;
     }
     return 0;

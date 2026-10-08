@@ -56,6 +56,11 @@ extern struct SynTime global_date;
 extern struct SynTime research_curr_wep_date;
 extern struct SynTime research_curr_mod_date;
 
+extern ubyte byte_155174;
+extern ubyte byte_155175[8];
+extern ubyte byte_155180;
+extern ubyte byte_155181[8];
+
 extern ubyte game_projector_speed;
 
 extern ubyte show_alert;

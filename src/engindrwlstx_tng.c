@@ -61,9 +61,6 @@
 
 extern ubyte byte_176D49;
 
-extern short word_1A5834;
-extern short word_1A5836;
-
 /******************************************************************************/
 // from engindrwlstx_spr
 void draw_hud_frame_on_screen_unscaled_but_scale_pos(short scr_x, short scr_y, ushort frm, int sscale);
@@ -114,13 +111,12 @@ void draw_frame_on_map_coords(MapCoord cor_x, MapCoord cor_y, MapCoord cor_z,
     struct ShEnginePoint sp;
     int cor_dt_x, cor_dt_y, cor_dt_z;
 
+    if (!area_overlaps_render_area(cor_x, cor_z, TILE_TO_MAPCOORD(1,0)/2)) {
+        return;
+    }
     cor_dt_x = cor_x - engn_xc;
     cor_dt_y = cor_y;
     cor_dt_z = cor_z - engn_zc;
-    if ((cor_dt_x > TILE_TO_MAPCOORD(render_area_a,0)) ||
-      (cor_dt_z > TILE_TO_MAPCOORD(render_area_b,0))) {
-        return;
-    }
 
     transform_shpoint(&sp, cor_dt_x, 8 * cor_dt_y - 8 * engn_yc, cor_dt_z);
     sp.X += ((scr_sh_x * overall_scale) >> 8);

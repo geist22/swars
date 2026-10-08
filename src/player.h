@@ -115,6 +115,8 @@ extern PlayerInfo players[PLAYERS_LIMIT];
 extern PlayerIdx local_player_no;
 extern struct AgentInfo cryo_agents;
 
+extern char net_player_names[PLAYERS_LIMIT][16];
+
 extern ushort netgame_agent_pos_x[PLAYERS_LIMIT][4];
 extern ushort netgame_agent_pos_z[PLAYERS_LIMIT][4];
 
@@ -189,6 +191,9 @@ void set_default_player_control(void);
 void players_init_default_control_mode(void);
 void player_target_clear(PlayerIdx plyr);
 void kill_my_players(PlayerIdx plyr);
+
+void net_player_names_clear(void);
+void net_player_name_set(PlayerIdx plyr, const char *nname);
 /******************************************************************************/
 #ifdef __cplusplus
 }

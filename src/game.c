@@ -89,7 +89,6 @@
 #include "enginsngtxtr.h"
 #include "enginpeff.h"
 #include "enginshadws.h"
-#include "engintext.h"
 #include "engintrns.h"
 #include "enginzoom.h"
 #include "game_data.h"
@@ -148,6 +147,7 @@
 #include "command.h"
 #include "packetfe.h"
 #include "player.h"
+#include "plyr_net.h"
 #include "plyr_usrinp.h"
 #include "plyr_packet.h"
 #include "research.h"
@@ -245,26 +245,29 @@ ulong stored_level3d_inuse;
 
 TbPixel linear_vec_pal[PALETTE_8b_COLORS];
 
-extern int data_1c8428;
+int data_1c8428;
 const char *primvehobj_fname = "qdata/primveh.obj";
 
 extern s32 dword_152E38[5]; // = {-1, -1, -1, -1, -1,};
 
 u32 active_flags_general_unkn01 = 0;
 
-extern long dword_1DDECC;
+ubyte mouse_sprite_anim_frame;
+ushort replay_intro_timer = 0;
 
-u32 engine_mem_alloc_size = 5900000;
+extern long dword_1DDECC;
 
 extern struct GamePanel unknstrct7_arr2[];
 
-extern long gamep_unknval_10;
-extern long gamep_unknval_11;
-extern long gamep_unknval_12;
-extern long nav_stats__ThisTurn;
-extern long gamep_unknval_14;
-extern long gamep_unknval_15;
-extern long gamep_unknval_16;
+ubyte mouser = 0;
+
+s32 gamep_unknval_10 = 0;
+s32 gamep_unknval_11 = 0;
+s32 gamep_unknval_12 = 0;
+u32 nav_stats__ThisTurn = 0;
+s32 gamep_unknval_14 = 0;
+s32 gamep_unknval_15 = 0;
+s32 gamep_unknval_16 = 0;
 
 extern long dword_155010;
 extern long dword_155014;
@@ -283,21 +286,40 @@ int mouse_map_z = 0x3200;
 
 extern short last_map_for_lights_func_11;
 
+struct LoginControl login_control[4];
+
+struct LevelDef level_def;
+
+sbyte mission_result;
 char mission_status_text[100];
 
-char *data_15319c = mission_status_text;
+ubyte net_player_teams[8];
+ubyte group_factions[8];
+ubyte byte_1C6D4A;
 
 s32 navi2_unkn_counter = 0;
 s32 navi2_unkn_counter_max = 0;
 
 extern long dword_1AAB74;
 extern long dword_1AAB78;
-extern ushort word_1AABD0;
+ushort word_1AABD0 = 0;
+
+ubyte old_screentype;
+ubyte screentype = 0;
+ubyte data_1c498d = 0;
+
+ubyte exit_game = 0;
+
+ubyte in_network_game = 0;
+ubyte is_single_game = 0;
+ubyte cmdln_colour_tables = 0;
+ubyte cmdln_param_bcg = 0;
 
 ubyte unkn_flags_01 = 0;
 
 ubyte start_into_mission = false;
 ubyte edit_flag = 0;
+ubyte change_screen = 0;
 
 struct OutroHotChar outro_hot_chars[OUTRO_HOT_CHARS_COUNT];
 
@@ -1947,10 +1969,40 @@ TbBool setup_host(void)
     return ret;
 }
 
+void calc_bul_offsets(void)
+{
+#if 1
+    asm volatile ("call ASM_calc_bul_offsets\n"
+        :  :  : "eax", "cc", "memory" );
+    return;
+#endif
+}
+
 void init_engine(void)
 {
+#if 0
     asm volatile ("call ASM_init_engine\n"
         :  :  : "eax" );
+    return;
+#endif
+    p_current_sort_sprite = game_sort_sprites;
+    p_current_draw_item = game_draw_list + 1;
+
+    calc_bul_offsets();
+
+    engn_xc = TILE_TO_MAPCOORD(60, 128);
+    engn_zc = TILE_TO_MAPCOORD(55, 128);
+    engn_yc = 0;
+    ingame.TrackX = engn_xc;
+    ingame.TrackZ = engn_zc;
+#if 0 // delete pending - no need to set those earlier
+    drwfloor_start_cor_x = (engn_xc & 0xFF00) - (render_area_a << 7);
+    drwfloor_start_cor_z = (engn_zc & 0xFF00) - (render_area_b << 7);
+#endif
+    ingame.NextRocket = 0;
+    setup_vecs(lbDisplay.WScreen, vec_tmap[0], lbDisplay.PhysicalScreenWidth,
+      lbDisplay.PhysicalScreenWidth, lbDisplay.PhysicalScreenHeight);
+    ingame.Flags |= GamF_HUDPanel | TngF_ProgressAction | GamF_RenderScene;
 }
 
 void net_player_colors_reassign(void)
@@ -2004,10 +2056,6 @@ void net_player_colors_reassign(void)
 
 void unkn_truce_groups(void)
 {
-#if 0
-    asm volatile ("call ASM_unkn_truce_groups\n"
-        :  :  : "eax" );
-#endif
     unkn_truce_groups_sub1();
     net_player_colors_reassign();
 }
@@ -2106,18 +2154,6 @@ void create_train_for_each_track(void)
         k++;
     }
 }
-
-/* no function - delete pending
-void clear_word_1774E8(void)
-{
-    short i;
-
-    for (i = 0; i < 150; i++)
-    {
-        word_1774E8[2 * i + 0] = 0;
-    }
-}
-*/
 
 void init_my_paths(void)
 {
@@ -2303,11 +2339,6 @@ void start_ingame_ambient_sound(void)
 
 void init_level(void)
 {
-#if 0
-    asm volatile ("call ASM_init_level\n"
-        :  :  : "eax" );
-    return;
-#endif
     short plyr_no;
 
     people_intel(1);
@@ -2377,7 +2408,6 @@ void init_level(void)
     gamep_unknval_16 = 0;
     ingame.fld_unkCB1 = 1;
     ingame.fld_unkCB2 = 1;
-    // clear_word_1774E8(); // no function - delete pending
     missions_clear_bank_tests();
     thing_groups_clear_all_actions();
     init_my_paths();
@@ -3362,10 +3392,10 @@ void recalc_mouse_pos(void)
     short mag;
     short i;
 
-    cor_dy = (dword_176D18 >> 8);
-    fctr_xz = (dword_176D1C >> 8);
-    cor_dx = (fctr_xz * dword_176D10) >> 16;
-    cor_dz = (fctr_xz * dword_176D14) >> 16;
+    cor_dy = (transf_vec_tlt_y >> 8);
+    fctr_xz = (transf_vec_tlt_xz >> 8);
+    cor_dx = (fctr_xz * transf_vec_yaw_x) >> 16;
+    cor_dz = (fctr_xz * transf_vec_yaw_z) >> 16;
 
     chk_x = 200 * cor_dx + 16 * mouse_map_x;
     chk_y = 200 * cor_dy;
@@ -3566,7 +3596,7 @@ ubyte load_game_slot(ubyte click)
     int ldslot;
     int ret;
 
-    if (login_control__State != LognCt_Unkn6) {
+    if (login_control[0].State != LognCt_Unkn6) {
         return 0;
     }
     if (save_slot == -1) {
@@ -3627,26 +3657,26 @@ ubyte save_game_slot(ubyte click)
 
 void reinit_unkn6_always_reset_variables(void)
 {
-    login_control__TechLevel = 4;
-    login_control__Money = starting_cash_amounts[login_control__TechLevel];
-    if (login_control__State == LognCt_Unkn6)
+    login_control[0].TechLevel = 4;
+    login_control[0].Money = starting_cash_amounts[login_control[0].TechLevel];
+    if (login_control[0].State == LognCt_Unkn6)
     {
         ingame.Credits = 50000;
         ingame.CashAtStart = 50000;
     }
     else
     {
-        ingame.Credits = login_control__Money;
-        ingame.CashAtStart = login_control__Money;
+        ingame.Credits = login_control[0].Money;
+        ingame.CashAtStart = login_control[0].Money;
     }
     ingame.Expenditure = 0;
-    login_control__State = LognCt_Unkn6;
+    login_control[0].State = LognCt_Unkn6;
     net_game_play_flags = NGPF_Unkn20 | NGPF_Unkn10 | NGPF_Unkn08 | NGPF_Unkn04;
 }
 
 void reinit_unkn6_adjustable_variables(void)
 {
-    login_control__City = -1;
+    login_control[0].City = -1;
 
     reinit_unkn6_always_reset_variables();
 }
@@ -3654,8 +3684,8 @@ void reinit_unkn6_adjustable_variables(void)
 void init_unkn6_adjustable_variables(void)
 {
     ingame.MissionStatus = ObvStatu_COMPLETED;
-    login_control__City = 19; // Tokyo
-    login_control__Team = 0;
+    login_control[0].City = 19; // Tokyo
+    login_control[0].Team = 0;
 
     reinit_unkn6_always_reset_variables();
 }
@@ -4414,14 +4444,6 @@ TbBool player_try_spend_money(long cost)
     return true;
 }
 
-void init_net_players(void)
-{
-    int i;
-    for (i = 0; i < 5; i++) {
-        LbMemorySet(&net_players[i], '\0', sizeof(struct NetPlayer2));
-    }
-}
-
 void campaign_new_game_prepare(void)
 {
     struct Campaign *p_campgn;
@@ -4499,13 +4521,13 @@ void net_new_game_prepare(void)
     srm_reset_research();
     init_agents();
 
-    init_net_players();
+    net_player_chat_init();
     net_grpaint_clear_op();
 }
 
 ubyte do_storage_NEW_MORTAL(ubyte click)
 {
-    if (login_control__State != LognCt_Unkn6)
+    if (login_control[0].State != LognCt_Unkn6)
         return 0;
 
     if (strlen(login_name) == 0)
@@ -5288,8 +5310,7 @@ ubyte do_user_interface(void)
                 p_locplayer->PanelState[mouser] = PANEL_STATE_SEND_MESSAGE;
                 reset_buffered_keys();
                 player_message_clear(local_player_no);
-                scanner_unkn370 = 0;
-                scanner_unkn3CC = 0;
+                panel_objective_info_start();
                 did_inp |= GINPUT_DIRECT;
             }
         }
@@ -5735,7 +5756,7 @@ void show_menu_screen_st0(void)
     player_mission_agents_toggle_reset(local_player_no);
     global_date_new_game_reset();
     ingame.Credits = 50000;
-    login_control__State = LognCt_Unkn6;
+    login_control[0].State = LognCt_Unkn6;
 
     debug_trace_place(17);
     // Need to set screen type before gfx background is reloaded
@@ -5877,8 +5898,8 @@ void show_load_and_prep_mission(void)
             ushort missi;
             ingame.MissionNo = 1;
             missi = 0;
-            if (login_control__City != -1)
-                missi = find_first_mission_with_map(cities[login_control__City].MapID);
+            if (login_control[0].City != -1)
+                missi = find_first_mission_with_map(cities[login_control[0].City].MapID);
             if (missi > 0) {
                 ingame.MissionNo = missi;
             }
@@ -5893,8 +5914,8 @@ void show_load_and_prep_mission(void)
             load_mission_name_text(missi);
             ingame.CurrentMission = missi;
             // The names are propagated by fenet only in network game
-            net_unkn2_names_clear();
-            strncpy(unkn2_names[0], login_name, 16);
+            net_player_names_clear();
+            net_player_name_set(0, login_name);
             debug_trace_place(12);
         }
     }
@@ -5961,7 +5982,7 @@ void show_load_and_prep_mission(void)
 
         if (in_network_game)
         {
-            if (nsvc.I.Type != NetSvc_IPX)
+            if (!netgame_service_is_multi_client_capable())
                 ingame.InNetGame_UNSURE = ((1 << 0) | (1 << 1)); // two players
             ingame.DetailLevel = 0;
             bang_set_detail(ingame.DetailLevel == 0);
@@ -6301,11 +6322,11 @@ void show_menu_screen(void)
 
     input_processing_end();
 
-    if (login_control__State == LognCt_NetStarted)
+    if (login_control[0].State == LognCt_NetStarted)
     {
         net_unkn_func_33();
     }
-    else if (login_control__State == LognCt_Unkn8)
+    else if (login_control[0].State == LognCt_Unkn8)
     {
         start_into_mission = 1;
         in_network_game = 1;
@@ -6314,7 +6335,7 @@ void show_menu_screen(void)
         net_players_num = LbNetworkSessionNumberPlayers();
         switch_net_screen_boxes_to_initiate();
         net_players_copy_equip_and_cryo_now();
-        init_net_players();
+        net_player_chat_init();
     }
 
     memcpy(lbDisplay.WScreen, back_buffer, lbDisplay.GraphicsScreenWidth * lbDisplay.GraphicsScreenHeight);
@@ -6575,8 +6596,8 @@ void draw_mission_concluded(void)
     if (ingame.fld_unkCB5)
     {
         sprintf(mission_status_text, "%s %s: %s ", gui_strings[GSTR_CHK_MISSION_STA_PRE],
-          gui_strings[GSTR_ENM_MISSION_STATUS + 1 + ingame.MissionStatus], scroll_text);
-        data_15319c = mission_status_text;
+          gui_strings[GSTR_ENM_MISSION_STATUS + 1 + ingame.MissionStatus], scrollinfo_text);
+        panel_conclusion_info_set(mission_status_text);
     }
     else
     {
@@ -6591,19 +6612,10 @@ void draw_mission_concluded(void)
           gui_strings[GSTR_CHK_MISSION_STA_SUF_KEYS], gui_strings[GSTR_CHK_MISSION_STA_TIME],
           tm_h, tm_m % 60, tm_s);
         LbStringToUpper(mission_status_text);
-        data_15319c = mission_status_text;
-        scroll_text = mission_status_text;
+        panel_conclusion_info_set(mission_status_text);
+        scrollinfo_text = mission_status_text;
     }
-    {
-        int scr_x, scr_y;
-
-        // TODO the text position should be computed based on position of panels loaded from file
-        scr_x = 11 * pop1_sprites_scale;
-        scr_y = 26 * pop1_sprites_scale;
-
-        lbDisplay.DrawColour = SCANNER_colour[ScnClr_Text];
-        AppTextDrawMissionStatus(scr_x, scr_y, data_15319c);
-    }
+    panel_conclusion_info_draw();
 }
 
 void input_mission_concluded(void)

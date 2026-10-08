@@ -29,16 +29,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "bigmap.h"
-#include "bmbang.h"
-#include "building.h"
-#include "campaign.h"
+#include "engincam.h"
 #include "engincolour.h"
 #include "enginsngtxtr.h"
 #include "engintrns.h"
 #include "enginzoom.h"
 #include "frame_sprani.h"
+
+#include "bigmap.h"
+#include "bmbang.h"
+#include "building.h"
+#include "campaign.h"
 #include "game.h"
+#include "packet.h"
 #include "game_data.h"
 #include "game_speed.h"
 #include "guitext.h"
@@ -47,8 +50,10 @@
 #include "thing.h"
 #include "pepgroup.h"
 #include "player.h"
+#include "plyr_net.h"
 #include "research.h"
 #include "thing_search.h"
+#include "tngcolisn.h"
 #include "wadfile.h"
 #include "sound.h"
 #include "swlog.h"
@@ -954,12 +959,47 @@ TbBool current_weapon_has_targetting(struct Thing *p_person)
     return weapon_has_targetting(wtype);
 }
 
-ubyte find_nth_weapon_held(ushort index, ubyte n)
+WeaponType find_nth_weapon_held(ThingIdx person, ubyte n)
 {
+#if 0
     char ret;
     asm volatile ("call ASM_find_nth_weapon_held\n"
-        : "=r" (ret) : "a" (index), "d" (n));
+        : "=r" (ret) : "a" (person), "d" (n));
     return ret;
+#endif
+    struct Thing *p_person;
+    u32 weapons;
+    WeaponType wtype;
+    ubyte count;
+
+    if (person > THINGS_LIMIT)
+        return 0;
+    if (person <= 0)
+        return 0;
+
+    p_person = &things[person];
+    if (p_person->State == PerSt_PERSON_BURNING)
+        return 0;
+    if ((p_person->Flag & TngF_Destroyed) != 0)
+        return 0;
+
+    weapons = p_person->U.UPerson.WeaponsCarried & ~(1 << (WEP_ENERGYSHLD-1));
+
+    wtype = WEP_NULL;
+    count = 0;
+    while (1)
+    {
+        if (count >= n)
+            break;
+        wtype++;
+        if (wtype >= WEP_TYPES_COUNT)
+            break;
+        if (weapons_has_weapon(weapons, wtype))
+            count++;
+    }
+    if (count == n)
+        return wtype;
+    return 0;
 }
 
 ulong person_carried_weapons_pesuaded_sell_value(struct Thing *p_person)
@@ -1105,18 +1145,101 @@ void player_agent_set_weapon_quantities_proper(struct Thing *p_person)
     }
 }
 
+/** Alter target coordinates due to weapon shooting inaccuracy.
+ */
 void weapon_sweep(struct Thing *p_owner, int *vx, int *vy, int *vz)
 {
+#if 0
     asm volatile ("call ASM_weapon_sweep\n"
         : : "a" (p_owner), "d" (vx), "b" (vy), "c" (vz));
+    return;
+#endif
+    int spread;
+    struct MapCoords own_cor;
+    int dist;
+    int angle, noise, nsangle;
+
+    spread = calc_person_heavy_weapon_spread(p_owner);
+    if (spread < 10)
+        return;
+
+    own_cor.X = PRCCOORD_TO_MAPCOORD(p_owner->X);
+    own_cor.Y = PRCCOORD_TO_MAPCOORD(p_owner->Y);
+    own_cor.Z = PRCCOORD_TO_MAPCOORD(p_owner->Z);
+
+    dist = map_distance_coords_fast(own_cor.X, own_cor.Y, own_cor.Z, *vx, *vy, *vz);
+
+    angle = arctan(*vx - own_cor.X, own_cor.Z - *vz);
+
+    // higher bits of deviation are not really random, making
+    // a sweep within the code as game turn increases
+    noise = ((p_owner->ThingOffset + gameturn) << 4) % (2 * spread);
+    // lower bits - those are random
+    noise += (LbRandomAnyShort() & 0x1f) - 0x10;
+    // allow only deviations in range (-spread/2 .. spread/2)
+    if (noise > spread)
+        noise = 2 * spread - noise;
+    noise -= spread >> 1;
+
+    nsangle = (angle + noise) & LbFPMath_AngleMask;
+
+    *vx = own_cor.X + ((dist * lbSinTable[nsangle]) >> 16);
+    *vz = own_cor.Z + ((dist * lbSinTable[nsangle + LbFPMath_PI/2]) >> 16);
 }
 
 struct SimpleThing *init_spark(int x, int y, int z)
 {
+#if 0
     struct SimpleThing *ret;
     asm volatile ("call ASM_init_spark\n"
         : "=r" (ret) : "a" (x), "d" (y), "b" (z));
     return ret;
+#endif
+    struct SimpleThing *p_sthing;
+    ThingIdx thing;
+    int angle1, angle2;
+    int vec_X, vec_Y, vec_Z;
+
+    if ((x < 0) || (x >= MAP_COORD_WIDTH))
+        return NULL;
+    if ((z < 0) || (z >= MAP_COORD_HEIGHT))
+        return NULL;
+
+    // limit sparks to player view area - use future value of Radius for size
+    if (!in_network_game && (pktrec_mode == PktR_NONE)) {
+        if (!area_overlaps_render_area(x, z, (5 * overall_scale) >> 8))
+            return NULL;
+    }
+
+    angle1 = LbRandomAnyShort() & LbFPMath_AngleMask;
+    vec_X = lbSinTable[angle1] >> 8;
+    vec_Y = lbSinTable[angle1 + LbFPMath_PI/2] >> 8;
+
+    angle2 = LbRandomAnyShort() & LbFPMath_AngleMask;
+    vec_Z = lbSinTable[angle2] >> 8;
+
+    if (sthings_used > STHINGS_LIMIT - 5)
+        return NULL;
+
+    thing = get_new_sthing();
+    if (thing == 0)
+        return NULL;
+
+    p_sthing = &sthings[thing];
+    p_sthing->X = MAPCOORD_TO_PRCCOORD(x,0);
+    p_sthing->Z = MAPCOORD_TO_PRCCOORD(z,0);
+    p_sthing->Y = MAPCOORD_TO_PRCCOORD(y,0);
+    p_sthing->U.UEffect.VX = vec_X * 8;
+    p_sthing->U.UEffect.VY = vec_Y * 2;
+    p_sthing->U.UEffect.VZ = vec_Z * 8;
+    add_node_sthing(thing);
+    p_sthing->Type = SmTT_SPARK;
+    p_sthing->Radius = 5;
+    p_sthing->Timer1 = 20;
+    p_sthing->Flag = TngF_Unkn0004;
+    p_sthing->Object = colour_lookup[ColLU_RED];
+
+    return p_sthing;
 }
 
 void elec_hit_building(int x, int y, int z, short col)
@@ -1127,10 +1250,30 @@ void elec_hit_building(int x, int y, int z, short col)
 
 void init_shoot_recoil(struct Thing *p_person, short vx, short vy, short vz)
 {
-#if 1
+#if 0
     asm volatile ("call ASM_init_shoot_recoil\n"
         : : "a" (p_person), "d" (vx), "b" (vy), "c" (vz));
+    return;
 #endif
+    int angle, octant;
+
+    angle = arctan(vx, -vz);
+    octant = ((angle >> 8) + 4) & 7;
+
+    if ((p_person->Flag2 & TgF2_ExistsOffMap) != 0)
+        return;
+    if ((p_person->Flag & TngF_WepRecoil) != 0)
+        return;
+
+    p_person->U.UPerson.RecoilTimer = 3;
+    p_person->U.UPerson.RecoilDir = angle >> 3;
+
+    if (p_person->U.UPerson.AnimMode != ANIM_PERS_PUSH_BACK)
+        p_person->U.UPerson.OldAnimMode = p_person->U.UPerson.AnimMode;
+    p_person->U.UPerson.Angle = octant;
+    set_person_anim_mode(p_person, ANIM_PERS_PUSH_BACK);
+
+    p_person->Flag |= TngF_WepRecoil;
 }
 
 TbBool thing_fire_shot_start_position(struct M31 *prc_beg_pt, struct Thing *p_owner, WeaponType wtype, ushort barrel)
@@ -2026,30 +2169,169 @@ void init_rocket(struct Thing *p_owner)
     shot_alerts_peeps(p_shot);
 }
 
-void init_razor_wire(struct Thing *p_person, ubyte flag)
+static TbBool person_moved_lay_wire(struct Thing *p_person, struct Thing *p_wire)
 {
+    return  (p_wire->VX != PRCCOORD_TO_MAPCOORD(p_person->X))
+     || (p_wire->VY != PRCCOORD_TO_MAPCOORD(p_person->Y))
+     || (p_wire->VZ != PRCCOORD_TO_MAPCOORD(p_person->Z));
+}
+
+static TbBool razor_wire_length_too_small(struct Thing *p_wire)
+{
+    return  (p_wire->VX == PRCCOORD_TO_MAPCOORD(p_wire->X))
+     && (p_wire->VY == PRCCOORD_TO_MAPCOORD(p_wire->Y))
+     && (p_wire->VZ == PRCCOORD_TO_MAPCOORD(p_wire->Z));
+}
+
+static void update_razor_wire_end_to_thing(struct Thing *p_wire, struct Thing *p_thing)
+{
+    p_wire->VX = PRCCOORD_TO_MAPCOORD(p_thing->X);
+    p_wire->VY = PRCCOORD_TO_MAPCOORD(p_thing->Y);
+    p_wire->VZ = PRCCOORD_TO_MAPCOORD(p_thing->Z);
+    p_wire->U.UEffect.Group = p_thing->U.UPerson.EffectiveGroup;
+}
+
+void init_razor_wire(struct Thing *p_person, ubyte subtype)
+{
+#if 0
     asm volatile ("call ASM_init_razor_wire\n"
-        : : "a" (p_person), "d" (flag));
+        : : "a" (p_person), "d" (subtype));
+    return;
+#endif
+    struct Thing *p_wire;
+    ThingIdx wiretng;
+
+    wiretng = get_new_thing();
+    if (wiretng == 0)
+        return;
+
+    p_wire = &things[wiretng];
+    p_wire->Type = TT_RAZOR_WIRE;
+    p_wire->Flag = TngF_Unkn0004;
+    p_wire->SubType = subtype;
+    p_wire->X = p_person->X;
+    p_wire->Z = p_person->Z;
+    p_wire->Y = p_person->Y;
+    p_wire->Health = -100;
+    p_wire->Owner = p_person->ThingOffset;
+    p_person->U.UPerson.SpecialOwner = wiretng;
+    update_razor_wire_end_to_thing(p_wire, p_person);
+
+    add_node_thing(p_wire->ThingOffset);
+
+    play_dist_sample(p_person, 67, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_4EVER, 1);
+    p_person->Flag2 |= TgF2_Unkn0001;
 }
 
 void finalise_razor_wire(struct Thing *p_person)
 {
+#if 0
     asm volatile ("call ASM_finalise_razor_wire\n"
         : : "a" (p_person));
+    return;
+#endif
+    struct Thing *p_wire;
+    s32 vec_x, vec_y, vec_z;
+    short new_vect;
+
+    p_person->Flag2 &= ~(TgF2_Unkn0001|TgF2_Unkn0004);
+    stop_sample_using_heap(p_person->ThingOffset, 67);
+
+    p_wire = &things[p_person->U.UPerson.SpecialOwner];
+
+    if (razor_wire_length_too_small(p_wire)) {
+        remove_thing(p_wire->ThingOffset);
+        delete_node(p_wire);
+        return;
+    }
+
+    vec_x = PRCCOORD_TO_MAPCOORD(p_wire->X);
+    vec_y = PRCCOORD_TO_YCOORD(p_wire->Y);
+    vec_z = PRCCOORD_TO_MAPCOORD(p_wire->Z);
+
+    // Insert a collision vector spanning the wire,
+    // from its origin point to where it was dragged to
+    new_vect = dynamic_insert_vect(vec_x, vec_y + 60, vec_z,
+      p_wire->VX + 50, p_wire->VY * 8 + 60, p_wire->VZ,
+      -p_wire->ThingOffset, 2);
+    if (new_vect == 0) {
+        remove_thing(p_wire->ThingOffset);
+        delete_node(p_wire);
+        return;
+    }
+
+    p_wire->Timer1 = 2000;
+    p_wire->Health = 20;
+    p_wire->U.UEffect.Group = p_person->U.UPerson.EffectiveGroup;
+    p_wire->Frame = new_vect;
 }
 
 void init_lay_razor(struct Thing *p_thing, short x, short y, short z, int flag)
 {
+#if 0
     asm volatile (
       "push %4\n"
       "call ASM_init_lay_razor\n"
         : : "a" (p_thing), "d" (x), "b" (y), "c" (z), "g" ((u32)flag));
+    return;
+#endif
+    (void)y;
+    p_thing->State = PerSt_GOTO_POINT;
+    p_thing->U.UPerson.ComTimer = -1;
+    p_thing->Timer1 = 0x30;
+    p_thing->StartTimer1 = 0x30;
+    p_thing->SubState = 0;
+    p_thing->U.UPerson.ComRange = 1;
+    p_thing->U.UPerson.GotoX = x;
+    p_thing->U.UPerson.GotoZ = z;
+
+    if (p_thing->U.UPerson.PathIndex != 0) {
+        remove_path(p_thing);
+        p_thing->U.UPerson.PathIndex = 0;
+    }
+
+    if ((p_thing->Flag2 & TgF2_Unkn0001) != 0) {
+        finalise_razor_wire(p_thing);
+    }
+
+    init_razor_wire(p_thing, flag);
+    p_thing->Flag2 |= TgF2_Unkn0004;
+}
+
+TbBool person_collect_energy_from_lay_wire(struct Thing *p_person, struct Thing *p_wire)
+{
+    // No energy cost for NPCs
+    if ((p_person->Flag & TngF_PlayerAgent) == 0) {
+        return true;
+    }
+
+    p_person->U.UPerson.Energy -= 15;
+    if (p_wire->SubType == 0)
+        p_person->U.UPerson.Energy -= 30;
+
+    return (p_person->U.UPerson.Energy >= 0);
 }
 
 void update_razor_wire(struct Thing *p_person)
 {
+#if 0
     asm volatile ("call ASM_update_razor_wire\n"
         : : "a" (p_person));
+    return;
+#endif
+    struct Thing *p_wire;
+
+    p_wire = &things[p_person->U.UPerson.SpecialOwner];
+
+    if (person_moved_lay_wire(p_person, p_wire))
+    {
+        if (!person_collect_energy_from_lay_wire(p_person, p_wire)) {
+            finalise_razor_wire(p_person);
+            return;
+        }
+    }
+
+    update_razor_wire_end_to_thing(p_wire, p_person);
 }
 
 void init_laser_beam(struct Thing *p_owner, ushort start_age, ubyte stype)
@@ -2765,7 +3047,6 @@ void init_minigun(struct Thing *p_owner)
           &prc_beg_pt, p_owner, wtype);
         allow_gnd_hit_eff = true;
     }
-    weapon_sweep(p_owner, &cor_fin_x, &cor_fin_y, &cor_fin_z);
     cor_beg_x = PRCCOORD_TO_MAPCOORD(prc_beg_pt.R[0]);
     cor_beg_y = PRCCOORD_TO_MAPCOORD(prc_beg_pt.R[1]);
     cor_beg_z = PRCCOORD_TO_MAPCOORD(prc_beg_pt.R[2]);
@@ -2773,6 +3054,7 @@ void init_minigun(struct Thing *p_owner)
     cor_fin_x = PRCCOORD_TO_MAPCOORD(prc_fin_pt.R[0]);
     cor_fin_y = PRCCOORD_TO_MAPCOORD(prc_fin_pt.R[1]);
     cor_fin_z = PRCCOORD_TO_MAPCOORD(prc_fin_pt.R[2]);
+    weapon_sweep(p_owner, &cor_fin_x, &cor_fin_y, &cor_fin_z);
     rhit = bul_path_end(cor_beg_x, cor_beg_y, cor_beg_z, &cor_fin_x, &cor_fin_y, &cor_fin_z, 50, p_owner, &status);
 
     if ((rhit & 0x80000000) != 0) // hit 3D object collision vector

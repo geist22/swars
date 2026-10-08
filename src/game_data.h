@@ -72,6 +72,9 @@ extern MemSystem mem_game[];
 extern void *scratch_malloc_mem;
 extern u32 scratch_malloc_size;
 
+extern void *engine_mem_alloc_ptr;
+extern u32 engine_mem_alloc_size;
+
 /******************************************************************************/
 
 /** Returns absolute path to user files directory for the application.

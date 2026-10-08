@@ -229,6 +229,7 @@ def textdat_create_from_po(lines, polist, txtfname):
         for e in polist:
             # Find entries matching for current txt file
             for place, num in e.occurrences:
+                assert (campgn,place,num,) not in pomdict, f"Place '{campgn},{place}:{num}' repeats"
                 pomdict[ (campgn,place,num,) ] = e
     create_lines_for_per_line(lines, pomdict, 'guitext')
     return

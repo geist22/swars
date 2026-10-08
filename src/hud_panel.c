@@ -20,7 +20,6 @@
 
 #include <assert.h>
 #include "bfanywnd.h"
-#include "bfbox.h"
 #include "bffont.h"
 #include "bfgentab.h"
 #include "bfline.h"
@@ -33,15 +32,17 @@
 #include "bfutility.h"
 #include "ssampply.h"
 
+#include "app_line.h"
+#include "app_sprite.h"
+#include "app_text_ba.h"
 #include "engincam.h"
 #include "engincolour.h"
 #include "enginpeff.h"
 #include "enginprops.h"
 #include "engintxtrmap.h"
 #include "render_gpoly.h"
+#include "huddrwlstm.h"
 
-#include "app_sprite.h"
-#include "engintext.h"
 #include "bigmap.h"
 #include "engintrns.h"
 #include "game_data.h"
@@ -62,8 +63,6 @@
 #include "thing.h"
 #include "swlog.h"
 /******************************************************************************/
-extern long dword_1DC36C;
-
 char player_message_text[PLAYERS_LIMIT][128];
 ubyte player_message_timer[PLAYERS_LIMIT];
 
@@ -74,6 +73,17 @@ ubyte player_message_timer[PLAYERS_LIMIT];
 sbyte agent_with_mouse_over_weapon = -1;
 
 ubyte byte_153198 = 1;
+
+int scrollinfo_vel = 0;
+
+/** Scrolling info text position, scaled to resolution.
+ *
+ * Range of the position is related to actual width of the text on screen,
+ * so switching resolution changes the range of this value.
+ */
+int scrollinfo_pos = 90;
+
+const char *conclusion_text = NULL;
 
 /** Momentary flags - filled and used only while updating the panel, then forgitten.
  */
@@ -253,130 +263,6 @@ void init_scanner(void)
     SCANNER_init();
 }
 
-void SCANNER_unkn_func_203(int scr_x1, int scr_y1, int scr_x2, int scr_y2, ubyte col1, int a6, int base_bri)
-{
-#if 0
-    asm volatile (
-      "push %6\n"
-      "push %5\n"
-      "push %4\n"
-      "call ASM_SCANNER_unkn_func_203\n"
-        : : "a" (scr_x1), "d" (scr_y1), "b" (scr_x2), "c" (scr_y2), "g" (col1), "g" (a6), "g" (base_bri));
-#endif
-    ubyte *o;
-    ubyte bri;
-
-    if (scr_y1 == scr_y2)
-    {
-        int x1, x2;
-        int k, k0;
-        int i;
-
-        if (scr_x2 < scr_x1) {
-            x1 = scr_x2;
-            x2 = scr_x1;
-        } else {
-            x1 = scr_x1;
-            x2 = scr_x2;
-        }
-        o = &lbDisplay.WScreen[scr_y1 * lbDisplay.PhysicalScreenWidth + x1];
-        k0 = (low_trans_grey_pal_bright[col1] >> 1) + base_bri;
-        for (i = 0; i <= x2 - x1; i++)
-        {
-            k = (low_trans_grey_pal_bright[*o] >> 1) + k0;
-            bri = low_trans_grey_bright_limit[k];
-            *o = pixmap.fade_table[256 * bri + col1];
-            o++;
-        }
-    }
-    else
-    {
-        int y1, y2;
-        int k, k0;
-        int i;
-
-        if (scr_y2 < scr_y1) {
-            y1 = scr_y2;
-            y2 = scr_y1;
-        } else {
-            y1 = scr_y1;
-            y2 = scr_y2;
-        }
-        o = &lbDisplay.WScreen[y1 * lbDisplay.PhysicalScreenWidth + scr_x1];
-        k0 = (low_trans_grey_pal_bright[col1] >> 1) + base_bri;
-        for (i = 0; i <= y2 - y1; i++)
-        {
-            k = (low_trans_grey_pal_bright[*o] >> 1) + k0;
-            bri = low_trans_grey_bright_limit[k];
-            *o = pixmap.fade_table[256 * bri + col1];
-            o += lbDisplay.PhysicalScreenWidth;
-        }
-    }
-}
-
-int SCANNER_text_draw(const char *text, int start_x, int height)
-{
-    const ubyte *str;
-    int x, y;
-    short fnt_height, height_base;
-    ubyte sel_c1;
-
-    lbFontPtr = small_font;
-    fnt_height = my_char_height('A');
-     // detail 0 font has height equal 6
-    height_base = 9 * fnt_height / 6;
-    y = 0;
-    str = (const ubyte *)text;
-    sel_c1 = SCANNER_colour[ScnClr_Text];
-    x = start_x;
-    if (height != height_base)
-    {
-        while (*str != '\0')
-        {
-            const struct TbSprite *p_spr;
-            int chr_width, chr_height;
-            ubyte ch;
-            TbPixel col;
-
-            if (*str == '\1') {
-              str++;
-              sel_c1 = *str;
-            } else {
-              ch = my_char_to_upper(*str);
-              col = pixmap.fade_table[56 * PALETTE_8b_COLORS + sel_c1];
-              p_spr = LbFontCharSprite(lbFontPtr, ch);
-              chr_width = p_spr->SWidth * height / height_base;
-              chr_height = p_spr->SHeight * height / height_base;
-              LbSpriteDrawScaledOneColour(x, y, p_spr, chr_width, chr_height, col);
-              x += chr_width;
-            }
-            str++;
-        }
-    }
-    else
-    {
-        while (*str != '\0')
-        {
-            const struct TbSprite *p_spr;
-            ubyte ch;
-            TbPixel col;
-
-            if (*str == '\1') {
-              str++;
-              sel_c1 = *str;
-            } else {
-              ch = my_char_to_upper(*str);
-              col = pixmap.fade_table[56 * PALETTE_8b_COLORS + sel_c1];
-              p_spr = LbFontCharSprite(lbFontPtr, ch);
-              LbSpriteDrawOneColour(x, y, p_spr, col);
-              x += p_spr->SWidth;
-            }
-            str++;
-        }
-    }
-    return x;
-}
-
 short panel_state_to_player_agent(ushort panstate)
 {
     if ((panstate >= PANEL_STATE_WEP_SEL_ONE) && (panstate <= PANEL_STATE_MOOD_SET_GRP + 3))
@@ -384,7 +270,83 @@ short panel_state_to_player_agent(ushort panstate)
     return -1;
 }
 
-void SCANNER_move_objective_info(int width, int height, int end_pos)
+short font_hud_message_text_scale(struct TbSprite *font)
+{
+    int tx_height;
+    int units_per_px;
+
+    lbFontPtr = small_font;
+    tx_height = my_char_height('A');
+    // For window width=320, expect text height=5; so that should
+    // produce unscaled sprite, which is 16 units per px.
+    units_per_px = (lbDisplay.GraphicsWindowWidth * 5 / tx_height)  / (320 / 16);
+    // Do not allow any scale, only n * 50%
+    units_per_px = (units_per_px + 4) & ~0x07;
+
+    return units_per_px;
+}
+
+void panel_conclusion_info_draw(void)
+{
+    int scr_x, scr_y;
+    int width, height;
+    short units_per_px;
+
+    if (conclusion_text == NULL)
+        return;
+
+    // TODO the text position should be computed based on position of panels loaded from file
+    scr_x = 11 * pop1_sprites_scale;
+    scr_y = 26 * pop1_sprites_scale;
+
+    units_per_px = font_hud_message_text_scale(small_font);
+    width = lbTextJustifyWindow.x + lbTextJustifyWindow.width - scr_x;
+    height = lbTextJustifyWindow.y + lbTextJustifyWindow.height - scr_y;
+
+    enlist_hud_draw_colour_wave_wrapped_text(scr_x, scr_y, width, height,
+      small_font, conclusion_text, units_per_px,
+      SCANNER_colour[ScnClr_Text], colour_lookup[ColLU_BLACK]);
+}
+
+void panel_conclusion_info_set(const char *text)
+{
+    conclusion_text = text;
+}
+
+void panel_objective_info_start(void)
+{
+    scrollinfo_vel = 0;
+    scrollinfo_pos = 0;
+}
+
+short panel_objective_text_scale(int height)
+{
+    short fnt_height, height_base;
+    short units_per_px;
+
+    fnt_height = my_char_height('A');
+    // detail 0 font has height equal 6
+    height_base = 9 * fnt_height / 6;
+    units_per_px = 16 * height / height_base;
+    return units_per_px;
+}
+
+int panel_objective_text_width(const char *text, int height)
+{
+    char loc_text[256];
+    short units_per_px;
+
+    strncpy(loc_text, text, sizeof(loc_text)-1);
+    loc_text[sizeof(loc_text)-1] = '\0';
+    my_str_to_upper(loc_text);
+
+    lbFontPtr = small_font;
+    units_per_px = panel_objective_text_scale(height);
+
+    return LbTextStringWidthResized(text, units_per_px);
+}
+
+void panel_objective_info_move(int width, int height, int end_pos)
 {
     PlayerInfo *p_locplayer;
 
@@ -392,28 +354,107 @@ void SCANNER_move_objective_info(int width, int height, int end_pos)
     if (in_network_game && p_locplayer->PanelState[mouser] == PANEL_STATE_SEND_MESSAGE)
     {
       if ( end_pos < lbDisplay.PhysicalScreenWidth - (lbDisplay.PhysicalScreenWidth >> 2) )
-          scanner_unkn370 = -20;
+          scrollinfo_vel = -20;
       if (end_pos > lbDisplay.PhysicalScreenWidth - 16)
-          scanner_unkn370 = 10;
-      if (scanner_unkn370 > 0)
+          scrollinfo_vel = 10;
+      if (scrollinfo_vel > 0)
       {
-          scanner_unkn370--;
-          scanner_unkn3CC -= 1 * height / 9;
+          scrollinfo_vel--;
+          scrollinfo_pos -= 1 * height / 9;
       }
-      if (scanner_unkn370 < 0)
+      if (scrollinfo_vel < 0)
       {
-          scanner_unkn370++;
-          scanner_unkn3CC += 1 * height / 9;
-          if (scanner_unkn3CC > 0)
-              scanner_unkn3CC = 0;
+          scrollinfo_vel++;
+          scrollinfo_pos += 1 * height / 9;
+          if (scrollinfo_pos > 0)
+              scrollinfo_pos = 0;
       }
     }
     else
     {
-        if (end_pos < 0)
-            scanner_unkn3CC = width;
-        scanner_unkn3CC -= 2 * height / 9;
+        if (end_pos <= 0)
+            scrollinfo_pos = width;
+        scrollinfo_pos -= 2 * height / 9;
     }
+}
+
+static void draw_objective_info_background(int scr_x, int scr_y, int width, int height)
+{
+    ushort drwflags;
+
+    drwflags = Lb_SPRITE_TRANSPAR4;
+    enlist_hud_draw_low_trans_grey_box(scr_x, scr_y, width, height,
+      drwflags, ingame.Scanner.Contrast, SCANNER_colour[ScnClr_Text]);
+}
+
+static void draw_objective_info_text(int scr_x, int scr_y, int width, int height)
+{
+    char loc_text[256];
+    short units_per_px;
+
+    strncpy(loc_text, scrollinfo_text, sizeof(loc_text)-1);
+    loc_text[sizeof(loc_text)-1] = '\0';
+    my_str_to_upper(loc_text);
+
+    units_per_px = panel_objective_text_scale(height);
+
+    enlist_hud_draw_clipped_text(scr_x + 1, scr_y, width - 2, height,
+      scrollinfo_pos, 0, small_font, loc_text,
+      units_per_px, 56, SCANNER_colour[ScnClr_Text]);
+}
+
+/** Objective text, or net players list.
+ */
+void draw_panel_objective_info(short panel)
+{
+    struct GamePanel *p_panel;
+    short bkgd_x, text_x;
+    short bkgd_w, text_w;
+
+    p_panel = &game_panel[panel];
+
+    if (in_network_game) {
+        bkgd_x = 0;
+        text_x = bkgd_x + 1;
+        bkgd_w = lbDisplay.GraphicsScreenWidth;
+        text_w = bkgd_w - 2;
+    } else {
+        // original width 67 low res, 132 high res
+        bkgd_x = p_panel->pos.X;
+        text_x = p_panel->dyn.X;
+        bkgd_w = p_panel->pos.Width;
+        text_w = p_panel->dyn.Width;
+    }
+
+    draw_objective_info_background(bkgd_x, p_panel->pos.Y, bkgd_w, p_panel->pos.Height);
+    draw_objective_info_text(text_x, p_panel->dyn.Y, text_w, p_panel->dyn.Height);
+}
+
+void SCANNER_unkn_func_205(void)
+{
+    asm volatile ("call ASM_SCANNER_unkn_func_205\n"
+        :  :  : "eax" );
+}
+
+void panel_objective_info_process_turn(short panel)
+{
+    struct GamePanel *p_panel;
+    int end_pos;
+    short bkgd_w, text_w;
+
+    p_panel = &game_panel[panel];
+
+    if (in_network_game) {
+        SCANNER_unkn_func_205();
+        bkgd_w = lbDisplay.GraphicsScreenWidth;
+        text_w = bkgd_w - 2;
+    } else {
+        bkgd_w = p_panel->pos.Width;
+        text_w = p_panel->dyn.Width;
+    }
+
+    end_pos = scrollinfo_pos + panel_objective_text_width(scrollinfo_text, p_panel->dyn.Height);
+    panel_objective_info_move(text_w, p_panel->dyn.Height, end_pos);
 }
 
 void player_message_clear(PlayerIdx plyr)
@@ -464,9 +505,12 @@ void draw_players_chat_talk(int x, int y)
     char locstr[164];
     int plyr;
     int base_x, pos_y;
+    int width, height;
+    short units_per_px;
 
     base_x = x;
     pos_y = y;
+    units_per_px = font_hud_message_text_scale(small_font);
 
     for (plyr = 0; plyr < PLAYERS_LIMIT; plyr++)
     {
@@ -475,7 +519,7 @@ void draw_players_chat_talk(int x, int y)
         if (player_message_timer[plyr] == 0)
             continue;
 
-        plname = unkn2_names[plyr];
+        plname = net_player_names[plyr];
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-truncation"
         if (player_message_text[plyr][0] != '\0')
@@ -493,63 +537,44 @@ void draw_players_chat_talk(int x, int y)
 #pragma GCC diagnostic pop
         LbStringToUpper(locstr);
 
-        lbDisplay.DrawColour = net_player_colours[plyr];
-        AppTextDrawMissionChatMessage(base_x, &pos_y, plyr,
-          player_message_timer[plyr], locstr);
+        width = lbTextJustifyWindow.x + lbTextJustifyWindow.width - base_x;
+        height = get_width_shad_cl_flash_wrapped_text(base_x, pos_y,
+          small_font, locstr, units_per_px);
+
+        enlist_hud_draw_shad_cl_flash_wrapped_text(base_x, pos_y, width, height,
+          small_font, locstr, units_per_px, player_message_timer[plyr],
+          net_player_colours[plyr], colour_lookup[ColLU_GREYLT]);
+
+
+        pos_y += height;
+    }
+}
+
+void players_chat_talk_process_turn(void)
+{
+    int plyr;
+
+    for (plyr = 0; plyr < PLAYERS_LIMIT; plyr++)
+    {
+        if (player_message_timer[plyr] == 0)
+            continue;
+
         player_message_timer_tick(plyr);
     }
 }
 
-void draw_objective_info_background(int scr_x, int scr_y, int width, int height)
-{
-    int y;
-    int i;
-
-    y = scr_y;
-    for (i = 0; i < height; i++)
-    {
-        SCANNER_unkn_func_203(scr_x, y, scr_x + width - 1, y, SCANNER_colour[ScnClr_Text],
-          ingame.Scanner.Brightness, ingame.Scanner.Contrast);
-        ++y;
-    }
-}
-
-void draw_objective_info_text(int scr_x, int scr_y, int width, int height)
-{
-    struct TbAnyWindow bkpwnd;
-    int end_pos;
-
-    LbScreenStoreGraphicsWindow(&bkpwnd);
-    LbScreenSetGraphicsWindow(scr_x + 1, scr_y, width - 2, height);
-
-    end_pos = SCANNER_text_draw(scroll_text, scanner_unkn3CC, height);
-
-    LbScreenLoadGraphicsWindow(&bkpwnd);
-
-    SCANNER_move_objective_info(width, height, end_pos);
-}
-
 void draw_players_chat(void)
 {
-    short x, y;
+    int scr_x, scr_y;
 
     if (!in_network_game)
         return;
 
-    if (lbDisplay.GraphicsScreenHeight >= 400) {
-        x = 22;
-        y = 51;
-    } else {
-        x = 11;
-        y = 26;
-    }
-    draw_players_chat_talk(x, y);
-}
+    // TODO the text position should be computed based on position of panels loaded from file
+    scr_x = 11 * pop1_sprites_scale;
+    scr_y = 26 * pop1_sprites_scale;
 
-void SCANNER_unkn_func_205(void)
-{
-    asm volatile ("call ASM_SCANNER_unkn_func_205\n"
-        :  :  : "eax" );
+    draw_players_chat_talk(scr_x, scr_y);
 }
 
 TbBool check_scanner_input(void)
@@ -699,19 +724,27 @@ TbBool check_scanner_input(void)
 void draw_new_panel_sprite_std(int px, int py, ulong spr_id)
 {
     struct TbSprite *p_spr;
+    ushort drwflags;
+    short brig;
 
     p_spr = &pop1_sprites[spr_id];
-    dword_1DC36C = ingame.Scanner.Brightness;
 
     if (ingame.PanelPermutation == -1) {
-        lbDisplay.DrawFlags |= Lb_SPRITE_TRANSPAR4;
-        ApSpriteDrawLowTransGreyRemap(px, py, p_spr,
-          &pixmap.fade_table[0 * PALETTE_8b_COLORS]);
-        lbDisplay.DrawFlags &= ~Lb_SPRITE_TRANSPAR4;
+        brig = ingame.Scanner.Brightness;
+        drwflags = Lb_SPRITE_TRANSPAR4;
     } else {
-        // We do not want to scale brightness of non-transparent panels - using a standard function
-        LbSpriteDraw(px, py, p_spr);
+#if 0 // TODO maybe a cmdline option to change panel bringness with scanner?
+        if (ingame.Scanner.Brightness >= 8)
+            brig = 28 + ingame.Scanner.Brightness / 2;
+        else
+            brig = 16 + 2 * ingame.Scanner.Brightness;
+#else
+        brig = 32;
+#endif
+        drwflags = 0;
     }
+
+    enlist_hud_draw_sprite(px, py, p_spr, drwflags, brig);
 }
 
 /**
@@ -723,18 +756,28 @@ void draw_new_panel_sprite_std(int px, int py, ulong spr_id)
 void draw_new_panel_sprite_scaled_std(int px, int py, ulong spr_id, int dest_width, int dest_height)
 {
     struct TbSprite *p_spr;
+    ushort drwflags;
+    short brig;
 
     p_spr = &pop1_sprites[spr_id];
-    dword_1DC36C = ingame.Scanner.Brightness;
 
     if (ingame.PanelPermutation == -1) {
-        lbDisplay.DrawFlags |= Lb_SPRITE_TRANSPAR4;
-        ApSpriteDrawScaledLowTransGreyRemap(px, py, p_spr, dest_width, dest_height,
-          &pixmap.fade_table[0 * PALETTE_8b_COLORS]);
-        lbDisplay.DrawFlags &= ~Lb_SPRITE_TRANSPAR4;
+        brig = ingame.Scanner.Brightness;
+        drwflags = Lb_SPRITE_TRANSPAR4;
     } else {
-        LbSpriteDrawScaled(px, py, p_spr, dest_width, dest_height);
+#if 0 // TODO maybe a cmdline option to change panel bringness with scanner?
+        if (ingame.Scanner.Brightness >= 8)
+            brig = 28 + ingame.Scanner.Brightness / 2;
+        else
+            brig = 16 + 2 * ingame.Scanner.Brightness;
+#else
+        brig = 32;
+#endif
+        drwflags = 0;
     }
+
+    enlist_hud_draw_sprite_scaled(px, py, p_spr, dest_width, dest_height,
+      drwflags, brig);
 }
 
 /**
@@ -746,18 +789,20 @@ void draw_new_panel_sprite_scaled_std(int px, int py, ulong spr_id, int dest_wid
 void draw_new_panel_sprite_dark(int px, int py, ulong spr_id)
 {
     struct TbSprite *p_spr;
+    ushort drwflags;
+    short brig;
 
     p_spr = &pop1_sprites[spr_id];
-    dword_1DC36C = 8;
 
     if (ingame.PanelPermutation == -1) {
-        lbDisplay.DrawFlags |= Lb_SPRITE_TRANSPAR4;
-        ApSpriteDrawLowTransGreyRemap(px, py, p_spr,
-          &pixmap.fade_table[0 * PALETTE_8b_COLORS]);
-        lbDisplay.DrawFlags &= ~Lb_SPRITE_TRANSPAR4;
+        brig = 8;
+        drwflags = Lb_SPRITE_TRANSPAR4;
     } else {
-        LbSpriteDrawRemap(px, py, p_spr, &pixmap.fade_table[16 * PALETTE_8b_COLORS]);
+        brig = 16;
+        drwflags = 0;
     }
+
+    enlist_hud_draw_sprite(px, py, p_spr, drwflags, brig);
 }
 
 /**
@@ -769,19 +814,21 @@ void draw_new_panel_sprite_dark(int px, int py, ulong spr_id)
 void draw_new_panel_sprite_scaled_dark(int px, int py, ulong spr_id, int dest_width, int dest_height)
 {
     struct TbSprite *p_spr;
+    ushort drwflags;
+    short brig;
 
     p_spr = &pop1_sprites[spr_id];
-    dword_1DC36C = 8;
 
     if (ingame.PanelPermutation == -1) {
-        lbDisplay.DrawFlags |= Lb_SPRITE_TRANSPAR4;
-        ApSpriteDrawScaledLowTransGreyRemap(px, py, p_spr, dest_width, dest_height,
-          &pixmap.fade_table[0 * PALETTE_8b_COLORS]);
-        lbDisplay.DrawFlags &= ~Lb_SPRITE_TRANSPAR4;
+        brig = 8;
+        drwflags = Lb_SPRITE_TRANSPAR4;
     } else {
-        LbSpriteDrawScaledRemap(px, py, p_spr, dest_width, dest_height,
-          &pixmap.fade_table[16 * PALETTE_8b_COLORS]);
+        brig = 16;
+        drwflags = 0;
     }
+
+    enlist_hud_draw_sprite_scaled(px, py, p_spr, dest_width, dest_height,
+      drwflags, brig);
 }
 
 /**
@@ -793,16 +840,20 @@ void draw_new_panel_sprite_scaled_dark(int px, int py, ulong spr_id, int dest_wi
 void draw_new_panel_sprite_prealp(int px, int py, ulong spr_id)
 {
     struct TbSprite *p_spr;
+    ushort drwflags;
+    short brig;
 
     p_spr = &pop1_sprites[spr_id];
-    dword_1DC36C = ingame.Scanner.Brightness;
 
     if (ingame.PanelPermutation == -1) {
-        lbDisplay.DrawFlags |= Lb_SPRITE_TRANSPAR4;
-        ApSpriteDrawLowTransGreyRemap(px, py, p_spr,
-          &pixmap.fade_table[0 * PALETTE_8b_COLORS]);
-        lbDisplay.DrawFlags &= ~Lb_SPRITE_TRANSPAR4;
+        brig = ingame.Scanner.Brightness;
+        drwflags = Lb_SPRITE_TRANSPAR4;
+    } else {
+        // not sure why the sprite is not drawn at all here
+        return;
     }
+
+    enlist_hud_draw_sprite(px, py, p_spr, drwflags, brig);
 }
 
 /**
@@ -815,12 +866,16 @@ void draw_new_panel_sprite_prealp(int px, int py, ulong spr_id)
 void draw_fourpack_amount(short x, ushort y, ushort amount)
 {
     int i;
-    TbPixel col;
+    ushort drwflags;
+    TbPixel colour;
 
+    // TODO make configurable via panel config file
     if (ingame.PanelPermutation == -3)
-        col = 26;
+        colour = 26;
     else
-        col = 247;
+        colour = 247;
+    // Solid, even for transparent panel - full color is less confusing
+    drwflags = 0;
 
     for (i = 0; i < min(amount,8); i++)
     {
@@ -829,7 +884,8 @@ void draw_fourpack_amount(short x, ushort y, ushort amount)
 
         p_shift = &game_panel_shifts[PaSh_WEP_FOURPACK_SLOTS + i];
         p_size = &game_panel_shifts[PaSh_WEP_FOURPACK_SIZE];
-        LbDrawBox(x + p_shift->x, y + p_shift->y, p_size->x, p_size->y, col);
+        enlist_hud_draw_box(x + p_shift->x, y + p_shift->y, p_size->x, p_size->y,
+          drwflags, 32, colour);
     }
 }
 
@@ -883,17 +939,18 @@ TbBool draw_panel_pickable_thing_below_agent(struct Thing *p_agent)
         short x, y;
         ushort spr;
 
+        spr = 12;
         {
             struct TbSprite *p_spr;
 
-            p_spr = &pop1_sprites[12];
+            p_spr = &pop1_sprites[spr];
             x = lbDisplay.GraphicsScreenWidth - 8 * pop1_sprites_scale - p_spr->SWidth;
             y = lbDisplay.GraphicsScreenHeight - 8 * pop1_sprites_scale - p_spr->SHeight;
         }
-        lbDisplay.DrawFlags = 0;
         wtype = p_pickup->U.UWeapon.WeaponType;
 
-        draw_new_panel_sprite_std(x, y, 12);
+        draw_new_panel_sprite_std(x, y, spr);
+
         if (wtype)
             spr = weapon_sprite_index(wtype, false);
         else
@@ -928,17 +985,18 @@ TbBool draw_panel_pickable_thing_player_targeted(PlayerInfo *p_locplayer)
         short x, y;
         ushort spr;
 
+        spr = 12;
         {
             struct TbSprite *p_spr;
 
-            p_spr = &pop1_sprites[12];
+            p_spr = &pop1_sprites[spr];
             x = lbDisplay.GraphicsScreenWidth - 8 * pop1_sprites_scale - p_spr->SWidth;
             y = lbDisplay.GraphicsScreenHeight - 8 * pop1_sprites_scale - p_spr->SHeight;
         }
-        lbDisplay.DrawFlags = 0;
         wtype = p_pickup->U.UWeapon.WeaponType;
 
-        draw_new_panel_sprite_std(x, y, 12);
+        draw_new_panel_sprite_std(x, y, spr);
+
         if (wtype)
             spr = weapon_sprite_index(wtype, false);
         else
@@ -991,7 +1049,8 @@ int count_weapons_in_flags(int *p_ncarr_below, int *p_ncarr_above, ulong weapons
     return ncarried;
 }
 
-void draw_agent_carried_weapon(PlayerIdx plyr, ushort plagent, short slot, TbBool ready, WeaponType wtype, short cx, short cy)
+void draw_agent_carried_weapon(PlayerIdx plyr, ushort plagent, short slot,
+  TbBool ready, WeaponType wtype, short cx, short cy)
 {
     TbBool wep_highlight;
     TbBool recharging;
@@ -1001,7 +1060,6 @@ void draw_agent_carried_weapon(PlayerIdx plyr, ushort plagent, short slot, TbBoo
     recharging = (player_agent_weapon_delay(plyr, plagent, wtype) != 0);
     wep_highlight = panel_agents_weapon_highlighted(plyr, plagent, wtype);
 
-    lbDisplay.DrawFlags = 0;
     if (!recharging || (gameturn & 1))
     {
         if (slot == 1) { // First weapon on list entry starts its sprite a bit earlier
@@ -1027,7 +1085,6 @@ void draw_agent_carried_weapon(PlayerIdx plyr, ushort plagent, short slot, TbBoo
 
     if (wep_highlight)
     {
-        lbDisplay.DrawFlags = 0;
         if (slot == 1) {// The first on list longer sprite has its own highlight
             x = cx + game_panel_shifts[PaSh_WEP_FRST_BTN_TO_DECOR].x;
             y = cy + game_panel_shifts[PaSh_WEP_FRST_BTN_TO_DECOR].y;
@@ -1051,7 +1108,8 @@ void draw_agent_carried_weapon(PlayerIdx plyr, ushort plagent, short slot, TbBoo
     draw_fourpack_items(x, y, plagent, wtype);
 }
 
-void draw_agent_current_weapon(PlayerIdx plyr, ushort plagent, short slot, TbBool darkened, TbBool ready, WeaponType wtype, short cx, short cy)
+void draw_agent_current_weapon(PlayerIdx plyr, ushort plagent, short slot, TbBool darkened,
+  TbBool ready, WeaponType wtype, short cx, short cy)
 {
     TbBool wep_highlight;
     TbBool recharging;
@@ -1085,7 +1143,8 @@ void draw_agent_current_weapon(PlayerIdx plyr, ushort plagent, short slot, TbBoo
     draw_fourpack_items(x, y, plagent, wtype);
 }
 
-void draw_agent_carried_weapon_prealp_list(PlayerIdx plyr, ushort plagent, short slot, TbBool ready, WeaponType wtype, short cx, short cy)
+void draw_agent_carried_weapon_prealp_list(PlayerIdx plyr, ushort plagent, short slot,
+  TbBool ready, WeaponType wtype, short cx, short cy)
 {
     TbBool wep_highlight;
     TbBool recharging;
@@ -1097,7 +1156,6 @@ void draw_agent_carried_weapon_prealp_list(PlayerIdx plyr, ushort plagent, short
     x = cx + game_panel_shifts[PaSh_WEP_NEXT_BTN_TO_SYMBOL].x;
     y = cy + game_panel_shifts[PaSh_WEP_NEXT_BTN_TO_SYMBOL].y;
 
-    lbDisplay.DrawFlags = 0;
     if (!recharging || (gameturn & 1))
     {
         if (slot == 6)
@@ -1119,7 +1177,8 @@ void draw_agent_carried_weapon_prealp_list(PlayerIdx plyr, ushort plagent, short
     draw_fourpack_items(x, y, plagent, wtype);
 }
 
-TbBool panel_mouse_over_weapon(short box_x, short box_y, short box_w, short box_h, int panstate, short box_no)
+TbBool panel_mouse_over_weapon(short box_x, short box_y,
+  short box_w, short box_h, int panstate, short box_no)
 {
     short msx, msy;
 
@@ -1146,7 +1205,8 @@ TbBool panel_mouse_over_weapon(short box_x, short box_y, short box_w, short box_
  * This function is intended to loop through weapons in the same way
  * as draw_weapons_list_prealp(), but update state instead of drawing.
  */
-TbBool update_weapons_list_prealp(PlayerIdx plyr, ushort plagent, ulong weapons_carried, short current_weapon)
+TbBool update_weapons_list_prealp(PlayerIdx plyr, ushort plagent,
+  ulong weapons_carried, short current_weapon)
 {
     struct GamePanel *p_panel;
     ushort nshown;
@@ -1246,7 +1306,8 @@ void draw_weapons_list_prealp(PlayerIdx plyr, ushort plagent, ulong weapons_carr
             continue;
         if (nshown >= ncarr_below)
         {
-            draw_agent_carried_weapon_prealp_list(plyr, plagent, nshown, (wtype == current_weapon), wtype, cx, cy);
+            draw_agent_carried_weapon_prealp_list(plyr, plagent,
+              nshown, (wtype == current_weapon), wtype, cx, cy);
 
             cx += game_panel_shifts[PaSh_WEP_NEXT_DISTANCE].x;
             cy += game_panel_shifts[PaSh_WEP_NEXT_DISTANCE].y;
@@ -1579,7 +1640,6 @@ TbBool draw_weapons_panel(ubyte *panel_wep)
         }
     }
 
-    lbDisplay.DrawFlags = 0;
     return ret;
 }
 
@@ -1616,77 +1676,47 @@ void draw_agent_grouping_bars(short panel)
     }
 }
 
-void func_702c0(int a1, int a2, int a3, int a4, int a5, ubyte a6)
+void draw_rect_around_map_coords(int cor_x, int cor_y, int cor_z, int width, int height, TbPixel colour)
 {
+#if 0
     // Pushed through a register holding them: a "g" operand may be placed
     // relative to the stack pointer, which each push moves.
     int stkargs[2];
 
-    stkargs[0] = (int)(intptr_t)a5;
-    stkargs[1] = (int)(intptr_t)a6;
+    stkargs[0] = (int)(intptr_t)height;
+    stkargs[1] = (int)(intptr_t)colour;
 
     asm volatile (
       "push 4(%4)\n"
       "push 0(%4)\n"
-      "call ASM_func_702c0\n"
-        : : "a" (a1), "d" (a2), "b" (a3), "c" (a4), "S" (stkargs)
+      "call ASM_draw_rect_around_map_coords\n"
+        : : "a" (cor_x), "d" (cor_y), "b" (cor_z), "c" (width), "S" (stkargs)
         : "cc", "memory");
+#endif
+    int cor_beg_x, cor_beg_z;
+    int cor_end_x, cor_end_z;
+    int thickness;
+    ushort drwflags;
+
+    cor_beg_x = cor_x - width;
+    cor_end_x = cor_x + width;
+    cor_beg_z = cor_z - height;
+    cor_end_z = cor_z + height;
+    drwflags = 0;
+    thickness = 1;
+
+    enlist_hud_draw_mapcoord_line(cor_beg_x, cor_y, cor_beg_z,
+      cor_end_x, cor_y, cor_beg_z, drwflags, thickness, colour);
+    enlist_hud_draw_mapcoord_line(cor_end_x, cor_y, cor_beg_z,
+      cor_end_x, cor_y, cor_end_z, drwflags, thickness, colour);
+    enlist_hud_draw_mapcoord_line(cor_end_x, cor_y, cor_end_z,
+      cor_beg_x, cor_y, cor_end_z, drwflags, thickness, colour);
+    enlist_hud_draw_mapcoord_line(cor_beg_x, cor_y, cor_end_z,
+      cor_beg_x, cor_y, cor_beg_z, drwflags, thickness, colour);
 }
 
-void draw_transparent_slant_bar(short x, short y, ushort w, ushort h)
-{
-    struct EnginePoint point4;
-    struct EnginePoint point2;
-    struct EnginePoint point1;
-    struct EnginePoint point3;
-    u32 waftx, wafty;
-    uint anim_speed_x, anim_speed_y;
-    ushort tmx, tmy;
-    short sh_x;
-
-    sh_x = 3;
-    if (lbDisplay.GraphicsScreenHeight < 400)
-        sh_x /= 2;
-    point1.pp.X = x;
-    point1.pp.Y = y;
-    point4.pp.X = (x + w);
-    point4.pp.Y = y;
-    point2.pp.Y = (y + h);
-    point2.pp.X = (x + w - sh_x);
-    point3.pp.Y = (y + h);
-    point3.pp.X = (x - sh_x);
-
-    // The shield bar is animated, even if it's not possible to see
-    anim_speed_x = (render_anim_turn >> (RENDER_ANIM_TURN_SHIFT + 3));
-    anim_speed_y = (render_anim_turn >> RENDER_ANIM_TURN_SHIFT);
-    waftx = waft_table[(anim_speed_x) & 0x1F];
-    wafty = waft_table[(anim_speed_y + 16) & 0x1F];
-    tmx = ((waftx + 30) >> 1);
-    tmy = ((wafty + 30) >> 3);
-    point1.pp.U = (tmx +  0) << 16;
-    point4.pp.U = (tmx + 64) << 16;
-    point2.pp.U = (tmx + 64) << 16;
-    point1.pp.V = (tmy + 64) << 16;
-    point4.pp.V = (tmy + 64) << 16;
-    point2.pp.V = (tmy + 72) << 16;
-    point3.pp.U = (tmx +  0) << 16;
-    point3.pp.V = (tmy + 72) << 16;
-
-    point1.pp.S = 0;
-    point2.pp.S = 0;
-    point3.pp.S = 0;
-    point4.pp.S = 0;
-
-    vec_mode = 18;
-    assert(vec_tmap[2] != NULL);
-    vec_map = vec_tmap[2];
-    draw_trigpoly(&point1.pp, &point4.pp, &point3.pp);
-    if (vec_mode == 2)
-        vec_mode = 27;
-    draw_trigpoly(&point4.pp, &point2.pp, &point3.pp);
-}
-
-void draw_health_level(short x, short y, ushort w, ushort h, short lv, ushort lvmax, ubyte col, ubyte transp)
+void draw_health_level(short x, short y, ushort w, ushort h,
+  short lv, ushort lvmax, TbPixel colour, ubyte transp)
 {
     short cw;
 
@@ -1696,112 +1726,93 @@ void draw_health_level(short x, short y, ushort w, ushort h, short lv, ushort lv
     cw = w * lv / lvmax;
     if (transp)
     {
-        draw_transparent_slant_bar(x, y, cw, h);
+        // The shield bar is animated, even if it's not possible to see
+        enlist_hud_draw_textured_flow_slant_box(x, y, cw, h,
+          18, 0x3F, 2, 0, 2);
     }
     else
     {
-        ApDrawSlantBox(x, y, cw, h, col);
+        enlist_hud_draw_slant_box(x, y, cw, h, 0, 32, colour);
     }
 }
 
-void draw_wep_energy_level(short x, short y, ushort w, ushort h, short lv, ushort lvmax, ubyte col, ubyte transp)
+void draw_wep_energy_level(short x, short y, ushort w, ushort h,
+  short lv, ushort lvmax, TbPixel colour, ubyte transp)
 {
-    short cw, ch;
+    ushort drwflags;
+    short ch;
 
     if ((lv <= 0) || (lvmax == 0))
         return;
 
+    drwflags = Lb_SPRITE_TRANSPAR4;
+
     ch = h * lv / lvmax;
 
-    short cx, cy;
-    cx = x;
-    cy = y;
-    for (cw = w; cw > 0; cw--)
-    {
-        short cy1, cy2;
-
-        cy1 = h + cy;
-        cy2 = h + cy - ch;
-        SCANNER_unkn_func_203(cx, cy1, cx, cy2, col,
-            ingame.Scanner.Contrast, ingame.Scanner.Brightness);
-        ++cx;
-        ++cy;
-    }
+    enlist_hud_draw_low_trans_grey_vslant_box(x, y + h, w, -ch, drwflags, 8, colour);
 }
 
 void draw_mood_level(short x, short y, ushort w, int h, short value)
 {
     short cent_x;
-    short x1, y1, x2;
-    TbPixel col;
+    short box_x, box_w;
+    ushort drwflags;
     short fade;
-    short i;
+    TbPixel colour;
 
     fade = value >> 2;
     if (value >= 0)
-        col = pixmap.fade_table[PALETTE_8b_COLORS * (63 - fade) + colour_lookup[ColLU_RED]];
+        colour = pixmap.fade_table[PALETTE_8b_COLORS * (63 - fade) + colour_lookup[ColLU_RED]];
     else
-        col = pixmap.fade_table[PALETTE_8b_COLORS * (63 + fade) + colour_lookup[ColLU_BLUE]];
+        colour = pixmap.fade_table[PALETTE_8b_COLORS * (63 + fade) + colour_lookup[ColLU_BLUE]];
+    drwflags = Lb_SPRITE_TRANSPAR4;
 
     cent_x = x + (w >> 1);
-    x1 = cent_x;
-    x2 = x1 + (w >> 1) * value / 88;
-    y1 = y;
-
-    for (i = h; i > 0; i--)
-    {
-        SCANNER_unkn_func_203(x1, y1, x2, y1,
-            col, ingame.Scanner.Contrast, ingame.Scanner.Brightness);
-        x1--;
-        x2--;
-        y1++;
-    }
+    box_x = cent_x;
+    box_w = (w >> 1) * value / 88;
+    enlist_hud_draw_low_trans_grey_slant_box(box_x, y, box_w, h, drwflags, 8, colour);
 }
 
 void draw_mood_limits(short x, short y, short w, short h, short value, short maxval)
 {
     short scaled_val;
     short curr_x, sh_x;
-    TbPixel col;
+    short thickness;
+    ushort drwflags;
+    TbPixel colour;
 
     if (value <= 0)
         return;
 
     sh_x = h;
 
-    col = colour_lookup[ColLU_WHITE];
+    drwflags = 0;
+    colour = colour_lookup[ColLU_WHITE];
     scaled_val = (w * value / maxval) >> 1;
+    thickness = 1;
 
     curr_x = x + (w >> 1) - scaled_val;
-    LbDrawLine(curr_x, y, curr_x - sh_x, (y + h), col);
+    enlist_hud_draw_line(curr_x, y, curr_x - sh_x, (y + h),
+      drwflags, thickness, 32, colour);
 
     curr_x = x + (w >> 1) + scaled_val;
-    LbDrawLine(curr_x, y, curr_x - sh_x, (y + h), col);
+    enlist_hud_draw_line(curr_x, y, curr_x - sh_x, (y + h),
+      drwflags, thickness, 32, colour);
 }
 
 void draw_energy_bar(int x1, int y1, short w, short h, int value, int maxval)
 {
     short scaled_val;
-    short x2, y2;
-    short i;
-    TbPixel col;
+    TbPixel colour;
 
     if (maxval == 0)
         return;
 
-    col = colour_lookup[ColLU_WHITE];
+    colour = colour_lookup[ColLU_WHITE];
     scaled_val = h * value / maxval;
-
-    x2 = x1 + scaled_val;
-    y2 = y1 - scaled_val;
-    for (i = w; i > 0; i--)
-    {
-        LbDrawLine(x1, y1, x2, y2, col);
-        x1++;
-        x2++;
-    }
+    enlist_hud_draw_slant_box(x1, y1, w, -scaled_val,
+      0, 32, colour);
 }
-
 
 TbBool panel_active_based_on_target(short panel)
 {
@@ -2028,34 +2039,6 @@ void draw_panel_thermal_button(short panel)
     }
 }
 
-/** Objective text, or net players list.
- */
-void draw_panel_objective_info(short panel)
-{
-    struct GamePanel *p_panel;
-    short bkgd_x, text_x;
-    short bkgd_w, text_w;
-
-    p_panel = &game_panel[panel];
-
-    if (in_network_game) {
-        SCANNER_unkn_func_205();
-        bkgd_x = 0;
-        text_x = bkgd_x + 1;
-        bkgd_w = lbDisplay.GraphicsScreenWidth;
-        text_w = bkgd_w - 2;
-    } else {
-        // original width 67 low res, 132 high res
-        bkgd_x = p_panel->pos.X;
-        text_x = p_panel->dyn.X;
-        bkgd_w = p_panel->pos.Width;
-        text_w = p_panel->dyn.Width;
-    }
-
-    draw_objective_info_background(bkgd_x, p_panel->pos.Y, bkgd_w, p_panel->pos.Height);
-    draw_objective_info_text(text_x, p_panel->dyn.Y, text_w, p_panel->dyn.Height);
-}
-
 void draw_weapon_energy_bar(short panel)
 {
     struct GamePanel *p_panel;
@@ -2222,7 +2205,6 @@ void draw_new_panel(void)
         p_panel = &game_panel[panel];
         if (p_panel->Spr[0] < 0)
           break;
-        lbDisplay.DrawFlags = 0;
 
         if (!panel_for_specific_agent(panel))
         {
@@ -2435,17 +2417,18 @@ void draw_new_panel(void)
             break;
         case PanT_Scanner:
             SCANNER_set_center_point(engn_xc, engn_zc, (2*LbFPMath_PI - 1) - ((engn_cam_yaw >> 5) & LbFPMath_AngleMask));
+            SCANNER_process_turn();
             SCANNER_draw_new_transparent();
             break;
         case PanT_Objective:
+            panel_objective_info_process_turn(panel);
             draw_panel_objective_info(panel);
             break;
         }
     }
 
+    players_chat_talk_process_turn();
     draw_players_chat();
-
-    lbDisplay.DrawFlags = 0;
 
     draw_panel_pickable_item();
 
@@ -2458,7 +2441,8 @@ void draw_new_panel(void)
             ctlmode = user_input_control_mode_get(local_player_no, 0);
             if (ctlmode == UInpCtr_Mouse && !PacketRecord_IsPlayback()) {
                 y = alt_at_point(mouse_map_x, mouse_map_z);
-                func_702c0(mouse_map_x, PRCCOORD_TO_YCOORD(y), mouse_map_z, 64, 64, colour_lookup[ColLU_RED]);
+                draw_rect_around_map_coords(mouse_map_x, PRCCOORD_TO_YCOORD(y), mouse_map_z,
+                  64, 64, colour_lookup[ColLU_RED]);
             }
         }
     }

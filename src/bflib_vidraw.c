@@ -33,7 +33,7 @@ ubyte byte_1DDC44[640];
 ubyte byte_1DDEC4 = 0;
 ubyte byte_1C4B7F = 0;
 ubyte byte_1C6DED = 0;
-extern ubyte byte_155189;// = 0xF7;
+ubyte byte_155189 = 247;
 
 void draw_noise_box(short x, short y, ushort w, ushort h)
 {

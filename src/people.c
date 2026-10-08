@@ -214,16 +214,23 @@ ubyte sfx_woman_shot[] = {
 };
 
 ushort female_peep = 0x2028;
+
+struct MyPath my_paths[1600];
+ushort path_count = 0;
 ushort head_my_path = 1;
 ushort word_1531DA = 1;
 
 ushort word_17FA58[400];
 
-extern sbyte burning_timer_delatas[8];
+sbyte burning_timer_delatas[] = {
+  0, 0, 1, 0, 1, 0, 0, 0,
+};
 extern short word_1AA38E;
 extern short word_1AA390;
 extern short word_1AA392;
 extern short word_1AA394;
+
+short unkn01_thing_idx = 0;
 
 void read_people_conf_file(void)
 {
@@ -869,6 +876,14 @@ short calc_person_speed(struct Thing *p_person)
         speed = PERSON_MAX_SPEED;
 
     return speed;
+}
+
+short calc_person_heavy_weapon_spread(struct Thing *p_person)
+{
+    // The wider the shooter's mood swing and the less arm mod level
+    // they have, the more the shot is allowed to stray off target.
+    return 60 + abs(p_person->U.UPerson.Mood)
+      - 16 * cybmod_arms_level(&p_person->U.UPerson.UMod);
 }
 
 void person_set_helath_to_max_limit(struct Thing *p_person)
@@ -6658,7 +6673,8 @@ void person_burning(struct Thing *p_person)
     return;
 #endif
     p_person->U.UPerson.Brightness = 32;
-    apply_super_quick_light(p_person->X >> 8, p_person->Z >> 8, 16 + (LbRandomAnyShort() & 0xF));
+    apply_super_quick_light(PRCCOORD_TO_MAPCOORD(p_person->X),
+      PRCCOORD_TO_MAPCOORD(p_person->Z), 16 + (LbRandomAnyShort() & 0xF));
 
     if (((gameturn + p_person->ThingOffset) & 0xF) == 0)
     {

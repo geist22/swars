@@ -963,15 +963,17 @@ struct ThingOldV9 { // sizeof=216
 #pragma pack()
 /******************************************************************************/
 extern struct Thing *things;
+extern ushort things_used;
 extern ThingIdx things_used_head;
 extern ThingIdx things_empty_head;
-extern ushort things_used;
-extern ThingIdx same_type_head[256 + 32 + 1]; // 256 + PEOPLE_GROUPS_LIMIT
-extern short static_radii[];
 
 extern struct SimpleThing *sthings;
-extern short sthings_used_head;
 extern ushort sthings_used;
+extern ThingIdx sthings_used_head;
+extern ThingIdx sthings_empty_head;
+
+extern ThingIdx same_type_head[256 + 32 + 1]; // 256 + PEOPLE_GROUPS_LIMIT
+extern short static_radii[];
 
 extern TbBool debug_hud_things;
 extern ubyte debug_log_things;

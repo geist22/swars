@@ -47,6 +47,8 @@ int font_word_length(const char *text);
 ubyte my_char_to_upper(ubyte c);
 ubyte my_char_height(uchar c);
 
+void my_str_to_upper(char *t);
+
 /** Amount of padding pixels at top of the char.
  */
 ubyte my_char_padding_top(uchar c);

@@ -63,8 +63,6 @@ syndwarsfx_SOURCES = \
 	engindrwlstm_wrp.h \
 	engindrwlstx_tng.c \
 	engindrwlstx_tng.h \
-	engintext.c \
-	engintext.h \
 	feappbar.c \
 	feappbar.h \
 	febrief.c \
@@ -163,6 +161,8 @@ syndwarsfx_SOURCES = \
 	pepgroup.h \
 	player.c \
 	player.h \
+	plyr_net.c \
+	plyr_net.h \
 	plyr_packet.c \
 	plyr_packet.h \
 	plyr_usrinp.c \

@@ -3,8 +3,11 @@ ACLOCAL_AMFLAGS = --install -I m4
 lib_LIBRARIES = libswrender.a
 
 libswrender_a_headers_src = \
+  include/app_box.h \
   include/app_gentab.h \
+  include/app_line.h \
   include/app_sprite.h \
+  include/app_text_ba.h \
   include/app_text_cw.h \
   include/app_text_sf.h \
   include/drawshape.h \
@@ -29,8 +32,12 @@ libswrender_a_headers_src = \
   include/engintxtrmap.h \
   include/enginzoom.h \
   include/frame_sprani.h \
+  include/holodrwlstx.h \
+  include/huddrwlstm.h \
+  include/huddrwlstx.h \
   include/privrdlog.h \
-  include/render_gpoly.h
+  include/render_gpoly.h \
+  include/sprfontut.h
 
 libswrender_a_headers_bld = \
   include/swrendconf.h
@@ -39,8 +46,13 @@ libswrender_a_SOURCES = \
   $(libswrender_a_headers_src) \
   src/ap_gspr_map.c \
   src/ap_spr_smap.c \
+  src/app_box.c \
+  src/app_box_lt.c \
+  src/app_box_tx.c \
   src/app_gengh.c \
+  src/app_hvline_lt.c \
   src/app_spr_init.c \
+  src/app_text_ba.c \
   src/app_text_cw.c \
   src/app_text_sf.c \
   src/drawshape.c \
@@ -68,7 +80,11 @@ libswrender_a_SOURCES = \
   src/engintxtrmap.c \
   src/enginzoom.c \
   src/frame_sprani.c \
-  src/render_gpoly.c
+  src/holodrwlstx.c \
+  src/huddrwlstm.c \
+  src/huddrwlstx.c \
+  src/render_gpoly.c \
+  src/sprfontut.c
 
 libswrender_a_CPPFLAGS = \
   -I"$(top_srcdir)/include" -I"$(builddir)/include"

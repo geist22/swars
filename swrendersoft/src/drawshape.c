@@ -34,7 +34,7 @@ void draw_line_transformed_col(int x1, int y1, int z1, int x2, int y2, int z2, T
     struct EnginePoint ep1, ep2;
 
     ep1.X3d = x1 - engn_xc;
-    ep1.Y3d = y1;
+    ep1.Y3d = y1 - engn_yc;
     ep1.Z3d = z1 - engn_zc;
     ep1.Flags = 0;
     transform_point(&ep1);

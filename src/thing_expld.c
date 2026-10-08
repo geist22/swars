@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include "bfutility.h"
 
+#include "engincam.h"
 #include "enginfexpl.h"
 #include "enginprops.h"
 #include "enginshrapn.h"
@@ -38,6 +39,8 @@
 /******************************************************************************/
 #pragma pack(1)
 
+#define EXPLODE_FACE_MAX_ON_MAP_SIZE TILE_TO_MAPCOORD(16,0)
+
 struct rectangle { // sizeof=4
     ubyte x1;
     ubyte y1;
@@ -52,9 +55,12 @@ TbBool ex_face_anim_enabled = true;
 
 extern struct rectangle redo_scanner[128];
 
-extern s32 minimum_explode_depth;
-extern u32 minimum_explode_and;
-extern s32 minimum_explode_size;
+s32 expl_unkn_cor_x;
+s32 expl_unkn_cor_z;
+
+s32 minimum_explode_size;
+u32 minimum_explode_and;
+s32 minimum_explode_depth;
 
 extern s32 dword_1AA5C4;
 extern s32 dword_1AA5C8;
@@ -86,7 +92,7 @@ ushort create_explode_face_tri(struct SortMapPoint *p_face_pt0,
 
     p_exface = &ex_faces[eface];
 
-    p_exface->Type = 5;
+    p_exface->Type = EXPL_FACE_TRI_REL;
     p_exface->Texture = txtr;
     p_exface->Flags = flags;
     p_exface->Col = (ubyte)excol;
@@ -135,7 +141,7 @@ ushort create_explode_face_quad(struct SortMapPoint *p_face_pt0,
 
     p_exface = &ex_faces[eface];
 
-    p_exface->Type = 6;
+    p_exface->Type = EXPL_FACE_QUAD_REL;
     p_exface->Texture = txtr;
     p_exface->Flags = flags;
     p_exface->Col = (ubyte)excol;
@@ -175,7 +181,7 @@ ushort create_explode_face_tri_by_div(struct SortMapPoint *p_face_pt0,
     }
 
     p_neface = &ex_faces[eface];
-    p_neface->Type = 3;
+    p_neface->Type = EXPL_FACE_TRI_ABS;
     p_neface->Texture = p_exface->Texture;
     p_neface->Flags = p_exface->Flags;
     p_neface->Col = p_exface->Col;
@@ -189,6 +195,8 @@ ushort create_explode_face_tri_by_div(struct SortMapPoint *p_face_pt0,
     p_neface->X2 = p_face_pt2->X;
     p_neface->Y2 = p_face_pt2->Y;
     p_neface->Z2 = p_face_pt2->Z;
+
+    // Note that p_neface->(X,Y,Z) remain unset for this type
 
     p_neface->DX = p_exface->DX;
     p_neface->DY = p_exface->DY;
@@ -248,7 +256,7 @@ ushort create_explode_face_quad_by_div(struct SortMapPoint *p_face_pt0,
     }
 
     p_neface = &ex_faces[eface];
-    p_neface->Type = 4;
+    p_neface->Type = EXPL_FACE_QUAD_ABS;
     p_neface->Texture = p_exface->Texture;
     p_neface->Flags = p_exface->Flags;
     p_neface->Col = p_exface->Col;
@@ -265,6 +273,8 @@ ushort create_explode_face_quad_by_div(struct SortMapPoint *p_face_pt0,
     p_neface->X3 = p_face_pt3->X;
     p_neface->Y3 = p_face_pt3->Y;
     p_neface->Z3 = p_face_pt3->Z;
+
+    // Note that p_neface->(X,Y,Z) remain unset for this type
 
     p_neface->DX = p_exface->DX;
     p_neface->DY = p_exface->DY;
@@ -612,27 +622,27 @@ void animate_explode(void)
 
         switch (p_exface->Type)
         {
-        case 1:
+        case EXPL_FACE_TRI_TYP1:
             animate_explode_face1(i, 3);
             break;
 
-        case 2:
+        case EXPL_FACE_QUAD_TYP2:
             animate_explode_face1(i, 4);
             break;
 
-        case 3:
+        case EXPL_FACE_TRI_ABS:
             animate_explode_face3_tri(i);
             break;
 
-        case 4:
+        case EXPL_FACE_QUAD_ABS:
             animate_explode_face3_quad(i);
             break;
 
-        case 5:
+        case EXPL_FACE_TRI_REL:
             animate_explode_face5(i, 3);
             break;
 
-        case 6:
+        case EXPL_FACE_QUAD_REL:
             animate_explode_face5(i, 4);
             break;
         }
@@ -709,35 +719,8 @@ void object_explode_faces(short obj)
     obj_cor.Y = p_gobj->OffsetY;
     obj_cor.Z = p_gobj->MapZ;
 
-    for (k = 0; k < p_gobj->NumbFaces; k++)
-    {
-        struct SingleObjectFace3 *p_face3;
-
-        p_face3 = &game_object_faces3[p_gobj->StartFace + k];
-
-        p_pt0 = &game_object_points[p_face3->PointNo[0]];
-        face_pt0.X = obj_cor.X + p_pt0->X;
-        face_pt0.Y = obj_cor.Y + p_pt0->Y;
-        face_pt0.Z = obj_cor.Z + p_pt0->Z;
-
-        p_pt1 = &game_object_points[p_face3->PointNo[1]];
-        face_pt1.X = obj_cor.X + p_pt1->X;
-        face_pt1.Y = obj_cor.Y + p_pt1->Y;
-        face_pt1.Z = obj_cor.Z + p_pt1->Z;
-
-        p_pt2 = &game_object_points[p_face3->PointNo[2]];
-        face_pt2.X = obj_cor.X + p_pt2->X;
-        face_pt2.Y = obj_cor.Y + p_pt2->Y;
-        face_pt2.Z = obj_cor.Z + p_pt2->Z;
-
-        eface = create_explode_face_tri(&face_pt0, &face_pt1, &face_pt2,
-          p_face3->Texture, p_face3->Flags, p_face3->ExCol);
-
-        if (eface == 0)
-            continue;
-
-        explode_face_setup_move_from_epicenter(eface, &obj_cor);
-    }
+    // Allocate quad explode faces first - seeing flat surfaces of the object
+    // is more important to the eye, and we may run out of explode faces later
 
     for (k = 0; k < p_gobj->NumbFaces4; k++)
     {
@@ -773,6 +756,37 @@ void object_explode_faces(short obj)
 
         explode_face_setup_move_from_epicenter(eface, &obj_cor);
     }
+
+    for (k = 0; k < p_gobj->NumbFaces; k++)
+    {
+        struct SingleObjectFace3 *p_face3;
+
+        p_face3 = &game_object_faces3[p_gobj->StartFace + k];
+
+        p_pt0 = &game_object_points[p_face3->PointNo[0]];
+        face_pt0.X = obj_cor.X + p_pt0->X;
+        face_pt0.Y = obj_cor.Y + p_pt0->Y;
+        face_pt0.Z = obj_cor.Z + p_pt0->Z;
+
+        p_pt1 = &game_object_points[p_face3->PointNo[1]];
+        face_pt1.X = obj_cor.X + p_pt1->X;
+        face_pt1.Y = obj_cor.Y + p_pt1->Y;
+        face_pt1.Z = obj_cor.Z + p_pt1->Z;
+
+        p_pt2 = &game_object_points[p_face3->PointNo[2]];
+        face_pt2.X = obj_cor.X + p_pt2->X;
+        face_pt2.Y = obj_cor.Y + p_pt2->Y;
+        face_pt2.Z = obj_cor.Z + p_pt2->Z;
+
+        eface = create_explode_face_tri(&face_pt0, &face_pt1, &face_pt2,
+          p_face3->Texture, p_face3->Flags, p_face3->ExCol);
+
+        if (eface == 0)
+            continue;
+
+        explode_face_setup_move_from_epicenter(eface, &obj_cor);
+    }
+
 }
 
 void thing_explode_faces(struct Thing *p_thing)
@@ -857,24 +871,38 @@ void draw_explode(void)
         if (p_exface->Timer == 0)
             continue;
 
+        if ((p_exface->Type == EXPL_FACE_TRI_ABS) ||
+          (p_exface->Type == EXPL_FACE_QUAD_ABS))
+        {
+            if (!area_overlaps_render_area(p_exface->X0, p_exface->Z0,
+              EXPLODE_FACE_MAX_ON_MAP_SIZE))
+                continue;
+        }
+        else
+        {
+            if (!area_overlaps_render_area(p_exface->X, p_exface->Z,
+              EXPLODE_FACE_MAX_ON_MAP_SIZE/2))
+                continue;
+        }
+
         switch (p_exface->Type)
         {
-        case 1:
+        case EXPL_FACE_TRI_TYP1:
             enlist_draw_explode_type1(exface, 3);
             break;
-        case 2:
+        case EXPL_FACE_QUAD_TYP2:
             enlist_draw_explode_type1(exface, 4);
             break;
-        case 3:
+        case EXPL_FACE_TRI_ABS:
             enlist_draw_explode_type3(exface, 3);
             break;
-        case 4:
+        case EXPL_FACE_QUAD_ABS:
             enlist_draw_explode_type3(exface, 4);
             break;
-        case 5:
+        case EXPL_FACE_TRI_REL:
             enlist_draw_explode_type5(exface, 3);
             break;
-        case 6:
+        case EXPL_FACE_QUAD_REL:
             enlist_draw_explode_type5(exface, 4);
             break;
         case 0:

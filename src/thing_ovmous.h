@@ -36,7 +36,7 @@ extern "C" {
 ubyte check_mouse_overlap_item(ushort sspr);
 ubyte check_mouse_overlap(ushort sspr);
 ubyte check_mouse_overlap_corpse(ushort sspr);
-ubyte check_mouse_over_unkn2(ushort sspr, struct Thing *p_thing);
+ubyte check_mouse_over_netgame_enemy(ushort sspr, struct Thing *p_thing);
 
 /******************************************************************************/
 #ifdef __cplusplus

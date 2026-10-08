@@ -58,9 +58,9 @@ struct ScreenBox options_gfx_box = {0};
 struct ScreenButton options_gfx_buttons[GFX_TOGGLE_OPTIONS_COUNT * 2 + GFX_MULTIVAL_OPTIONS_COUNT] = {0};
 struct ScreenButton options_gfx_labels[GFX_TOGGLE_OPTIONS_COUNT+GFX_MULTIVAL_OPTIONS_COUNT] = {0};
 
-extern short word_1C4866[3];
+short word_1C4866[3];
 
-extern short textpos[10];
+short textpos[10];
 
 /******************************************************************************/
 

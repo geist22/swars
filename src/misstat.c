@@ -33,6 +33,10 @@ const ubyte month_days[12] = {
   31, 28, 31, 30, 31, 30, 31, 31, 30, 31,
 };
 
+struct MissionStatus mission_status[MISSION_STATUS_LIMIT];
+
+/******************************************************************************/
+
 long time_difference(struct SynTime *tm1, struct SynTime *tm2)
 {
     return 60 * (tm1->Hour - (long)tm2->Hour) + tm1->Minute - (long)tm2->Minute;
@@ -227,7 +231,7 @@ int stats_mp_count_players_agents_killed(PlayerIdx plyr)
     p_mistat = &mission_status[plyr];
     for (k = 0; k < PLAYERS_LIMIT; k++)
     {
-        if (unkn2_names[k][0] == '\0')
+        if (net_player_names[k][0] == '\0')
             continue;
 
         n += p_mistat->MP.AgentsKilled[k];
@@ -245,7 +249,7 @@ int stats_mp_count_net_players_agents_kills(PlayerIdx plyr)
     p_mistat = &mission_status[plyr];
     for (k = 0; k < PLAYERS_LIMIT; k++)
     {
-        if (unkn2_names[k][0] == '\0')
+        if (net_player_names[k][0] == '\0')
             continue;
 
         if (k == plyr)

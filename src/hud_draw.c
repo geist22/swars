@@ -19,22 +19,81 @@
 #include "hud_draw.h"
 
 #include "bfscreen.h"
+#include "bftext.h"
 
 #include "engindrwlstx_tng.h"
 #include "game_options.h"
+#include "game_sprts.h"
 #include "game.h"
 #include "hud_panel.h"
 #include "hud_target.h"
+#include "huddrwlstm.h"
+#include "mydraw.h"
 #include "packet.h"
 #include "player.h"
+#include "scandraw.h"
 #include "swlog.h"
 #include "thing.h"
 /******************************************************************************/
 
-void draw_engine_net_text(void)
+struct Thing *mouse_over_unkn2_tng = NULL;
+int mouse_over_unkn2_x;
+int mouse_over_unkn2_y;
+
+/******************************************************************************/
+
+void set_netplayer_name_text_over_thing(ScrCoord x, ScrCoord y,
+  struct Thing *p_thing)
 {
-    asm volatile ("call ASM_draw_engine_net_text\n"
+    mouse_over_unkn2_tng = p_thing;
+    mouse_over_unkn2_x = x;
+    mouse_over_unkn2_y = y;
+}
+
+void draw_netplayer_name_text_over_thing(void)
+{
+#if 0
+    asm volatile ("call ASM_draw_netplayer_name_text_over_thing\n"
         :  :  : "eax" );
+#endif
+    char locstr[32];
+    struct Thing *p_thing;
+    int scr_x, scr_y;
+    int width, height;
+    int sh_x, sh_y;
+    int units_per_px;
+    PlayerIdx plyr;
+    TbPixel colour;
+
+    p_thing = mouse_over_unkn2_tng;
+
+    if (p_thing == NULL)
+        return;
+
+    mouse_over_unkn2_tng = NULL;
+
+    plyr = p_thing->U.UPerson.ComCur >> 2;
+
+    strncpy(locstr, net_player_names[plyr], sizeof(locstr)-1);
+    locstr[sizeof(locstr)-1] = '\0';
+    my_str_to_upper(locstr);
+
+    units_per_px = 16;
+    sh_x = sh_y = 0;
+    colour = net_player_colours[plyr];
+    width = LbTextStringWidthResized(locstr, units_per_px);
+    height = my_char_height('A') * units_per_px / 16;
+    scr_x = mouse_over_unkn2_x - (width >> 1);
+    if (scr_x < 0) {
+        sh_x = scr_x;
+        scr_x = 0;
+    }
+    else if (scr_x + width > lbDisplay.GraphicsScreenWidth) {
+        scr_x = lbDisplay.GraphicsScreenWidth - width;
+    }
+    scr_y = mouse_over_unkn2_y;
+    enlist_hud_draw_clipped_text(scr_x, scr_y, width, height,
+      sh_x, sh_y, small_font, locstr, units_per_px, 32, colour);
 }
 
 void draw_hud(int dcthing)

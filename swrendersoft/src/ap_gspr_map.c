@@ -52,12 +52,11 @@ static inline void LbDrawBufferTrRemap(unsigned char **buf_out, const char *buf_
         for (i=0; i<buf_len; i++ )
         {
             // App-specific code starts
-            unsigned int pxmap;
-            int pxbase;
-            pxbase = dword_1DC36C + (low_trans_grey_pal_bright[*(const ubyte *)buf_inp] >> 1);
-            pxmap = pxbase + (low_trans_grey_pal_bright[**buf_out] >> 1);
-            pxmap = (low_trans_grey_bright_limit[pxmap] << 8) | ((*(const ubyte *)buf_inp));
-            **buf_out = transmap[pxmap];
+            TbPixel col1, col2;
+
+            col1 = *(const ubyte *)buf_inp;
+            col2 = **buf_out;
+            **buf_out = LbBlendPixelLowTrans4Remap(transmap, 1, 1, col1, col2);
             // App-specific code ends
             buf_inp++;
             (*buf_out)--;
@@ -67,12 +66,11 @@ static inline void LbDrawBufferTrRemap(unsigned char **buf_out, const char *buf_
         for (i=0; i<buf_len; i++ )
         {
             // App-specific code starts
-            unsigned int pxmap;
-            int pxbase;
-            pxbase = dword_1DC36C + (low_trans_grey_pal_bright[*(const ubyte *)buf_inp] >> 1);
-            pxmap = pxbase + (low_trans_grey_pal_bright[**buf_out] >> 1);
-            pxmap = (low_trans_grey_bright_limit[pxmap]) | ((*(const ubyte *)buf_inp) << 8);
-            **buf_out = transmap[pxmap];
+            TbPixel col1, col2;
+
+            col1 = *(const ubyte *)buf_inp;
+            col2 = **buf_out;
+            **buf_out = LbBlendPixelLowTrans8Remap(transmap, 1, 1, col1, col2);
             // App-specific code ends
             buf_inp++;
             (*buf_out)--;
@@ -85,12 +83,11 @@ static inline void LbDrawBufferTrRemap(unsigned char **buf_out, const char *buf_
         for (i=0; i<buf_len; i++ )
         {
             // App-specific code starts
-            unsigned int pxmap;
-            int pxbase;
-            pxbase = dword_1DC36C + (low_trans_grey_pal_bright[*(const ubyte *)buf_inp] >> 1);
-            pxmap = pxbase + (low_trans_grey_pal_bright[**buf_out] >> 1);
-            pxmap = (low_trans_grey_bright_limit[pxmap] << 8) | ((*(const ubyte *)buf_inp));
-            **buf_out = transmap[pxmap];
+            TbPixel col1, col2;
+
+            col1 = *(const ubyte *)buf_inp;
+            col2 = **buf_out;
+            **buf_out = LbBlendPixelLowTrans4Remap(transmap, 1, 1, col1, col2);
             // App-specific code ends
             buf_inp++;
             (*buf_out)++;
@@ -100,12 +97,11 @@ static inline void LbDrawBufferTrRemap(unsigned char **buf_out, const char *buf_
         for (i=0; i<buf_len; i++ )
         {
             // App-specific code starts
-            unsigned int pxmap;
-            int pxbase;
-            pxbase = dword_1DC36C + (low_trans_grey_pal_bright[*(const ubyte *)buf_inp] >> 1);
-            pxmap = pxbase + (low_trans_grey_pal_bright[**buf_out] >> 1);
-            pxmap = (low_trans_grey_bright_limit[pxmap]) | ((*(const ubyte *)buf_inp) << 8);
-            **buf_out = transmap[pxmap];
+            TbPixel col1, col2;
+
+            col1 = *(const ubyte *)buf_inp;
+            col2 = **buf_out;
+            **buf_out = LbBlendPixelLowTrans8Remap(transmap, 1, 1, col1, col2);
             // App-specific code ends
             buf_inp++;
             (*buf_out)++;
@@ -230,13 +226,13 @@ TbResult ApSpriteDrawLowTransGreyRemap(long x, long y, const TbSprite *spr, cons
     } else
     if ((lbDisplay.DrawFlags & Lb_SPRITE_FLIP_HORIZ) != 0) {
         ubyte bri;
-        bri = (dword_1DC36C <= 8) ? (24 + dword_1DC36C) : (32 + (dword_1DC36C - 8) / 2);
+        bri = (low_trans_grey_brightness <= 8) ? (24 + low_trans_grey_brightness) : (32 + (low_trans_grey_brightness - 8) / 2);
         return LbSpriteDrawSlRemap(spd.sp,spd.Wd,spd.Ht,spd.r,&transmap[bri * PALETTE_8b_COLORS],
           spd.nextRowDelta,spd.startShift,spd.mirror);
     } else
     {
         ubyte bri;
-        bri = (dword_1DC36C <= 8) ? (24 + dword_1DC36C) : (32 + (dword_1DC36C - 8) / 2);
+        bri = (low_trans_grey_brightness <= 8) ? (24 + low_trans_grey_brightness) : (32 + (low_trans_grey_brightness - 8) / 2);
         return LbSpriteDrawFCRemap(spd.sp,spd.Wd,spd.Ht,spd.r,&transmap[bri * PALETTE_8b_COLORS],
           spd.nextRowDelta,spd.startShift,spd.mirror);
     }

@@ -105,6 +105,13 @@ void camera_load_backup_state(const struct CameraState *p_bkp);
 
 void camera_apply_velocity(void);
 
+/** Checks if given coords are radius are crossing the map area which will be rendered.
+ *
+ * Being rendered does not neccesarily mean that any part of checkd area
+ * will be visible on screen. But related area will be added to drawlist.
+ */
+TbBool area_overlaps_render_area(int cor_x, int cor_z, int radius);
+
 /******************************************************************************/
 #ifdef __cplusplus
 }

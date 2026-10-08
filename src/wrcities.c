@@ -18,9 +18,11 @@
 /******************************************************************************/
 #include "wrcities.h"
 
+#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 #include "bffile.h"
+#include "bfmath.h"
 #include "bfmemory.h"
 #include "bfmemut.h"
 #include "bfstrut.h"
@@ -62,7 +64,12 @@ const struct TbNamedEnum cities_conf_city_cmds[] = {
 
 char *memload_city_prop_text = NULL;
 
+ubyte num_cities = 0;
+struct City cities[50];
+
 sbyte selected_city_id = -1;
+
+/******************************************************************************/
 
 void load_city_prop_text(void)
 {
@@ -319,6 +326,7 @@ void read_cities_conf_file(void)
                 CONFWRNLOG("Could not read \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
                 break;
             }
+            assert(k <= INT8_MAX); // we often store city index within a byte variable
             num_cities = k;
             CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)num_cities);
             break;
@@ -535,7 +543,7 @@ void activate_cities(ubyte brief)
 
     deactivate_cities();
 
-    if (login_control__State == LognCt_NetStarted)
+    if (login_control[0].State == LognCt_NetStarted)
     {
         clear_cities_decor(0x01);
         return;
@@ -587,11 +595,31 @@ ushort find_mission_for_city_in_brief(short brief, sbyte city)
 
 sbyte find_closest_city(ushort x, ushort y)
 {
+#if 0
     sbyte ret;
     asm volatile (
       "call ASM_find_closest_city\n"
         : "=r" (ret) : "a" (x), "d" (y));
     return ret;
+#endif
+    u32 dist, sel_dist;
+    sbyte city, sel_city;
+
+    sel_dist = UINT32_MAX;
+    sel_city = -1;
+    for (city = 0; city < num_cities; city++)
+    {
+        struct City *p_city;
+
+        p_city = &cities[city];
+        dist = LbSqrL((p_city->Y - y) * (p_city->Y - y) + (p_city->X - x) * (p_city->X - x));
+        if (dist < sel_dist)
+        {
+            sel_dist = dist;
+            sel_city = city;
+        }
+    }
+    return sel_city;
 }
 
 /******************************************************************************/

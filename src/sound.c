@@ -76,6 +76,10 @@ extern struct HeapMgrHeader *hmhead;
 extern long samples_in_bank;
 extern struct SampleTable *sample_table;
 
+short startscr_samplevol;
+short startscr_midivol;
+short startscr_cdvolume;
+
 /******************************************************************************/
 
 void set_default_sfx_settings(void)

@@ -68,26 +68,26 @@ ubyte byte_15511C = 1;
 sbyte map_hl_city_id = -1;
 TbBool map_from_mission = false;
 
-extern long landmap_8BC;
-extern long landmap_8C0;
-extern long landmap_8C4;
-extern long landmap_8C8;
-extern ulong dword_1C48D0;
-extern ulong dword_1C48D4;
-extern ulong dword_1C48E0[6];
-extern ulong dword_1C48F8;
-extern ulong dword_1C48FC;
-extern ulong dword_1C4908[6];
-extern ulong dword_1C4920;
-extern ulong dword_1C4924;
-extern ulong dword_1C4930[6];
+s32 landmap_8BC;
+s32 landmap_8C0;
+s32 landmap_8C4;
+s32 landmap_8C8;
+u32 dword_1C48D0;
+u32 dword_1C48D4;
+u32 dword_1C48E0[6];
+u32 dword_1C48F8;
+u32 dword_1C48FC;
+u32 dword_1C4908[6];
+u32 dword_1C4920;
+u32 dword_1C4924;
+u32 dword_1C4930[6];
 
-extern ubyte byte_1C4888;
-extern short word_1C488A[6];
-extern short word_1C4896[6];
-extern short word_1C48A2[6];
-extern short word_1C48AE[6];
-extern short word_1C48CC;
+ubyte byte_1C4888 = 0;
+short word_1C488A[6];
+short word_1C4896[6];
+short word_1C48A2[6];
+short word_1C48AE[6];
+short word_1C48CC;
 
 short word_1C6E08 = -1;
 short word_1C6E0A = -1;
@@ -184,7 +184,7 @@ ubyte show_world_city_info_box(struct ScreenTextBox *p_box)
     }
     lbDisplay.DrawFlags = 0;
 
-    if (login_control__State != LognCt_NetStarted && screentype == SCRT_WORLDMAP)
+    if (login_control[0].State != LognCt_NetStarted && screentype == SCRT_WORLDMAP)
     {
         world_info_ACCEPT_button.DrawFn(&world_info_ACCEPT_button);
         world_info_CANCEL_button.DrawFn(&world_info_CANCEL_button);
@@ -531,8 +531,8 @@ void draw_world_cities_names(struct ScreenBox *p_box)
 void select_world_city(sbyte city)
 {
     map_hl_city_id = city;
-    if (login_control__State == LognCt_NetStarted) {
-        login_control__City = city;
+    if (login_control[0].State == LognCt_NetStarted) {
+        login_control[0].City = city;
         net_schedule_player_city_choice_sync();
     }
     word_1C48CC = 0;

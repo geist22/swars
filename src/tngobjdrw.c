@@ -55,7 +55,26 @@ const ushort pers_anims_wth_shadows[] = {
   1, 33, 113, 241, 273, 161, 193, 721, 753, 321, 401, 433, 33,
 };
 
-extern ubyte byte_1C83E4;
+ubyte pers_subtype_to_shpak[] = {
+   0,  0,
+   0,  1,
+   2,  2,
+   3,  4,
+   9,  9,
+  10, 11,
+   5,  6,
+   0,  0,
+   0,  1,
+   5,  6,
+   0,  1,
+   7,  8,
+   2,  2,
+  10, 11,
+   5,  6,
+  10, 11,
+};
+
+ubyte byte_1C83E4 = 0;
 
 /** Callback for setting height of shadow corners.
  */

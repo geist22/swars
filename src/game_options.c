@@ -32,6 +32,12 @@
 /******************************************************************************/
 struct InGame ingame;
 
+ubyte net_game_play_flags = 0;
+
+ubyte game_gfx_advanced_lights;
+ubyte game_billboard_movies;
+ubyte game_gfx_deep_radar;
+
 short user_sel_brightness = 0;
 
 TbPixel deep_radar_surface_col = 0xd8;
@@ -231,7 +237,7 @@ int game_option_min(int option_no)
     case GOpt_ScannerPulse:
         return 0;
     case GOpt_PanelPermutation:
-        if (ingame.PanelPermutation < 0)
+        if ((ingame.PanelPermutation < 0) || (ingame.UserFlags & UsrF_Cheats) != 0)
             return OPT_PANEL_PERMUT_MIN;
         else
             return OPT_PANEL_PERMUT_ALPHA_MIN;
@@ -265,7 +271,9 @@ int game_option_max(int option_no)
     case GOpt_DetailLevel:
         return 1;
     case GOpt_CameraPerspective:
-        return 5;
+        if ((ingame.UserFlags & UsrF_Cheats) != 0)
+            return ProjM_IsomSimpLight;
+        return ProjM_Perspective;
     case GOpt_AdvancedLights:
     case GOpt_BillboardMovies:
     case GOpt_DeepRadar:
@@ -273,7 +281,7 @@ int game_option_max(int option_no)
     case GOpt_ScannerPulse:
         return 1;
     case GOpt_PanelPermutation:
-        if (ingame.PanelPermutation < 0)
+        if ((ingame.PanelPermutation < 0) && (ingame.UserFlags & UsrF_Cheats) == 0)
             return OPT_PANEL_PERMUT_MAX;
         else
             return OPT_PANEL_PERMUT_ALPHA_MAX;
@@ -362,22 +370,64 @@ void game_option_toggle(int option_no)
     }
 }
 
-void game_option_dec(int option_no)
+static void game_option_linear_dec(int option_no)
 {
     int sval;
 
+    sval = game_option_get(option_no);
+    sval--;
+    if (sval < game_option_min(option_no))
+        sval = game_option_max(option_no);
+    game_option_set(option_no, sval);
+}
+
+static void game_option_linear_inc(int option_no)
+{
+    int sval;
+
+    sval = game_option_get(option_no);
+    sval++;
+    if (sval > game_option_max(option_no))
+        sval = game_option_min(option_no);
+    game_option_set(option_no, sval);
+}
+
+static void game_option_linear_shift(int option_no, int amount)
+{
+    int limit, sval;
+
+    sval = game_option_get(option_no);
+    sval += amount;
+    limit = game_option_max(option_no);
+    if (sval > limit)
+        sval = limit;
+    limit = game_option_min(option_no);
+    if (sval < limit)
+        sval = limit;
+    game_option_set(option_no, sval);
+}
+
+void game_option_dec(int option_no)
+{
     switch (option_no)
     {
     // Toggle options (two values only)
     case GOpt_ProjectorSpeed:
     case GOpt_HighResolution:
     case GOpt_DetailLevel:
-    case GOpt_CameraPerspective:
     case GOpt_AdvancedLights:
     case GOpt_BillboardMovies:
     case GOpt_DeepRadar:
     case GOpt_UseMultiMedia:
     case GOpt_ScannerPulse:
+        game_option_toggle(option_no);
+        break;
+    // Linear but limited to toggle during normal play
+    case GOpt_CameraPerspective:
+        if ((ingame.UserFlags & UsrF_Cheats) != 0) {
+            game_option_linear_dec(option_no);
+            break;
+        }
         game_option_toggle(option_no);
         break;
     // Linear options (with any value between some min and max)
@@ -391,11 +441,7 @@ void game_option_dec(int option_no)
     case GOpt_DangerTrack:
     case GOpt_TranspObjSurfaceColr:
     case GOpt_TranspObjLineColr:
-        sval = game_option_get(option_no);
-        sval--;
-        if (sval < game_option_min(option_no))
-            sval = game_option_max(option_no);
-        game_option_set(option_no, sval);
+        game_option_linear_dec(option_no);
         break;
     default:
         break;
@@ -404,19 +450,23 @@ void game_option_dec(int option_no)
 
 void game_option_inc(int option_no)
 {
-    int sval;
-
     switch (option_no)
     {
     case GOpt_ProjectorSpeed:
     case GOpt_HighResolution:
     case GOpt_DetailLevel:
-    case GOpt_CameraPerspective:
     case GOpt_AdvancedLights:
     case GOpt_BillboardMovies:
     case GOpt_DeepRadar:
     case GOpt_UseMultiMedia:
     case GOpt_ScannerPulse:
+        game_option_toggle(option_no);
+        break;
+    case GOpt_CameraPerspective:
+        if ((ingame.UserFlags & UsrF_Cheats) != 0) {
+            game_option_linear_inc(option_no);
+            break;
+        }
         game_option_toggle(option_no);
         break;
     case GOpt_PanelPermutation:
@@ -429,11 +479,7 @@ void game_option_inc(int option_no)
     case GOpt_DangerTrack:
     case GOpt_TranspObjSurfaceColr:
     case GOpt_TranspObjLineColr:
-        sval = game_option_get(option_no);
-        sval++;
-        if (sval > game_option_max(option_no))
-            sval = game_option_min(option_no);
-        game_option_set(option_no, sval);
+        game_option_linear_inc(option_no);
         break;
     default:
         break;
@@ -442,19 +488,27 @@ void game_option_inc(int option_no)
 
 void game_option_shift(int option_no, int amount)
 {
-    int limit, sval;
+    int sval;
 
     switch (option_no)
     {
     case GOpt_ProjectorSpeed:
     case GOpt_HighResolution:
     case GOpt_DetailLevel:
-    case GOpt_CameraPerspective:
     case GOpt_AdvancedLights:
     case GOpt_BillboardMovies:
     case GOpt_DeepRadar:
     case GOpt_UseMultiMedia:
     case GOpt_ScannerPulse:
+        sval = game_option_get(option_no);
+        if (((sval != 0) && (amount < 0)) || ((sval == 0) && (amount > 0)))
+            game_option_toggle(option_no);
+        break;
+    case GOpt_CameraPerspective:
+        if ((ingame.UserFlags & UsrF_Cheats) != 0) {
+            game_option_linear_shift(option_no, amount);
+            break;
+        }
         sval = game_option_get(option_no);
         if (((sval != 0) && (amount < 0)) || ((sval == 0) && (amount > 0)))
             game_option_toggle(option_no);
@@ -469,15 +523,7 @@ void game_option_shift(int option_no, int amount)
     case GOpt_DangerTrack:
     case GOpt_TranspObjSurfaceColr:
     case GOpt_TranspObjLineColr:
-        sval = game_option_get(option_no);
-        sval += amount;
-        limit = game_option_max(option_no);
-        if (sval > limit)
-            sval = limit;
-        limit = game_option_min(option_no);
-        if (sval < limit)
-            sval = limit;
-        game_option_set(option_no, sval);
+        game_option_linear_shift(option_no, amount);
         break;
     default:
         break;

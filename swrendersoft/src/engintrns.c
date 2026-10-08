@@ -18,20 +18,22 @@
 /******************************************************************************/
 #include "engintrns.h"
 
+#include <assert.h>
+
 #include "engincam.h"
 #include "enginzoom.h"
 /******************************************************************************/
 #define SCREEN_POINT_COORD_MIN (-MAX_SUPPORTED_SCREEN_WIDTH)
 #define SCREEN_POINT_COORD_MAX (2 * MAX_SUPPORTED_SCREEN_WIDTH)
 
-s32 dword_176D0C;
-s32 dword_176D10;
-s32 dword_176D14;
-s32 dword_176D18;
-s32 dword_176D1C;
-s32 dword_176D3C;
-s32 dword_176D40;
-s32 dword_176D44;
+s32 transf_vec_yaw_x;
+s32 transf_vec_yaw_z;
+s32 transf_vec_tlt_y;
+s32 transf_vec_tlt_xz;
+
+s32 transf_scr_center_x;
+s32 transf_scr_center_y;
+s32 transf_scr_two_third_x;
 /******************************************************************************/
 
 /**
@@ -77,8 +79,8 @@ void local_to_worldr(int *dx, int *dy, int *dz)
 
     z = *dz;
     x = *dx;
-    *dx = (z * dword_176D10 + x * dword_176D14) >> 16;
-    *dz = (z * dword_176D14 - x * dword_176D10) >> 16;
+    *dx = (z * transf_vec_yaw_x + x * transf_vec_yaw_z) >> 16;
+    *dz = (z * transf_vec_yaw_z - x * transf_vec_yaw_x) >> 16;
 }
 
 void transform_point(struct EnginePoint *p_ep)
@@ -87,11 +89,11 @@ void transform_point(struct EnginePoint *p_ep)
     int scr_shx, scr_shy;
 
     p_ep->Y3d -= 8 * engn_yc;
-    fctr_a = (dword_176D14 * p_ep->X3d - dword_176D10 * p_ep->Z3d) >> 16;
-    fctr_b = (dword_176D14 * p_ep->Z3d + dword_176D10 * p_ep->X3d) >> 16;
-    fctr_c = (dword_176D1C * p_ep->Y3d - dword_176D18 * fctr_b) >> 16;
+    fctr_a = (transf_vec_yaw_z * p_ep->X3d - transf_vec_yaw_x * p_ep->Z3d) >> 16;
+    fctr_b = (transf_vec_yaw_z * p_ep->Z3d + transf_vec_yaw_x * p_ep->X3d) >> 16;
+    fctr_c = (transf_vec_tlt_xz * p_ep->Y3d - transf_vec_tlt_y * fctr_b) >> 16;
 
-    p_ep->Z3d = (dword_176D1C * fctr_b + dword_176D18 * p_ep->Y3d) >> 16;
+    p_ep->Z3d = (transf_vec_tlt_xz * fctr_b + transf_vec_tlt_y * p_ep->Y3d) >> 16;
     p_ep->X3d = fctr_a * overall_scale;
     p_ep->Y3d = fctr_c * overall_scale;
 
@@ -106,7 +108,7 @@ void transform_point(struct EnginePoint *p_ep)
     if (game_perspective == ProjM_Perspective)
         scr_shx = scr_shx * (0x4000 - p_ep->Z3d) >> 14;
 
-    p_ep->pp.X = dword_176D3C + scr_shx;
+    p_ep->pp.X = transf_scr_center_x + scr_shx;
     if (p_ep->pp.X < 0)
     {
         if (p_ep->pp.X < SCREEN_POINT_COORD_MIN)
@@ -124,7 +126,7 @@ void transform_point(struct EnginePoint *p_ep)
     if (game_perspective == ProjM_Perspective)
         scr_shy = scr_shy * (0x4000 - p_ep->Z3d) >> 14;
 
-    p_ep->pp.Y = dword_176D40 - scr_shy;
+    p_ep->pp.Y = transf_scr_center_y - scr_shy;
     if (p_ep->pp.Y < 0)
     {
         if (p_ep->pp.Y < SCREEN_POINT_COORD_MIN)
@@ -147,10 +149,10 @@ void transform_shpoint(struct ShEnginePoint *p_sp, int dxc, int dyc, int dzc)
     int scr_x, scr_y;
     ubyte flg;
 
-    fctr_a = (dword_176D14 * dxc - dword_176D10 * dzc) >> 16;
-    fctr_b = (dword_176D10 * dxc + dword_176D14 * dzc) >> 16;
-    fctr_c = (dword_176D1C * dyc - dword_176D18 * fctr_b) >> 16;
-    scr_d = (dword_176D18 * dyc + dword_176D1C * fctr_b) >> 16;
+    fctr_a = (transf_vec_yaw_z * dxc - transf_vec_yaw_x * dzc) >> 16;
+    fctr_b = (transf_vec_yaw_x * dxc + transf_vec_yaw_z * dzc) >> 16;
+    fctr_c = (transf_vec_tlt_xz * dyc - transf_vec_tlt_y * fctr_b) >> 16;
+    scr_d = (transf_vec_tlt_y * dyc + transf_vec_tlt_xz * fctr_b) >> 16;
     sca_x = fctr_a * overall_scale;
     sca_y = fctr_c * overall_scale;
     flg = 0;
@@ -163,7 +165,7 @@ void transform_shpoint(struct ShEnginePoint *p_sp, int dxc, int dyc, int dzc)
     if (game_perspective == ProjM_Perspective)
         scr_shx = scr_shx * (0x4000 - scr_d) >> 14;
 
-    scr_x = dword_176D3C + scr_shx;
+    scr_x = transf_scr_center_x + scr_shx;
     if (scr_x < 0)
     {
         if (scr_x < SCREEN_POINT_COORD_MIN)
@@ -181,7 +183,7 @@ void transform_shpoint(struct ShEnginePoint *p_sp, int dxc, int dyc, int dzc)
     if (game_perspective == ProjM_Perspective)
         scr_shy = scr_shy * (0x4000 - scr_d) >> 14;
 
-    scr_y = dword_176D40 - scr_shy;
+    scr_y = transf_scr_center_y - scr_shy;
     if (scr_y < 0)
     {
         if (scr_y < SCREEN_POINT_COORD_MIN)
@@ -210,10 +212,10 @@ void transform_shpoint_fpv(struct ShEnginePoint *p_sp, int dxc, int dyc, int dzc
     int scr_x, scr_y;
     ubyte flg;
 
-    fctr_a = (dword_176D14 * dxc - dword_176D10 * dzc) >> 16;
-    fctr_b = (dword_176D10 * dxc + dword_176D14 * dzc) >> 16;
-    fctr_c = (dword_176D1C * dyc - dword_176D18 * fctr_b) >> 16;
-    scr_d = (dword_176D18 * dyc + dword_176D1C * fctr_b) >> 16;
+    fctr_a = (transf_vec_yaw_z * dxc - transf_vec_yaw_x * dzc) >> 16;
+    fctr_b = (transf_vec_yaw_x * dxc + transf_vec_yaw_z * dzc) >> 16;
+    fctr_c = (transf_vec_tlt_xz * dyc - transf_vec_tlt_y * fctr_b) >> 16;
+    scr_d = (transf_vec_tlt_y * dyc + transf_vec_tlt_xz * fctr_b) >> 16;
     sca_x = fctr_a * overall_scale;
     sca_y = fctr_c * overall_scale;
     flg = 0;
@@ -234,7 +236,7 @@ void transform_shpoint_fpv(struct ShEnginePoint *p_sp, int dxc, int dyc, int dzc
         flg |= 0x20;
     }
 
-    scr_x = dword_176D3C + scr_shx;
+    scr_x = transf_scr_center_x + scr_shx;
     if (scr_x < 0)
     {
         if (scr_x < SCREEN_POINT_COORD_MIN)
@@ -248,7 +250,7 @@ void transform_shpoint_fpv(struct ShEnginePoint *p_sp, int dxc, int dyc, int dzc
         flg |= 0x02;
     }
 
-    scr_y = dword_176D40 + scr_shy;
+    scr_y = transf_scr_center_y + scr_shy;
     if (scr_y < 0)
     {
         if (scr_y < SCREEN_POINT_COORD_MIN)
@@ -274,9 +276,9 @@ int transform_shpoint_y(int dxc, int dyc, int dzc)
     int scr_shy, sca_y;
     int scr_y;
 
-    fctr_b = (dword_176D10 * dxc + dword_176D14 * dzc) >> 16;
-    fctr_c = (dword_176D1C * dyc - dword_176D18 * fctr_b) >> 16;
-    scr_d = (dword_176D18 * dyc + dword_176D1C * fctr_b) >> 16;
+    fctr_b = (transf_vec_yaw_x * dxc + transf_vec_yaw_z * dzc) >> 16;
+    fctr_c = (transf_vec_tlt_xz * dyc - transf_vec_tlt_y * fctr_b) >> 16;
+    scr_d = (transf_vec_tlt_y * dyc + transf_vec_tlt_xz * fctr_b) >> 16;
     sca_y = fctr_c * overall_scale;
 
     if ((game_perspective == ProjM_Perspective) && (scr_d > 0x4000 / 16))
@@ -287,7 +289,7 @@ int transform_shpoint_y(int dxc, int dyc, int dzc)
     if (game_perspective == ProjM_Perspective)
         scr_shy = scr_shy * (0x4000 - scr_d) >> 14;
 
-    scr_y = dword_176D40 - scr_shy;
+    scr_y = transf_scr_center_y - scr_shy;
     if (scr_y < 0)
     {
         if (scr_y < SCREEN_POINT_COORD_MIN)
@@ -304,9 +306,9 @@ int transform_shpoint_y(int dxc, int dyc, int dzc)
 
 void transform_reinit_vec_window(void)
 {
-    dword_176D3C = vec_window_width / 2;
-    dword_176D40 = vec_window_height / 2;
-    dword_176D44 = 4 * (vec_window_width / 2) / 3;
+    transf_scr_center_x = vec_window_width / 2;
+    transf_scr_center_y = vec_window_height / 2;
+    transf_scr_two_third_x = 4 * (vec_window_width / 2) / 3;
 }
 
 void transform_reinit_camera(void)
@@ -314,12 +316,11 @@ void transform_reinit_camera(void)
     int angle;
 
     angle = (engn_cam_yaw >> 5) & LbFPMath_AngleMask;
-    dword_176D0C = angle;
-    dword_176D14 = lbSinTable[angle + LbFPMath_PI/2];
-    dword_176D10 = lbSinTable[angle];
+    transf_vec_yaw_z = lbSinTable[angle + LbFPMath_PI/2];
+    transf_vec_yaw_x = lbSinTable[angle];
     angle = engn_cam_tilt & LbFPMath_AngleMask;
-    dword_176D18 = lbSinTable[angle];
-    dword_176D1C = lbSinTable[angle + LbFPMath_PI/2];
+    transf_vec_tlt_y = lbSinTable[angle];
+    transf_vec_tlt_xz = lbSinTable[angle + LbFPMath_PI/2];
 }
 
 void transform_screen_to_map_isometric(int *dxc, int *dzc, int scr_x, int scr_y)
@@ -328,19 +329,19 @@ void transform_screen_to_map_isometric(int *dxc, int *dzc, int scr_x, int scr_y)
     int fctr_c;
     int scr_shx, scr_shy;
 
-    if (dword_176D18 == 0) {
+    if (transf_vec_tlt_y == 0) {
         *dxc = *dzc = 0;
         return;
     }
 
-    scr_shx =  scr_x - dword_176D3C;
-    scr_shy = -scr_y + dword_176D40;
+    scr_shx =  scr_x - transf_scr_center_x;
+    scr_shy = -scr_y + transf_scr_center_y;
     fctr_a = (scr_shx << 11) / overall_scale;
     fctr_c = (scr_shy << 11) / overall_scale;
-    fctr_b_part = ((fctr_c << 16)) / dword_176D18;
+    fctr_b_part = ((fctr_c << 16)) / transf_vec_tlt_y;
 
-    *dxc =  ((dword_176D14 * fctr_a - dword_176D10 * fctr_b_part) >> 16);
-    *dzc = -((dword_176D10 * fctr_a + dword_176D14 * fctr_b_part) >> 16);
+    *dxc =  ((transf_vec_yaw_z * fctr_a - transf_vec_yaw_x * fctr_b_part) >> 16);
+    *dzc = -((transf_vec_yaw_x * fctr_a + transf_vec_yaw_z * fctr_b_part) >> 16);
 }
 
 /******************************************************************************/

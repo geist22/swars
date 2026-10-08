@@ -62,14 +62,17 @@ struct ShEnginePoint {
 #pragma pack()
 /******************************************************************************/
 
-extern s32 dword_176D0C;
-extern s32 dword_176D10;
-extern s32 dword_176D14;
-extern s32 dword_176D18;
-extern s32 dword_176D1C;
-extern s32 dword_176D3C;
-extern s32 dword_176D40;
-extern s32 dword_176D44;
+//TODO close these into a struct
+/** Vectors used for coordinate transform to camera angle.
+ */
+extern s32 transf_vec_yaw_x;
+extern s32 transf_vec_yaw_z;
+extern s32 transf_vec_tlt_y;
+extern s32 transf_vec_tlt_xz;
+
+extern s32 transf_scr_center_x;
+extern s32 transf_scr_center_y;
+extern s32 transf_scr_two_third_x;
 
 /******************************************************************************/
 s32 mul_shift16_sign_pad_lo(s32 ar1, s32 ar2);

@@ -50,7 +50,7 @@ void draw_objective_point(long x, long y, ThingIdx thing, short a4, ubyte colour
 void draw_map_flat_circle(short cor_x, short cor_y, short cor_z, short radius, TbPixel colour);
 void draw_map_flat_rect(int cor_x, int cor_y, int cor_z, int size_x, int size_z, TbPixel colour);
 
-void SCANNER_draw_solid(void);
+void SCANNER_fe_draw_solid(void);
 void SCANNER_draw_new_transparent(void);
 /******************************************************************************/
 #ifdef __cplusplus

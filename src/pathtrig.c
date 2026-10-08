@@ -88,23 +88,6 @@ int unkn_path_func_001(struct Thing *p_thing, ubyte a2)
     return ret;
 }
 
-void path_init8_unkn3(struct Path *path, int ax8, int ay8, int bx8, int by8, int a6)
-{
-    // Pushed through a register holding them: a "g" operand may be placed
-    // relative to the stack pointer, which each push moves.
-    int stkargs[2];
-
-    stkargs[0] = (int)(intptr_t)by8;
-    stkargs[1] = (int)(intptr_t)a6;
-
-    asm volatile (
-      "push 4(%4)\n"
-      "push 0(%4)\n"
-      "call ASM_path_init8_unkn3\n"
-        : : "a" (path), "d" (ax8), "b" (ay8), "c" (bx8), "S" (stkargs)
-        : "cc", "memory");
-}
-
 //TODO temp copy of static func
 static sbyte path_compare_multiplications(long mul1a, long mul1b, long mul2a, long mul2b)
 {
@@ -433,6 +416,105 @@ void thin_wall(int x1, int y1, int x2, int y2, ubyte en1, ubyte en2)
         make_clipped_edges(en1, en2);
     }
 #endif
+}
+
+s32 ma_triangle_route_4(int triA, int triB, s32 *p_treert)
+{
+    s32 ret;
+    asm volatile ("call ASM_ma_triangle_route_4\n"
+        : "=r" (ret) : "a" (triA), "d" (triB), "b" (p_treert));
+    return ret;
+}
+
+s32 route_to_path(int ax8, int ay8, int bx8, int by8, s32 *p_treert,
+  s32 treert_len, struct Path *p_path, int *p_len2)
+{
+#if 1
+    // Pushed through a register holding them: a "g" operand may be placed
+    // relative to the stack pointer, which each push moves.
+    int stkargs[4];
+    s32 ret;
+
+    stkargs[0] = (int)(intptr_t)p_treert;
+    stkargs[1] = (int)(intptr_t)treert_len;
+    stkargs[2] = (int)(intptr_t)p_path;
+    stkargs[3] = (int)(intptr_t)p_len2;
+
+    asm volatile (
+      "push 12(%5)\n"
+      "push 8(%5)\n"
+      "push 4(%5)\n"
+      "push 0(%5)\n"
+      "call ASM_route_to_path\n"
+        : "=r" (ret) : "a" (ax8), "d" (ay8), "b" (bx8), "c" (by8), "S" (stkargs)
+        : "cc", "memory");
+
+    return ret;
+#endif
+}
+
+void path_init8_unkn3(struct Path *p_path, int ax8, int ay8, int bx8, int by8, int a6)
+{
+#if 0
+    // Pushed through a register holding them: a "g" operand may be placed
+    // relative to the stack pointer, which each push moves.
+    int stkargs[2];
+
+    stkargs[0] = (int)(intptr_t)by8;
+    stkargs[1] = (int)(intptr_t)a6;
+
+    asm volatile (
+      "push 4(%4)\n"
+      "push 0(%4)\n"
+      "call ASM_path_init8_unkn3\n"
+        : : "a" (p_path), "d" (ax8), "b" (ay8), "c" (bx8), "S" (stkargs)
+        : "cc", "memory");
+    return;
+#endif
+    navi_onscreen_debug(0);
+
+    p_path->PathLength = 0;
+    p_path->ax8 = ax8;
+    p_path->ay8 = ay8;
+    p_path->by8 = by8;
+    p_path->bx8 = bx8;
+
+    tree_Ax8 = ax8;
+    tree_Ay8 = ay8;
+    tree_Bx8 = bx8;
+    tree_By8 = by8;
+    tree_routelen = -1;
+
+    tree_triA = triangle_findSE8(ax8, ay8);
+    if (tree_triA != -1) {
+        struct TrTriangle *p_tri;
+
+        p_tri = &triangulation[0].Triangles[tree_triA];
+        tree_altA = p_tri->solid;
+    } else {
+        tree_altA = 0;
+    }
+
+    tree_triB = triangle_findSE8(bx8, by8);
+    if (tree_triB != -1) {
+        struct TrTriangle *p_tri;
+
+        p_tri = &triangulation[0].Triangles[tree_triB];
+        tree_altB = p_tri->solid;
+    } else {
+        tree_altB = 0;
+    }
+
+    if ((tree_triA != -1) && (tree_triB != -1))
+    {
+        s32 len2;
+
+        tree_routelen = ma_triangle_route_4(tree_triA, tree_triB, tree_route);
+        if (tree_routelen != -1) {
+            p_path->PathLength = route_to_path(ax8, ay8, bx8, by8,
+              tree_route, tree_routelen, p_path, &len2);
+        }
+    }
 }
 
 int unused_func_115(int X1, int Z1, int X2, int Z2)

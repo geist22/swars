@@ -110,14 +110,12 @@ TbResult ApSpriteDrawLTGreyRemapUsingScalingUpDataTrans1RL(uchar *outbuf, int sc
                             if (xdup > 0)
                             {
                                 // App-specific code starts
-                                unsigned int pxmap;
-                                int pxbase;
-                                pxbase = dword_1DC36C + (low_trans_grey_pal_bright[*sprdata] >> 1);
+                                TbPixel col1;
+
+                                col1 = *sprdata;
                                 for (;xdup > 0; xdup--)
                                 {
-                                    pxmap = pxbase + (low_trans_grey_pal_bright[*out_end] >> 1);
-                                    pxmap = (low_trans_grey_bright_limit[pxmap] << 8) | ((*sprdata));
-                                    *out_end = transmap[pxmap];
+                                    *out_end = LbBlendPixelLowTrans4Remap(transmap, 1, 1, col1, *out_end);
                                     out_end--;
                                 }
                                 // App-specific code ends
@@ -221,14 +219,12 @@ TbResult ApSpriteDrawLTGreyRemapUsingScalingUpDataTrans1LR(uchar *outbuf, int sc
                             if (xdup > 0)
                             {
                                 // App-specific code starts
-                                unsigned int pxmap;
-                                int pxbase;
-                                pxbase = dword_1DC36C + (low_trans_grey_pal_bright[*sprdata] >> 1);
+                                TbPixel col1;
+
+                                col1 = *sprdata;
                                 for (;xdup > 0; xdup--)
                                 {
-                                    pxmap = pxbase + (low_trans_grey_pal_bright[*out_end] >> 1);
-                                    pxmap = (low_trans_grey_bright_limit[pxmap] << 8) | ((*sprdata));
-                                    *out_end = transmap[pxmap];
+                                    *out_end = LbBlendPixelLowTrans4Remap(transmap, 1, 1, col1, *out_end);
                                     out_end++;
                                 }
                                 // App-specific code ends
@@ -332,14 +328,12 @@ TbResult ApSpriteDrawLTGreyRemapUsingScalingUpDataTrans2RL(uchar *outbuf, int sc
                             if (xdup > 0)
                             {
                                 // App-specific code starts
-                                unsigned int pxmap;
-                                int pxbase;
-                                pxbase = dword_1DC36C + (low_trans_grey_pal_bright[*sprdata] >> 1);
+                                TbPixel col1;
+
+                                col1 = *sprdata;
                                 for (;xdup > 0; xdup--)
                                 {
-                                    pxmap = pxbase + (low_trans_grey_pal_bright[*out_end] >> 1);
-                                    pxmap = (low_trans_grey_bright_limit[pxmap]) | ((*sprdata) << 8);
-                                    *out_end = transmap[pxmap];
+                                    *out_end = LbBlendPixelLowTrans8Remap(transmap, 1, 1, col1, *out_end);
                                     out_end--;
                                 }
                                 // App-specific code ends
@@ -443,14 +437,12 @@ TbResult ApSpriteDrawLTGreyRemapUsingScalingUpDataTrans2LR(uchar *outbuf, int sc
                             if (xdup > 0)
                             {
                                 // App-specific code starts
-                                unsigned int pxmap;
-                                int pxbase;
-                                pxbase = dword_1DC36C + (low_trans_grey_pal_bright[*sprdata] >> 1);
+                                TbPixel col1;
+
+                                col1 = *sprdata;
                                 for (;xdup > 0; xdup--)
                                 {
-                                    pxmap = pxbase + (low_trans_grey_pal_bright[*out_end] >> 1);
-                                    pxmap = (low_trans_grey_bright_limit[pxmap]) | ((*sprdata) << 8);
-                                    *out_end = transmap[pxmap];
+                                    *out_end = LbBlendPixelLowTrans8Remap(transmap, 1, 1, col1, *out_end);
                                     out_end++;
                                 }
                                 // App-specific code ends
@@ -542,13 +534,11 @@ TbResult ApSpriteDrawLTGreyRemapUsingScalingDownDataTrans1RL(uchar *outbuf, int 
                         if (xcurstep[1] > 0)
                         {
                             // App-specific code starts
-                            unsigned int pxmap;
-                            int pxbase;
-                            pxbase = dword_1DC36C + (low_trans_grey_pal_bright[*sprdata] >> 1);
+                            TbPixel col1;
+
+                            col1 = *sprdata;
                             {
-                                pxmap = pxbase + (low_trans_grey_pal_bright[*out_end] >> 1);
-                                pxmap = (low_trans_grey_bright_limit[pxmap] << 8) | ((*sprdata));
-                                *out_end = transmap[pxmap];
+                                *out_end = LbBlendPixelLowTrans4Remap(transmap, 1, 1, col1, *out_end);
                                 out_end--;
                             }
                             // App-specific code ends
@@ -638,13 +628,11 @@ TbResult ApSpriteDrawLTGreyRemapUsingScalingDownDataTrans1LR(uchar *outbuf, int 
                         if (xcurstep[1] > 0)
                         {
                             // App-specific code starts
-                            unsigned int pxmap;
-                            int pxbase;
-                            pxbase = dword_1DC36C + (low_trans_grey_pal_bright[*sprdata] >> 1);
+                            TbPixel col1;
+
+                            col1 = *sprdata;
                             {
-                                pxmap = pxbase + (low_trans_grey_pal_bright[*out_end] >> 1);
-                                pxmap = (low_trans_grey_bright_limit[pxmap] << 8) | ((*sprdata));
-                                *out_end = transmap[pxmap];
+                                *out_end = LbBlendPixelLowTrans4Remap(transmap, 1, 1, col1, *out_end);
                                 out_end++;
                             }
                             // App-specific code ends
@@ -734,13 +722,11 @@ TbResult ApSpriteDrawLTGreyRemapUsingScalingDownDataTrans2RL(uchar *outbuf, int 
                         if (xcurstep[1] > 0)
                         {
                             // App-specific code starts
-                            unsigned int pxmap;
-                            int pxbase;
-                            pxbase = dword_1DC36C + (low_trans_grey_pal_bright[*sprdata] >> 1);
+                            TbPixel col1;
+
+                            col1 = *sprdata;
                             {
-                                pxmap = pxbase + (low_trans_grey_pal_bright[*out_end] >> 1);
-                                pxmap = (low_trans_grey_bright_limit[pxmap]) | ((*sprdata) << 8);
-                                *out_end = transmap[pxmap];
+                                *out_end = LbBlendPixelLowTrans8Remap(transmap, 1, 1, col1, *out_end);
                                 out_end--;
                             }
                             // App-specific code ends
@@ -830,13 +816,11 @@ TbResult ApSpriteDrawLTGreyRemapUsingScalingDownDataTrans2LR(uchar *outbuf, int 
                         if (xcurstep[1] > 0)
                         {
                             // App-specific code starts
-                            unsigned int pxmap;
-                            int pxbase;
-                            pxbase = dword_1DC36C + (low_trans_grey_pal_bright[*sprdata] >> 1);
+                            TbPixel col1;
+
+                            col1 = *sprdata;
                             {
-                                pxmap = pxbase + (low_trans_grey_pal_bright[*out_end] >> 1);
-                                pxmap = (low_trans_grey_bright_limit[pxmap]) | ((*sprdata) << 8);
-                                *out_end = transmap[pxmap];
+                                *out_end = LbBlendPixelLowTrans8Remap(transmap, 1, 1, col1, *out_end);
                                 out_end++;
                             }
                             // App-specific code ends
@@ -949,7 +933,7 @@ TbResult ApSpriteDrawLowTransGreyRemapUsingScalingData(long posx, long posy, con
         else
         {
           ubyte bri;
-          bri = (dword_1DC36C <= 8) ? (24 + dword_1DC36C) : (32 + (dword_1DC36C - 8) / 2);
+          bri = (low_trans_grey_brightness <= 8) ? (24 + low_trans_grey_brightness) : (32 + (low_trans_grey_brightness - 8) / 2);
           if ((lbDisplay.DrawFlags & Lb_SPRITE_FLIP_HORIZ) != 0)
           {
               return LbSpriteDrawRemapUsingScalingUpDataSolidRL(outbuf, scanline,
@@ -996,7 +980,7 @@ TbResult ApSpriteDrawLowTransGreyRemapUsingScalingData(long posx, long posy, con
         else
         {
           ubyte bri;
-          bri = (dword_1DC36C <= 8) ? (24 + dword_1DC36C) : (32 + (dword_1DC36C - 8) / 2);
+          bri = (low_trans_grey_brightness <= 8) ? (24 + low_trans_grey_brightness) : (32 + (low_trans_grey_brightness - 8) / 2);
           if ((lbDisplay.DrawFlags & Lb_SPRITE_FLIP_HORIZ) != 0)
           {
               return LbSpriteDrawRemapUsingScalingDownDataSolidRL(outbuf, scanline,

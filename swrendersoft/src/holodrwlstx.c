@@ -1,14 +1,15 @@
 /******************************************************************************/
 // Syndicate Wars Fan Expansion, source port of the classic game from Bullfrog.
 /******************************************************************************/
-/** @file engintext.h
- *     Header file for engintext.c.
+/** @file holodrwlstx.c
+ *     Drawlists execution for the holographic projector menu.
  * @par Purpose:
- *     Drawing text on screen within the game engine.
+ *     Implements functions for executing previously made drawlists,
+ *     meaning the actual drawing based on primitives in the list.
  * @par Comment:
- *     Just a header file - #defines, typedefs, function prototypes etc.
+ *     None.
  * @author   Tomasz Lis
- * @date     19 Apr 2022 - 27 Aug 2023
+ * @date     16 May 2024 - 23 Sep 2026
  * @par  Copying and copyrights:
  *     This program is free software; you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -16,26 +17,12 @@
  *     (at your option) any later version.
  */
 /******************************************************************************/
-#ifndef ENGINTEXT_H
-#define ENGINTEXT_H
+#include "holodrwlstx.h"
 
-#include "bftypes.h"
+#include <assert.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 /******************************************************************************/
-#pragma pack(1)
 
-
-#pragma pack()
 /******************************************************************************/
-TbBool AppTextDrawMissionChatMessage(int posx, int *posy, int plyr, int timer,
-  const char *text);
 
-TbBool AppTextDrawMissionStatus(int posx, int posy, const char *text);
 /******************************************************************************/
-#ifdef __cplusplus
-}
-#endif
-#endif

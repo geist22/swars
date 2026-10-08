@@ -301,7 +301,9 @@ TbBool weapons_add_one_for_player(u32 *p_weapons,
 void sanitize_weapon_quantities(u32 *p_weapons,
   struct WeaponsFourPack *p_fourpacks);
 
-ubyte find_nth_weapon_held(ushort index, ubyte n);
+/** Return type on n-th weapon held by a person.
+ */
+WeaponType find_nth_weapon_held(ThingIdx person, ubyte n);
 
 /** Gives range (in normal map coord points) of given weapon when wielded by given person.
  *

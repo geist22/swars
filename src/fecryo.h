@@ -60,6 +60,10 @@ enum ModDrawStage {
  */
 extern ubyte selected_mod;
 
+extern ubyte flic_mods[5];
+extern ubyte old_flic_mods[5];
+extern ubyte mod_draw_states[4];
+
 /** Print full name of cybernetic mod type to a buffer.
  */
 void snprint_cybmod_type_long_name(char *buf, u32 buflen, ushort mtype);

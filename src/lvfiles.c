@@ -74,6 +74,10 @@ struct BillboardNBreakout {
 
 TbBool level_deep_fix = false;
 
+ushort game_level_unique_id = 0;
+ubyte game_level_unkn1[40];
+ubyte game_level_unkn2[40];
+
 ulong stored_g3d_next_object;
 ulong stored_g3d_next_object_face3;
 ulong stored_g3d_next_object_face4;
@@ -86,6 +90,10 @@ ulong stored_global3d_inuse;
 
 extern struct QuickLoad quick_load_pc[19];
 
+/** Quick load MAD file helper array.
+ *
+ * Entries here must match `mem_game[]` entries.
+ */
 struct QuickLoad quick_load_pc[] = {
   {NULL,				(void **)&game_my_big_map,	18, 16384},
   {&next_floor_texture,	(void **)&game_textures,		18, 800},
@@ -118,8 +126,7 @@ ushort next_bezier_pt = 1;
 
 ushort unkn3de_len = 0;
 
-extern uint dword_177790;
-extern struct BillboardNBreakout map_bnb;
+struct BillboardNBreakout map_bnb;
 
 void debug_level(const char *text, int player)
 {
@@ -1097,7 +1104,6 @@ void load_level_pc(short level, short missi, ubyte reload)
         int i;
 
         word_1C8446 = 1;
-        word_176E38 = 0;
 
         fmtver = load_level_pc_handle(lev_fh);
 
@@ -1150,6 +1156,11 @@ void fix_map_outranged_properties(void)
                   (int)texture, (int)tile_x, (int)tile_y);
                 p_mapel->Texture &= 0xC000;
                 p_mapel->Texture |= texture % next_floor_texture;
+            }
+            if (((tile_y == 0) || (tile_x == 0)) && (p_mapel->Ambient != 0)) {
+                LOGSYNC("Non-zero ambient light %d used in border mapel at %d,%d",
+                  (int)p_mapel->Ambient, (int)tile_x, (int)tile_y);
+                p_mapel->Ambient = 0;
             }
         }
     }
@@ -1472,6 +1483,54 @@ void load_map_dat_pc_handle(TbFileHandle fh)
       num_sthings, num_things, next_traffic_node, next_light_command, next_bezier_pt);
 }
 
+void save_mad_pc_handle(TbFileHandle mad_fh)
+{
+    u32 fmtver;
+    ushort tmp;
+    int i;
+
+    assert(sizeof(struct MyMapElement) == 18);
+
+    fmtver = 1;
+    LbFileWrite(mad_fh, &fmtver, sizeof(u32));
+
+    // Store amounts of quick_load array items
+    for (i = 0; quick_load_pc[i].Size != 0; i++)
+    {
+        ushort *p_numb;
+        p_numb = quick_load_pc[i].Numb;
+        if (p_numb != NULL) {
+            LbFileWrite(mad_fh, p_numb, sizeof(ushort));
+        }
+    }
+
+    // Save the quick_load items
+    for (i = 0; quick_load_pc[i].Size != 0; i++)
+    {
+        int entsize, nentries;
+        ushort *p_numb;
+
+        p_numb = quick_load_pc[i].Numb;
+        if (p_numb != NULL) {
+            entsize = quick_load_pc[i].Size;
+            nentries = quick_load_pc[i].Extra + *p_numb;
+        } else {
+            nentries = quick_load_pc[i].Size;
+            entsize = quick_load_pc[i].Extra;
+        }
+
+        LbFileWrite(mad_fh, *quick_load_pc[i].Ptr, nentries * entsize);
+        tmp = 0;
+        LbFileWrite(mad_fh, &tmp, sizeof(ushort));
+    }
+
+    LbFileWrite(mad_fh, &selected_triangulation_no, sizeof(selected_triangulation_no));
+    LbFileWrite(mad_fh, &triangulation_initied, sizeof(triangulation_initied));
+    LbFileWrite(mad_fh, triangulation, sizeof(struct Triangulation) * 4);
+
+    //TODO finish the save implementation
+}
+
 void load_mad_pc_buffer(ubyte *mad_ptr, long rdsize)
 {
     short shut_h;
@@ -1516,6 +1575,8 @@ void load_mad_pc_buffer(ubyte *mad_ptr, long rdsize)
     for (i = 1; i < 17; i++)
     {
         ushort *p_numb;
+
+        assert(quick_load_pc[i].Ptr == mem_game[i].BufferPtr);
         p_numb = quick_load_pc[i].Numb;
         mem_game[i].N = quick_load_pc[i].Extra + *p_numb;
     }
@@ -1681,10 +1742,6 @@ TbResult load_map_mad(ushort mapno)
 
 void load_map_bnb(ushort mapno)
 {
-#if 0
-    asm volatile ("call ASM_load_map_bnb\n"
-        : : "a" (mapno));
-#endif
     char locstr[DISKPATH_SIZE];
     PathInfo *pinfo;
     TbFileHandle fh;
@@ -1704,13 +1761,11 @@ void load_map_bnb(ushort mapno)
         map_bnb.field_1 = 0;
         map_bnb.field_2 = 0;
         map_bnb.field_3 = 0;
-        dword_177790 = 0;
     }
     else
     {
         LbFileRead(fh, &map_bnb, 4);
         LbFileClose(fh);
-        dword_177790 = 2;
     }
     Amin = map_bnb.field_0;
     if (map_bnb.field_0 >= map_bnb.field_2)

@@ -276,6 +276,9 @@ struct CarGlare car_glare[] = {
   {-96, -16, 304, 0},
 };
 
+void *dword_177750 = NULL;
+struct unkn_mech_struc7 *unkn_mech_stct7 = NULL;
+
 struct unkn_mech_struc3 *unkn_mech_arr3 = NULL;
 struct unkn_mech_struc4 *unkn_mech_arr4 = NULL;
 struct unkn_mech_struc5 *unkn_mech_arr5 = NULL;
@@ -301,8 +304,8 @@ s32 mech_rocket2_launch_cor_x = TILE_TO_MAPCOORD(MAP_TILE_WIDTH/2, 127);
 s32 mech_rocket2_launch_cor_y = TILE_TO_MAPCOORD(1, 0);
 s32 mech_rocket2_launch_cor_z = TILE_TO_MAPCOORD(MAP_TILE_WIDTH/2, 127);
 
-extern s32 unkn_mech_var10;
-extern s32 unkn_mech_var11;
+s32 unkn_mech_var10 = 0;
+s32 unkn_mech_var11 = 0;
 
 const char *vehicle_type_name(ushort vtype)
 {

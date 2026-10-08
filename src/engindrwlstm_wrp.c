@@ -468,10 +468,10 @@ void compute_normals_light_ratio(ushort nrml_beg, ushort nrml_end, ushort matx)
         vec_nx = *(struct M31 *)&p_nrml->NX;
         matrix_transform(&vec_rot, &local_mats[matx], &vec_nx);
 
-        fctr_o = dword_176D14 * (vec_rot.R[0] >> 14) - dword_176D10 * (vec_rot.R[2] >> 14);
-        fctr_p = (dword_176D14 * (vec_rot.R[2] >> 14) + dword_176D10 * (vec_rot.R[0] >> 14)) >> 16;
-        fctr_r = dword_176D1C * (vec_rot.R[1] >> 14) - dword_176D18 * fctr_p;
-        fctr_s = (dword_176D18 * (vec_rot.R[1] >> 14) + dword_176D1C * fctr_p) >> 16;
+        fctr_o = transf_vec_yaw_z * (vec_rot.R[0] >> 14) - transf_vec_yaw_x * (vec_rot.R[2] >> 14);
+        fctr_p = (transf_vec_yaw_z * (vec_rot.R[2] >> 14) + transf_vec_yaw_x * (vec_rot.R[0] >> 14)) >> 16;
+        fctr_r = transf_vec_tlt_xz * (vec_rot.R[1] >> 14) - transf_vec_tlt_y * fctr_p;
+        fctr_s = (transf_vec_tlt_y * (vec_rot.R[1] >> 14) + transf_vec_tlt_xz * fctr_p) >> 16;
 
         p_nrml->LightRatio = 0;
         p_nrml->LightRatio |= ((fctr_o >> 19) & 0xFF);

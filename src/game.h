@@ -120,6 +120,16 @@ struct LevelDef {
   ubyte field_2B;
 };
 
+struct LoginControl { // sizeof=0x0a
+    ubyte lcunkn0;
+    ubyte State;
+    ubyte TechLevel;
+    ubyte Faction;
+    u32 Money;
+    sbyte City;
+    ubyte Team;
+};
+
 struct UnkPlayerGroup {
     ubyte AgentWeapons[4];
     short AgentOwners[4];
@@ -132,19 +142,14 @@ struct UnkPlayerGroup {
 
 extern char session_name[20];
 extern char user_name[50];
-extern char unkn2_names[8][16];
 
 extern ubyte in_network_game;
 extern ubyte is_single_game;
 extern ubyte cmdln_colour_tables;
 extern ubyte cmdln_param_bcg;
 
-extern ubyte login_control__State;
-extern ulong login_control__Money;
-extern sbyte login_control__City;
-extern ubyte login_control__TechLevel;
-extern ubyte login_control__Faction;
-extern ubyte login_control__Team;
+//TODO do something with the array - currently only 1st element is in use
+extern struct LoginControl login_control[4];
 
 extern ubyte exit_game;
 
@@ -155,31 +160,17 @@ extern long unkn01_pos_y;
 extern ushort current_map;
 extern short current_level;
 
-extern void *engine_mem_alloc_ptr;
-extern u32 engine_mem_alloc_size;
-
 extern ubyte *scratch_buf1;
-
-extern ushort game_level_unique_id;
-extern ubyte game_level_unkn1[40];
-extern ubyte game_level_unkn2[40];
 
 extern ushort word_1531E0;
 
 extern ubyte *spare_map_buffer;
-extern ushort word_176E38;
 
-extern ubyte net_service_started;
-
-extern ubyte net_host_player_no;
 extern ubyte byte_1C6D4A;
-extern ubyte byte_1C6DDC[5];
 extern ushort word_1C8446;
 
 extern ubyte old_screentype;
 extern ubyte screentype;
-extern ubyte data_1c498d;
-extern ubyte mouse_sprite_anim_frame;
 extern char *outro_text_s;
 extern char *outro_text_z;
 extern long data_1dd91c;
@@ -194,12 +185,6 @@ extern char *dev_credits_groups[];
 
 extern sbyte mission_result;
 
-extern ubyte scientists_lost;
-extern ulong new_mods_researched;
-extern ulong new_weapons_researched;
-
-extern sbyte selected_net_session;
-extern sbyte selected_net_user;
 extern ubyte net_player_teams[8];
 extern long dword_153194;
 
@@ -208,12 +193,8 @@ extern ubyte data_1c4aa2;
 extern ubyte start_into_mission;
 extern ubyte edit_flag;
 extern ubyte change_screen;
-extern ubyte restore_savegame;
 extern ubyte current_drawing_mod;
-extern ubyte mod_draw_states[4];
 extern ubyte new_current_drawing_mod;
-extern ubyte flic_mods[5];
-extern ubyte old_flic_mods[5];
 
 extern struct LevelDef level_def;
 
@@ -223,18 +204,11 @@ extern long dword_1AA5C4;
 extern long dword_1AA5C8;
 
 extern ushort next_mission;
-extern ushort replay_intro_timer;
 
 extern int mouse_map_x;
 extern int mouse_map_y;
 extern int mouse_map_z;
 
-extern ubyte game_gfx_advanced_lights;
-extern ubyte game_billboard_movies;
-extern ubyte game_gfx_deep_radar;
-extern ubyte byte_1C4A6F;
-
-extern char net_unkn2_text[];
 extern char *misc_text[5];
 
 // To be replaced by LbArcTanAngle()

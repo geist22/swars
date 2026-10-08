@@ -46,7 +46,7 @@ TbBool AppTextDrawShadClFlash(int posx, int posy, const char *text);
  * @param text The text to be drawn.
  * @return
  */
-TbBool AppTextDrawShadClFlashResized(int posx, int *posy, int units_per_px,
+TbBool AppTextDrawShadClFlashResized(int posx, int posy, int units_per_px,
   ushort ttl_turns, const char *text);
 
 #ifdef __cplusplus

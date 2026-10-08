@@ -225,7 +225,7 @@ struct VehStateConfig
 #pragma pack()
 /******************************************************************************/
 
-extern struct unkn_mech_struc7 *unkn_mech_stct7; // = NULL;
+extern struct unkn_mech_struc7 *unkn_mech_stct7;
 extern void *dword_177750;
 
 extern s32 mech_rocket1_launch_cor_x;
