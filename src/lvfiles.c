@@ -25,8 +25,8 @@
 #include "bfmemut.h"
 
 #include "drawtext.h"
+#include "engincam.h"
 #include "engincolour.h"
-#include "enginfexpl.h"
 #include "enginlights.h"
 
 #include "bat.h"
@@ -37,7 +37,6 @@
 #include "bigmap.h"
 #include "campaign.h"
 #include "command.h"
-#include "display.h"
 #include "enginpriobjs.h"
 #include "enginsngobjs.h"
 #include "enginsngtxtr.h"
@@ -54,6 +53,7 @@
 #include "building.h"
 #include "pepgroup.h"
 #include "thing.h"
+#include "thing_expld.h"
 #include "tngcolisn.h"
 #include "vehicle.h"
 #include "vehtraffic.h"
@@ -74,8 +74,12 @@ struct BillboardNBreakout {
 
 TbBool level_deep_fix = false;
 
+ushort game_level_unique_id = 0;
+ubyte game_level_unkn1[40];
+ubyte game_level_unkn2[40];
+
 ulong stored_g3d_next_object;
-ulong stored_g3d_next_object_face;
+ulong stored_g3d_next_object_face3;
 ulong stored_g3d_next_object_face4;
 ulong stored_g3d_next_object_point;
 ulong stored_g3d_next_normal;
@@ -86,12 +90,16 @@ ulong stored_global3d_inuse;
 
 extern struct QuickLoad quick_load_pc[19];
 
+/** Quick load MAD file helper array.
+ *
+ * Entries here must match `mem_game[]` entries.
+ */
 struct QuickLoad quick_load_pc[] = {
   {NULL,				(void **)&game_my_big_map,	18, 16384},
   {&next_floor_texture,	(void **)&game_textures,		18, 800},
   {&next_face_texture,	(void **)&game_face_textures,	16, 800},
   {&next_object_point,	(void **)&game_object_points,	10, 2000},
-  {&next_object_face,	(void **)&game_object_faces,	32, 2000},
+  {&next_object_face3,	(void **)&game_object_faces3,	32, 2000},
   {&next_object,		(void **)&game_objects,		36, 120},
   {&next_quick_light,	(void **)&game_quick_lights,	 6, 4000},
   {&next_full_light,	(void **)&game_full_lights,	32, 10},
@@ -108,10 +116,17 @@ struct QuickLoad quick_load_pc[] = {
   {NULL,				NULL,				 0, 0},
 };
 
+struct LevelMisc *game_level_miscs = NULL;
+
+struct Objective *game_used_lvl_objectives = NULL;
 ushort next_used_lvl_objective = 1;
 
-extern uint dword_177790;
-extern struct BillboardNBreakout map_bnb;
+struct UnknBezEdit *bezier_pts = NULL;
+ushort next_bezier_pt = 1;
+
+ushort unkn3de_len = 0;
+
+struct BillboardNBreakout map_bnb;
 
 void debug_level(const char *text, int player)
 {
@@ -140,7 +155,7 @@ void global_3d_store(int action)
         if (stored_global3d_inuse)
         {
             next_object = stored_g3d_next_object;
-            next_object_face = stored_g3d_next_object_face;
+            next_object_face3 = stored_g3d_next_object_face3;
             next_object_face4 = stored_g3d_next_object_face4;
             next_object_point = stored_g3d_next_object_point;
             next_normal = stored_g3d_next_normal;
@@ -154,7 +169,7 @@ void global_3d_store(int action)
         if (!stored_global3d_inuse)
         {
             stored_g3d_next_object = next_object;
-            stored_g3d_next_object_face = next_object_face;
+            stored_g3d_next_object_face3 = next_object_face3;
             stored_g3d_next_object_face4 = next_object_face4;
             stored_g3d_next_object_point = next_object_point;
             stored_g3d_next_normal = next_normal;
@@ -256,11 +271,11 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
                 p_thing->Z += (256 << 8);
             if ((p_thing->X >> 16) >= 128)
                 p_thing->X = (64 << 16);
-            p_thing->PTarget = 0;
+            p_thing->PTarget = NULL;
             p_thing->LinkParent = loc_thing.LinkParent;
             p_thing->LinkChild = loc_thing.LinkChild;
             // We have limited amount of group definitions
-            if (p_thing->U.UObject.Group >= PEOPLE_GROUPS_COUNT)
+            if (p_thing->U.UObject.Group >= PEOPLE_GROUPS_LIMIT)
                 p_thing->U.UObject.Group = 0;
             // All relevant thing types must have the values below at same position
             p_thing->U.UObject.EffectiveGroup = p_thing->U.UObject.Group;
@@ -296,11 +311,13 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
             if (p_thing->Type == SmTT_DROPPED_ITEM)
             {
                 // SimpleThings should not be on this list. But many level do have them.
+                //TODO verify and/or unify to allow use of reset_thing_frame(p_thing);
                 p_thing->Frame = nstart_ani[p_thing->StartFrame + 1];
             }
 
             if (p_thing->Type == TT_VEHICLE)
             {
+                ushort snobj;
                 if (fmtver < 17)
                     p_thing->U.UVehicle.Armour = 4;
                 p_thing->U.UVehicle.PassengerHead = 0;
@@ -316,18 +333,18 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
                     LbFileRead(lev_fh, &local_mats[matx], sizeof(struct M33));
                     p_thing->U.UVehicle.MatrixIndex = matx;
                 }
-                byte_1C83D1 = 0;
 
                 n = next_normal;
-                copy_prim_obj_to_game_object(PRCCOORD_TO_MAPCOORD(p_thing->X), PRCCOORD_TO_MAPCOORD(p_thing->Z),
+                snobj = copy_prim_obj_to_game_object(PRCCOORD_TO_MAPCOORD(p_thing->X), PRCCOORD_TO_MAPCOORD(p_thing->Z),
                   -prim_unknprop01 - p_thing->StartFrame, PRCCOORD_TO_MAPCOORD(p_thing->Y));
                 k = next_normal;
-                unkn_object_shift_03(next_object - 1);
-                unkn_object_shift_02(n, k, next_object - 1);
+                unkn_object_shift_03(snobj);
+                unkn_object_shift_02(n, k, snobj);
 
                 k = p_thing - things;
-                p_thing->U.UVehicle.Object = next_object - 1;
-                game_objects[next_object - 1].ThingNo = k;
+                p_thing->U.UVehicle.Object = snobj;
+                game_objects[snobj].ThingNo = k;
+
                 VNAV_unkn_func_207(p_thing);
                 {
                     struct M33 *p_matx;
@@ -386,7 +403,7 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
     }
     for (i = 0; i < 8; i++)
     {
-        if (level_def.PlayableGroups[i] >= PEOPLE_GROUPS_COUNT)
+        if (level_def.PlayableGroups[i] >= PEOPLE_GROUPS_LIMIT)
             level_def.PlayableGroups[i] = 0;
     }
     if (fmtver >= 3)
@@ -394,7 +411,7 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
         LbFileRead(lev_fh, engine_mem_alloc_ptr + engine_mem_alloc_size - 1320 - 33, 1320);
         LbFileRead(lev_fh, war_flags, 32 * sizeof(struct WarFlag));
     }
-    for (k = 0; k < PEOPLE_GROUPS_COUNT; k++)
+    for (k = 0; k < PEOPLE_GROUPS_LIMIT; k++)
     {
         for (i = 0; i < 8; i++)
         {
@@ -464,13 +481,14 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
             }
             else
             {
-              if (p_thing->Type == SmTT_DROPPED_ITEM) {
-                  p_thing->Frame = nstart_ani[p_thing->StartFrame + 1];
-              }
-              p_thing->LinkParent = loc_thing.LinkParent;
-              p_thing->LinkChild = loc_thing.LinkChild;
-              if (thing != 0)
-                  add_node_sthing(thing);
+                if (p_thing->Type == SmTT_DROPPED_ITEM) {
+                     //TODO verify and/or unify to allow use of reset_sthing_frame(p_thing);
+                     p_thing->Frame = nstart_ani[p_thing->StartFrame + 1];
+                }
+                p_thing->LinkParent = loc_thing.LinkParent;
+                p_thing->LinkChild = loc_thing.LinkChild;
+                if (thing != 0)
+                    add_node_sthing(thing);
             }
         }
     }
@@ -509,7 +527,7 @@ ulong load_level_pc_handle(TbFileHandle lev_fh)
     }
 
     if (fmtver >= 16) {
-        n = LbFileRead(lev_fh, &engn_anglexz, 4);
+        n = LbFileRead(lev_fh, &engn_cam_yaw, 4);
         if (n < 4)
             LOGWARN("Field anglexz truncated, got %d bytes", n);
     }
@@ -627,7 +645,7 @@ void save_level_pc_handle(TbFileHandle lev_fh)
 
     LbFileWrite(lev_fh, game_level_miscs, sizeof(struct LevelMisc) * 200);
 
-    LbFileWrite(lev_fh, &engn_anglexz, 4);
+    LbFileWrite(lev_fh, &engn_cam_yaw, 4);
 }
 
 
@@ -638,7 +656,7 @@ short find_group_which_looks_like_human_player(TbBool strict)
     short n_partial;
 
     n_partial = 0;
-    for (group = 0; group < PEOPLE_GROUPS_COUNT; group++)
+    for (group = 0; group < PEOPLE_GROUPS_LIMIT; group++)
     {
         int n_all, n_agents, n_zealots, n_punks;
 
@@ -766,12 +784,12 @@ void level_perform_deep_fix(void)
             if (nx_group >= 0)
                 lp_group = find_unused_group_id(true);
             if (lp_group >= 0) {
-                thing_group_copy(pv_group, nx_group, 0x01|0x02|0x04);
-                n = thing_group_transfer_people(nx_group, lp_group, SubTT_PERS_AGENT, 0, 4);
+                groups_copy(pv_group, nx_group, 0x01|0x02|0x04);
+                n = group_to_group_transfer_people(nx_group, lp_group, SubTT_PERS_AGENT, 0, 4);
                 if (n <= 0)
-                    n = thing_group_transfer_people(nx_group, lp_group, SubTT_PERS_ZEALOT, 0, 4);
+                    n = group_to_group_transfer_people(nx_group, lp_group, SubTT_PERS_ZEALOT, 0, 4);
                 if (n <= 0)
-                    n = thing_group_transfer_people(nx_group, lp_group, -1, 0, 4);
+                    n = group_to_group_transfer_people(nx_group, lp_group, -1, 0, 4);
                 if (n > 0) {
                     LOGWARN("Local player group %d has no team; switching to new group %d based on %d",
                       (int)pv_group, (int)lp_group, (int)nx_group);
@@ -798,8 +816,8 @@ void level_perform_deep_fix(void)
         LOGWARN("Local player group is %d; switching to %d",
           (int)pv_group, (int)nx_group);
         if (nx_group > 0) {
-            thing_group_copy(pv_group, nx_group, 0x01|0x02);
-            thing_group_transfer_people(pv_group, nx_group, -1, 0, 4);
+            groups_copy(pv_group, nx_group, 0x01|0x02);
+            group_to_group_transfer_people(pv_group, nx_group, -1, 0, 4);
         }
     }
 #endif
@@ -898,7 +916,7 @@ TbResult level_misc_verify_mgun(struct LevelMisc *p_lvmsc)
     s32 bkp_engn_xc, bkp_engn_yc, bkp_engn_zc;
     ThingIdx mgun;
 
-    if ((p_lvmsc->Group < 0) || (p_lvmsc->Group >= PEOPLE_GROUPS_COUNT))
+    if ((p_lvmsc->Group < 0) || (p_lvmsc->Group >= PEOPLE_GROUPS_LIMIT))
         return Lb_FAIL;
     if ((p_lvmsc->Weapon < 1) || (p_lvmsc->Weapon >= WEP_TYPES_COUNT))
         return Lb_FAIL;
@@ -1086,7 +1104,6 @@ void load_level_pc(short level, short missi, ubyte reload)
         int i;
 
         word_1C8446 = 1;
-        word_176E38 = 0;
 
         fmtver = load_level_pc_handle(lev_fh);
 
@@ -1140,13 +1157,18 @@ void fix_map_outranged_properties(void)
                 p_mapel->Texture &= 0xC000;
                 p_mapel->Texture |= texture % next_floor_texture;
             }
+            if (((tile_y == 0) || (tile_x == 0)) && (p_mapel->Ambient != 0)) {
+                LOGSYNC("Non-zero ambient light %d used in border mapel at %d,%d",
+                  (int)p_mapel->Ambient, (int)tile_x, (int)tile_y);
+                p_mapel->Ambient = 0;
+            }
         }
     }
-    for (i = 0; i < next_object_face; i++) {
+    for (i = 0; i < next_object_face3; i++) {
         struct SingleObjectFace3 *p_face;
         ushort texture;
 
-        p_face = &game_object_faces[i];
+        p_face = &game_object_faces3[i];
         texture = p_face->Texture & 0x3FFF;
         if (texture >= next_face_texture) {
             LOGERR("Outranged texture %d used in face3 %d", (int)texture, (int)i);
@@ -1246,18 +1268,18 @@ void load_map_dat_pc_handle(TbFileHandle fh)
     }
     if (fmtver >= 19)
     {
-        LbFileRead(fh, &next_object_face, sizeof(next_object_face));
+        LbFileRead(fh, &next_object_face3, sizeof(next_object_face3));
         assert(sizeof(struct SingleObjectFace3) == 32);
-        LbFileRead(fh, game_object_faces, sizeof(struct SingleObjectFace3) * next_object_face);
+        LbFileRead(fh, game_object_faces3, sizeof(struct SingleObjectFace3) * next_object_face3);
     }
     else
     {
         struct SingleObjectFace3OldV7 old_object_face;
-        LbFileRead(fh, &next_object_face, sizeof(next_object_face));
+        LbFileRead(fh, &next_object_face3, sizeof(next_object_face3));
         assert(sizeof(old_object_face) == 48);
-        for (i = 0; i < next_object_face; i++) {
+        for (i = 0; i < next_object_face3; i++) {
             LbFileRead(fh, &old_object_face, sizeof(old_object_face));
-            refresh_old_object_face_format(&game_object_faces[i], &old_object_face, fmtver);
+            refresh_old_object_face_format(&game_object_faces3[i], &old_object_face, fmtver);
         }
     }
     {
@@ -1308,8 +1330,8 @@ void load_map_dat_pc_handle(TbFileHandle fh)
     {
         next_object_face4 = 1;
     }
-    LOGSYNC("stats: object_faces=%hu objects=%hu quick_lights=%hu full_lights=%hu normals=%hu object_faces4=%hu",
-      next_object_face, next_object, next_quick_light, next_full_light, next_normal, next_object_face4);
+    LOGSYNC("stats: object_faces3=%hu objects=%hu quick_lights=%hu full_lights=%hu normals=%hu object_faces4=%hu",
+      next_object_face3, next_object, next_quick_light, next_full_light, next_normal, next_object_face4);
 
     clear_mapwho_on_whole_map();
 
@@ -1461,6 +1483,54 @@ void load_map_dat_pc_handle(TbFileHandle fh)
       num_sthings, num_things, next_traffic_node, next_light_command, next_bezier_pt);
 }
 
+void save_mad_pc_handle(TbFileHandle mad_fh)
+{
+    u32 fmtver;
+    ushort tmp;
+    int i;
+
+    assert(sizeof(struct MyMapElement) == 18);
+
+    fmtver = 1;
+    LbFileWrite(mad_fh, &fmtver, sizeof(u32));
+
+    // Store amounts of quick_load array items
+    for (i = 0; quick_load_pc[i].Size != 0; i++)
+    {
+        ushort *p_numb;
+        p_numb = quick_load_pc[i].Numb;
+        if (p_numb != NULL) {
+            LbFileWrite(mad_fh, p_numb, sizeof(ushort));
+        }
+    }
+
+    // Save the quick_load items
+    for (i = 0; quick_load_pc[i].Size != 0; i++)
+    {
+        int entsize, nentries;
+        ushort *p_numb;
+
+        p_numb = quick_load_pc[i].Numb;
+        if (p_numb != NULL) {
+            entsize = quick_load_pc[i].Size;
+            nentries = quick_load_pc[i].Extra + *p_numb;
+        } else {
+            nentries = quick_load_pc[i].Size;
+            entsize = quick_load_pc[i].Extra;
+        }
+
+        LbFileWrite(mad_fh, *quick_load_pc[i].Ptr, nentries * entsize);
+        tmp = 0;
+        LbFileWrite(mad_fh, &tmp, sizeof(ushort));
+    }
+
+    LbFileWrite(mad_fh, &selected_triangulation_no, sizeof(selected_triangulation_no));
+    LbFileWrite(mad_fh, &triangulation_initied, sizeof(triangulation_initied));
+    LbFileWrite(mad_fh, triangulation, sizeof(struct Triangulation) * 4);
+
+    //TODO finish the save implementation
+}
+
 void load_mad_pc_buffer(ubyte *mad_ptr, long rdsize)
 {
     short shut_h;
@@ -1505,6 +1575,8 @@ void load_mad_pc_buffer(ubyte *mad_ptr, long rdsize)
     for (i = 1; i < 17; i++)
     {
         ushort *p_numb;
+
+        assert(quick_load_pc[i].Ptr == mem_game[i].BufferPtr);
         p_numb = quick_load_pc[i].Numb;
         mem_game[i].N = quick_load_pc[i].Extra + *p_numb;
     }
@@ -1598,9 +1670,9 @@ void load_mad_pc_buffer(ubyte *mad_ptr, long rdsize)
     }
 
     if (mad_ptr - (ubyte *)dword_177750 >= 100000)
-        unkn_mech_arr7 = mad_ptr;
+        unkn_mech_stct7 = (struct unkn_mech_struc7 *)mad_ptr;
     else
-        unkn_mech_arr7 = dword_177750 + 100000;
+        unkn_mech_stct7 = (struct unkn_mech_struc7 *)((ubyte *)dword_177750 + 100000);
 }
 
 TbResult load_map_dat(ushort mapno)
@@ -1670,10 +1742,6 @@ TbResult load_map_mad(ushort mapno)
 
 void load_map_bnb(ushort mapno)
 {
-#if 0
-    asm volatile ("call ASM_load_map_bnb\n"
-        : : "a" (mapno));
-#endif
     char locstr[DISKPATH_SIZE];
     PathInfo *pinfo;
     TbFileHandle fh;
@@ -1693,13 +1761,11 @@ void load_map_bnb(ushort mapno)
         map_bnb.field_1 = 0;
         map_bnb.field_2 = 0;
         map_bnb.field_3 = 0;
-        dword_177790 = 0;
     }
     else
     {
         LbFileRead(fh, &map_bnb, 4);
         LbFileClose(fh);
-        dword_177790 = 2;
     }
     Amin = map_bnb.field_0;
     if (map_bnb.field_0 >= map_bnb.field_2)
@@ -1722,7 +1788,7 @@ TbResult load_mad_pc(ushort mapno)
     TbResult ret;
 
     ingame.Flags |= GamF_Unkn00010000;
-    init_free_explode_faces();
+    init_object_explode_faces();
     if (mapno != 0) {
         load_map_bnb(mapno);
         ret = load_map_mad(mapno);

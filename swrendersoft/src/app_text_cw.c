@@ -34,6 +34,7 @@
 
 #include "enginprops.h"
 #include "privrdlog.h"
+/******************************************************************************/
 
 #if defined(LB_ENABLE_SHADOW_COLOUR)
 #  define SHADOW_COLOUR lbDisplay.ShadowColour
@@ -42,6 +43,7 @@
 #endif
 
 TbBool LbIApplyControlCharToDrawSettings(const char **c);
+TbBool LbIApplyControlCharToAlignSettings(const char **c);
 TbBool LbIAlignMethodSet(ushort fdflags);
 TbBool is_wide_charcode(ulong chr);
 
@@ -210,10 +212,12 @@ void put_down_cw_sprites(const char *sbuf, const char *ebuf,
 {
     if (units_per_px == 16)
     {
-        put_down_colwavetext_sprites(sbuf, ebuf, x, y, space_len, 32, 16, render_anim_turn);
+        put_down_colwavetext_sprites(sbuf, ebuf, x, y, space_len, 32, 16,
+          render_anim_turn >> RENDER_ANIM_TURN_SHIFT);
     } else
     {
-        put_down_colwavetext_sprites_resized(sbuf, ebuf, x, y, space_len, units_per_px, 32, 16, render_anim_turn);
+        put_down_colwavetext_sprites_resized(sbuf, ebuf, x, y, space_len, units_per_px, 32, 16,
+          render_anim_turn >> RENDER_ANIM_TURN_SHIFT);
     }
 }
 
@@ -328,15 +332,15 @@ TbBool AppTextDrawColourWaveResized(int posx, int posy, int units_per_px, const 
 {
     struct TbAnyWindow grwnd;
     // Counter for amount of blank characters in a line
-    long count;
-    long justifyx,justifyy;
-    long startx,starty;
+    s32 count;
+    int justifyx, justifyy;
+    s32 startx,starty;
     const char *sbuf;
     const char *ebuf;
     const char *prev_ebuf;
-    long chr;
-    long x, y, len;
-    long w, h;
+    s32 chr;
+    s32 x, y, len;
+    s32 w, h;
 
     if ((lbFontPtr == NULL) || (text == NULL))
         return true;
@@ -467,21 +471,7 @@ TbBool AppTextDrawColourWaveResized(int posx, int posy, int units_per_px, const 
               count = 0;
               starty += h;
             }
-            switch (*ebuf)
-            {
-            case 6:
-              lbDisplay.DrawFlags ^= Lb_TEXT_HALIGN_LEFT;
-              break;
-            case 7:
-              lbDisplay.DrawFlags ^= Lb_TEXT_HALIGN_RIGHT;
-              break;
-            case 8:
-              lbDisplay.DrawFlags ^= Lb_TEXT_HALIGN_CENTER;
-              break;
-            case 9:
-              lbDisplay.DrawFlags ^= Lb_TEXT_HALIGN_JUSTIFY;
-              break;
-            }
+            LbIApplyControlCharToAlignSettings(&ebuf);
         } else
 
         if (chr == 14)
@@ -503,16 +493,6 @@ TbBool AppTextDrawColourWave(int posx, int posy, const char *text)
 {
     // Using resized version - it will end up with version optimized for no resize anyway
     return AppTextDrawColourWaveResized(posx, posy, 16, text);
-}
-
-struct TbSprite *AppFontCharSpriteRW(struct TbSprite *font,
-  const ulong chr)
-{
-    if (font == NULL)
-        return NULL;
-    if ((chr >= 31) && (chr < 256))
-        return &font[(chr-31)];
-    return NULL;
 }
 
 /******************************************************************************/

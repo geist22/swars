@@ -28,8 +28,21 @@ extern "C" {
 /******************************************************************************/
 #pragma pack(1)
 
-struct Path;
 struct Thing;
+
+struct WayPoint {
+    s32 x8;
+    s32 y8;
+};
+
+struct Path { // sizeof=0x814
+    s32 ax8;
+    s32 ay8;
+    s32 bx8;
+    s32 by8;
+    s32 PathLength;
+    struct WayPoint WayPoints[256];
+};
 
 #pragma pack()
 /******************************************************************************/

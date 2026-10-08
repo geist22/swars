@@ -18,6 +18,7 @@
 /******************************************************************************/
 #include "febrief.h"
 
+#include <assert.h>
 #include "bfkeybd.h"
 #include "bftext.h"
 #include "bfmath.h"
@@ -26,9 +27,12 @@
 #include "bfscrcopy.h"
 #include "ssampply.h"
 
+#include "bigmap.h"
 #include "campaign.h"
+#include "embedanim.h"
 #include "femail.h"
 #include "femain.h"
+#include "feworld.h"
 #include "game_data.h"
 #include "game_options.h"
 #include "guiboxes.h"
@@ -41,6 +45,7 @@
 #include "lvobjctv.h"
 #include "mydraw.h"
 #include "scanner.h"
+#include "scandraw.h"
 #include "sound.h"
 #include "wadfile.h"
 #include "wrcities.h"
@@ -61,8 +66,7 @@ struct ScreenTextBox brief_netscan_box = {0};
 
 struct ScreenBox brief_graphical_box = {0};
 
-extern sbyte selected_netscan_objective;// = -1;
-extern char unkn39_text[];
+sbyte selected_netscan_objective = -1;
 
 ubyte brief_state_city_selected = 0;
 ubyte brief_citymap_content = BriCtM_AUTO_SCANNER;
@@ -71,6 +75,10 @@ ubyte brief_citymap_content = BriCtM_AUTO_SCANNER;
  */
 long mail_num_active_cities = 0;
 
+char *mission_briefing_text = NULL;
+
+char brief_netscan_cost_text[20];
+
 long dword_1C47E0 = 0;
 ubyte byte_1C47E4 = 0;
 short word_1C47E6 = 0;
@@ -78,12 +86,36 @@ short word_1C47E8 = 0;
 
 /******************************************************************************/
 
-ubyte ac_brief_do_netscan_enhance(ubyte click);
-ubyte ac_show_brief_netscan_box(struct ScreenTextBox *box);
-ubyte ac_accept_mission(ubyte click);
-ubyte ac_do_unkn1_CANCEL(ubyte click);
-void ac_purple_unkn2_data_to_screen(void);
-void ac_SCANNER_data_to_screen(void);
+ubyte accept_mission(ubyte click)
+{
+#if 0
+    ubyte ret;
+    asm volatile ("call ASM_accept_mission\n"
+        : "=r" (ret) : "a" (click));
+    return ret;
+#endif
+    if (open_brief > 0)
+    {
+        change_screen = ChSCRT_WORLDMAP;
+        map_from_mission = 1;
+        old_mission_brief = open_brief;
+    }
+    return 1;
+}
+
+ubyte do_unkn1_CANCEL(ubyte click)
+{
+#if 0
+    ubyte ret;
+    asm volatile ("call ASM_do_unkn1_CANCEL\n"
+        : "=r" (ret) : "a" (click));
+    return ret;
+#endif
+    reload_background_flag = 1;
+    screentype = SCRT_99;
+    return 0;
+}
+
 void update_netscan_cost_button(ubyte city_id)
 {
     int k, max_width;
@@ -115,6 +147,9 @@ void update_netscan_cost_button(ubyte city_id)
     k = max(k, 213);
     brief_NETSCAN_COST_box.Width = min(k, max_width);
     brief_NETSCAN_COST_box.Flags |= GBxFlg_Unkn0001;
+
+    if (game_projector_speed)
+        brief_NETSCAN_COST_box.Flags |= GBxFlg_Unkn0002;
 }
 
 void reveal_netscan_objective(short nsobv)
@@ -128,6 +163,8 @@ void reveal_netscan_objective(short nsobv)
 void brief_citymap_readd_scanner_signals(void)
 {
     struct NetscanObjective *p_nsobv;
+
+    assert(selected_netscan_objective >= 0);
 
     p_nsobv = &netscan_objectives[selected_netscan_objective];
     add_netscan_signal_to_scanner(p_nsobv, 1);
@@ -169,12 +206,6 @@ TbBool mouse_over_text_window_item(short tx_height, short margin, short start_sh
 
 ubyte show_brief_netscan_box(struct ScreenTextBox *p_box)
 {
-#if 0
-    ubyte ret;
-    asm volatile ("call ASM_show_brief_netscan_box\n"
-        : "=r" (ret) : "a" (p_box));
-    return ret;
-#endif
     int nlines;
     short start_shift;
     short nsobv;
@@ -219,7 +250,7 @@ ubyte show_brief_netscan_box(struct ScreenTextBox *p_box)
                 }
                 if (selected_netscan_objective == nsobv)
                     lbDisplay.DrawFlags |= Lb_TEXT_ONE_COLOR;
-                draw_text_purple_list2(0, start_shift, netscan_text + p_nsobv->TextOffset, 0);
+                draw_text_purple_list2(0, start_shift, memload_netscan_text + p_nsobv->TextOffset, 0);
                 lbDisplay.DrawFlags = 0;
                 start_shift += ln_height * p_nsobv->TextLines;
                 if (start_shift + tx_height >= text_window_y2 - text_window_y1)
@@ -228,38 +259,28 @@ ubyte show_brief_netscan_box(struct ScreenTextBox *p_box)
             nlines += p_nsobv->TextLines;
         }
         if (cities[selected_city_id].Info < netscan_objectives_count) {
-            //drawn = brief_NETSCAN_button.DrawFn(&brief_NETSCAN_button); -- incompatible calling convention
-            asm volatile ("call *%2\n"
-                : "=r" (drawn) : "a" (&brief_NETSCAN_button), "g" (brief_NETSCAN_button.DrawFn));
+            drawn = brief_NETSCAN_button.DrawFn(&brief_NETSCAN_button);
         }
     }
     if (drawn) {
-        //brief_NETSCAN_COST_box.DrawFn(&brief_NETSCAN_COST_box); -- incompatible calling convention
-        asm volatile ("call *%2\n"
-          : "=r" (drawn) : "a" (&brief_NETSCAN_COST_box), "g" (brief_NETSCAN_COST_box.DrawFn));
+        drawn = brief_NETSCAN_COST_box.DrawFn(&brief_NETSCAN_COST_box);
     }
     return 0;
 }
 
 void flic_netscan_open_anim(ubyte netno)
 {
-    struct Animation *p_anim;
-    PathInfo *pinfo;
-    int k;
     ubyte anislot;
 
     anislot = AniSl_NETSCAN;
-    k = anim_slots[anislot];
-    p_anim = &animations[k];
-    pinfo = &game_dirs[DirPlace_Equip];
-    anim_flic_set_fname(p_anim, "%s/net%02d.fli", pinfo->directory, netno);
-    flic_unkn03(anislot);
+    embanim_set_netscan_file(anislot, netno);
+    embanim_reinit(anislot);
 }
 
 void purple_unkn2_data_to_screen(void)
 {
-    ubyte *buf;
-    buf = anim_type_get_output_buffer(AniSl_NETSCAN);
+    TbPixel *buf;
+    buf = embanim_type_get_output_buffer(AniSl_NETSCAN);
     LbScreenSetGraphicsWindow(brief_graphical_box.X + 1, brief_graphical_box.Y + 1,
       brief_graphical_box.Width - 2, brief_graphical_box.Height - 2);
     LbScreenCopy(buf, lbDisplay.GraphicsWindowPtr, lbDisplay.GraphicsWindowHeight);
@@ -291,6 +312,8 @@ void count_selectable_cities(void)
     short city_id, last_city_id;
 
     mail_num_active_cities = 0;
+    last_city_id = -1;
+
     for (city_id = 0; city_id < num_cities; city_id++)
     {
         if (cities[city_id].Flags & CitF_Unkn01) {
@@ -308,19 +331,19 @@ void show_citymap_city_selection(struct ScreenBox *box)
     short city_id;
     short text_h;
     short dy;
-    ulong bufpos;
 
     text_h = my_char_height('A');
     dy = text_h + 4;
     for (city_id = 0; city_id < num_cities; city_id++)
     {
+        const char *text;
         if ((cities[city_id].Flags & CitF_Unkn01) == 0)
             continue;
 
         dy += text_h + 4;
         lbDisplay.DrawFlags |= 0x8000;
-        bufpos = cities[city_id].TextIndex[0];
-        draw_text_purple_list2(0, dy, (char*) &memload[bufpos], 0);
+        text = city_full_name(city_id);
+        draw_text_purple_list2(0, dy, text, 0);
         lbDisplay.DrawFlags &= ~0x8000;
     }
 }
@@ -356,8 +379,9 @@ ubyte input_citymap_city_selection(struct ScreenBox *p_box)
 
 ubyte input_citymap_scanner(struct ScreenBox *p_box)
 {
-    int dx, dy;
-    short sdx, sdy;
+    int dx, dz;
+    short sdx_s, sdx_c;
+    short sdz_s, sdz_c;
     ubyte ret;
 
     ret = 0;
@@ -400,7 +424,7 @@ ubyte input_citymap_scanner(struct ScreenBox *p_box)
             dword_1C47E0++;
     }
     dx = 0;
-    dy = 0;
+    dz = 0;
     ingame.Scanner.Angle = ((dword_1C47E0 >> 2) + ingame.Scanner.Angle) & 0x7FF;
     if (is_key_pressed(KC_RIGHT, KMod_DONTCARE)) {
         dx++;
@@ -411,26 +435,19 @@ ubyte input_citymap_scanner(struct ScreenBox *p_box)
         ret = 1;
     }
     if (is_key_pressed(KC_UP, KMod_DONTCARE)) {
-        dy--;
+        dz--;
         ret = 1;
     }
     if (is_key_pressed(KC_DOWN, KMod_DONTCARE)) {
-        dy++;
+        dz++;
         ret = 1;
     }
-    ingame.Scanner.MX += dx * lbSinTable[ingame.Scanner.Angle + LbFPMath_PI/2] >> 13;
-    ingame.Scanner.MX += dy * lbSinTable[ingame.Scanner.Angle] >> 13;
-    sdx = dx * lbSinTable[ingame.Scanner.Angle] >> 13;
-    sdy = dy * lbSinTable[ingame.Scanner.Angle + LbFPMath_PI/2] >> 13;
-    ingame.Scanner.MZ += sdx - sdy;
-    if (ingame.Scanner.MX < 0)
-        ingame.Scanner.MX = 0;
-    if (ingame.Scanner.MZ < 0)
-        ingame.Scanner.MZ = 0;
-    if (ingame.Scanner.MX > 256)
-        ingame.Scanner.MX = 256;
-    if (ingame.Scanner.MZ > 256)
-        ingame.Scanner.MZ = 256;
+    sdx_s = dz * lbSinTable[ingame.Scanner.Angle] >> 6;
+    sdx_c = dx * lbSinTable[ingame.Scanner.Angle + LbFPMath_PI/2] >> 6;
+    sdz_s = dx * lbSinTable[ingame.Scanner.Angle] >> 6;
+    sdz_c = dz * lbSinTable[ingame.Scanner.Angle + LbFPMath_PI/2] >> 6;
+    SCANNER_shift_center_point(sdx_s + sdx_c, sdz_s - sdz_c);
+
     return ret;
 }
 
@@ -533,9 +550,9 @@ ubyte show_citymap_box(struct ScreenBox *p_box)
         anim_no = netscan_objectives[selected_netscan_objective].AnimNo;
         if (anim_no == 0)
             brief_citymap_content = BriCtM_AUTO_SCANNER;
-        if (xdo_next_frame(AniSl_NETSCAN))
+        if (embanim_do_next_frame(AniSl_NETSCAN))
             brief_citymap_content = BriCtM_AUTO_SCANNER;
-        draw_flic_purple_list(ac_purple_unkn2_data_to_screen);
+        draw_flic_purple_list(purple_unkn2_data_to_screen);
     }
     else if (brief_state_city_selected)
     {
@@ -543,7 +560,7 @@ ubyte show_citymap_box(struct ScreenBox *p_box)
         {
             input_citymap_scanner(p_box);
         }
-        draw_flic_purple_list(ac_SCANNER_data_to_screen);
+        draw_flic_purple_list(SCANNER_data_to_screen);
         if (mail_num_active_cities != 1)
             draw_hotspot_purple_list(p_box->X + (p_box->Width >> 1), p_box->Y + (p_box->Height >> 1));
         if (mouse_move_over_box(p_box))
@@ -650,10 +667,6 @@ void skip_flashy_draw_mission_screen_boxes(void)
 
 ubyte show_mission_screen(void)
 {
-#if 0
-    asm volatile ("call ASM_show_mission_screen\n"
-        :  :  : "eax" );
-#endif
     ubyte drawn = true;
 
     if (((game_projector_speed) && is_heading_flag01()) ||
@@ -666,26 +679,17 @@ ubyte show_mission_screen(void)
     if (drawn)
         drawn = draw_heading_box();
 
-    if (drawn)
-    {
-        //drawn = brief_mission_text_box.DrawFn(&brief_mission_text_box); -- incompatible calling convention
-        asm volatile ("call *%2\n"
-            : "=r" (drawn) : "a" (&brief_mission_text_box), "g" (brief_mission_text_box.DrawFn));
+    if (drawn) {
+        drawn = brief_mission_text_box.DrawFn(&brief_mission_text_box);
     }
 
-    if (drawn)
-    {
+    if (drawn) {
         input_brief_mission_text_box(&brief_mission_text_box);
-        //drawn = brief_graphical_box.DrawFn(&brief_graphical_box); -- incompatible calling convention
-        asm volatile ("call *%2\n"
-            : "=r" (drawn) : "a" (&brief_graphical_box), "g" (brief_graphical_box.DrawFn));
+        drawn = brief_graphical_box.DrawFn(&brief_graphical_box);
     }
 
-    if (drawn)
-    {
-        //drawn = brief_netscan_box.DrawFn(&brief_netscan_box); -- incompatible calling convention
-        asm volatile ("call *%2\n"
-            : "=r" (drawn) : "a" (&brief_netscan_box), "g" (brief_netscan_box.DrawFn));
+    if (drawn) {
+        drawn = brief_netscan_box.DrawFn(&brief_netscan_box);
     }
 
     return drawn;
@@ -693,9 +697,7 @@ ubyte show_mission_screen(void)
 
 void init_brief_screen_scanner(void)
 {
-    ingame.Scanner.MX = 127;
-    ingame.Scanner.MZ = 127;
-    ingame.Scanner.Angle = 0;
+    SCANNER_set_center_point(MAP_COORD_WIDTH/2, MAP_COORD_HEIGHT/2, 0);
     ingame.Scanner.Zoom = 256;
 
     SCANNER_set_screen_box(brief_graphical_box.X + 1, brief_graphical_box.Y + 1,
@@ -723,24 +725,25 @@ void init_brief_screen_boxes(void)
 
     init_screen_text_box(&brief_netscan_box, 7, 281, 322, 145,
       6, small_med_font, 3);
-    init_screen_button(&brief_NETSCAN_button, 312u, 405u,
-      gui_strings[441], 6, med2_font, 1, 0x80);
-    init_screen_info_box(&brief_NETSCAN_COST_box, 12u, 405u, 213u,
-      gui_strings[442], unkn39_text, 6, med_font, small_med_font, 1);
+    init_screen_button(&brief_NETSCAN_button, 312, 405, gui_strings[441],
+      6, med2_font, 1, 0x80);
+    init_screen_info_box(&brief_NETSCAN_COST_box, 12, 405, 213, gui_strings[442], "",
+      6, med_font, small_med_font, 1);
     brief_NETSCAN_COST_box.Text2 = brief_netscan_cost_text;
-    brief_NETSCAN_button.CallBackFn = ac_brief_do_netscan_enhance;
-    brief_netscan_box.DrawTextFn = ac_show_brief_netscan_box;
+    brief_NETSCAN_button.CallBackFn = brief_do_netscan_enhance;
+    brief_netscan_box.DrawTextFn = show_brief_netscan_box;
 
-    init_screen_text_box(&brief_mission_text_box, 338u, 72u, 295u, 354, 6, small_font, 3);
-    init_screen_button(&unkn1_ACCEPT_button, 343u, 405u,
-      gui_strings[436], 6, med2_font, 1, 0x00);
-    init_screen_button(&unkn1_CANCEL_button, 616u, 405u,
-      gui_strings[437], 6, med2_font, 1, 0x80);
+    init_screen_text_box(&brief_mission_text_box, 338u, 72u, 295u, 354,
+      6, small_font, 3);
+    init_screen_button(&unkn1_ACCEPT_button, 343u, 405u, gui_strings[436],
+      6, med2_font, 1, 0x00);
+    init_screen_button(&unkn1_CANCEL_button, 616u, 405u, gui_strings[437],
+      6, med2_font, 1, 0x80);
     brief_mission_text_box.Buttons[0] = &unkn1_ACCEPT_button;
     brief_mission_text_box.Buttons[1] = &unkn1_CANCEL_button;
     brief_mission_text_box.Text = mission_briefing_text;
-    unkn1_ACCEPT_button.CallBackFn = ac_accept_mission;
-    unkn1_CANCEL_button.CallBackFn = ac_do_unkn1_CANCEL;
+    unkn1_ACCEPT_button.CallBackFn = accept_mission;
+    unkn1_CANCEL_button.CallBackFn = do_unkn1_CANCEL;
 
     init_screen_box(&brief_graphical_box, 7, 72, 322, 200, 6);
     brief_graphical_box.SpecialDrawFn = show_citymap_box;
@@ -795,7 +798,7 @@ void update_brief_screen_netscan_button(ushort text_id)
       brief_netscan_box.X + brief_netscan_box.Width - 17, brief_NETSCAN_COST_box.Y,
       text, 6, med2_font, 1, 0x80);
     brief_NETSCAN_COST_box.Width = brief_netscan_box.Width - 10 - brief_NETSCAN_button.Width - 17;
-    brief_NETSCAN_button.CallBackFn = ac_brief_do_netscan_enhance;
+    brief_NETSCAN_button.CallBackFn = brief_do_netscan_enhance;
 }
 
 void reset_brief_screen_player_state(void)

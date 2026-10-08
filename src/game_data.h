@@ -72,6 +72,9 @@ extern MemSystem mem_game[];
 extern void *scratch_malloc_mem;
 extern u32 scratch_malloc_size;
 
+extern void *engine_mem_alloc_ptr;
+extern u32 engine_mem_alloc_size;
+
 /******************************************************************************/
 
 /** Returns absolute path to user files directory for the application.
@@ -106,6 +109,7 @@ void adjust_memory_use(void);
 TbResult init_memory(MemSystem *mem_table);
 int get_memory_ptr_allocated_count(void **mgptr);
 TbResult propagate_memory_sizes(void);
+void init_things_memory_with_user_heap(void);
 
 /******************************************************************************/
 #ifdef __cplusplus

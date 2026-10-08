@@ -23,23 +23,190 @@
 #include "bfgentab.h"
 #include "bfsprite.h"
 #include "insspr.h"
+#include <stdlib.h>
 
+#include "engincam.h"
 #include "engincolour.h"
+#include "enginsngobjs.h"
 #include "engintrns.h"
 
 #include "bigmap.h"
-#include "display.h"
-#include "engindrwlstm.h"
+#include "engindrwlstm_wrp.h"
 #include "engindrwlstx.h"
 #include "frame_sprani.h"
 #include "game_sprts.h"
 #include "game.h"
+#include "mouse.h"
+#include "player.h"
+#include "sound.h"
 #include "thing.h"
 #include "weapon.h"
 #include "swlog.h"
 /******************************************************************************/
 
 TbBool hud_show_target_health = false;
+
+s32 target_old_frameno= 0;
+
+extern short word_176CB4;
+extern short word_176CB6;
+
+/******************************************************************************/
+
+void func_70a88(int *p_cor_x, int *p_cor_y, int cor_z, ushort frame_no, TbPixel colour)
+{
+    asm volatile (
+      "push %4\n"
+      "call ASM_func_70a88\n"
+        :  : "a" (p_cor_x), "d" (p_cor_y), "b" (cor_z), "c" (frame_no), "g" ((u32)colour));
+    return;
+}
+
+void show_goto_point(u32 flag)
+{
+#if 0
+    asm volatile ("call ASM_show_goto_point\n"
+        : : "a" (flag));
+    return;
+#endif
+    ushort frame_count;
+    short frame_no;
+    struct Thing *p_thing;
+    short face;
+    ThingIdx dcthing;
+
+    if (flag & 0xff)
+    {
+        word_176CB6 = 0;
+        word_176CB4 = nstart_ani[926];
+        return;
+    }
+    if (word_176CB4 != 0)
+    {
+      frame_count = word_176CB6++;
+      frame_no = word_176CB4;
+      if (frame_count > 5)
+        word_176CB4 = 0;
+      else
+        word_176CB4 = frame[word_176CB4].Next;
+
+      dcthing = players[local_player_no].DirectControl[mouser];
+      p_thing = &things[dcthing];
+      if (((p_thing->Flag & 0x10000000) != 0 || (p_thing->State == PerSt_GOTO_POINT)) &&
+        ((p_thing->Flag2 & 0x40) == 0))
+      {
+        int height;
+        int cor_x, cor_y, cor_z;
+        TbPixel colour;
+
+        if (word_176CB6 == 1)
+            play_sample_using_heap(0, 92, 127, 64, 100, 0, 3u);
+
+        colour = 0;
+        cor_x = p_thing->U.UPerson.GotoX;
+        cor_z = p_thing->U.UPerson.GotoZ;
+        face = players[local_player_no].GotoFace;
+        if (face != 0)
+        {
+            int prc_x, prc_z;
+
+            prc_x = cor_x << 8;
+            prc_z = cor_z << 8;
+            if (face <= 0)
+                height = get_height_on_face_quad(prc_x, prc_z, -face);
+            else
+                height = get_height_on_face(prc_x, prc_z, face);
+        }
+        else
+        {
+            height = alt_at_point(cor_x, cor_z);
+        }
+
+        cor_y = height >> 8;
+        if ((p_thing->Flag2 & 0x80000) != 0)
+          colour = 48;
+        func_70a88(&cor_x, &cor_y, cor_z, frame_no, colour);
+      }
+    }
+}
+
+void draw_hud_target_mouse(ThingIdx dcthing)
+{
+    PlayerInfo *p_locplayer;
+    struct Thing *p_dcthing;
+
+    p_dcthing = &things[dcthing];
+    p_locplayer = &players[local_player_no];
+    if (p_locplayer->Target > 0)
+    {
+        struct Thing *p_targtng;
+        int weprange;
+        ushort msspr;
+        uint range;
+
+        weprange = current_hand_weapon_range(p_dcthing);
+        switch (p_locplayer->TargetType)
+        {
+        case TrgTp_Unkn1:
+        case TrgTp_Unkn2:
+        case TrgTp_Unkn6:
+        case TrgTp_Unkn7:
+            p_locplayer->field_102 = p_locplayer->Target;
+            p_locplayer->TargetType = TrgTp_Unkn7;
+            p_targtng = &things[p_locplayer->Target];
+            range = weprange * weprange;
+            if (can_i_see_thing(p_dcthing, p_targtng, range, 3) ) {
+                msspr = 3;
+            } else {
+                msspr = 2;
+            }
+            do_change_mouse(msspr);
+            break;
+        case TrgTp_Unkn3:
+            p_locplayer->field_102 = p_locplayer->Target;
+            do_change_mouse(7);
+            break;
+        case TrgTp_Unkn4:
+            p_locplayer->field_102 = p_locplayer->Target;
+            p_targtng = &things[p_locplayer->field_102];
+            p_dcthing = &things[p_locplayer->DirectControl[mouser]];
+            if (can_i_enter_vehicle(p_dcthing, p_targtng)) {
+              msspr = 6;
+            } else {
+              range = p_targtng->Radius * p_targtng->Radius + weprange * weprange;
+              if (can_i_see_thing(p_dcthing, p_targtng, range, 3) ) {
+                msspr = 3;
+              } else {
+                msspr = 2;
+              }
+            }
+            do_change_mouse(msspr);
+            break;
+        default:
+            break;
+        }
+    }
+    else if (p_locplayer->Target < 0)
+    {
+        if (p_locplayer->TargetType == TrgTp_Unkn3) {
+          p_locplayer->field_102 = p_locplayer->Target;
+          do_change_mouse(7);
+        } else {
+          p_locplayer->field_102 = p_locplayer->Target;
+          do_change_mouse(5);
+        }
+    }
+    else
+    {
+        do_change_mouse(8);
+    }
+}
+
+void init_draw_target(void)
+{
+    if (target_old_frameno == 0)
+        target_old_frameno = nstart_ani[983];
+}
 
 void draw_hud_lock_target(void)
 {
@@ -146,7 +313,7 @@ void draw_hud_health_bar(int x, int y, struct Thing *p_thing)
 
     dx = (9 * overall_scale) >> 8;
     dy = (10 * overall_scale) >> 8;
-    h_total = -15 * (overall_scale) >> 8;
+    h_total = -(15 * overall_scale) >> 8;
     w = (2 * overall_scale) >> 8;
 
     hp_per_px = p_thing->U.UPerson.MaxHealth / dy;
@@ -250,7 +417,7 @@ void draw_unkn1_standard_sprite(ushort fr, int scr_x, int scr_y)
     lbDisplay.DrawFlags = 0;
 }
 
-void draw_hud_target_old_frame(struct Thing *p_target, int fr)
+void draw_hud_target_old_frame(struct Thing *p_target, int frm)
 {
     struct EnginePoint ep;
 
@@ -264,15 +431,15 @@ void draw_hud_target_old_frame(struct Thing *p_target, int fr)
     {
         int sh_x;
         sh_x = (12 * overall_scale) >> 9;
-        draw_unkn1_standard_sprite(fr +  0, ep.pp.X - sh_x, ep.pp.Y);
-        draw_unkn1_standard_sprite(fr + 10, ep.pp.X + sh_x, ep.pp.Y);
+        draw_unkn1_standard_sprite(frm +  0, ep.pp.X - sh_x, ep.pp.Y);
+        draw_unkn1_standard_sprite(frm + 10, ep.pp.X + sh_x, ep.pp.Y);
     }
     else
     {
         int sh_x;
         sh_x = (12 * overall_scale) >> 9;
-        draw_unkn1_scaled_alpha_sprite(fr +  0, ep.pp.X - sh_x, ep.pp.Y, overall_scale, PALETTE_FADE_LEVELS / 2);
-        draw_unkn1_scaled_alpha_sprite(fr + 10, ep.pp.X + sh_x, ep.pp.Y, overall_scale, PALETTE_FADE_LEVELS / 2);
+        draw_frame_scaled_alpha(ep.pp.X - sh_x, ep.pp.Y, frm +  0, overall_scale, PALETTE_FADE_LEVELS / 2);
+        draw_frame_scaled_alpha(ep.pp.X + sh_x, ep.pp.Y, frm + 10, overall_scale, PALETTE_FADE_LEVELS / 2);
     }
 
     draw_hud_health_bar(ep.pp.X, ep.pp.Y, p_target);

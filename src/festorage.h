@@ -31,6 +31,10 @@ extern "C" {
 #pragma pack()
 /******************************************************************************/
 
+extern ubyte restore_savegame;
+
+/******************************************************************************/
+
 void init_storage_screen_boxes(void);
 void reset_storage_screen_boxes_flags(void);
 void set_flag01_storage_screen_boxes(void);

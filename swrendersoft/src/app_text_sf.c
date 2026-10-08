@@ -43,6 +43,7 @@
 #endif
 
 TbBool LbIApplyControlCharToDrawSettings(const char **c);
+TbBool LbIApplyControlCharToAlignSettings(const char **c);
 TbBool LbIAlignMethodSet(ushort fdflags);
 TbBool is_wide_charcode(ulong chr);
 
@@ -226,19 +227,19 @@ void put_down_sf_sprites(const char *sbuf, const char *ebuf,
     }
 }
 
-TbBool AppTextDrawShadClFlashResized(int posx, int *posy, int units_per_px, ushort ttl_turns, const char *text)
+TbBool AppTextDrawShadClFlashResized(int posx, int posy, int units_per_px, ushort ttl_turns, const char *text)
 {
     struct TbAnyWindow grwnd;
     // Counter for amount of blank characters in a line
-    long count;
-    long justifyx,justifyy;
-    long startx,starty;
+    s32 count;
+    int justifyx, justifyy;
+    s32 startx,starty;
     const char *sbuf;
     const char *ebuf;
     const char *prev_ebuf;
-    long chr;
-    long x, y, len;
-    long w, h;
+    s32 chr;
+    s32 x, y, len;
+    s32 w, h;
 
     if ((lbFontPtr == NULL) || (text == NULL))
         return true;
@@ -249,7 +250,7 @@ TbBool AppTextDrawShadClFlashResized(int posx, int *posy, int units_per_px, usho
     justifyy = lbTextJustifyWindow.y - lbTextClipWindow.y;
     posx += justifyx;
     startx = posx;
-    starty = *posy + justifyy;
+    starty = posy + justifyy;
 
     h = LbTextLineHeight() * units_per_px / 16;
     sbuf = text;
@@ -369,21 +370,7 @@ TbBool AppTextDrawShadClFlashResized(int posx, int *posy, int units_per_px, usho
               count = 0;
               starty += h;
             }
-            switch (*ebuf)
-            {
-            case 6:
-              lbDisplay.DrawFlags ^= Lb_TEXT_HALIGN_LEFT;
-              break;
-            case 7:
-              lbDisplay.DrawFlags ^= Lb_TEXT_HALIGN_RIGHT;
-              break;
-            case 8:
-              lbDisplay.DrawFlags ^= Lb_TEXT_HALIGN_CENTER;
-              break;
-            case 9:
-              lbDisplay.DrawFlags ^= Lb_TEXT_HALIGN_JUSTIFY;
-              break;
-            }
+            LbIApplyControlCharToAlignSettings(&ebuf);
         } else
 
         if (chr == 14)
@@ -398,7 +385,6 @@ TbBool AppTextDrawShadClFlashResized(int posx, int *posy, int units_per_px, usho
     len = LbTextCharWidth(' ') * units_per_px / 16;
     put_down_sf_sprites(sbuf, ebuf, x, y, len, units_per_px, ttl_turns);
     LbScreenLoadGraphicsWindow(&grwnd);
-    *posy = starty - justifyy + h;
     return true;
 }
 

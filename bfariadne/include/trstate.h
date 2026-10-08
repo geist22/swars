@@ -58,7 +58,7 @@ struct Triangulation {
 /******************************************************************************/
 /** Whether the triangulation states were initialized.
  */
-extern int triangulation_initied; // = 0;
+extern int triangulation_initied;
 
 /** Initializes (clears) all triangulations.
  */

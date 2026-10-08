@@ -23,11 +23,10 @@
 #include "bfscreen.h"
 #include "rom.h"
 
+#include "engincam.h"
 #include "engincolour.h"
 #include "engintrns.h"
 #include "privrdlog.h"
-
-#include "display.h"
 /******************************************************************************/
 
 void draw_text(short x, short y, const char *text, ubyte colour)
@@ -68,12 +67,6 @@ void draw_text_transformed_col(int coord_x, int coord_y, int coord_z, const char
 
 void draw_text_transformed(int coord_x, int coord_y, int coord_z, const char *text)
 {
-#if 0
-    asm volatile (
-      "call ASM_draw_text_transformed\n"
-        : : "a" (coord_x), "d" (coord_y), "b" (coord_z), "c" (text));
-    return;
-#endif
     draw_text_transformed_col(coord_x, coord_y, coord_z, text, colour_lookup[ColLU_GREEN]);
 }
 
