@@ -64,6 +64,7 @@ enum CybModsConfigCmd {
     CCMod_Sprite,
     CCMod_Cost,
     CCMod_Funding,
+    CCMod_FundingClassic,
     CCMod_PercentPerDay,
 };
 
@@ -80,6 +81,7 @@ const struct TbNamedEnum cybmods_conf_mod_cmds[] = {
   {"Sprite",		CCMod_Sprite},
   {"Cost",			CCMod_Cost},
   {"ResearchFunding",		CCMod_Funding},
+  {"ResearchFundingClassic",	CCMod_FundingClassic},
   {"ResearchPercentPerDay",	CCMod_PercentPerDay},
   {NULL,		0},
 };
@@ -243,6 +245,15 @@ void read_cybmods_conf_file(void)
                 }
                 mdef->Funding = k / 100;
                 CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)mdef->Funding);
+                break;
+            case CCMod_FundingClassic:
+                i = LbIniValueGetLongInt(&parser, &k);
+                if (i <= 0) {
+                    CONFWRNLOG("Could not read \"%s\" command parameter.", COMMAND_TEXT(cmd_num));
+                    break;
+                }
+                mdefa->FundingClassic = k / 100;
+                CONFDBGLOG("%s %d", COMMAND_TEXT(cmd_num), (int)mdefa->FundingClassic);
                 break;
             case CCMod_PercentPerDay:
                 i = LbIniValueGetLongInt(&parser, &k);
