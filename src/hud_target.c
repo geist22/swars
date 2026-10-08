@@ -27,6 +27,7 @@
 
 #include "engincam.h"
 #include "engincolour.h"
+#include "enginsngobjs.h"
 #include "engintrns.h"
 
 #include "bigmap.h"
@@ -37,6 +38,7 @@
 #include "game.h"
 #include "mouse.h"
 #include "player.h"
+#include "sound.h"
 #include "thing.h"
 #include "weapon.h"
 #include "swlog.h"
@@ -46,13 +48,83 @@ TbBool hud_show_target_health = false;
 
 s32 target_old_frameno= 0;
 
+extern short word_176CB4;
+extern short word_176CB6;
+
 /******************************************************************************/
+
+void func_70a88(int *p_cor_x, int *p_cor_y, int cor_z, ushort frmno, TbPixel colour)
+{
+    asm volatile (
+      "push %4\n"
+      "call ASM_func_70a88\n"
+        :  : "a" (p_cor_x), "d" (p_cor_y), "b" (cor_z), "c" (frmno), "g" ((u32)colour));
+    return;
+}
 
 void show_goto_point(u32 flag)
 {
+#if 0
     asm volatile ("call ASM_show_goto_point\n"
         : : "a" (flag));
     return;
+#endif
+    ushort frame_count;
+    struct Thing *p_thing;
+    short face;
+    ThingIdx dcthing;
+
+    if (flag & 0xff)
+    {
+        word_176CB6 = 0;
+        word_176CB4 = nstart_ani[926];
+        return;
+    }
+    if (word_176CB4 != 0)
+    {
+      frame_count = word_176CB6++;
+      if (frame_count > 5)
+        word_176CB4 = 0;
+      word_176CB4 = frame[word_176CB4].Next;
+
+      dcthing = players[local_player_no].DirectControl[mouser];
+      p_thing = &things[dcthing];
+      if (((p_thing->Flag & 0x10000000) != 0 || (p_thing->State == PerSt_GOTO_POINT)) &&
+        ((p_thing->Flag2 & 0x40) == 0))
+      {
+        int height;
+        int cor_x, cor_y, cor_z;
+        TbPixel colour;
+
+        if (word_176CB6 == 1)
+            play_sample_using_heap(0, 92, 127, 64, 100, 0, 3u);
+
+        colour = 0;
+        cor_x = p_thing->U.UPerson.GotoX;
+        cor_z = p_thing->U.UPerson.GotoZ;
+        face = players[local_player_no].GotoFace;
+        if (face != 0)
+        {
+            int prc_x, prc_z;
+
+            prc_x = cor_x << 8;
+            prc_z = cor_z << 8;
+            if (face <= 0)
+                height = get_height_on_face_quad(prc_x, prc_z, -face);
+            else
+                height = get_height_on_face(prc_x, prc_z, face);
+        }
+        else
+        {
+            height = alt_at_point(cor_x, cor_z);
+        }
+
+        cor_y = height >> 8;
+        if ((p_thing->Flag2 & 0x80000) != 0)
+          colour = 48;
+        func_70a88(&cor_x, &cor_y, cor_z, word_176CB4, colour);
+      }
+    }
 }
 
 void draw_hud_target_mouse(ThingIdx dcthing)

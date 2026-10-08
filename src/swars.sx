@@ -2172,7 +2172,7 @@ GLOBAL_FUNC(ASM_show_goto_point)	/* 0x020938 */
 		push   %eax
 		mov    EXPORT_SYMBOL(word_176CB4),%cx
 		lea    0x4(%esp),%eax
-		call   func_70a88
+		call   ac_func_70a88
 	jump_20b04:
 		add    $0xc,%esp
 		pop    %edi
@@ -61414,7 +61414,7 @@ draw_3d_map_corn_square:	/* 0x070958 */
 
 
 /*----------------------------------------------------------------*/
-func_70a88:
+GLOBAL_FUNC(ASM_func_70a88)	/* 0x70a88 */
 /*----------------------------------------------------------------*/
 		push   %esi
 		push   %edi
