@@ -27,6 +27,7 @@
 #include "game.h"
 #include "hud_panel.h"
 #include "hud_target.h"
+#include "huddrwlstm.h"
 #include "mydraw.h"
 #include "packet.h"
 #include "player.h"
@@ -57,7 +58,9 @@ void draw_netplayer_name_text_over_thing(void)
 #endif
     char locstr[32];
     struct Thing *p_thing;
-    int scr_x, scr_y, txwidth;
+    int scr_x, scr_y;
+    int width, height;
+    int sh_x, sh_y;
     int units_per_px;
     PlayerIdx plyr;
     TbPixel colour;
@@ -69,21 +72,28 @@ void draw_netplayer_name_text_over_thing(void)
 
     mouse_over_unkn2_tng = NULL;
 
-    units_per_px = 16;
     plyr = p_thing->U.UPerson.ComCur >> 2;
 
     strncpy(locstr, net_player_names[plyr], sizeof(locstr)-1);
     locstr[sizeof(locstr)-1] = '\0';
     my_str_to_upper(locstr);
 
+    units_per_px = 16;
+    sh_x = sh_y = 0;
     colour = net_player_colours[plyr];
-    txwidth = LbTextStringWidthResized(locstr, units_per_px);
-    scr_x = mouse_over_unkn2_x - (txwidth >> 1);
+    width = LbTextStringWidthResized(locstr, units_per_px);
+    height = my_char_height('A') * units_per_px / 16;
+    scr_x = mouse_over_unkn2_x - (width >> 1);
+    if (scr_x < 0) {
+        sh_x = scr_x;
+        scr_x = 0;
+    }
+    else if (scr_x + width > lbDisplay.GraphicsScreenWidth) {
+        scr_x = lbDisplay.GraphicsScreenWidth - width;
+    }
     scr_y = mouse_over_unkn2_y;
-    lbDisplay.DrawFlags = Lb_TEXT_ONE_COLOR;
-    lbDisplay.DrawColour = colour;
-    lbFontPtr = small_font;
-    LbTextDrawResized(scr_x, scr_y, units_per_px, locstr);
+    enlist_hud_draw_clipped_text(scr_x, scr_y, width, height,
+      sh_x, sh_y, small_font, locstr, units_per_px, 32, colour);
 }
 
 void draw_hud(int dcthing)
