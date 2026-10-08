@@ -53,12 +53,12 @@ extern short word_176CB6;
 
 /******************************************************************************/
 
-void func_70a88(int *p_cor_x, int *p_cor_y, int cor_z, ushort frmno, TbPixel colour)
+void func_70a88(int *p_cor_x, int *p_cor_y, int cor_z, ushort frame_no, TbPixel colour)
 {
     asm volatile (
       "push %4\n"
       "call ASM_func_70a88\n"
-        :  : "a" (p_cor_x), "d" (p_cor_y), "b" (cor_z), "c" (frmno), "g" ((u32)colour));
+        :  : "a" (p_cor_x), "d" (p_cor_y), "b" (cor_z), "c" (frame_no), "g" ((u32)colour));
     return;
 }
 
@@ -70,6 +70,7 @@ void show_goto_point(u32 flag)
     return;
 #endif
     ushort frame_count;
+    short frame_no;
     struct Thing *p_thing;
     short face;
     ThingIdx dcthing;
@@ -83,9 +84,11 @@ void show_goto_point(u32 flag)
     if (word_176CB4 != 0)
     {
       frame_count = word_176CB6++;
+      frame_no = word_176CB4;
       if (frame_count > 5)
         word_176CB4 = 0;
-      word_176CB4 = frame[word_176CB4].Next;
+      else
+        word_176CB4 = frame[word_176CB4].Next;
 
       dcthing = players[local_player_no].DirectControl[mouser];
       p_thing = &things[dcthing];
@@ -122,7 +125,7 @@ void show_goto_point(u32 flag)
         cor_y = height >> 8;
         if ((p_thing->Flag2 & 0x80000) != 0)
           colour = 48;
-        func_70a88(&cor_x, &cor_y, cor_z, word_176CB4, colour);
+        func_70a88(&cor_x, &cor_y, cor_z, frame_no, colour);
       }
     }
 }
