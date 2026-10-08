@@ -28,15 +28,12 @@
 #include "engindrwlstx.h"
 
 #include "guiboxes.h"
+#include "hud_draw.h"
 #include "player.h"
 #include "swlog.h"
 #include "thing.h"
 
 /******************************************************************************/
-
-struct Thing *mouse_over_unkn2_tng = NULL;
-int mouse_over_unkn2_x;
-int mouse_over_unkn2_y;
 
 /******************************************************************************/
 
@@ -177,12 +174,12 @@ ubyte check_mouse_overlap_corpse(ushort sspr)
     return 0;
 }
 
-ubyte check_mouse_over_unkn2(ushort sspr, struct Thing *p_thing)
+ubyte check_mouse_over_netgame_enemy(ushort sspr, struct Thing *p_thing)
 {
 #if 0
     ubyte ret;
     asm volatile (
-      "call ASM_check_mouse_over_unkn2\n"
+      "call ASM_check_mouse_over_netgame_enemy\n"
         : "=r" (ret) : "a" (sspr), "d" (p_thing));
     return ret;
 #endif
@@ -210,9 +207,7 @@ ubyte check_mouse_over_unkn2(ushort sspr, struct Thing *p_thing)
 
     if (in_box(lbDisplay.MMouseX, lbDisplay.MMouseY, box.X, box.Y, box.Width, box.Height))
     {
-        mouse_over_unkn2_tng = p_thing;
-        mouse_over_unkn2_y = box.Y - 8;
-        mouse_over_unkn2_x = box.X + (box.Height >> 1);
+        set_netplayer_name_text_over_thing(box.X + (box.Height >> 1), box.Y - 8, p_thing);
         return 1;
     }
     return 0;

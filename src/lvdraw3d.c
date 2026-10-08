@@ -252,7 +252,7 @@ void screen_sorted_sprite_persn_render_callback(ushort sspr)
                 p_owntng = NULL;
         }
         if ((p_owntng != NULL) && (p_owntng->U.UPerson.CurrentWeapon != WEP_CLONESHLD)) {
-            check_mouse_over_unkn2(sspr, p_owntng);
+            check_mouse_over_netgame_enemy(sspr, p_owntng);
         }
     }
 }
@@ -1245,7 +1245,7 @@ void engine_draw_whole_screen_top_down(void)
         draw_screen();
         draw_hud(p_locplayer->DirectControl[0]);
         if (in_network_game)
-            draw_engine_net_text();
+            draw_netplayer_name_text_over_thing();
         if (debug_hud_collision)
             draw_engine_unk3_last(engn_xc, engn_zc);
     }

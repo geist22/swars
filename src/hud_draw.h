@@ -28,11 +28,15 @@ extern "C" {
 /******************************************************************************/
 #pragma pack(1)
 
+struct Thing;
 
 #pragma pack()
 /******************************************************************************/
 
-void draw_engine_net_text(void);
+void set_netplayer_name_text_over_thing(ScrCoord x, ScrCoord y,
+  struct Thing *p_thing);
+
+void draw_netplayer_name_text_over_thing(void);
 
 void draw_hud(int dcthing);
 

@@ -2184,7 +2184,7 @@ GLOBAL_FUNC(ASM_show_goto_point)	/* 0x020938 */
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC(ASM_draw_engine_net_text)	/* 0x020B50 */
+GLOBAL_FUNC(ASM_draw_netplayer_name_text_over_thing)	/* 0x020B50 */
 /*----------------------------------------------------------------*/
 		push   %ebx
 		push   %ecx
@@ -3665,7 +3665,7 @@ GLOBAL_FUNC(ASM_check_mouse_overlap)	/* 0x250A0 */
 
 
 /*----------------------------------------------------------------*/
-GLOBAL_FUNC(ASM_check_mouse_over_unkn2)
+GLOBAL_FUNC(ASM_check_mouse_over_netgame_enemy)
 /*----------------------------------------------------------------*/
 		push   %ebx
 		push   %ecx

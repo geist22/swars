@@ -19,22 +19,71 @@
 #include "hud_draw.h"
 
 #include "bfscreen.h"
+#include "bftext.h"
 
 #include "engindrwlstx_tng.h"
 #include "game_options.h"
+#include "game_sprts.h"
 #include "game.h"
 #include "hud_panel.h"
 #include "hud_target.h"
+#include "mydraw.h"
 #include "packet.h"
 #include "player.h"
+#include "scandraw.h"
 #include "swlog.h"
 #include "thing.h"
 /******************************************************************************/
 
-void draw_engine_net_text(void)
+struct Thing *mouse_over_unkn2_tng = NULL;
+int mouse_over_unkn2_x;
+int mouse_over_unkn2_y;
+
+/******************************************************************************/
+
+void set_netplayer_name_text_over_thing(ScrCoord x, ScrCoord y,
+  struct Thing *p_thing)
 {
-    asm volatile ("call ASM_draw_engine_net_text\n"
+    mouse_over_unkn2_tng = p_thing;
+    mouse_over_unkn2_x = x;
+    mouse_over_unkn2_y = y;
+}
+
+void draw_netplayer_name_text_over_thing(void)
+{
+#if 0
+    asm volatile ("call ASM_draw_netplayer_name_text_over_thing\n"
         :  :  : "eax" );
+#endif
+    char locstr[32];
+    struct Thing *p_thing;
+    int scr_x, scr_y, txwidth;
+    int units_per_px;
+    PlayerIdx plyr;
+    TbPixel colour;
+
+    p_thing = mouse_over_unkn2_tng;
+
+    if (p_thing == NULL)
+        return;
+
+    mouse_over_unkn2_tng = NULL;
+
+    units_per_px = 16;
+    plyr = p_thing->U.UPerson.ComCur >> 2;
+
+    strncpy(locstr, net_player_names[plyr], sizeof(locstr)-1);
+    locstr[sizeof(locstr)-1] = '\0';
+    my_str_to_upper(locstr);
+
+    colour = net_player_colours[plyr];
+    txwidth = LbTextStringWidthResized(locstr, units_per_px);
+    scr_x = mouse_over_unkn2_x - (txwidth >> 1);
+    scr_y = mouse_over_unkn2_y;
+    lbDisplay.DrawFlags = Lb_TEXT_ONE_COLOR;
+    lbDisplay.DrawColour = colour;
+    lbFontPtr = small_font;
+    LbTextDrawResized(scr_x, scr_y, units_per_px, locstr);
 }
 
 void draw_hud(int dcthing)
