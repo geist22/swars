@@ -52,7 +52,25 @@ ubyte mod_tech_level[17] = {
 
 ushort mod_group_type_strid[] = {74, 71, 72, 70, 73, };
 
-struct ModDefAdd mod_defs_a[33] = {0};
+struct ModDefAdd mod_defs_a[33] = {
+    {{0},   0},
+    {{0},  30},
+    {{0}, 120},
+    {{0},  44},
+    {{0},  25},
+    {{0}, 100},
+    {{0}, 250},
+    {{0},  50},
+    {{0}, 200},
+    {{0}, 244},
+    {{0},  45},
+    {{0}, 180},
+    {{0}, 194},
+    {{0}, 200},
+    {{0},  94},
+    {{0},  88},
+    {{0}, 182},
+};
 struct TbNamedEnum mod_names[33] = {0};
 
 enum CybModsConfigCmd {
