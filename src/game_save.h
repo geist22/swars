@@ -33,7 +33,7 @@ extern ubyte *save_game_buffer;
 extern char save_active_desc[25];
 extern char login_name[16];
 
-extern short save_slot; // = -1;
+extern short save_slot;
 extern char save_slot_names[SAVE_SLOTS_VISIBLE_COUNT][25];
 extern s32 save_slot_base;
 

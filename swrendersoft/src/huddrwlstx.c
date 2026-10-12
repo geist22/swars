@@ -34,6 +34,9 @@
 #include "app_text_cw.h"
 #include "app_text_sf.h"
 #include "drawshape.h"
+#include "engincam.h"
+#include "engindrwlstx.h"
+#include "engintrns.h"
 #include "sprfontut.h"
 
 /******************************************************************************/
@@ -221,14 +224,93 @@ void hud_draw_colour_wave_wrapped_text(struct DIHudWrappedText *p_diWrpText)
     FontSpacingRestore(p_diWrpText->pFont, space_bkp);
 }
 
+void hud_draw_frame_alpha(struct DIHudFrame *p_diFrame)
+{
+    lbDisplay.DrawFlags = p_diFrame->DrwFlags;
+
+    draw_frame_alpha(p_diFrame->Pos.X, p_diFrame->Pos.Y,
+      p_diFrame->Frame, p_diFrame->Scale, p_diFrame->Bright);
+}
+
 void hud_draw_mapcoord_line(struct DIHudMapCoordLine *p_diMapCorLine)
 {
     lbDisplay.DrawFlags = p_diMapCorLine->DrwFlags;
 
-    draw_line_transformed_col(
+    draw_mapcoord_line_col(
       p_diMapCorLine->PtBeg.X, p_diMapCorLine->PtBeg.Y, p_diMapCorLine->PtBeg.Z,
       p_diMapCorLine->PtEnd.X, p_diMapCorLine->PtEnd.Y, p_diMapCorLine->PtEnd.Z,
       p_diMapCorLine->Col);
+}
+
+void hud_draw_mapcoord_line_annotated_num(struct DIHudMapCoordAnnotLine *p_diMapCorAntLine)
+{
+    lbDisplay.DrawFlags = p_diMapCorAntLine->DrwFlags;
+
+    draw_mapcoord_line_annotated_num(
+      p_diMapCorAntLine->PtBeg.X, p_diMapCorAntLine->PtBeg.Y, p_diMapCorAntLine->PtBeg.Z,
+      p_diMapCorAntLine->PtEnd.X, p_diMapCorAntLine->PtEnd.Y, p_diMapCorAntLine->PtEnd.Z,
+      p_diMapCorAntLine->AnnotVal, p_diMapCorAntLine->Col1, p_diMapCorAntLine->Col2);
+}
+
+void hud_draw_mapcoord_corner_rect(struct DIHudMapCoordRect *p_diMapCorRect)
+{
+    struct EnginePoint ep;
+
+    ep.X3d = p_diMapCorRect->Pt.X - engn_xc;
+    ep.Y3d = p_diMapCorRect->Pt.Y; // subtracted within transform_point(): - 8 * engn_yc;
+    ep.Z3d = p_diMapCorRect->Pt.Z - engn_zc;
+    ep.Flags = 0;
+    transform_point(&ep);
+
+    lbDisplay.DrawFlags = p_diMapCorRect->DrwFlags;
+
+    draw_corner_rect(ep.pp.X, ep.pp.Y,
+      p_diMapCorRect->Width, p_diMapCorRect->Height,
+      p_diMapCorRect->LnLen, p_diMapCorRect->Thick, p_diMapCorRect->Col);
+}
+
+void hud_draw_mapcoord_frame(struct DIHudMapCoordFrame *p_diMapCorFrame)
+{
+    struct EnginePoint ep;
+    int pp_X, pp_Y;
+
+    ep.X3d = p_diMapCorFrame->Pt.X - engn_xc;
+    ep.Y3d = p_diMapCorFrame->Pt.Y; // subtracted within transform_point(): - 8 * engn_yc;
+    ep.Z3d = p_diMapCorFrame->Pt.Z - engn_zc;
+    ep.Flags = 0;
+    transform_point(&ep);
+
+    pp_X = ep.pp.X;
+    pp_Y = ep.pp.Y;
+
+    lbDisplay.DrawFlags = p_diMapCorFrame->DrwFlags;
+
+    if (p_diMapCorFrame->Col != 0) {
+        draw_frame_unscaled_one_colour(pp_X, pp_Y, p_diMapCorFrame->Frame,
+          p_diMapCorFrame->Col);
+    } else {
+        draw_frame_unscaled(pp_X, pp_Y, p_diMapCorFrame->Frame);
+    }
+}
+
+void hud_draw_mapcoord_sprites_in_quarters(struct DIHudMapCoordSprList *p_diMapCorSprLst)
+{
+    struct EnginePoint ep;
+    int pp_X, pp_Y;
+
+    ep.X3d = p_diMapCorSprLst->Pt.X - engn_xc;
+    ep.Y3d = p_diMapCorSprLst->Pt.Y; // subtracted within transform_point(): - 8 * engn_yc;
+    ep.Z3d = p_diMapCorSprLst->Pt.Z - engn_zc;
+    ep.Flags = 0;
+    transform_point(&ep);
+
+    pp_X = ep.pp.X;
+    pp_Y = ep.pp.Y;
+
+    lbDisplay.DrawFlags = p_diMapCorSprLst->DrwFlags;
+
+    draw_sprites_in_quarters_unscaled(pp_X, pp_Y,
+      p_diMapCorSprLst->pSprLst, p_diMapCorSprLst->Radius);
 }
 
 /******************************************************************************/

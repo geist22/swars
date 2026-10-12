@@ -35,6 +35,11 @@ extern "C" {
 TbBool enlist_hud_draw_line(short beg_x, short beg_y, short end_x, short end_y,
   ushort drwflags, ubyte thickness, short brig, TbPixel colour);
 
+TbBool enlist_hud_draw_mapcoord_line_annotated_num(short cor1_x,
+  short cor1_y_m8, short cor1_z, short cor2_x, short cor2_y_m8,
+  short cor2_z, int val, ushort drwflags, ubyte thickness,
+  TbPixel lncol, TbPixel txcol);
+
 TbBool enlist_hud_draw_box(short px, short py, short width, short height,
   ushort drwflags, short brig, TbPixel colour);
 
@@ -56,6 +61,9 @@ TbBool enlist_hud_draw_low_trans_grey_vslant_box(short px, short py,
 TbBool enlist_hud_draw_textured_flow_slant_box(short px, short py,
   short width, short height, ubyte vecmode,
   ubyte brig, ubyte tmapno, ushort num_ua, ushort num_vb);
+
+TbBool enlist_hud_draw_frame_alpha(short px, short py, ushort frm,
+  ushort drwflags, short scale, short brig);
 
 TbBool enlist_hud_draw_sprite(short px, short py, struct TbSprite *p_spr,
   ushort drwflags, short brig);
@@ -88,9 +96,22 @@ TbBool enlist_hud_draw_colour_wave_wrapped_text(short px, short py,
 
 /** Enlist drawing line between the provided map coordinates.
  */
-TbBool enlist_hud_draw_mapcoord_line(short cor1_x, short cor1_y,
-  short cor1_z, short cor2_x, short cor2_y, short cor2_z,
+TbBool enlist_hud_draw_mapcoord_line(short cor1_x, short cor1_y_m8,
+  short cor1_z, short cor2_x, short cor2_y_m8, short cor2_z,
   ushort drwflags, ubyte thickness, TbPixel colour);
+
+TbBool enlist_hud_draw_mapcoord_corner_rect(short cor_x, short cor_y_m8,
+  short cor_z, short width, short height, short lnlen, ubyte thickness,
+  ushort drwflags, TbPixel colour);
+
+/** Enlist drawing a frame on the provided map coordinates.
+ */
+TbBool enlist_hud_draw_mapcoord_frame_one_colour(short cor_x, short cor_y,
+  short cor_z, ushort frm, ushort drwflags, TbPixel colour);
+
+TbBool enlist_hud_draw_mapcoord_sprites_in_quarters_unscaled(short cor_x,
+  short cor_y_m8, short cor_z, struct TbSprite * const p_sprlst[],
+  ushort drwflags, short radius);
 
 /******************************************************************************/
 #ifdef __cplusplus

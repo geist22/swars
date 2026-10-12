@@ -1368,23 +1368,41 @@ void process_view_inputs(int thing)
     process_overall_scale(zoom);
 }
 
-void func_6fd1c(int a1, int a2, int a3, int a4, int a5, int a6, ubyte a7)
+void draw_mapcoord_line_col2(int cor1_x, int cor1_y, int cor1_z,
+  int cor2_x, int cor2_y, int cor2_z, TbPixel colour)
 {
+#if 0
     // Pushed through a register holding them: a "g" operand may be placed
     // relative to the stack pointer, which each push moves.
     int stkargs[3];
 
-    stkargs[0] = (int)(intptr_t)a5;
-    stkargs[1] = (int)(intptr_t)a6;
-    stkargs[2] = (int)(intptr_t)a7;
+    stkargs[0] = (int)(intptr_t)cor2_y;
+    stkargs[1] = (int)(intptr_t)cor2_z;
+    stkargs[2] = (int)(intptr_t)colour;
 
     asm volatile (
       "push 8(%4)\n"
       "push 4(%4)\n"
       "push 0(%4)\n"
-      "call ASM_func_6fd1c\n"
-        : : "a" (a1), "d" (a2), "b" (a3), "c" (a4), "S" (stkargs)
+      "call ASM_draw_mapcoord_line_col2\n"
+        : : "a" (cor1_x), "d" (cor1_y), "b" (cor1_z), "c" (cor2_x), "S" (stkargs)
         : "cc", "memory");
+    return;
+#endif
+    struct EnginePoint ep1;
+    struct EnginePoint ep2;
+
+    ep2.X3d = cor1_x - engn_xc;
+    ep2.Y3d = cor1_y; // subtracted within transform_point(): - 8 * engn_yc;
+    ep2.Z3d = cor1_z - engn_zc;
+    ep2.Flags = 0;
+    transform_point(&ep2);
+    ep1.X3d = cor2_x - engn_xc;
+    ep1.Y3d = cor2_y; // subtracted within transform_point(): - 8 * engn_yc;
+    ep1.Z3d = cor2_z - engn_zc;
+    ep1.Flags = 0;
+    transform_point(&ep1);
+    LbDrawLine(ep2.pp.X, ep2.pp.Y, ep1.pp.X, ep1.pp.Y, colour);
 }
 
 void check_mouse_overvehicle(struct Thing *p_thing, ubyte target_assign)
@@ -1506,67 +1524,6 @@ void screen_animate_draw_outro_text(void)
         break;
     }
     func_cc638(text1, text2);
-}
-
-TbKeyCode screen_wait_seconds_or_until_continue_key(int sec)
-{
-    int i;
-    TbKeyCode key;
-
-    clear_key_pressed(KC_SPACE);
-    clear_key_pressed(KC_ESCAPE);
-    clear_key_pressed(KC_RETURN);
-
-    key = KC_UNASSIGNED;
-    for (i = sec*game_num_fps; i != 0; i--)
-    {
-        if (is_key_pressed(KC_SPACE, KMod_DONTCARE)) {
-            key = KC_SPACE;
-            break;
-        }
-        if (is_key_pressed(KC_ESCAPE, KMod_DONTCARE)) {
-            key = KC_ESCAPE;
-            break;
-        }
-        if (is_key_pressed(KC_RETURN, KMod_DONTCARE)) {
-            key = KC_RETURN;
-            break;
-        }
-
-        swap_wscreen();
-        game_update();
-    }
-    clear_key_pressed(key);
-
-    return key;
-}
-
-TbKeyCode screen_wait_seconds_or_until_yesno_key(int sec)
-{
-    int i;
-    TbKeyCode key;
-
-    clear_key_pressed(KC_Y);
-    clear_key_pressed(KC_N);
-
-    key = KC_UNASSIGNED;
-    for (i = sec*game_num_fps; i != 0; i--)
-    {
-        if (is_key_pressed(KC_Y, KMod_DONTCARE)) {
-            key = KC_Y;
-            break;
-        }
-        if (is_key_pressed(KC_N, KMod_DONTCARE)) {
-            key = KC_N;
-            break;
-        }
-
-        swap_wscreen();
-        game_update();
-    }
-    clear_key_pressed(key);
-
-    return key;
 }
 
 void init_outro(void)
@@ -3649,10 +3606,30 @@ ubyte load_game_slot(ubyte click)
 
 ubyte save_game_slot(ubyte click)
 {
+#if 0
     ubyte ret;
     asm volatile ("call ASM_save_game_slot\n"
         : "=r" (ret) : "a" (click));
     return ret;
+#endif
+    char *slot_str;
+    int ret;
+
+    if (login_control[0].State != LognCt_Unkn6) {
+        return 0;
+    }
+    if (save_slot == -1) {
+        alert_box_text_fmt("%s", gui_strings[564]);
+        return 1;
+    }
+    slot_str = save_slot_names[save_slot - save_slot_base - 1];
+    ret = save_game_write(save_slot, slot_str);
+    if (ret) {
+        alert_box_text_fmt("%s", gui_strings[566]);
+    } else {
+        alert_box_text_fmt("%s", gui_strings[571]);
+    }
+    return 1;
 }
 
 void reinit_unkn6_always_reset_variables(void)

@@ -20,6 +20,7 @@
 
 #include "bfmath.h"
 #include "bfmemory.h"
+#include "bfpalette.h"
 #include "bffile.h"
 #include "bfini.h"
 #include "bfutility.h"
@@ -4706,11 +4707,11 @@ void person_attempt_to_leave_ferry(struct Thing *p_person)
     p_cmd = &game_commands[p_person->U.UPerson.ComCur];
     radius_sqr = (p_cmd->Arg1 << 6) * (p_cmd->Arg1 << 6);
     p_vehicle = &things[p_person->U.UPerson.Vehicle];
-    func_6fd1c(PRCCOORD_TO_MAPCOORD(p_person->X),
+    draw_mapcoord_line_col2(PRCCOORD_TO_MAPCOORD(p_person->X),
       PRCCOORD_TO_MAPCOORD(p_person->Y),
       PRCCOORD_TO_MAPCOORD(p_person->Z),
       p_cmd->X, p_cmd->Y, p_cmd->Z, colour_lookup[ColLU_RED]);
-    func_6fd1c(PRCCOORD_TO_MAPCOORD(p_vehicle->X),
+    draw_mapcoord_line_col2(PRCCOORD_TO_MAPCOORD(p_vehicle->X),
       PRCCOORD_TO_MAPCOORD(p_vehicle->Y),
       PRCCOORD_TO_MAPCOORD(p_vehicle->Z),
       p_cmd->X, p_cmd->Y, p_cmd->Z, colour_lookup[ColLU_BLUE]);
@@ -6672,7 +6673,7 @@ void person_burning(struct Thing *p_person)
         : : "a" (p_person));
     return;
 #endif
-    p_person->U.UPerson.Brightness = 32;
+    p_person->U.UPerson.Brightness = PALETTE_FADE_LEVELS / 2;
     apply_super_quick_light(PRCCOORD_TO_MAPCOORD(p_person->X),
       PRCCOORD_TO_MAPCOORD(p_person->Z), 16 + (LbRandomAnyShort() & 0xF));
 

@@ -157,22 +157,22 @@ void draw_hud_frame_on_screen(short scr_x, short scr_y, ushort frm, int sscale)
     p_frm = &frame[frm];
     assert(p_frm < frame_end);
 
-    el = p_frm->FirstElement;
-    for (p_elem = &melement_ani[el]; p_elem > melement_ani; p_elem = &melement_ani[el])
+    for (el = p_frm->FirstElement; el > 0; el = p_elem->Next)
     {
         struct TbSprite *p_spr;
-        int el_x, el_y;
+        int el_X, el_Y;
 
-        el = p_elem->Next;
+        p_elem = &melement_ani[el];
         p_spr = (struct TbSprite *)((ubyte *)m_sprites + p_elem->ToSprite);
         if ((p_spr <= m_sprites) || (p_spr >= m_sprites_end))
             continue;
 
-        lbDisplay.DrawFlags = p_elem->Flags & 7;
+        lbDisplay.DrawFlags = p_elem->Flags & 0x07;
+
         if ((p_elem->Flags & 0xFE00) == 0) {
-            el_x = scr_x + ((sscale * p_elem->X) >> 9);
-            el_y = scr_y + ((sscale * p_elem->Y) >> 9);
-            LbSpriteDrawScaled(el_x, el_y, p_spr,
+            el_X = scr_x + ((sscale * p_elem->X) >> 9);
+            el_Y = scr_y + ((sscale * p_elem->Y) >> 9);
+            LbSpriteDrawScaled(el_X, el_Y, p_spr,
               (sscale * p_spr->SWidth + 127) >> 9,
               (sscale * p_spr->SHeight + 127) >> 9);
         }
@@ -194,51 +194,115 @@ void draw_hud_frame_on_screen_unscaled_but_scale_pos(short scr_x, short scr_y, u
     p_frm = &frame[frm];
     assert(p_frm < frame_end);
 
-    el = p_frm->FirstElement;
-    for (p_elem = &melement_ani[el]; p_elem > melement_ani; p_elem = &melement_ani[el])
+    for (el = p_frm->FirstElement; el > 0; el = p_elem->Next)
     {
         struct TbSprite *p_spr;
-        int el_x, el_y;
+        int el_X, el_Y;
 
-        el = p_elem->Next;
+        p_elem = &melement_ani[el];
         p_spr = (struct TbSprite *)((ubyte *)m_sprites + p_elem->ToSprite);
         if ((p_spr <= m_sprites) || (p_spr >= m_sprites_end))
             continue;
 
-        lbDisplay.DrawFlags = p_elem->Flags & 7;
+        lbDisplay.DrawFlags = p_elem->Flags & 0x07;
+
         if ((p_elem->Flags & 0xFE00) == 0) {
-            el_x = scr_x + ((sscale * p_elem->X) >> 9);
-            el_y = scr_y + ((sscale * p_elem->Y) >> 9);
-            LbSpriteDraw(el_x, el_y, p_spr);
+            el_X = scr_x + ((sscale * p_elem->X) >> 9);
+            el_Y = scr_y + ((sscale * p_elem->Y) >> 9);
+            LbSpriteDraw(el_X, el_Y, p_spr);
         }
     }
+}
+
+void draw_frame_unscaled(int scr_x, int scr_y, ushort frm)
+{
+    struct Frame *p_frm;
+    struct Element *p_elem;
+    ushort el;
+
+    p_frm = &frame[frm];
+    assert(p_frm < frame_end);
+
+    for (el = p_frm->FirstElement; el > 0; el = p_elem->Next)
+    {
+        struct TbSprite *p_spr;
+        int el_X, el_Y;
+
+        p_elem = &melement_ani[el];
+        p_spr = (struct TbSprite *)((ubyte *)m_sprites + p_elem->ToSprite);
+        if ((p_spr <= m_sprites) || (p_spr >= m_sprites_end))
+            continue;
+
+        lbDisplay.DrawFlags = p_elem->Flags & 0x07;
+
+        if ((p_elem->Flags & 0xFE00) == 0) {
+            el_X = scr_x + (p_elem->X >> 1);
+            el_Y = scr_y + (p_elem->Y >> 1);
+            LbSpriteDraw(el_X, el_Y, p_spr);
+        }
+    }
+    lbDisplay.DrawFlags = 0;
+}
+
+void draw_frame_unscaled_one_colour(int scr_x, int scr_y, ushort frm,
+  TbPixel colour)
+{
+    struct Frame *p_frm;
+    struct Element *p_elem;
+    ushort el;
+
+    p_frm = &frame[frm];
+    assert(p_frm < frame_end);
+
+    for (el = p_frm->FirstElement; el > 0; el = p_elem->Next)
+    {
+        struct TbSprite *p_spr;
+        int el_X, el_Y;
+
+        p_elem = &melement_ani[el];
+        p_spr = (struct TbSprite *)((ubyte *)m_sprites + p_elem->ToSprite);
+        if ((p_spr <= m_sprites) || (p_spr >= m_sprites_end))
+            continue;
+
+        lbDisplay.DrawFlags = p_elem->Flags & 0x07;
+
+        if ((p_elem->Flags & 0xFE00) == 0) {
+            el_X = scr_x + (p_elem->X >> 1);
+            el_Y = scr_y + (p_elem->Y >> 1);
+            LbSpriteDrawOneColour(el_X, el_Y, p_spr, colour);
+        }
+    }
+    lbDisplay.DrawFlags = 0;
 }
 
 void draw_frame_on_screen(short scr_x, short scr_y, ushort frm)
 {
     struct Frame *p_frm;
     struct Element *p_elem;
+    int sscale;
     ushort el;
+
+    sscale = overall_scale;
 
     p_frm = &frame[frm];
     assert(p_frm < frame_end);
 
-    el = p_frm->FirstElement;
-    for (p_elem = &melement_ani[el]; p_elem > melement_ani; p_elem = &melement_ani[el])
+    for (el = p_frm->FirstElement; el > 0; el = p_elem->Next)
     {
         struct TbSprite *p_spr;
-        int el_x, el_y;
+        int el_X, el_Y;
 
-        el = p_elem->Next;
+        p_elem = &melement_ani[el];
         p_spr = (struct TbSprite *)((ubyte *)m_sprites + p_elem->ToSprite);
         if ((p_spr <= m_sprites) || (p_spr >= m_sprites_end))
             continue;
 
         lbDisplay.DrawFlags = p_elem->Flags & 0x07;
+
         if ((p_elem->Flags & 0xFE00) == 0) {
-            el_x = scr_x + ((p_elem->X * overall_scale) >> 9);
-            el_y = scr_y + ((p_elem->Y * overall_scale) >> 9);
-            LbSpriteDrawResized(el_x, el_y, (16 * overall_scale) >> 8, p_spr);
+            el_X = scr_x + ((sscale * p_elem->X) >> 9);
+            el_Y = scr_y + ((sscale * p_elem->Y) >> 9);
+            LbSpriteDrawResized(el_X, el_Y, (16 * sscale) >> 8, p_spr);
         }
 
         anim_elem_pos_mark(p_elem);
@@ -246,7 +310,7 @@ void draw_frame_on_screen(short scr_x, short scr_y, ushort frm)
     lbDisplay.DrawFlags = 0;
 }
 
-void draw_frame_unscaled_alpha_force(short scr_x, short scr_y, ushort frm, ubyte bri)
+void draw_frame_unscaled_alpha_force(short scr_x, short scr_y, ushort frm, ubyte brig)
 {
     struct Frame *p_frm;
     struct Element *p_elem;
@@ -255,22 +319,22 @@ void draw_frame_unscaled_alpha_force(short scr_x, short scr_y, ushort frm, ubyte
     p_frm = &frame[frm];
     assert(p_frm < frame_end);
 
-    el = p_frm->FirstElement;
-    for (p_elem = &melement_ani[el]; p_elem > melement_ani; p_elem = &melement_ani[el])
+    for (el = p_frm->FirstElement; el > 0; el = p_elem->Next)
     {
         struct TbSprite *p_spr;
-        int el_x, el_y;
+        int el_X, el_Y;
 
-        el = p_elem->Next;
+        p_elem = &melement_ani[el];
         p_spr = (struct TbSprite *)((ubyte *)m_sprites + p_elem->ToSprite);
         if ((p_spr <= m_sprites) || (p_spr >= m_sprites_end))
             continue;
 
         lbDisplay.DrawFlags = p_elem->Flags & 0x07;
+
         if ((p_elem->Flags & 0xFE00) == 0) {
-            el_x = scr_x + (p_elem->X >> 1);
-            el_y = scr_y + (p_elem->Y >> 1);
-            LbSpriteDrawRemap(el_x, el_y, p_spr, &pixmap.fade_table[bri * PALETTE_8b_COLORS]);
+            el_X = scr_x + (p_elem->X >> 1);
+            el_Y = scr_y + (p_elem->Y >> 1);
+            LbSpriteDrawRemap(el_X, el_Y, p_spr, &pixmap.fade_table[brig * PALETTE_8b_COLORS]);
         }
 
         anim_elem_pos_mark(p_elem);
@@ -278,8 +342,8 @@ void draw_frame_unscaled_alpha_force(short scr_x, short scr_y, ushort frm, ubyte
     lbDisplay.DrawFlags = 0;
 }
 
-void draw_frame_unscaled_alpha(short scr_x, short scr_y, ubyte *frv, ushort frm,
-  ubyte bri)
+void draw_frame_unscaled_alpha_frv(short scr_x, short scr_y, ubyte *frv, ushort frm,
+  ubyte brig)
 {
     struct Frame *p_frm;
     struct Element *p_elem;
@@ -288,27 +352,27 @@ void draw_frame_unscaled_alpha(short scr_x, short scr_y, ubyte *frv, ushort frm,
     p_frm = &frame[frm];
     assert(p_frm < frame_end);
 
-    el = p_frm->FirstElement;
-    for (p_elem = &melement_ani[el]; p_elem > melement_ani; p_elem = &melement_ani[el])
+    for (el = p_frm->FirstElement; el > 0; el = p_elem->Next)
     {
         struct TbSprite *p_spr;
-        int el_x, el_y;
+        int el_X, el_Y;
 
-        el = p_elem->Next;
+        p_elem = &melement_ani[el];
         p_spr = (struct TbSprite *)((ubyte *)m_sprites + p_elem->ToSprite);
         if ((p_spr <= m_sprites) || (p_spr >= m_sprites_end))
             continue;
+
+        lbDisplay.DrawFlags = p_elem->Flags & 0x07;
 
         if (frv[(p_elem->Flags >> 4) & 0x1F] != ((p_elem->Flags >> 9) & 0x07))
             continue;
 
-        lbDisplay.DrawFlags = p_elem->Flags & 7;
-        el_x = scr_x + (p_elem->X >> 1);
-        el_y = scr_y + (p_elem->Y >> 1);
+        el_X = scr_x + (p_elem->X >> 1);
+        el_Y = scr_y + (p_elem->Y >> 1);
         if (((p_elem->Flags >> 4) & 0x1F) == 4) {
-            LbSpriteDraw(el_x, el_y, p_spr);
+            LbSpriteDraw(el_X, el_Y, p_spr);
         } else {
-            LbSpriteDrawRemap(el_x, el_y, p_spr, &pixmap.fade_table[bri * PALETTE_8b_COLORS]);
+            LbSpriteDrawRemap(el_X, el_Y, p_spr, &pixmap.fade_table[brig * PALETTE_8b_COLORS]);
         }
 
         anim_elem_pos_mark(p_elem);
@@ -328,13 +392,12 @@ void draw_frame_glb_scale_alpha(int scr_x, int scr_y, ushort frm)
     p_frm = &frame[frm];
     assert(p_frm < frame_end);
 
-    el = p_frm->FirstElement;
-    for (p_elem = &melement_ani[el]; p_elem > melement_ani; p_elem = &melement_ani[el])
+    for (el = p_frm->FirstElement; el > 0; el = p_elem->Next)
     {
         struct TbSprite *p_spr;
-        int el_x, el_y;
+        int el_X, el_Y;
 
-        el = p_elem->Next;
+        p_elem = &melement_ani[el];
         p_spr = (struct TbSprite *)((ubyte *)m_sprites + p_elem->ToSprite);
         if ((p_spr <= m_sprites) || (p_spr >= m_sprites_end))
             continue;
@@ -342,11 +405,12 @@ void draw_frame_glb_scale_alpha(int scr_x, int scr_y, ushort frm)
         lbDisplay.DrawFlags = p_elem->Flags & 0x0F;
         if ((lbDisplay.DrawFlags & Lb_SPRITE_TRANSPAR4) == 0)
             lbDisplay.DrawFlags |= Lb_SPRITE_TRANSPAR8;
+
         if ((p_elem->Flags & 0xFE00) == 0)
         {
-            el_x = scr_x + (p_elem->X >> 1);
-            el_y = scr_y + (p_elem->Y >> 1);
-            DrawSpriteWthShadowUsingScalingData(el_x, el_y, p_spr);
+            el_X = scr_x + (p_elem->X >> 1);
+            el_Y = scr_y + (p_elem->Y >> 1);
+            DrawSpriteWthShadowUsingScalingData(el_X, el_Y, p_spr);
         }
     }
     lbDisplay.DrawFlags = 0;
@@ -364,26 +428,26 @@ void draw_frame_glb_scale_alpha_frv(int scr_x, int scr_y, ubyte *frv, ushort frm
     p_frm = &frame[frm];
     assert(p_frm < frame_end);
 
-    el = p_frm->FirstElement;
-    for (p_elem = &melement_ani[el]; p_elem > melement_ani; p_elem = &melement_ani[el])
+    for (el = p_frm->FirstElement; el > 0; el = p_elem->Next)
     {
         struct TbSprite *p_spr;
-        int el_x, el_y;
+        int el_X, el_Y;
 
-        el = p_elem->Next;
+        p_elem = &melement_ani[el];
         p_spr = (struct TbSprite *)((ubyte *)m_sprites + p_elem->ToSprite);
         if ((p_spr <= m_sprites) || (p_spr >= m_sprites_end))
             continue;
 
         lbDisplay.DrawFlags = p_elem->Flags & 0x07;
         if ((lbDisplay.DrawFlags & Lb_SPRITE_TRANSPAR4) == 0)
-                    lbDisplay.DrawFlags |= Lb_SPRITE_TRANSPAR8;
-        if (frv[(p_elem->Flags >> 4) & 0x1F] == ((p_elem->Flags >> 9) & 0x07))
-        {
-            el_x = scr_x + (p_elem->X >> 1);
-            el_y = scr_y + (p_elem->Y >> 1);
-            DrawSpriteWthShadowUsingScalingData(el_x, el_y, p_spr);
-        }
+            lbDisplay.DrawFlags |= Lb_SPRITE_TRANSPAR8;
+
+        if (frv[(p_elem->Flags >> 4) & 0x1F] != ((p_elem->Flags >> 9) & 0x07))
+            continue;
+
+        el_X = scr_x + (p_elem->X >> 1);
+        el_Y = scr_y + (p_elem->Y >> 1);
+        DrawSpriteWthShadowUsingScalingData(el_X, el_Y, p_spr);
     }
     lbDisplay.DrawFlags = 0;
 }
@@ -398,7 +462,7 @@ void draw_frame_scaled_alpha(int scr_x, int scr_y, ushort frm,
   ushort scale, ushort alpha)
 {
     struct Frame *p_frm;
-    struct Element *p_el;
+    struct Element *p_elem;
     int swidth, sheight;
     ushort el;
 
@@ -406,11 +470,11 @@ void draw_frame_scaled_alpha(int scr_x, int scr_y, ushort frm,
     assert(p_frm < frame_end);
     lbSpriteReMapPtr = &pixmap.fade_table[256 * alpha];
 
-    el = p_frm->FirstElement;
     anim_elem_pos_min_set(INT16_MAX, INT16_MAX);
-    for (p_el = &melement_ani[el]; p_el > melement_ani; p_el = &melement_ani[p_el->Next])
+    for (el = p_frm->FirstElement; el > 0; el = p_elem->Next)
     {
-        anim_elem_pos_mark(p_el);
+        p_elem = &melement_ani[el];
+        anim_elem_pos_mark(p_elem);
     }
 
     swidth = p_frm->SWidth;
@@ -431,13 +495,14 @@ void draw_frame_scaled_alpha(int scr_x, int scr_y, ushort frm,
 }
 
 void draw_frame_scaled_alpha_frv(short x, short y, ubyte *frv, ushort frm,
-  ubyte bri)
+  ubyte brig)
 {
     struct Frame *p_frm;
     struct Element *p_elem;
     int max_x, max_y;
     int min_x, min_y;
     int range_x, range_y;
+    ushort el;
     TbBool really_draw;
 
     really_draw = 0;
@@ -448,34 +513,36 @@ void draw_frame_scaled_alpha_frv(short x, short y, ubyte *frv, ushort frm,
     p_frm = &frame[frm];
     assert(p_frm < frame_end);
 
-    for (p_elem = &melement_ani[p_frm->FirstElement]; p_elem > melement_ani;
-      p_elem = &melement_ani[p_elem->Next])
+    for (el = p_frm->FirstElement; el > 0; el = p_elem->Next)
     {
         struct TbSprite *p_spr;
+        int el_X, el_Y;
 
-        if (frv[(p_elem->Flags >> 4) & 0x1F] == ((p_elem->Flags >> 9) & 0x07))
-        {
-            int tmp;
+        p_elem = &melement_ani[el];
+        p_spr = (struct TbSprite *)((ubyte *)m_sprites + p_elem->ToSprite);
+        if ((p_spr <= m_sprites) || (p_spr >= m_sprites_end))
+            continue;
 
-            really_draw = 1;
-            p_spr = (struct TbSprite *)((ubyte *)m_sprites + p_elem->ToSprite);
-            if (min_x > p_elem->X >> 1)
-                min_x = p_elem->X >> 1;
-            if (min_y > p_elem->Y >> 1)
-                min_y = p_elem->Y >> 1;
-            tmp = p_spr->SWidth + (p_elem->X >> 1);
-            if (max_x < tmp)
-                max_x = tmp;
-            tmp = p_spr->SHeight + (p_elem->Y >> 1);
-            if (max_y < tmp)
-                max_y = tmp;
-        }
+        if (frv[(p_elem->Flags >> 4) & 0x1F] != ((p_elem->Flags >> 9) & 0x07))
+            continue;
+
+        really_draw = 1;
+        if (min_x > p_elem->X >> 1)
+            min_x = p_elem->X >> 1;
+        if (min_y > p_elem->Y >> 1)
+            min_y = p_elem->Y >> 1;
+        el_X = p_spr->SWidth + (p_elem->X >> 1);
+        el_Y = p_spr->SHeight + (p_elem->Y >> 1);
+        if (max_x < el_X)
+            max_x = el_X;
+        if (max_y < el_Y)
+            max_y = el_Y;
     }
 
     if (!really_draw)
         return;
 
-    lbSpriteReMapPtr = &pixmap.fade_table[256 * bri];
+    lbSpriteReMapPtr = &pixmap.fade_table[256 * brig];
     anim_elem_pos_min_set(min_x, min_y);
 
     range_x = max_x - min_x;
@@ -496,80 +563,60 @@ void draw_frame_scaled_alpha_frv(short x, short y, ubyte *frv, ushort frm,
     }
 }
 
-void draw_sorted_sprite1b(ubyte *frv, ushort frm, short x, short y,
-  ubyte bri, ubyte angle)
+void draw_sorted_sprite1b(ubyte *frv, ushort frm, short scr_x, short scr_y,
+  ubyte brig, ubyte angle)
 {
-#if 0
-    debug_check_unkn_sprite_size(__FILE__, __LINE__);
-#endif
+    short scale;
 
+    scale = overall_scale;
     if ((frv[4] != 0) && (angle > 1) && (angle < 7))
-        bri += 15;
-    if (bri < 10)
-        bri = 10;
-    if (bri > 60)
-        bri = 60;
+        brig += 15;
+    if (brig < 10)
+        brig = 10;
+    if (brig > 60)
+        brig = 60;
 
-    if ((overall_scale == 256) || (overall_scale <= 0) || (overall_scale >= 4096))
+    if ((scale == 256) || (scale <= 0) || (scale >= 4096))
     {
-        draw_frame_unscaled_alpha(x, y, frv, frm, bri);
+        draw_frame_unscaled_alpha_frv(scr_x, scr_y, frv, frm, brig);
     }
     else
     {
-        draw_frame_scaled_alpha_frv(x, y, frv, frm, bri);
+        draw_frame_scaled_alpha_frv(scr_x, scr_y, frv, frm, brig);
     }
 }
 
-void draw_sorted_sprite1a(ushort frm, short x, short y, ubyte bright)
+void draw_frame_alpha(short scr_x, short scr_y, ushort frm,
+  short scale, ubyte bright)
 {
-    int sscale;
-    ubyte bri;
+    ubyte brig;
 
-    sscale = overall_scale;
-    bri = bright;
-    if (bri < 10)
-        bri = 10;
-    if (bri > 48)
-        bri = 48;
+    brig = bright;
+    if (brig < 10)
+        brig = 10;
+    if (brig > 48)
+        brig = 48;
 
-    if ((sscale == 256) || (sscale <= 0) || (sscale >= 4096))
+    if ((scale == 256) || (scale <= 0) || (scale >= 4096))
     {
-        draw_frame_unscaled_alpha_force(x, y, frm, bri);
+        draw_frame_unscaled_alpha_force(scr_x, scr_y, frm, brig);
     }
     else
     {
-        draw_frame_scaled_alpha(x, y, frm, sscale, bri);
-    }
-}
-
-void draw_sort_sprite1c_sub(ushort frm, short x, short y, ubyte bright, ushort scale)
-{
-    int sscale;
-    ubyte bri;
-
-    sscale = (scale * overall_scale) >> 8;
-
-    bri = bright;
-    if (bri < 10)
-        bri = 10;
-    if (bri > 48)
-        bri = 48;
-
-    if (sscale == 256 || sscale == 0 || sscale >= 0x1000)
-    {
-        draw_frame_unscaled_alpha_force(x, y, frm, bri);
-    }
-    else
-    {
-        draw_frame_scaled_alpha(x, y, frm, sscale, bri);
+        draw_frame_scaled_alpha(scr_x, scr_y, frm, scale, brig);
     }
 }
 
 void draw_sort_sprite1c(ushort sspr)
 {
     struct SortSprite *p_sspr;
+    int sscale;
+
     p_sspr = &game_sort_sprites[sspr];
-    draw_sort_sprite1c_sub(p_sspr->Frame, p_sspr->X, p_sspr->Y, p_sspr->Brightness, p_sspr->Scale);
+    sscale = (p_sspr->Scale * overall_scale) >> 8;
+
+    draw_frame_alpha(p_sspr->X, p_sspr->Y,
+      p_sspr->Frame, sscale, p_sspr->Brightness);
 }
 
 void draw_sort_sprite1a(ushort sspr)
@@ -580,7 +627,9 @@ void draw_sort_sprite1a(ushort sspr)
 
     anim_elem_pos_min_set(120, 120);
 
-    draw_sorted_sprite1a(p_sspr->Frame, p_sspr->X, p_sspr->Y, p_sspr->Brightness);
+    draw_frame_alpha(p_sspr->X, p_sspr->Y, p_sspr->Frame,
+      overall_scale, p_sspr->Brightness);
+
     screen_sorted_sprite_statc_render_cb(sspr);
 }
 
@@ -608,7 +657,8 @@ void draw_sort_sprite_frame_pers_b(int sspr)
 
     anim_elem_pos_min_set(120, 120);
 
-    draw_sorted_sprite1a(p_sspr->Frame, p_sspr->X, p_sspr->Y, p_sspr->Brightness);
+    draw_frame_alpha(p_sspr->X, p_sspr->Y, p_sspr->Frame,
+      overall_scale, p_sspr->Brightness);
 
     screen_sorted_sprite_persn_render_cb(sspr);
 }
@@ -656,20 +706,23 @@ void draw_fire_flame(ushort flm)
 {
     struct FireFlame *p_flame;
     struct SpecialPoint *p_scrpoint;
+    ubyte brig;
 
+    brig = PALETTE_FADE_LEVELS / 2;
     p_flame = &FIRE_flame[flm];
     if (p_flame->big != 0)
     {
         p_scrpoint = &game_screen_point_pool[p_flame->PointOffset];
         draw_frame_scaled_alpha(p_scrpoint->X + dword_176D00,
           p_scrpoint->Y + dword_176D04,
-          p_flame->frame, ((p_flame->big + 128) * overall_scale) >> 7, 0x20);
+          p_flame->frame, ((p_flame->big + 128) * overall_scale) >> 7, brig);
     }
     else
     {
         p_scrpoint = &game_screen_point_pool[p_flame->PointOffset];
-        draw_sorted_sprite1a(p_flame->frame, p_scrpoint->X + dword_176D00,
-          p_scrpoint->Y + dword_176D04, 0x20);
+        draw_frame_alpha(p_scrpoint->X + dword_176D00,
+          p_scrpoint->Y + dword_176D04, p_flame->frame,
+          overall_scale, brig);
     }
 }
 
@@ -757,6 +810,60 @@ void draw_sort_sprite_short_text(ushort sspr)
     LbMemoryCopy(locstr, &p_sspr->SrcItem, 8);
     locstr[8] = '\0';
     draw_text(p_sspr->X, p_sspr->Y, locstr, colour);
+}
+
+void draw_sprites_in_quarters_unscaled(int scr_x, int scr_y,
+  struct TbSprite * const p_sprlst[], int radius)
+{
+    const struct TbSprite *p_spr;
+    int top, bottom, left, right;
+    int i;
+
+    // Compute shifts in all directions, so that sprites have outer borders aligned
+    top = radius;
+    bottom = radius;
+    left = radius;
+    right = radius;
+    for (i = 0; i < 256; i++) {
+        p_spr = p_sprlst[i];
+        if (p_spr == NULL)
+            break;
+
+        // Get top pos from first 2 quarters
+        if (((i & 3) < 2) && (top < radius + p_spr->SHeight))
+            top = radius + p_spr->SHeight;
+        // Get left pos from quarters 0 and 2
+        if (((i & 1) == 0) && (left < radius + p_spr->SWidth))
+           left = radius + p_spr->SWidth;
+        // Get right pos from quarters 1 and 3
+        if (((i & 1) != 0) && (right < radius + p_spr->SWidth))
+           right = radius + p_spr->SWidth;
+        // Get bottom pos from last 2 quarters
+        if (((i & 3) >= 2) && (bottom < radius + p_spr->SHeight))
+            bottom = radius + p_spr->SHeight;
+    }
+
+    for (i = 0; i < 256; i++) {
+        p_spr = p_sprlst[i];
+        if (p_spr == NULL)
+            break;
+
+        switch (i & 3)
+        {
+        case 0:
+            LbSpriteDraw(scr_x - left, scr_y - top, p_spr);
+            break;
+        case 1:
+            LbSpriteDraw(scr_x + right - p_spr->SWidth, scr_y - top, p_spr);
+            break;
+        case 2:
+            LbSpriteDraw(scr_x + right - p_spr->SWidth, scr_y + bottom - p_spr->SHeight, p_spr);
+            break;
+        case 3:
+            LbSpriteDraw(scr_x - left, scr_y + bottom - p_spr->SHeight, p_spr);
+            break;
+        }
+    }
 }
 
 /******************************************************************************/

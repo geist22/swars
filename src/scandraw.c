@@ -954,8 +954,8 @@ void unkn_draw_transformed_point(short x, short y, long ptX, long ptY, long ptZ,
     struct EnginePoint ep;
 
     ep.X3d = ptX - engn_xc;
+    ep.Y3d = ptY; // subtracted within transform_point(): - 8 * engn_yc;
     ep.Z3d = ptZ - engn_zc;
-    ep.Y3d = ptY - engn_yc;
     ep.Flags = 0;
     transform_point(&ep);
     LbDrawLine(x, y, ep.pp.X, ep.pp.Y, colour);
@@ -986,12 +986,6 @@ void draw_objective_point(long x, long y, ThingIdx thing, short a4, ubyte colour
 
 void draw_map_flat_circle(short cor_x, short cor_y, short cor_z, short radius, TbPixel colour)
 {
-#if 0
-    asm volatile (
-      "push %4\n"
-      "call ASM_draw_map_flat_circle\n"
-        : : "a" (cor_x), "d" (cor_y), "b" (cor_z), "c" (radius), "g" ((u32)colour));
-#endif
     struct EnginePoint ep1;
     struct EnginePoint ep2;
     int cir_cor_x, cir_cor_z;
@@ -1009,12 +1003,12 @@ void draw_map_flat_circle(short cor_x, short cor_y, short cor_z, short radius, T
         cir_nxt_z = cor_z + cir_dt_z;
 
         ep1.X3d = cir_cor_x - engn_xc;
-        ep1.Y3d = cor_y - engn_yc;
+        ep1.Y3d = cor_y; // subtracted within transform_point(): - 8 * engn_yc;
         ep1.Z3d = cir_cor_z - engn_zc;
         ep1.Flags = 0;
         transform_point(&ep1);
         ep2.X3d = cir_nxt_x - engn_xc;
-        ep2.Y3d = cor_y - engn_yc;
+        ep2.Y3d = cor_y; // subtracted within transform_point(): - 8 * engn_yc;
         ep2.Z3d = cir_nxt_z - engn_zc;
         ep2.Flags = 0;
         transform_point(&ep2);
@@ -1028,12 +1022,12 @@ void draw_map_flat_circle(short cor_x, short cor_y, short cor_z, short radius, T
         cir_nxt_z = cor_z + radius;
 
         ep1.X3d = cir_cor_x - engn_xc;
-        ep1.Y3d = cor_y - engn_yc;
+        ep1.Y3d = cor_y; // subtracted within transform_point(): - 8 * engn_yc;
         ep1.Z3d = cir_cor_z - engn_zc;
         ep1.Flags = 0;
         transform_point(&ep1);
         ep2.X3d = cir_nxt_x - engn_xc;
-        ep2.Y3d = cor_y - engn_yc;
+        ep2.Y3d = cor_y; // subtracted within transform_point(): - 8 * engn_yc;
         ep2.Z3d = cir_nxt_z - engn_zc;
         ep2.Flags = 0;
         transform_point(&ep2);
@@ -1043,13 +1037,6 @@ void draw_map_flat_circle(short cor_x, short cor_y, short cor_z, short radius, T
 
 void draw_map_flat_rect(int cor_x, int cor_y, int cor_z, int size_x, int size_z, TbPixel colour)
 {
-#if 0
-    asm volatile (
-      "push %5\n"
-      "push %4\n"
-      "call ASM_draw_map_flat_rect\n"
-        : : "a" (a1), "d" (a2), "b" (a3), "c" (a4), "g" (a5), "g" ((u32)colour));
-#endif
     struct EnginePoint ep1;
     struct EnginePoint ep2;
     int cor_x2, cor_z2;
@@ -1058,55 +1045,56 @@ void draw_map_flat_rect(int cor_x, int cor_y, int cor_z, int size_x, int size_z,
     cor_z2 = cor_z + size_z;
 
     ep1.X3d = cor_x  - engn_xc;
-    ep1.Y3d = cor_y  - engn_yc;
+    ep1.Y3d = cor_y; // subtracted within transform_point(): - 8 * engn_yc;
     ep1.Z3d = cor_z  - engn_zc;
     ep1.Flags = 0;
     transform_point(&ep1);
     ep2.X3d = cor_x2 - engn_xc;
-    ep2.Y3d = cor_y  - engn_yc;
+    ep2.Y3d = cor_y; // subtracted within transform_point(): - 8 * engn_yc;
     ep2.Z3d = cor_z  - engn_zc;
     ep2.Flags = 0;
     transform_point(&ep2);
     LbDrawLine(ep1.pp.X, ep1.pp.Y, ep2.pp.X, ep2.pp.Y, colour);
 
     ep1.X3d = cor_x2 - engn_xc;
-    ep1.Y3d = cor_y  - engn_yc;
+    ep1.Y3d = cor_y; // subtracted within transform_point(): - 8 * engn_yc;
     ep1.Z3d = cor_z  - engn_zc;
     ep1.Flags = 0;
     transform_point(&ep1);
     ep2.X3d = cor_x2 - engn_xc;
-    ep2.Y3d = cor_y  - engn_yc;
+    ep2.Y3d = cor_y; // subtracted within transform_point(): - 8 * engn_yc;
     ep2.Z3d = cor_z2 - engn_zc;
     ep2.Flags = 0;
     transform_point(&ep2);
     LbDrawLine(ep1.pp.X, ep1.pp.Y, ep2.pp.X, ep2.pp.Y, colour);
 
     ep1.X3d = cor_x2 - engn_xc;
-    ep1.Y3d = cor_y  - engn_yc;
+    ep1.Y3d = cor_y; // subtracted within transform_point(): - 8 * engn_yc;
     ep1.Z3d = cor_z2 - engn_zc;
     ep1.Flags = 0;
     transform_point(&ep1);
     ep2.X3d = cor_x  - engn_xc;
-    ep2.Y3d = cor_y  - engn_yc;
+    ep2.Y3d = cor_y; // subtracted within transform_point(): - 8 * engn_yc;
     ep2.Z3d = cor_z2 - engn_zc;
     ep2.Flags = 0;
     transform_point(&ep2);
     LbDrawLine(ep1.pp.X, ep1.pp.Y, ep2.pp.X, ep2.pp.Y, colour);
 
     ep1.X3d = cor_x  - engn_xc;
-    ep1.Y3d = cor_y  - engn_yc;
+    ep1.Y3d = cor_y; // subtracted within transform_point(): - 8 * engn_yc;
     ep1.Z3d = cor_z2 - engn_zc;
     ep1.Flags = 0;
     transform_point(&ep1);
     ep2.Flags = 0;
     ep2.X3d = cor_x  - engn_xc;
-    ep2.Y3d = cor_y  - engn_yc;
+    ep2.Y3d = cor_y; // subtracted within transform_point(): - 8 * engn_yc;
     ep2.Z3d = cor_z  - engn_zc;
     transform_point(&ep2);
     LbDrawLine(ep1.pp.X, ep1.pp.Y, ep2.pp.X, ep2.pp.Y, colour);
 }
 
-void SCANNER_draw_shape_from_points(int x, int y, const struct TbPoint *points, ushort count, TbPixel col)
+void SCANNER_draw_shape_from_points(int x, int y,
+  const struct TbPoint *points, ushort count, TbPixel col)
 {
     int i;
 
@@ -1132,7 +1120,8 @@ void SCANNER_draw_shape_from_points(int x, int y, const struct TbPoint *points, 
  *
  * This function assumes graphics window set to the scanner map area.
  */
-void SCANNER_draw_shape_part_from_points(int x, int y, const struct TbPoint *points, ushort count, ushort frame, ushort part, TbPixel col)
+void SCANNER_draw_shape_part_from_points(int x, int y,
+  const struct TbPoint *points, ushort count, ushort frame, ushort part, TbPixel col)
 {
     ushort i;
 
@@ -1418,11 +1407,6 @@ void SCANNER_draw_mark_point3_blink2_filled(int x, int y, TbPixel col)
 
 void SCANNER_draw_mark_point5_blink4(int x, int y, TbPixel col)
 {
-#if 0
-    asm volatile (
-      "call ASM_SCANNER_draw_mark_point5_blink4\n"
-        : : "a" (x), "d" (y), "b" (col));
-#endif
     ushort frame, sz;
 
     frame = gameturn & 3;
@@ -1439,11 +1423,6 @@ void SCANNER_draw_mark_point5_blink4(int x, int y, TbPixel col)
 
 void SCANNER_draw_mark_point7(int x, int y, TbPixel col)
 {
-#if 0
-    asm volatile (
-      "call ASM_SCANNER_draw_mark_point7\n"
-        : : "a" (x), "d" (y), "b" (col));
-#endif
     ushort sz;
 
     sz = SCANNER_scale_size(7);
@@ -2070,11 +2049,6 @@ static void SCANNER_draw_solid_signals(void)
 
 void SCANNER_draw_signals(void)
 {
-#if 0
-    asm volatile ("call ASM_SCANNER_draw_signals\n"
-        :  :  : "eax" );
-    return;
-#endif
     int sh_x, sh_y;
     int range;
     int pos_mx, pos_mz;

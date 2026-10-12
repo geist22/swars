@@ -20,56 +20,73 @@
 /******************************************************************************/
 #include "drawtext_wrp.h"
 
+#include "bfbox.h"
+#include "bfkeybd.h"
 #include "bfline.h"
 #include "bfscreen.h"
+#include "bftime.h"
+#include "bfwindows.h"
 
+#include "display.h"
 #include "drawtext.h"
 #include "drawshape.h"
 #include "engincolour.h"
 #include "engintrns.h"
 
 #include "bigmap.h"
+#include "keyboard.h"
 #include "swlog.h"
 /******************************************************************************/
 
-void draw_line_transformed_at_ground(int x1, int z1, int x2, int z2, TbPixel colour)
+void draw_line_transformed_at_ground(int cor1_x, int cor1_z,
+  int cor2_x, int cor2_z, TbPixel colour)
 {
-#if 0
-    asm volatile (
-      "push %4\n"
-      "call ASM_draw_line_transformed_at_ground\n"
-        : : "a" (x1), "d" (z1), "b" (x2), "c" (z2), "g" (colour));
-#endif
-    int coord1_y, coord2_y;
+    int cor1_y_m8, cor2_y_m8;
 
-    coord1_y = PRCCOORD_TO_YCOORD(alt_at_point(x1, z1));
-    coord2_y = PRCCOORD_TO_YCOORD(alt_at_point(x2, z2));
+    cor1_y_m8 = PRCCOORD_TO_YCOORD(alt_at_point(cor1_x, cor1_z));
+    cor2_y_m8 = PRCCOORD_TO_YCOORD(alt_at_point(cor2_x, cor2_z));
 
-    draw_line_transformed_col(x1, coord1_y, z1, x2, coord2_y, z2, colour);
+    draw_mapcoord_line_col(cor1_x, cor1_y_m8, cor1_z,
+      cor2_x, cor2_y_m8, cor2_z, colour);
 }
 
-void draw_text_transformed_at_ground(int coord_x, int coord_z, const char *text)
+void draw_text_transformed_at_ground(int cor_x, int cor_z, const char *text)
 {
-#if 0
-    asm volatile (
-      "call ASM_draw_text_transformed_at_ground\n"
-        : : "a" (coord_x), "d" (coord_z), "b" (text));
-    return;
-#endif
-    int coord_y;
+    int cor_y_m8;
 
-    coord_y = PRCCOORD_TO_YCOORD(alt_at_point(coord_x, coord_z));
-    draw_text_transformed_col(coord_x, coord_y, coord_z, text, colour_lookup[ColLU_RED]);
+    cor_y_m8 = PRCCOORD_TO_YCOORD(alt_at_point(cor_x, cor_z));
+    draw_text_transformed_col(cor_x, cor_y_m8, cor_z,
+      text, colour_lookup[ColLU_RED]);
 }
 
-void draw_number_transformed_at_ground(int coord_x, int coord_z, int num)
+void draw_number_transformed_at_ground(int cor_x, int cor_z, int num)
 {
     char locstr[52];
-    int coord_y;
+    int cor_y_m8;
 
-    coord_y = PRCCOORD_TO_YCOORD(alt_at_point(coord_x, coord_z));
+    cor_y_m8 = PRCCOORD_TO_YCOORD(alt_at_point(cor_x, cor_z));
     sprintf(locstr, "%d", num);
-    draw_text_transformed_col(coord_x, coord_y, coord_z, locstr, colour_lookup[ColLU_RED]);
+    draw_text_transformed_col(cor_x, cor_y_m8, cor_z,
+      locstr, colour_lookup[ColLU_RED]);
+}
+
+void show_message(const char *text)
+{
+    int x, y, w, h;
+
+    x = lbDisplay.GraphicsScreenWidth / 12;
+    y = lbDisplay.GraphicsScreenHeight / 4;
+    w = lbDisplay.GraphicsScreenWidth - 2 * x;
+    h = lbDisplay.GraphicsScreenHeight / 8;
+
+    lbDisplay.DrawFlags = 0;
+    LbDrawBox(x, y, w, h, colour_lookup[4]);
+    lbDisplay.DrawFlags = 0;
+    draw_text(x * 3 / 2, y * 1 / 16, text, colour_lookup[1]);
+
+    swap_wscreen();
+
+    screen_wait_seconds_or_until_continue_key(5);
 }
 
 /******************************************************************************/
