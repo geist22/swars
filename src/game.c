@@ -75,6 +75,7 @@
 #include "dos.h"
 #include "drawshape.h"
 #include "drawtext.h"
+#include "drawtext_wrp.h"
 #include "embedanim.h"
 #include "enginbckt.h"
 #include "engindrwlstm_wrp.h"
@@ -1937,11 +1938,6 @@ void calc_bul_offsets(void)
 
 void init_engine(void)
 {
-#if 0
-    asm volatile ("call ASM_init_engine\n"
-        :  :  : "eax" );
-    return;
-#endif
     p_current_sort_sprite = game_sort_sprites;
     p_current_draw_item = game_draw_list + 1;
 
@@ -3022,9 +3018,9 @@ void game_startup_fail_screen(void)
     LbPaletteDraw(cent_x - embeded_square_dim/2, cent_y - embeded_square_dim/2, embeded_square_dim/16, embeded_square_dim/16, 0);
     LbDrawBox(cent_x - embeded_square_dim/6, cent_y - circle_diam*2/64, embeded_square_dim * 2 / 6, circle_diam*5/64, 0);
 
-    draw_text(cent_x - 40, cent_y - circle_diam*1/64, "U.T.O.P.I.A.", col_white);
-    draw_text(cent_x - 40, cent_y - circle_diam*0/64, "Game startup failed!", col_white);
-    draw_text(cent_x - 40, cent_y + circle_diam*1/64, "Check \"error.log\".", col_white);
+    draw_simple_text(cent_x - 40, cent_y - circle_diam*1/64, "U.T.O.P.I.A.", col_white);
+    draw_simple_text(cent_x - 40, cent_y - circle_diam*0/64, "Game startup failed!", col_white);
+    draw_simple_text(cent_x - 40, cent_y + circle_diam*1/64, "Check \"error.log\".", col_white);
 
     if (!was_locked)
         LbScreenUnlock();
@@ -3437,11 +3433,6 @@ TbResult clear_vecs_screen(TbPixel colour)
 
 void gproc3_unknsub2(void)
 {
-#if 0
-    asm volatile ("call ASM_gproc3_unknsub2\n"
-        :  :  : "eax" );
-    return;
-#endif
     struct CameraState cam_bkp;
     short ms_x, ms_y, ms_limit;
     TbPixel *outbuf;
@@ -6436,22 +6427,11 @@ ubyte critical_action_input(void)
     TbKeyCode key;
 
     strcpy(locstr, "Confirm Critical Action Y/N?");
+
     DangerMusicFadeSwitch(2, 4u);
     SetMusicTempo(110, 1000);
-    {
-        int x, y, w, h;
-        short tx_height;
 
-        tx_height = my_char_height('A');
-        w = my_string_width(locstr) + 2 * tx_height;
-        h = 3 * tx_height;
-        x = (lbDisplay.GraphicsWindowWidth - w) / 2;
-        y = (lbDisplay.GraphicsWindowHeight - h) / 2;
-
-        draw_purple_rect(x, y, w, h, 0);
-        draw_text(x + tx_height, y + tx_height, locstr, 0xC);
-    }
-
+    draw_message_box(locstr);
     key = screen_wait_seconds_or_until_yesno_key(20);
 
     DangerMusicFadeSwitch(1, 1);
