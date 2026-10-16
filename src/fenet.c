@@ -992,12 +992,6 @@ void purple_unkn4_data_to_screen(void)
 
 void net_grpaint_draw_op(short scr_x2, short scr_y2, ubyte colno, sbyte op, ubyte plyr)
 {
-#if 0
-    asm volatile (
-      "push %4\n"
-      "call ASM_net_grpaint_draw_op\n"
-        : : "a" (scr_x2), "d" (scr_y2), "b" (colno), "c" (op), "g" (plyr));
-#endif
     struct ScreenBufBkp bkp;
 
     switch (op)
@@ -1030,12 +1024,6 @@ void net_grpaint_clear_op(void)
 
 ubyte show_net_grpaint(struct ScreenBox *p_box)
 {
-#if 0
-    ubyte ret;
-    asm volatile ("call ASM_show_net_grpaint\n"
-        : "=r" (ret) : "a" (p_box));
-    return ret;
-#endif
     int i;
     short dy;
     short ln_height;

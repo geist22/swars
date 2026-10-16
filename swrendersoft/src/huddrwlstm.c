@@ -243,6 +243,32 @@ TbBool enlist_hud_draw_textured_flow_slant_box(short px, short py,
     return true;
 }
 
+TbBool enlist_hud_draw_frame_alpha(short px, short py, ushort frm,
+  ushort drwflags, short scale, short brig)
+{
+    struct DrawItemHud dih;
+    struct DrawItemHud *p_di;
+
+    if (brig > PALETTE_FADE_LEVELS-1)
+        brig = PALETTE_FADE_LEVELS-1;
+    if (brig < 0)
+        brig = 0;
+
+    p_di = &dih;
+
+    p_di->U.Frame.Pos.X = px;
+    p_di->U.Frame.Pos.Y = py;
+    p_di->U.Frame.Frame = frm;
+    p_di->U.Frame.DrwFlags = drwflags;
+    p_di->U.Frame.Scale = scale;
+    p_di->U.Frame.Bright = brig;
+    p_di->U.Frame.Col = colour_lookup[ColLU_WHITE];
+
+    //TODO enlist instead of drawing directly
+    hud_draw_frame_alpha(&p_di->U.Frame);
+    return true;
+}
+
 TbBool enlist_hud_draw_sprite(short px, short py, struct TbSprite *p_spr,
   ushort drwflags, short brig)
 {
@@ -395,8 +421,8 @@ TbBool enlist_hud_draw_colour_wave_wrapped_text(short px, short py,
     return true;
 }
 
-TbBool enlist_hud_draw_mapcoord_line(short cor1_x, short cor1_y,
-  short cor1_z, short cor2_x, short cor2_y, short cor2_z,
+TbBool enlist_hud_draw_mapcoord_line(short cor1_x, short cor1_y_m8,
+  short cor1_z, short cor2_x, short cor2_y_m8, short cor2_z,
   ushort drwflags, ubyte thickness, TbPixel colour)
 {
     struct DrawItemHud dih;
@@ -405,10 +431,10 @@ TbBool enlist_hud_draw_mapcoord_line(short cor1_x, short cor1_y,
     p_di = &dih;
 
     p_di->U.MapCorLine.PtBeg.X = cor1_x;
-    p_di->U.MapCorLine.PtBeg.Y = cor1_y;
+    p_di->U.MapCorLine.PtBeg.Y = cor1_y_m8;
     p_di->U.MapCorLine.PtBeg.Z = cor1_z;
     p_di->U.MapCorLine.PtEnd.X = cor2_x;
-    p_di->U.MapCorLine.PtEnd.Y = cor2_y;
+    p_di->U.MapCorLine.PtEnd.Y = cor2_y_m8;
     p_di->U.MapCorLine.PtEnd.Z = cor2_z;
     p_di->U.MapCorLine.DrwFlags = drwflags;
     p_di->U.MapCorLine.Thick = thickness;
@@ -416,6 +442,150 @@ TbBool enlist_hud_draw_mapcoord_line(short cor1_x, short cor1_y,
 
     //TODO enlist instead of drawing directly
     hud_draw_mapcoord_line(&p_di->U.MapCorLine);
+    return true;
+}
+
+TbBool enlist_hud_draw_mapcoord_line_annotated_num(short cor1_x,
+  short cor1_y_m8, short cor1_z, short cor2_x, short cor2_y_m8,
+  short cor2_z, int val, ushort drwflags, ubyte thickness,
+  TbPixel lncol, TbPixel txcol)
+{
+    struct DrawItemHud dih;
+    struct DrawItemHud *p_di;
+
+    p_di = &dih;
+
+    p_di->U.MapCorAntLine.PtBeg.X = cor1_x;
+    p_di->U.MapCorAntLine.PtBeg.Y = cor1_y_m8;
+    p_di->U.MapCorAntLine.PtBeg.Z = cor1_z;
+    p_di->U.MapCorAntLine.PtEnd.X = cor2_x;
+    p_di->U.MapCorAntLine.PtEnd.Y = cor2_y_m8;
+    p_di->U.MapCorAntLine.PtEnd.Z = cor2_z;
+    p_di->U.MapCorAntLine.AnnotVal = val;
+    p_di->U.MapCorAntLine.DrwFlags = drwflags;
+    p_di->U.MapCorAntLine.Thick = thickness;
+    p_di->U.MapCorAntLine.Col1 = lncol;
+    p_di->U.MapCorAntLine.Col2 = txcol;
+
+    //TODO enlist instead of drawing directly
+    hud_draw_mapcoord_line_annotated_num(&p_di->U.MapCorAntLine);
+    return true;
+}
+
+TbBool enlist_hud_draw_mapcoord_to_scrcoord_line(short scr1_x,
+  short scr1_y, short cor2_x, short cor2_y_m8, short cor2_z,
+  ushort drwflags, ubyte thickness, TbPixel colour)
+{
+    struct DrawItemHud dih;
+    struct DrawItemHud *p_di;
+
+    p_di = &dih;
+
+    p_di->U.M2SCorLine.Beg.X = scr1_x;
+    p_di->U.M2SCorLine.Beg.Y = scr1_y;
+    p_di->U.M2SCorLine.PtEnd.X = cor2_x;
+    p_di->U.M2SCorLine.PtEnd.Y = cor2_y_m8;
+    p_di->U.M2SCorLine.PtEnd.Z = cor2_z;
+    p_di->U.M2SCorLine.DrwFlags = drwflags;
+    p_di->U.M2SCorLine.Thick = thickness;
+    p_di->U.M2SCorLine.Col = colour;
+
+    //TODO enlist instead of drawing directly
+    hud_draw_mapcoord_to_scrcoord_line(&p_di->U.M2SCorLine);
+    return true;
+}
+
+TbBool enlist_hud_draw_mapcoord_corner_rect(short cor_x, short cor_y_m8,
+  short cor_z, short width, short height, short lnlen, ubyte thickness,
+  ushort drwflags, TbPixel colour)
+{
+    struct DrawItemHud dih;
+    struct DrawItemHud *p_di;
+
+    p_di = &dih;
+
+    p_di->U.MapCorRect.Pt.X = cor_x;
+    p_di->U.MapCorRect.Pt.Y = cor_y_m8;
+    p_di->U.MapCorRect.Pt.Z = cor_z;
+    p_di->U.MapCorRect.Width = width;
+    p_di->U.MapCorRect.Height = height;
+    p_di->U.MapCorRect.LnLen = lnlen;
+    p_di->U.MapCorRect.DrwFlags = drwflags;
+    p_di->U.MapCorRect.Bright = 32;
+    p_di->U.MapCorRect.Thick = thickness;
+    p_di->U.MapCorRect.Col = colour;
+
+    //TODO enlist instead of drawing directly
+    hud_draw_mapcoord_corner_rect(&p_di->U.MapCorRect);
+    return true;
+}
+
+TbBool enlist_hud_draw_mapcoord_flat_circle(short cor_x,
+  short cor_y_m8, short cor_z, short radius,
+  ushort drwflags, ubyte thickness, TbPixel colour)
+{
+    struct DrawItemHud dih;
+    struct DrawItemHud *p_di;
+
+    p_di = &dih;
+
+    p_di->U.MapCorCircl.Pt.X = cor_x;
+    p_di->U.MapCorCircl.Pt.Y = cor_y_m8;
+    p_di->U.MapCorCircl.Pt.Z = cor_z;
+    p_di->U.MapCorCircl.Radius = radius;
+    p_di->U.MapCorCircl.DrwFlags = drwflags;
+    p_di->U.MapCorCircl.Bright = 32;
+    p_di->U.MapCorCircl.Thick = thickness;
+    p_di->U.MapCorCircl.Col = colour;
+
+    //TODO enlist instead of drawing directly
+    hud_draw_mapcoord_flat_circle(&p_di->U.MapCorCircl);
+    return true;
+}
+
+TbBool enlist_hud_draw_mapcoord_frame_one_colour(short cor_x, short cor_y,
+  short cor_z, ushort frm, ushort drwflags, TbPixel colour)
+{
+    struct DrawItemHud dih;
+    struct DrawItemHud *p_di;
+
+    p_di = &dih;
+
+    p_di->U.MapCorFrame.Pt.X = cor_x;
+    p_di->U.MapCorFrame.Pt.Y = 8 * cor_y;
+    p_di->U.MapCorFrame.Pt.Z = cor_z;
+    p_di->U.MapCorFrame.DrwFlags = drwflags;
+    p_di->U.MapCorFrame.Frame = frm;
+    p_di->U.MapCorFrame.Scale = 16;
+    p_di->U.MapCorFrame.Bright = 32;
+    p_di->U.MapCorFrame.Col = colour;
+
+    //TODO enlist instead of drawing directly
+    hud_draw_mapcoord_frame(&p_di->U.MapCorFrame);
+    return true;
+}
+
+TbBool enlist_hud_draw_mapcoord_sprites_in_quarters_unscaled(short cor_x,
+  short cor_y_m8, short cor_z, struct TbSprite * const p_sprlst[],
+  ushort drwflags, short radius)
+{
+    struct DrawItemHud dih;
+    struct DrawItemHud *p_di;
+
+    p_di = &dih;
+
+    p_di->U.MapCorSprLst.Pt.X = cor_x;
+    p_di->U.MapCorSprLst.Pt.Y = cor_y_m8;
+    p_di->U.MapCorSprLst.Pt.Z = cor_z;
+    p_di->U.MapCorSprLst.DrwFlags = drwflags;
+    p_di->U.MapCorSprLst.pSprLst = p_sprlst;
+    p_di->U.MapCorSprLst.Radius = radius;
+    p_di->U.MapCorSprLst.Scale = 16;
+    p_di->U.MapCorSprLst.Bright = 32;
+    p_di->U.MapCorSprLst.Col = 0;
+
+    //TODO enlist instead of drawing directly
+    hud_draw_mapcoord_sprites_in_quarters(&p_di->U.MapCorSprLst);
     return true;
 }
 

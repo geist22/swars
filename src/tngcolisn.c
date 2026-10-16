@@ -21,11 +21,9 @@
 #include <stdio.h>
 #include "bfline.h"
 
-#include "drawtext.h"
-#include "engincam.h"
 #include "engincolour.h"
-#include "engintrns.h"
 #include "enginzoom.h"
+#include "huddrwlstm.h"
 
 #include "bigmap.h"
 #include "drawtext_wrp.h"
@@ -70,42 +68,23 @@ void set_dome_col(struct Thing *p_building, ubyte flag)
     }
 }
 
-void draw_unkn1_bar(ushort cv)
+void draw_collision_vector_line(ushort colvect)
 {
-#if 0
-    asm volatile (
-      "call ASM_draw_unkn1_bar\n"
-        : : "a" (cv));
-#endif
-    short scr_x, scr_y;
-    struct EnginePoint ep1;
-    struct EnginePoint ep2;
-    char locstr[8];
+    struct ColVect *p_colvect;
+    TbPixel lncol, txcol;
 
-    ep1.X3d = game_col_vects[cv].X1 - engn_xc;
-    ep1.Z3d = game_col_vects[cv].Z1 - engn_zc;
-    ep1.Y3d = game_col_vects[cv].Y1;
-    ep1.Flags = 0;
-    transform_point(&ep1);
-    ep2.X3d = game_col_vects[cv].X2 - engn_xc;
-    ep2.Z3d = game_col_vects[cv].Z2 - engn_zc;
-    ep2.Y3d = game_col_vects[cv].Y2;
-    ep2.Flags = 0;
-    transform_point(&ep2);
-    LbDrawLine(ep1.pp.X, ep1.pp.Y, ep2.pp.X, ep2.pp.Y, colour_lookup[ColLU_WHITE]);
-    scr_x = ep2.pp.X + ep1.pp.X;
-    scr_y = ep2.pp.Y + ep1.pp.Y;
-    sprintf(locstr, "%d", cv);
-    draw_text(scr_x, scr_y, locstr, colour_lookup[ColLU_PINK]);
+    p_colvect = &game_col_vects[colvect];
+    lncol = colour_lookup[ColLU_WHITE];
+    txcol = colour_lookup[ColLU_PINK];
+
+    enlist_hud_draw_mapcoord_line_annotated_num(
+      p_colvect->X1, p_colvect->Y1, p_colvect->Z1,
+      p_colvect->X2, p_colvect->Y2, p_colvect->Z2,
+      colvect, 0, 1, lncol, txcol);
 }
 
 void draw_engine_unk3_last(short x, short z)
 {
-#if 0
-    asm volatile (
-      "call ASM_draw_engine_unk3_last\n"
-        : : "a" (x), "d" (z));
-#endif
     int x_beg, x_end;
     int z_beg, z_end;
     int cx, cz;
@@ -137,19 +116,19 @@ void draw_engine_unk3_last(short x, short z)
               cor_y = (mapel / 128) << 8;
               cor_x = (mapel % 128) << 8;
               col = 0x63u;
-              draw_line_transformed_at_ground(cor_x, cor_y, cor_x + 256, cor_y, col);
-              draw_line_transformed_at_ground(cor_x + 256, cor_y, cor_x + 256, cor_y + 256, col);
-              draw_line_transformed_at_ground(cor_x, cor_y + 256, cor_x + 256, cor_y + 256, col);
-              draw_line_transformed_at_ground(cor_x, cor_y + 256, cor_x, cor_y, col);
+              draw_mapcoord_line_at_ground(cor_x, cor_y, cor_x + 256, cor_y, col);
+              draw_mapcoord_line_at_ground(cor_x + 256, cor_y, cor_x + 256, cor_y + 256, col);
+              draw_mapcoord_line_at_ground(cor_x, cor_y + 256, cor_x + 256, cor_y + 256, col);
+              draw_mapcoord_line_at_ground(cor_x, cor_y + 256, cor_x, cor_y, col);
 
               p_cvlist = &game_col_vects_list[vl];
-              draw_unkn1_bar(p_cvlist->Vect);
+              draw_collision_vector_line(p_cvlist->Vect);
               vl = p_cvlist->NextColList & 0x7FFF;
               cor_x += 128;
               cor_y += 128;
 
               p_cvlist = &game_col_vects_list[vl];
-              draw_number_transformed_at_ground(cor_x, cor_y, p_cvlist->Object);
+              draw_mapcoord_simple_text_number_at_ground(cor_x, cor_y, p_cvlist->Object);
             }
         }
     }

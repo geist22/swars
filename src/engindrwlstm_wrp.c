@@ -21,6 +21,7 @@
 #include "bfendian.h"
 #include "bfmath.h"
 #include "bfmemut.h"
+#include "bfpalette.h"
 #include "bfutility.h"
 #include <assert.h>
 #include <limits.h>
@@ -107,8 +108,8 @@ struct unkn_mech_struc3 { // sizeof=0x76
 /******************************************************************************/
 extern ubyte byte_176D49;
 
-extern long dword_176CAC;
-extern long dword_176CB0;
+s32 bang_wobble_line_timer = 0;
+short veh_plasma_sparks_timer = 0;
 u32 dword_152E4C = 0x3F69A093;
 
 struct BulStart bul_starts[4000];
@@ -231,9 +232,9 @@ void draw_pers_e_graphic(struct Thing *p_thing,
     struct ShEnginePoint sp;
     int scr_depth;
     short br_inc;
-    short bri;
+    short brig;
 
-    bri = byte_152EF0[p_thing->SubType] + intensity;
+    brig = byte_152EF0[p_thing->SubType] + intensity;
     br_inc = person_shield_glow_brightness(p_thing);
 
     if ((render_floor_flags & RendFlrF_WobblyTerrain) != 0)
@@ -263,15 +264,15 @@ void draw_pers_e_graphic(struct Thing *p_thing,
         if ((ingame.Flags & GamF_ThermalView) != 0) {
             ushort frm;
             frm = nstart_ani[1066];
-            bri = 32;
+            brig = PALETTE_FADE_LEVELS / 2;
             draw_pers_frame_basic(p_thing, sp.X, sp.Y,
-              scr_depth, frm, bri);
+              scr_depth, frm, brig);
         }
     }
     else
     {
         draw_pers_frame_versioned(p_thing, sp.X, sp.Y,
-          scr_depth, frame, bri + br_inc);
+          scr_depth, frame, brig + br_inc);
     }
 
     if (br_inc > 0) {
@@ -324,13 +325,13 @@ void build_wobble_line(int x1, int y1, int z1,
 
 void draw_bang_wobble_line(struct SimpleThing *p_pow)
 {
-    if (dword_176CAC == 0)
+    if (bang_wobble_line_timer == 0)
         return;
 
     if ((dword_152E4C & 0xFF) <= 208)
         return;
 
-    dword_176CAC--;
+    bang_wobble_line_timer--;
 
     enlist_draw_bang_wobble_line(p_pow->U.UBang.shrapnel);
 }
@@ -396,7 +397,7 @@ void draw_bang(struct SimpleThing *p_pow)
         short tmp;
         tmp = (dword_152E4C & 0xFF);
         if (tmp > 240)
-            dword_176CAC = tmp - 240;
+            bang_wobble_line_timer = tmp - 240;
     }
     dword_152E4C = bw_rotr32(dword_152E4C, 7) + 0x16365267;
 
@@ -781,11 +782,11 @@ int draw_rot_object(int cor_dx, int cor_dy, int cor_dz,
       (p_thing->U.UVehicle.WorkPlace & VWPFlg_Unkn0080) != 0))
     {
         if ((LbRandomPosShort() & 0xFF) > 0xE0)
-            dword_176CB0 = (LbRandomPosShort() & 0xFF) - 0xD0;
+            veh_plasma_sparks_timer = (LbRandomPosShort() & 0xFF) - 0xD0;
 
-        if ((dword_176CB0 != 0) && (LbRandomPosShort() & 0xFF) > 0x90)
+        if ((veh_plasma_sparks_timer != 0) && (LbRandomPosShort() & 0xFF) > 0x90)
         {
-            dword_176CB0--;
+            veh_plasma_sparks_timer--;
             enlist_draw_plasma_sparks_on_object(point_object);
         }
     }

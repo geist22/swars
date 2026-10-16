@@ -22,11 +22,13 @@
 #include "bfbox.h"
 #include "bfline.h"
 #include "bfmath.h"
+#include "bfpalette.h"
 
 #include "drawtext.h"
 #include "engincam.h"
 #include "engincolour.h"
 #include "engintrns.h"
+#include "huddrwlstm.h"
 
 #include "bigmap.h"
 #include "building.h"
@@ -50,12 +52,9 @@ extern ubyte execute_commands;
 struct Thing *p_track_thing = NULL;
 struct Thing *p_track2_thing = NULL;
 int dword_1DC7A4 = 0;
-short word_1DC7A0 = 0;
-short word_1DC7A2 = 0;
-
-ushort word_1DC898 = 0;
-ushort word_1DC8CE = 0;
-ubyte byte_1DC89C[50];
+short dbgcmds_scroll_pos = 0;
+short dbgcmds_count = 0;
+short dbgcmds_hilight_cmd = -1;
 
 s32 mfilter_nearest_debug_selectable(ThingIdx thing, short X, short Z, ThingFilterParams *params)
 {
@@ -110,16 +109,14 @@ s32 mfilter_nearest_debug_selectable(ThingIdx thing, short X, short Z, ThingFilt
     return (dtZ * dtZ + dtX * dtX);
 }
 
-void unused_func_203(short x, short y, short thing, ubyte colkp)
+void draw_thingcoord_to_scrcoord_line(short scr_x, short scr_y, ThingIdx thing, ubyte colkp)
 {
     short tng_x, tng_y, tng_z;
+
     get_thing_position_mapcoords(&tng_x, &tng_y, &tng_z, thing);
 
-    if (lbDisplay.GraphicsScreenHeight < 400) {
-        x >>= 1;
-        y >>= 1;
-    }
-    unkn_draw_transformed_point(x, y, tng_x, tng_y, tng_z, colour_lookup[colkp]);
+    enlist_hud_draw_mapcoord_to_scrcoord_line(scr_x, scr_y,
+      tng_x, tng_y, tng_z, 0, 1, colour_lookup[colkp]);
 }
 
 int unused_func_200(short x, short y, ushort group)
@@ -130,18 +127,8 @@ int unused_func_200(short x, short y, ushort group)
     return ret;
 }
 
-void func_6fe80(int probe_x, int probe_y, int probe_z, int target_x, int target_y, int target_z, TbPixel colour)
+void draw_mapcoord_line_directed_to_target(int probe_x, int probe_y, int probe_z, int target_x, int target_y, int target_z, TbPixel colour)
 {
-#if 0
-    asm volatile (
-      "push %6\n"
-      "push %5\n"
-      "push %4\n"
-      "call ASM_func_6fe80\n"
-        : : "a" (probe_x), "d" (probe_y), "b" (probe_z), "c" (target_x), "g" (target_y), "g" (target_z), "g" (colour));
-#endif
-    struct EnginePoint ep1;
-    struct EnginePoint ep2;
     int dist_x, dist_y, dist_z;
     int tdist;
     int cur_x, cur_y, cur_z;
@@ -163,6 +150,7 @@ void func_6fe80(int probe_x, int probe_y, int probe_z, int target_x, int target_
     col2 = colour - 1;
     steps_tot = tdist / 50;
 
+    // Arrows toward target
     for (step = 1; step < steps_tot; step += 8)
     {
         cur_x = probe_x + dist_x * (step);
@@ -171,42 +159,16 @@ void func_6fe80(int probe_x, int probe_y, int probe_z, int target_x, int target_
         prv_x = probe_x + dist_x * (step - 1);
         prv_z = probe_z + dist_z * (step - 1);
 
-        ep1.X3d = cur_x - engn_xc;
-        ep1.Y3d = cur_y - engn_yc;
-        ep1.Z3d = cur_z - engn_zc;
-        ep1.Flags = 0;
-        transform_point(&ep1);
-        ep2.X3d = prv_x + dist_z - engn_xc;
-        ep2.Z3d = prv_z - dist_x - engn_zc;
-        ep2.Y3d = cur_y - engn_yc;
-        ep2.Flags = 0;
-        transform_point(&ep2);
-        LbDrawLine(ep1.pp.X, ep1.pp.Y, ep2.pp.X, ep2.pp.Y, col2);
+        enlist_hud_draw_mapcoord_line(cur_x, cur_y, cur_z,
+          prv_x + dist_z, cur_y, prv_z - dist_x, 0, 1, col2);
 
-        ep1.X3d = cur_x - engn_xc;
-        ep1.Y3d = cur_y - engn_yc;
-        ep1.Z3d = cur_z - engn_zc;
-        ep1.Flags = 0;
-        transform_point(&ep1);
-        ep2.X3d = prv_x - dist_z - engn_xc;
-        ep2.Y3d = cur_y - engn_yc;
-        ep2.Z3d = prv_z + dist_x - engn_zc;
-        ep2.Flags = 0;
-        transform_point(&ep2);
-        LbDrawLine(ep1.pp.X, ep1.pp.Y, ep2.pp.X, ep2.pp.Y, col2);
+        enlist_hud_draw_mapcoord_line(cur_x, cur_y, cur_z,
+          prv_x - dist_z, cur_y, prv_z + dist_x, 0, 1, col2);
     }
 
-    ep1.X3d = probe_x - engn_xc;
-    ep1.Y3d = probe_y - engn_yc;
-    ep1.Z3d = probe_z - engn_zc;
-    ep1.Flags = 0;
-    transform_point(&ep1);
-    ep2.X3d = target_x - engn_xc;
-    ep2.Y3d = target_y - engn_yc;
-    ep2.Z3d = target_z - engn_zc;
-    ep2.Flags = 0;
-    transform_point(&ep2);
-    LbDrawLine(ep1.pp.X, ep1.pp.Y, ep2.pp.X, ep2.pp.Y, colour);
+    // Line from floor under mouse to target
+    enlist_hud_draw_mapcoord_line(probe_x, probe_y, probe_z,
+      target_x, target_y, target_z, 0, 1, colour);
 }
 
 /** Searches all existing things in order to find one for debug.
@@ -251,7 +213,7 @@ int select_thing_for_debug(short x, short y, short z, short ttype)
         tng_z = MAP_COORD_HEIGHT / 2;
         colu = ColLU_GREYMD;
     }
-    func_6fe80(x, alt, z, tng_x, tng_y, tng_z, colour_lookup[colu]);
+    draw_mapcoord_line_directed_to_target(x, alt, z, tng_x, tng_y, tng_z, colour_lookup[colu]);
 
     if (thing == 0)
     {
@@ -269,29 +231,32 @@ int select_thing_for_debug(short x, short y, short z, short ttype)
         p_sthing = &sthings[thing];
         sprintf(locstr, "TH %d ID %d", thing, p_sthing->UniqueID);
     }
-    draw_text_transformed_at_ground(tng_x, tng_z, locstr);
+    draw_mapcoord_simple_text_at_ground(tng_x, tng_z, locstr);
     return thing;
 }
 
-void count_fnavs(TbBool a1)
+void count_fnavs(TbBool now_draw)
 {
-/*
-    asm volatile (
-      "call ASM_count_fnavs\n"
-        : : "a" (a1));
-*/
-    if (!a1)
+    static ushort dbgfnavs_count = 0;
+    static ubyte dbgfnavs[50];
+
+    if (!now_draw)
     {
-        byte_1DC89C[word_1DC898] = 0;
-        word_1DC898++;
+        if (dbgfnavs_count < sizeof(dbgfnavs)/sizeof(dbgfnavs[0])) {
+            dbgfnavs[dbgfnavs_count] = 0;
+            dbgfnavs_count++;
+        }
         return;
     }
     if ((ingame.Flags & GamF_NaviPerfInfo) != 0)
     {
         ushort i;
-        TbPixel col;
+        TbPixel colour;
+        ubyte brig;
 
-        for (i = 0; i < word_1DC898; i++)
+        brig = PALETTE_FADE_LEVELS / 2;
+
+        for (i = 0; i < dbgfnavs_count; i++)
         {
             short scr_x, scr_y, w, h;
 
@@ -299,28 +264,34 @@ void count_fnavs(TbBool a1)
             h = 3 * (pop1_sprites_scale + 1) / 2;
             scr_x = lbDisplay.GraphicsScreenWidth - 29 * (pop1_sprites_scale + 1) / 2;
             scr_y = lbDisplay.GraphicsScreenHeight - (29 + 6 * i) * (pop1_sprites_scale + 1) / 2;
-            if (byte_1DC89C[i])
-                col = colour_lookup[ColLU_GREEN];
+            if (dbgfnavs[i])
+                colour = colour_lookup[ColLU_GREEN];
             else
-                col = colour_lookup[ColLU_RED];
-            LbDrawBox(scr_x, scr_y, w, h, col);
+                colour = colour_lookup[ColLU_RED];
+            enlist_hud_draw_box(scr_x, scr_y, w, h, 0, brig, colour);
         }
     }
-    word_1DC898 = 0;
+    dbgfnavs_count = 0;
 }
 
-void navi_onscreen_debug(TbBool a1)
+void navi_onscreen_debug(TbBool now_draw)
 {
-    if (!a1)
+    static ushort navuse_count = 0;
+
+    if (!now_draw)
     {
-        word_1DC8CE++;
+        navuse_count++;
         return;
     }
     if ((ingame.Flags & GamF_NaviPerfInfo) != 0)
     {
         ushort i;
+        TbPixel colour;
+        ubyte brig;
 
-        for (i = 0; i < word_1DC8CE; i++)
+        brig = PALETTE_FADE_LEVELS / 2;
+
+        for (i = 0; i < navuse_count; i++)
         {
             short scr_x, scr_y, w, h;
 
@@ -328,10 +299,11 @@ void navi_onscreen_debug(TbBool a1)
             h = 5 * (pop1_sprites_scale + 1) / 2;
             scr_x = lbDisplay.GraphicsScreenWidth - 30 * (pop1_sprites_scale + 1) / 2;
             scr_y = lbDisplay.GraphicsScreenHeight - (30 + 6 * i) * (pop1_sprites_scale + 1) / 2;
-            LbDrawBox(scr_x, scr_y, w, h, colour_lookup[ColLU_BLUE]);
+            colour = colour_lookup[ColLU_BLUE];
+            enlist_hud_draw_box(scr_x, scr_y, w, h, 0, brig, colour);
         }
     }
-    word_1DC8CE = 0;
+    navuse_count = 0;
     count_fnavs(1);
 }
 
@@ -357,20 +329,19 @@ int person_command_dbg_point_to_target(short x, short y, ushort cmd, struct Thin
     case PCmd_WAIT_OBJT_DESTROY:
     case PCmd_WAND_OBJT_DESTROY:
     case PCmd_WAIT_P_PERSUADE:
-        unused_func_203(x, y, p_cmd->OtherThing, 1u);
+        draw_thingcoord_to_scrcoord_line(x, y, p_cmd->OtherThing, 1u);
         return 1;
     case PCmd_KILL_PERSON:
     case PCmd_CAMERA_TRACK:
-        unused_func_203(x, y, p_cmd->OtherThing, 2u);
+        draw_thingcoord_to_scrcoord_line(x, y, p_cmd->OtherThing, 2u);
         return 1;
     case PCmd_GO_TO_POINT:
     case PCmd_GOTOPOINT_FACE:
     case PCmd_RUN_TO_POINT:
-        unkn_draw_transformed_point(
-          x >> (lbDisplay.GraphicsScreenHeight < 400),
-          y >> (lbDisplay.GraphicsScreenHeight < 400),
-          p_cmd->X, p_cmd->Y, p_cmd->Z, colour_lookup[ColLU_RED]);
-        draw_map_flat_circle(p_cmd->X, p_cmd->Y, p_cmd->Z, p_cmd->Arg1 << 6, 2u);
+        enlist_hud_draw_mapcoord_to_scrcoord_line(x, y,
+          p_cmd->X, p_cmd->Y, p_cmd->Z, 0, 1, colour_lookup[ColLU_RED]);
+        enlist_hud_draw_mapcoord_flat_circle(p_cmd->X, p_cmd->Y, p_cmd->Z,
+          p_cmd->Arg1 << 6, 0, 1, 2u);
         return 1;
     case PCmd_KILL_MEM_GROUP:
     case PCmd_KILL_ALL_GROUP:
@@ -380,29 +351,26 @@ int person_command_dbg_point_to_target(short x, short y, ushort cmd, struct Thin
       return 1;
     case PCmd_BLOCK_PERSON:
     case PCmd_SCARE_PERSON:
-        unused_func_203(x, y, p_cmd->OtherThing, 4u);
+        draw_thingcoord_to_scrcoord_line(x, y, p_cmd->OtherThing, 4u);
         return 1;
     case PCmd_PERSUADE_PERSON:
     case PCmd_GET_ITEM:
-        unused_func_203(x, y, p_cmd->OtherThing, 5u);
+        draw_thingcoord_to_scrcoord_line(x, y, p_cmd->OtherThing, 5u);
         return 1;
     case PCmd_USE_WEAPON:
-        unkn_draw_transformed_point(
-          x >> (lbDisplay.GraphicsScreenHeight < 400),
-          y >> (lbDisplay.GraphicsScreenHeight < 400),
-          p_cmd->X, p_cmd->Y, p_cmd->Z, colour_lookup[ColLU_RED]);
+        enlist_hud_draw_mapcoord_to_scrcoord_line(x, y,
+          p_cmd->X, p_cmd->Y, p_cmd->Z, 0, 1, colour_lookup[ColLU_RED]);
         return 1;
     case PCmd_CATCH_FERRY:
     case PCmd_EXIT_FERRY:
-        unkn_draw_transformed_point(
-          x >> (lbDisplay.GraphicsScreenHeight < 400),
-          y >> (lbDisplay.GraphicsScreenHeight < 400),
-          p_cmd->X, p_cmd->Y, p_cmd->Z, colour_lookup[ColLU_RED]);
+        enlist_hud_draw_mapcoord_to_scrcoord_line(x, y,
+          p_cmd->X, p_cmd->Y, p_cmd->Z, 0, 1, colour_lookup[ColLU_RED]);
         if ((p_cmd->Flags & PCmdF_AreaIsRect) != 0) {
             draw_map_flat_rect(p_cmd->X, p_cmd->Y, p_cmd->Z,
               p_cmd->Arg1 - p_cmd->X, p_cmd->Time - p_cmd->Z, 2u);
         } else {
-            draw_map_flat_circle(p_cmd->X, p_cmd->Y, p_cmd->Z, p_cmd->Arg1 << 6, 2u);
+            enlist_hud_draw_mapcoord_flat_circle(p_cmd->X, p_cmd->Y, p_cmd->Z,
+              p_cmd->Arg1 << 6, 0, 1, 2u);
         }
         return 1;
     case PCmd_PROTECT_MEM_G:
@@ -413,24 +381,24 @@ int person_command_dbg_point_to_target(short x, short y, ushort cmd, struct Thin
         return 1;
     case PCmd_KILL_EVERYONE:
     case PCmd_WITHIN_AREA:
-        unkn_draw_transformed_point(
-          x >> (lbDisplay.GraphicsScreenHeight < 400),
-          y >> (lbDisplay.GraphicsScreenHeight < 400),
-          p_cmd->X, p_cmd->Y, p_cmd->Z, colour_lookup[ColLU_RED]);
+        enlist_hud_draw_mapcoord_to_scrcoord_line(x, y,
+          p_cmd->X, p_cmd->Y, p_cmd->Z, 0, 1, colour_lookup[ColLU_RED]);
         if ((p_cmd->Flags & PCmdF_AreaIsRect) != 0) {
             draw_map_flat_rect(p_cmd->X, p_cmd->Y, p_cmd->Z,
               p_cmd->Arg1 - p_cmd->X, p_cmd->Time - p_cmd->Z, 2u);
         } else {
-            draw_map_flat_circle(p_cmd->X, p_cmd->Y, p_cmd->Z, p_cmd->Arg1 << 6, 2u);
+            enlist_hud_draw_mapcoord_flat_circle(p_cmd->X, p_cmd->Y, p_cmd->Z,
+              p_cmd->Arg1 << 6, 0, 1, 2u);
         }
         return 1;
     case PCmd_WAIT_P_V_I_NEAR:
 	case PCmd_WAND_P_V_I_NEAR:
     case PCmd_UNTIL_P_V_I_NEAR:
-        unused_func_203(x, y, p_cmd->OtherThing, 1u);
+        draw_thingcoord_to_scrcoord_line(x, y, p_cmd->OtherThing, 1u);
         get_thing_position_mapcoords(&tng_x, &tng_y, &tng_z, p_person->ThingOffset);
 
-        draw_map_flat_circle(tng_x, tng_y, tng_z, p_cmd->Arg1 << 6, 2u);
+        enlist_hud_draw_mapcoord_flat_circle(tng_x, tng_y, tng_z,
+          p_cmd->Arg1 << 6, 0, 1, 2u);
         return 1;
     case PCmd_UNTIL_MEM_G_NEAR:
 	case PCmd_WAIT_ALL_G_NEAR:
@@ -441,21 +409,21 @@ int person_command_dbg_point_to_target(short x, short y, ushort cmd, struct Thin
         if ((lbShift & KMod_SHIFT) != 0)
             unused_func_200(x, y, p_cmd->OtherThing);
         get_thing_position_mapcoords(&tng_x, &tng_y, &tng_z, p_person->ThingOffset);
-        draw_map_flat_circle(tng_x, tng_y, tng_z, p_cmd->Arg1 << 6, 2u);
+        enlist_hud_draw_mapcoord_flat_circle(tng_x, tng_y, tng_z,
+          p_cmd->Arg1 << 6, 0, 1, 2u);
         return 1;
     case PCmd_UNTIL_P_V_I_ARRIVE:
     case PCmd_WAIT_P_V_I_ARRIVE:
     case PCmd_WAND_P_V_I_ARRIVE:
-        unused_func_203(x, y, p_cmd->OtherThing, 1u);
-        unkn_draw_transformed_point(
-          x >> (lbDisplay.GraphicsScreenHeight < 400),
-          y >> (lbDisplay.GraphicsScreenHeight < 400),
-          p_cmd->X, p_cmd->Y, p_cmd->Z, colour_lookup[ColLU_RED]);
+        draw_thingcoord_to_scrcoord_line(x, y, p_cmd->OtherThing, 1u);
+        enlist_hud_draw_mapcoord_to_scrcoord_line(x, y,
+          p_cmd->X, p_cmd->Y, p_cmd->Z, 0, 1, colour_lookup[ColLU_RED]);
         if ((p_cmd->Flags & PCmdF_AreaIsRect) != 0) {
             draw_map_flat_rect(p_cmd->X, p_cmd->Y, p_cmd->Z,
                 p_cmd->Arg1 - p_cmd->X, p_cmd->Time - p_cmd->Z, 2u);
         } else {
-            draw_map_flat_circle(p_cmd->X, p_cmd->Y, p_cmd->Z, p_cmd->Arg1 << 6, 2u);
+            enlist_hud_draw_mapcoord_flat_circle(p_cmd->X, p_cmd->Y, p_cmd->Z,
+              p_cmd->Arg1 << 6, 0, 1, 2u);
         }
         return 1;
     case PCmd_UNTIL_MEM_G_ARRIVE:
@@ -466,15 +434,14 @@ int person_command_dbg_point_to_target(short x, short y, ushort cmd, struct Thin
     case PCmd_WAND_ALL_G_ARRIVE:
         if ((lbShift & KMod_SHIFT) != 0)
             unused_func_200(x, y, p_cmd->OtherThing);
-        unkn_draw_transformed_point(
-          x >> (lbDisplay.GraphicsScreenHeight < 400),
-          y >> (lbDisplay.GraphicsScreenHeight < 400),
-          p_cmd->X, p_cmd->Y, p_cmd->Z, colour_lookup[ColLU_RED]);
+        enlist_hud_draw_mapcoord_to_scrcoord_line(x, y,
+          p_cmd->X, p_cmd->Y, p_cmd->Z, 0, 1, colour_lookup[ColLU_RED]);
         if ((p_cmd->Flags & PCmdF_AreaIsRect) != 0) {
             draw_map_flat_rect(p_cmd->X, p_cmd->Y, p_cmd->Z,
               p_cmd->Arg1 - p_cmd->X, p_cmd->Time - p_cmd->Z, 2u);
         } else {
-            draw_map_flat_circle(p_cmd->X, p_cmd->Y, p_cmd->Z, p_cmd->Arg1 << 6, 2u);
+            enlist_hud_draw_mapcoord_flat_circle(p_cmd->X, p_cmd->Y, p_cmd->Z,
+              p_cmd->Arg1 << 6, 0, 1, 2u);
         }
         return 1;
     default:
@@ -484,12 +451,19 @@ int person_command_dbg_point_to_target(short x, short y, ushort cmd, struct Thin
     return 0;
 }
 
-void draw_unkn_func_07(short x, short y, short a3, short a4, ubyte a5)
+ushort person_commands_count(ThingIdx person)
 {
-    asm volatile (
-      "push %4\n"
-      "call ASM_draw_unkn_func_07\n"
-        : : "a" (x), "d" (y), "b" (a3), "c" (a4), "g" ((u32)a5));
+    struct Thing *p_person;
+    ushort cmds_count;
+    short cmd, cmdhead;
+
+    p_person = &things[person];
+    cmdhead = p_person->U.UPerson.ComHead;
+    cmds_count = 0;
+    for (cmd = cmdhead; cmd != 0; cmds_count++)
+        cmd = game_commands[cmd].Next;
+
+    return cmds_count;
 }
 
 // TODO separate get_person_commands_debug_hud_inputs() from the below
@@ -498,21 +472,19 @@ void person_commands_debug_hud(int x, int y, int w, int h, ThingIdx person, ubyt
     struct Thing *p_person;
     ushort cmds_count;
     short cmd, cmdhead;
-#if 0
-    short hilight_cmd;
-#endif
     short cy;
     short ms_y;
+    ushort drwflags;
     char locstr[52];
     short box_x, box_y;
     short box_width, box_height;
     short row_height;
     short padding;
+    short brig;
     int j;
 
-#if 0
-    hilight_cmd = -1;
-#endif
+    dbgcmds_hilight_cmd = -1;
+    brig = PALETTE_FADE_LEVELS / 2;
     box_width = w;
     box_height = h;
     box_x = x;
@@ -526,91 +498,86 @@ void person_commands_debug_hud(int x, int y, int w, int h, ThingIdx person, ubyt
     }
 
     p_person = &things[person];
-    cmdhead = p_person->U.UPerson.ComHead;
-    cmds_count = 0;
-    for (cmd = cmdhead; cmd; cmds_count++)
-        cmd = game_commands[cmd].Next;
-
+    cmds_count = person_commands_count(person);
     if (cmds_count == 0)
         return;
 
     if (row_height * cmds_count + 2 * padding < box_height)
         box_height = row_height * cmds_count + 2 * padding;
-    if ((word_1DC7A0 >> 2) > word_1DC7A2 - 4)
-        word_1DC7A0 = 0;
-    word_1DC7A2 = cmds_count;
-    lbDisplay.DrawFlags = Lb_SPRITE_TRANSPAR4;
-    LbDrawBox(box_x, box_y, box_width, box_height, col3);
-    if (lbDisplay.GraphicsScreenHeight < 400) { // TODO get rid of the multiplying, when possible
-        box_width *= 2;
-        box_height *= 2;
-        box_x *= 2;
-        box_y *= 2;
-        row_height *= 2;
-        padding *= 2;
-    }
-    lbDisplay.DrawFlags = 0;
-    draw_unkn_func_07(box_x, box_y, box_width, box_height, col1);
+    if ((dbgcmds_scroll_pos >> 2) > dbgcmds_count - 4)
+        dbgcmds_scroll_pos = 0;
+    dbgcmds_count = cmds_count;
+
+    drwflags = Lb_SPRITE_TRANSPAR4;
+    enlist_hud_draw_box(box_x, box_y, box_width, box_height, drwflags,
+      brig, col3);
+    drwflags = Lb_SPRITE_OUTLINE;
+    enlist_hud_draw_box(box_x, box_y, box_width, box_height, drwflags,
+      brig, col1);
+
+    // Find first command to be displayed
+    cmdhead = p_person->U.UPerson.ComHead;
     cmd = cmdhead;
-    for (j = word_1DC7A0 >> 2; cmd; j--)
+    for (j = dbgcmds_scroll_pos >> 2; j > 0; j--)
     {
-        if (j == 0)
+        if (cmd == 0)
             break;
         cmd = game_commands[cmd].Next;
     }
-    cy = box_y + padding - 4 * (word_1DC7A0 & 3);
-    person_command_to_text(0, 0, 1);
+
+    cy = box_y + padding - row_height * (dbgcmds_scroll_pos & 3) / 4;
+    // Skip half-visible command (our simple text draw does not support partial draw)
+    if (dbgcmds_scroll_pos & 3) {
+        if (cmd != 0)
+            cmd = game_commands[cmd].Next;
+        cy += row_height;
+    }
 
     while (cmd != 0)
     {
-        if (cy > box_y)
-        {
-            if (mouse_move_over_box_coords(box_x + 8, cy, box_x + 8 + box_width, cy + row_height - 1))
-            {
-                if (lbDisplay.GraphicsScreenHeight < 400)
-                    LbDrawBox((box_x + padding)/2, (cy - 2)/2, (box_width - 2 * padding)/2, (row_height - 1)/2, col1);
-                else
-                    LbDrawBox(box_x + padding, cy - 2, box_width - 2 * padding, row_height - 1, col1);
-            }
-            if ((p_person != NULL) && (p_person->U.UPerson.ComCur == cmd))
-            {
-                if (lbDisplay.GraphicsScreenHeight < 400)
-                    LbDrawBox((box_x + padding)/2, (cy - 2)/2, (box_width - 2 * padding)/2, (row_height - 1)/2, colour_lookup[ColLU_GREEN]);
-                else
-                    LbDrawBox(box_x + padding, cy - 2, box_width - 2 * padding, row_height - 1, colour_lookup[ColLU_GREEN]);
-            }
+        if (cy + row_height > box_y + box_height)
+            break;
 
-#if 0
-            if (mouse_move_over_box_coords(box_x + 8, cy, box_x + 8 + box_width, cy + row_height - 1))
-            {
-                hilight_cmd = cmd;
-            }
-#endif
-            if (p_person != NULL)
-                person_command_dbg_point_to_target(box_x + 2 * padding - 20, cy + 5, cmd, p_person);
-            if (person_command_to_text(locstr, cmd, 0)) {
-                if (lbDisplay.GraphicsScreenHeight < 400)
-                    draw_text((box_x + 2 * padding)/2, (cy)/2, locstr, col2);
-                else
-                    draw_text(box_x + 2 * padding, cy, locstr, col2);
-            }
-            else
-            {
-                cy -= row_height;
-            }
-            if (cy + 28 > box_height + box_y)
-                break;
+        if (mouse_move_over_box_coords(box_x + 8, cy, box_x + 8 + box_width, cy + row_height - 1))
+        {
+            dbgcmds_hilight_cmd = cmd;
         }
+
+        drwflags = 0;
+        if (dbgcmds_hilight_cmd == cmd)
+        {
+            enlist_hud_draw_box(box_x + padding, cy - 2,
+              box_width - 2 * padding, row_height - 1, drwflags,
+              brig, col1);
+            drwflags |= Lb_SPRITE_TRANSPAR4;
+        }
+        if ((p_person != NULL) && (p_person->U.UPerson.ComCur == cmd))
+        {
+            enlist_hud_draw_box(box_x + padding, cy - 2,
+              box_width - 2 * padding, row_height - 1, drwflags,
+              brig, colour_lookup[ColLU_GREEN]);
+        }
+        lbDisplay.DrawFlags = 0;
+
+        if (p_person != NULL) {
+            person_command_dbg_point_to_target(box_x - 2 * padding, cy + row_height/3, cmd, p_person);
+        }
+        if (person_command_to_text(locstr, cmd, 0)) {
+            draw_simple_text(box_x + 2 * padding, cy, locstr, col2);
+        } else {
+            cy -= row_height;
+        }
+
         cy += row_height;
         cmd = game_commands[cmd].Next;
         ++j;
     }
 
-    ms_y = lbDisplay.GraphicsScreenHeight < 400 ? 2 * lbDisplay.MMouseY : lbDisplay.MMouseY;
-    if ((ms_y < box_y - 20) && (word_1DC7A0 > 0))
-        word_1DC7A0--;
-    if ((ms_y > box_height + box_y + 10) && (word_1DC7A0 >> 2 < word_1DC7A2 - (box_height >> 4)))
-        word_1DC7A0++;
+    ms_y = lbDisplay.MMouseY;
+    if ((ms_y < box_y - 20) && (dbgcmds_scroll_pos > 0))
+        dbgcmds_scroll_pos--;
+    if ((ms_y > box_y + box_height + 10) && ((dbgcmds_scroll_pos >> 2) < dbgcmds_count - (box_height / row_height)))
+        dbgcmds_scroll_pos++;
 }
 
 void things_debug_hud(void)
@@ -649,7 +616,7 @@ void things_debug_hud(void)
         return;
 
     if (lbDisplay.GraphicsScreenHeight < 400) {
-        cmdf_scr_w = 125;
+        cmdf_scr_w = 160;
         cmdf_scr_h = 75;
     } else {
         cmdf_scr_w = 250;
@@ -660,7 +627,11 @@ void things_debug_hud(void)
     scr_x = 16 * pop1_sprites_scale;
     scr_y = 30 * pop1_sprites_scale;
     // Right column (commands list)
-    cmdf_scr_x = lbDisplay.GraphicsScreenWidth - cmdf_scr_w - 32 * pop1_sprites_scale;
+    if (lbDisplay.GraphicsScreenHeight < 400) {
+        cmdf_scr_x = lbDisplay.GraphicsScreenWidth - cmdf_scr_w - 8 * pop1_sprites_scale;
+    } else {
+        cmdf_scr_x = lbDisplay.GraphicsScreenWidth - cmdf_scr_w - 32 * pop1_sprites_scale;
+    }
     cmdf_scr_y = scr_y + 38 * pop1_sprites_scale;
 
     if (thing < 0)
@@ -674,24 +645,24 @@ void things_debug_hud(void)
               (int)p_sthing->State);
             snprintf(locstr+strlen(locstr), sizeof(locstr)-strlen(locstr), " th %d",
               (int)p_sthing->ThingOffset);
-            draw_text(scr_x, scr_y + ln*0, locstr, colour_lookup[ColLU_WHITE]);
+            draw_simple_text(scr_x, scr_y + ln*0, locstr, colour_lookup[ColLU_WHITE]);
 
             sprintf(locstr, "F  %08x SF %d F %d",
               (uint)p_sthing->Flag,
               (int)p_sthing->StartFrame,
               (int)p_sthing->Frame);
-            draw_text(scr_x, scr_y + ln*1, locstr, colour_lookup[ColLU_WHITE]);
+            draw_simple_text(scr_x, scr_y + ln*1, locstr, colour_lookup[ColLU_WHITE]);
 
             sprintf(locstr, "%s",
               thing_type_name(p_sthing->Type, p_sthing->SubType));
-            draw_text(cmdf_scr_x + 8 * pop1_sprites_scale, cmdf_scr_y - ln, locstr, colour_lookup[ColLU_PINK]);
+            draw_simple_text(cmdf_scr_x + 8 * pop1_sprites_scale, cmdf_scr_y - ln, locstr, colour_lookup[ColLU_PINK]);
         }
         return;
     }
     p_track_thing = &things[thing];
     p_track2_thing = &things[thing];
     get_thing_position_mapcoords(&tng_x, &tng_y, &tng_z, thing);
-    func_6fe80(mouse_map_x, mouse_map_y, mouse_map_z,  tng_x, tng_y, tng_z,
+    draw_mapcoord_line_directed_to_target(mouse_map_x, mouse_map_y, mouse_map_z,  tng_x, tng_y, tng_z,
       colour_lookup[ColLU_WHITE]);
     // Show commands list
     {
@@ -753,7 +724,7 @@ void things_debug_hud(void)
               (int)p_track_thing->ThingOffset);
             break;
         }
-        draw_text(scr_x, scr_y, locstr, colour_lookup[ColLU_WHITE]);
+        draw_simple_text(scr_x, scr_y, locstr, colour_lookup[ColLU_WHITE]);
 
         switch (p_track_thing->Type)
         {
@@ -814,7 +785,7 @@ void things_debug_hud(void)
               (int)p_track_thing->Frame);
             break;
         }
-        draw_text(scr_x, scr_y + ln*1, locstr, colour_lookup[ColLU_WHITE]);
+        draw_simple_text(scr_x, scr_y + ln*1, locstr, colour_lookup[ColLU_WHITE]);
 
         switch (p_track_thing->Type)
         {
@@ -854,7 +825,7 @@ void things_debug_hud(void)
               (uint)p_track_thing->Flag2);
             break;
         }
-        draw_text(scr_x, scr_y + ln*2, locstr, colour_lookup[ColLU_WHITE]);
+        draw_simple_text(scr_x, scr_y + ln*2, locstr, colour_lookup[ColLU_WHITE]);
 
         // Print targets separately as we need their positions to draw line to the things they relate to
 
@@ -862,38 +833,38 @@ void things_debug_hud(void)
         sprintf(locstr, "Targ2 %d", (int)p_track_thing->U.UPerson.Target2);
         trg2_scr_x = scr_x;
         trg2_scr_y = scr_y + ln*3;
-        draw_text(trg2_scr_x, trg2_scr_y, locstr, colour_lookup[ColLU_WHITE]);
+        draw_simple_text(trg2_scr_x, trg2_scr_y, locstr, colour_lookup[ColLU_WHITE]);
 
         short targ_scr_x, targ_scr_y;
         sprintf(locstr, "pTarg %x",  (uint)p_track_thing->PTarget);
         targ_scr_x = scr_x + 45;
         targ_scr_y = scr_y + ln*3;
-        draw_text(targ_scr_x, targ_scr_y, locstr, colour_lookup[ColLU_WHITE]);
+        draw_simple_text(targ_scr_x, targ_scr_y, locstr, colour_lookup[ColLU_WHITE]);
 
         short gtti_scr_x, gtti_scr_y;
         sprintf(locstr, "gotoTI %d", (int)p_track_thing->GotoThingIndex);
         gtti_scr_x = scr_x + 110;
         gtti_scr_y = scr_y + ln*3;
-        draw_text(gtti_scr_x, gtti_scr_y, locstr, colour_lookup[ColLU_WHITE]);
+        draw_simple_text(gtti_scr_x, gtti_scr_y, locstr, colour_lookup[ColLU_WHITE]);
 
         if (p_track_thing->Flag & TngF_DangerFlee)
-            draw_text(scr_x + 0, scr_y + ln*4, "Da", colour_lookup[ColLU_WHITE]);
+            draw_simple_text(scr_x + 0, scr_y + ln*4, "Da", colour_lookup[ColLU_WHITE]);
         if (p_track_thing->Flag & TngF_WepRecoil)
-            draw_text(scr_x + 20, scr_y + ln*4, "Re", colour_lookup[ColLU_WHITE]);
+            draw_simple_text(scr_x + 20, scr_y + ln*4, "Re", colour_lookup[ColLU_WHITE]);
         if (p_track_thing->Flag & TngF_Unkn00020000)
-            draw_text(scr_x + 40, scr_y + ln*4, "Si", colour_lookup[ColLU_WHITE]);
+            draw_simple_text(scr_x + 40, scr_y + ln*4, "Si", colour_lookup[ColLU_WHITE]);
         if (p_track_thing->Flag & TngF_Destroyed)
-            draw_text(scr_x + 60, scr_y + ln*4, "De", colour_lookup[ColLU_WHITE]);
+            draw_simple_text(scr_x + 60, scr_y + ln*4, "De", colour_lookup[ColLU_WHITE]);
         if (p_track_thing->Flag & TngF_WepCharging)
-            draw_text(scr_x + 80, scr_y + ln*4, "Ch", colour_lookup[ColLU_WHITE]);
+            draw_simple_text(scr_x + 80, scr_y + ln*4, "Ch", colour_lookup[ColLU_WHITE]);
         if (p_track_thing->Flag & TngF_Unkn0040)
-            draw_text(scr_x + 100, scr_y + ln*4, "CI", colour_lookup[ColLU_WHITE]);
+            draw_simple_text(scr_x + 100, scr_y + ln*4, "CI", colour_lookup[ColLU_WHITE]);
         if (p_track_thing->Flag & TngF_ShootAtPos)
-            draw_text(scr_x + 120, scr_y + ln*4, "SAP", colour_lookup[ColLU_WHITE]);
+            draw_simple_text(scr_x + 120, scr_y + ln*4, "SAP", colour_lookup[ColLU_WHITE]);
         if (p_track_thing->Flag & TngF_StationrSht)
-            draw_text(scr_x + 160, scr_y + ln*4, "Sta", colour_lookup[ColLU_RED]);
+            draw_simple_text(scr_x + 160, scr_y + ln*4, "Sta", colour_lookup[ColLU_RED]);
         if (p_track_thing->Flag & TngF_TriggerUse)
-            draw_text(scr_x + 230, scr_y + ln*4, "TRIG", colour_lookup[ColLU_WHITE]);
+            draw_simple_text(scr_x + 230, scr_y + ln*4, "TRIG", colour_lookup[ColLU_WHITE]);
 
         switch (p_track_thing->Type)
         {
@@ -918,7 +889,7 @@ void things_debug_hud(void)
                       thing_type_name(p_track_thing->Type, p_track_thing->SubType),
                       thing_type_name(p_spasngr->Type, p_spasngr->SubType), (int)pasngr);
                 }
-            draw_text(cmdf_scr_x + 8 * pop1_sprites_scale, cmdf_scr_y - ln, locstr, colour_lookup[ColLU_RED]);
+            draw_simple_text(cmdf_scr_x + 8 * pop1_sprites_scale, cmdf_scr_y - ln, locstr, colour_lookup[ColLU_RED]);
             break;
         case TT_PERSON:
             sprintf(locstr, "%s: lastdist %d VX,VZ (%d,%d)",
@@ -926,12 +897,12 @@ void things_debug_hud(void)
               (int)p_track_thing->U.UPerson.LastDist,
               (int)p_track_thing->VX,
               (int)p_track_thing->VZ);
-            draw_text(cmdf_scr_x + 8 * pop1_sprites_scale, cmdf_scr_y - ln, locstr, colour_lookup[ColLU_GREEN]);
+            draw_simple_text(cmdf_scr_x + 8 * pop1_sprites_scale, cmdf_scr_y - ln, locstr, colour_lookup[ColLU_GREEN]);
             break;
         default:
             sprintf(locstr, "%s",
               thing_type_name(p_track_thing->Type, p_track_thing->SubType));
-            draw_text(cmdf_scr_x + 8 * pop1_sprites_scale, cmdf_scr_y - ln, locstr, colour_lookup[ColLU_PINK]);
+            draw_simple_text(cmdf_scr_x + 8 * pop1_sprites_scale, cmdf_scr_y - ln, locstr, colour_lookup[ColLU_PINK]);
             break;
         }
 
@@ -941,7 +912,7 @@ void things_debug_hud(void)
           (int)cybmod_arms_level(&p_track_thing->U.UPerson.UMod),
           (int)cybmod_brain_level(&p_track_thing->U.UPerson.UMod),
           (int)cybmod_skin_level(&p_track_thing->U.UPerson.UMod));
-        draw_text(scr_x, scr_y + ln*5, locstr, colour_lookup[ColLU_WHITE]);
+        draw_simple_text(scr_x, scr_y + ln*5, locstr, colour_lookup[ColLU_WHITE]);
 
         sprintf(locstr, "T1 %d T2 %d ct %d RT %d BC %d",
           (int)p_track_thing->Timer1,
@@ -949,7 +920,7 @@ void things_debug_hud(void)
           (int)p_track_thing->U.UPerson.ComTimer,
           (int)p_track_thing->U.UPerson.RecoilTimer,
           (int)p_track_thing->U.UPerson.BumpCount);
-        draw_text(scr_x, scr_y + ln*6, locstr, colour_lookup[ColLU_WHITE]);
+        draw_simple_text(scr_x, scr_y + ln*6, locstr, colour_lookup[ColLU_WHITE]);
 
         path = p_track_thing->U.UPerson.PathIndex;
         if (path != 0)
@@ -964,8 +935,8 @@ void things_debug_hud(void)
                   (int)my_paths[path].Flag,
                   (int)my_paths[path].X[0] >> 8,
                   (int)my_paths[path].Z[0] >> 8);
-                draw_text(scr_x + 22, cy, locstr, colour_lookup[0]);
-                draw_text(scr_x + 20, cy, locstr, colour_lookup[ColLU_WHITE]);
+                draw_simple_text(scr_x + 22, cy, locstr, colour_lookup[0]);
+                draw_simple_text(scr_x + 20, cy, locstr, colour_lookup[ColLU_WHITE]);
                 path = my_paths[path].Next;
                 cy += ln;
             }
@@ -975,16 +946,16 @@ void things_debug_hud(void)
         {
             short tgtng_x, tgtng_y, tgtng_z;
             get_thing_position_mapcoords(&tgtng_x, &tgtng_y, &tgtng_z, p_track_thing->U.UPerson.Target2);
-            unkn_draw_transformed_point(trg2_scr_x, trg2_scr_y + ln/2, tgtng_x, tgtng_y, tgtng_z,
-              colour_lookup[ColLU_RED]);
+            enlist_hud_draw_mapcoord_to_scrcoord_line(trg2_scr_x, trg2_scr_y + ln/2,
+              tgtng_x, tgtng_y, tgtng_z, 0, 1, colour_lookup[ColLU_RED]);
         }
 
         if (p_track_thing->GotoThingIndex != 0)
         {
             short gttng_x, gttng_y, gttng_z;
             get_thing_position_mapcoords(&gttng_x, &gttng_y, &gttng_z, p_track_thing->GotoThingIndex);
-            unkn_draw_transformed_point(gtti_scr_x, gtti_scr_y + ln/2, gttng_x, gttng_y, gttng_z,
-              colour_lookup[ColLU_GREEN]);
+            enlist_hud_draw_mapcoord_to_scrcoord_line(gtti_scr_x, gtti_scr_y + ln/2,
+              gttng_x, gttng_y, gttng_z, 0, 1, colour_lookup[ColLU_GREEN]);
         }
 
         if (p_track_thing->PTarget != NULL)
@@ -996,7 +967,7 @@ void things_debug_hud(void)
                 get_thing_position_mapcoords(&tgtng_x, &tgtng_y, &tgtng_z, p_target->ThingOffset);
             else
                 tgtng_x = tgtng_y = tgtng_z = 0;
-            func_6fd1c(tng_x, tng_y, tng_z, tgtng_x, tgtng_y, tgtng_z,
+            draw_mapcoord_line_col2(tng_x, tng_y, tng_z, tgtng_x, tgtng_y, tgtng_z,
               colour_lookup[ColLU_BLUE]);
         }
 
@@ -1004,6 +975,7 @@ void things_debug_hud(void)
     }
 }
 
+//TODO remove last arg and add out_len instead?
 TbBool person_command_to_text(char *out, ushort cmd, ubyte a3)
 {
     struct Command *p_cmd;
@@ -1016,7 +988,7 @@ TbBool person_command_to_text(char *out, ushort cmd, ubyte a3)
 
     o = out;
     if (a3 == 1)
-        return a3 ^ 1;
+        return 0;
 
     p_cmd = &game_commands[cmd];
 

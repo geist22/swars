@@ -75,6 +75,7 @@
 #include "dos.h"
 #include "drawshape.h"
 #include "drawtext.h"
+#include "drawtext_wrp.h"
 #include "embedanim.h"
 #include "enginbckt.h"
 #include "engindrwlstm_wrp.h"
@@ -164,6 +165,7 @@
 #include "wadfile.h"
 #include "weapon.h"
 #include "wrcities.h"
+#include "agent_cosmetics.h"
 
 /** Expected sizes for font DAT/TAB files for resolution 320x200.
  * Each file has 205 sprites, TAB has 6 bytes per entry, DAT varies to use empirical value.
@@ -1367,23 +1369,41 @@ void process_view_inputs(int thing)
     process_overall_scale(zoom);
 }
 
-void func_6fd1c(int a1, int a2, int a3, int a4, int a5, int a6, ubyte a7)
+void draw_mapcoord_line_col2(int cor1_x, int cor1_y, int cor1_z,
+  int cor2_x, int cor2_y, int cor2_z, TbPixel colour)
 {
+#if 0
     // Pushed through a register holding them: a "g" operand may be placed
     // relative to the stack pointer, which each push moves.
     int stkargs[3];
 
-    stkargs[0] = (int)(intptr_t)a5;
-    stkargs[1] = (int)(intptr_t)a6;
-    stkargs[2] = (int)(intptr_t)a7;
+    stkargs[0] = (int)(intptr_t)cor2_y;
+    stkargs[1] = (int)(intptr_t)cor2_z;
+    stkargs[2] = (int)(intptr_t)colour;
 
     asm volatile (
       "push 8(%4)\n"
       "push 4(%4)\n"
       "push 0(%4)\n"
-      "call ASM_func_6fd1c\n"
-        : : "a" (a1), "d" (a2), "b" (a3), "c" (a4), "S" (stkargs)
+      "call ASM_draw_mapcoord_line_col2\n"
+        : : "a" (cor1_x), "d" (cor1_y), "b" (cor1_z), "c" (cor2_x), "S" (stkargs)
         : "cc", "memory");
+    return;
+#endif
+    struct EnginePoint ep1;
+    struct EnginePoint ep2;
+
+    ep2.X3d = cor1_x - engn_xc;
+    ep2.Y3d = cor1_y; // subtracted within transform_point(): - 8 * engn_yc;
+    ep2.Z3d = cor1_z - engn_zc;
+    ep2.Flags = 0;
+    transform_point(&ep2);
+    ep1.X3d = cor2_x - engn_xc;
+    ep1.Y3d = cor2_y; // subtracted within transform_point(): - 8 * engn_yc;
+    ep1.Z3d = cor2_z - engn_zc;
+    ep1.Flags = 0;
+    transform_point(&ep1);
+    LbDrawLine(ep2.pp.X, ep2.pp.Y, ep1.pp.X, ep1.pp.Y, colour);
 }
 
 void check_mouse_overvehicle(struct Thing *p_thing, ubyte target_assign)
@@ -1505,67 +1525,6 @@ void screen_animate_draw_outro_text(void)
         break;
     }
     func_cc638(text1, text2);
-}
-
-TbKeyCode screen_wait_seconds_or_until_continue_key(int sec)
-{
-    int i;
-    TbKeyCode key;
-
-    clear_key_pressed(KC_SPACE);
-    clear_key_pressed(KC_ESCAPE);
-    clear_key_pressed(KC_RETURN);
-
-    key = KC_UNASSIGNED;
-    for (i = sec*game_num_fps; i != 0; i--)
-    {
-        if (is_key_pressed(KC_SPACE, KMod_DONTCARE)) {
-            key = KC_SPACE;
-            break;
-        }
-        if (is_key_pressed(KC_ESCAPE, KMod_DONTCARE)) {
-            key = KC_ESCAPE;
-            break;
-        }
-        if (is_key_pressed(KC_RETURN, KMod_DONTCARE)) {
-            key = KC_RETURN;
-            break;
-        }
-
-        swap_wscreen();
-        game_update();
-    }
-    clear_key_pressed(key);
-
-    return key;
-}
-
-TbKeyCode screen_wait_seconds_or_until_yesno_key(int sec)
-{
-    int i;
-    TbKeyCode key;
-
-    clear_key_pressed(KC_Y);
-    clear_key_pressed(KC_N);
-
-    key = KC_UNASSIGNED;
-    for (i = sec*game_num_fps; i != 0; i--)
-    {
-        if (is_key_pressed(KC_Y, KMod_DONTCARE)) {
-            key = KC_Y;
-            break;
-        }
-        if (is_key_pressed(KC_N, KMod_DONTCARE)) {
-            key = KC_N;
-            break;
-        }
-
-        swap_wscreen();
-        game_update();
-    }
-    clear_key_pressed(key);
-
-    return key;
 }
 
 void init_outro(void)
@@ -1979,11 +1938,6 @@ void calc_bul_offsets(void)
 
 void init_engine(void)
 {
-#if 0
-    asm volatile ("call ASM_init_engine\n"
-        :  :  : "eax" );
-    return;
-#endif
     p_current_sort_sprite = game_sort_sprites;
     p_current_draw_item = game_draw_list + 1;
 
@@ -3064,9 +3018,9 @@ void game_startup_fail_screen(void)
     LbPaletteDraw(cent_x - embeded_square_dim/2, cent_y - embeded_square_dim/2, embeded_square_dim/16, embeded_square_dim/16, 0);
     LbDrawBox(cent_x - embeded_square_dim/6, cent_y - circle_diam*2/64, embeded_square_dim * 2 / 6, circle_diam*5/64, 0);
 
-    draw_text(cent_x - 40, cent_y - circle_diam*1/64, "U.T.O.P.I.A.", col_white);
-    draw_text(cent_x - 40, cent_y - circle_diam*0/64, "Game startup failed!", col_white);
-    draw_text(cent_x - 40, cent_y + circle_diam*1/64, "Check \"error.log\".", col_white);
+    draw_simple_text(cent_x - 40, cent_y - circle_diam*1/64, "U.T.O.P.I.A.", col_white);
+    draw_simple_text(cent_x - 40, cent_y - circle_diam*0/64, "Game startup failed!", col_white);
+    draw_simple_text(cent_x - 40, cent_y + circle_diam*1/64, "Check \"error.log\".", col_white);
 
     if (!was_locked)
         LbScreenUnlock();
@@ -3097,6 +3051,7 @@ TbBool game_setup(void)
         LOGERR("Rules config file loading failed.");
         ret = false;
     }
+    read_agent_cosmetics_file();
     read_weapons_conf_file();
     read_cybmods_conf_file();
     bang_init();
@@ -3478,11 +3433,6 @@ TbResult clear_vecs_screen(TbPixel colour)
 
 void gproc3_unknsub2(void)
 {
-#if 0
-    asm volatile ("call ASM_gproc3_unknsub2\n"
-        :  :  : "eax" );
-    return;
-#endif
     struct CameraState cam_bkp;
     short ms_x, ms_y, ms_limit;
     TbPixel *outbuf;
@@ -3647,10 +3597,30 @@ ubyte load_game_slot(ubyte click)
 
 ubyte save_game_slot(ubyte click)
 {
+#if 0
     ubyte ret;
     asm volatile ("call ASM_save_game_slot\n"
         : "=r" (ret) : "a" (click));
     return ret;
+#endif
+    char *slot_str;
+    int ret;
+
+    if (login_control[0].State != LognCt_Unkn6) {
+        return 0;
+    }
+    if (save_slot == -1) {
+        alert_box_text_fmt("%s", gui_strings[564]);
+        return 1;
+    }
+    slot_str = save_slot_names[save_slot - save_slot_base - 1];
+    ret = save_game_write(save_slot, slot_str);
+    if (ret) {
+        alert_box_text_fmt("%s", gui_strings[566]);
+    } else {
+        alert_box_text_fmt("%s", gui_strings[571]);
+    }
+    return 1;
 }
 
 void reinit_unkn6_always_reset_variables(void)
@@ -5545,9 +5515,9 @@ ubyte do_user_interface(void)
             p_agent = p_locplayer->MyAgent[n];
             if (p_agent->Type != TT_PERSON) continue;
 
-            if (person_can_accept_control(p_agent->ThingOffset) && ((p_agent->Flag2 & TgF2_KnockedOut) == 0))
+            if (person_can_accept_control(p_agent->ThingOffset) && ((p_agent->Flag2 & TgF2_KnockedOut) == 0) && !(lbShift & KMod_SHIFT))
             {
-                clear_gamekey_pressed(gkey);
+				clear_gamekey_pressed(gkey);
                 if (p_locplayer->DoubleMode)
                 {
                     byte_153198 = n+1;
@@ -5561,25 +5531,33 @@ ubyte do_user_interface(void)
                     // Double tapping - center view on the agent
                     if (gameturn - last_sel_agent_turn[n] < 7)
                     {
-                      struct Packet *p_pckt;
+                        struct Packet *p_pckt;
 
-                      p_pckt = &packets[local_player_no];
+                        p_pckt = &packets[local_player_no];
 
-                      game_set_cam_track_thing_xz(p_agent->ThingOffset);
-                      engn_yc = PRCCOORD_TO_MAPCOORD(p_agent->Y);
-                      dcthing = p_locplayer->DirectControl[mouser];
-                      build_packet(p_pckt, PAct_SELECT_AGENT, dcthing, p_agent->ThingOffset, 0, 0);
-                      if (p_agent->ThingOffset == (short)p_locplayer->DirectControl[mouser])
-                      {
-                          engn_xc = PRCCOORD_TO_MAPCOORD(p_agent->X);
-                          engn_zc = PRCCOORD_TO_MAPCOORD(p_agent->Z);
-                      }
+                        game_set_cam_track_thing_xz(p_agent->ThingOffset);
+                        engn_yc = PRCCOORD_TO_MAPCOORD(p_agent->Y);
+                        dcthing = p_locplayer->DirectControl[mouser];
+                        build_packet(p_pckt, PAct_SELECT_AGENT, dcthing, p_agent->ThingOffset, 0, 0);
+                        if (p_agent->ThingOffset == (short)p_locplayer->DirectControl[mouser])
+                        {
+                            engn_xc = PRCCOORD_TO_MAPCOORD(p_agent->X);
+                            engn_zc = PRCCOORD_TO_MAPCOORD(p_agent->Z);
+                        }
                     }
                     last_sel_agent_turn[n] = gameturn;
                 }
-                did_inp |= GINPUT_PACKET;
-                return did_inp;
+				did_inp |= GINPUT_PACKET;
+				return did_inp;
             }
+			else if (lbShift & KMod_SHIFT) {
+				clear_gamekey_pressed(gkey);
+				if (person_carries_any_medikit(p_agent->ThingOffset)) {
+					my_build_packet(&packets[local_player_no], PAct_AGENT_USE_MEDIKIT, p_agent->ThingOffset, 0, 0, 0);
+				}
+				did_inp |= GINPUT_PACKET;
+				return did_inp;
+			}
         }
     }
 
@@ -6449,22 +6427,11 @@ ubyte critical_action_input(void)
     TbKeyCode key;
 
     strcpy(locstr, "Confirm Critical Action Y/N?");
+
     DangerMusicFadeSwitch(2, 4u);
     SetMusicTempo(110, 1000);
-    {
-        int x, y, w, h;
-        short tx_height;
 
-        tx_height = my_char_height('A');
-        w = my_string_width(locstr) + 2 * tx_height;
-        h = 3 * tx_height;
-        x = (lbDisplay.GraphicsWindowWidth - w) / 2;
-        y = (lbDisplay.GraphicsWindowHeight - h) / 2;
-
-        draw_purple_rect(x, y, w, h, 0);
-        draw_text(x + tx_height, y + tx_height, locstr, 0xC);
-    }
-
+    draw_message_box(locstr);
     key = screen_wait_seconds_or_until_yesno_key(20);
 
     DangerMusicFadeSwitch(1, 1);

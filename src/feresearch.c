@@ -672,8 +672,8 @@ ubyte show_research_graph(struct ScreenBox *box)
             wdefa = &weapon_defs_a[research.CurrentWeapon + 1];
 
             const ushort Funding = use_classic_research
-				? wdefa->FundingClassic
-				: wdef->Funding;
+				        ? wdefa->FundingClassic
+				        : wdef->Funding;
             y_trend_delta = research_unkn_func_004(wdef->PercentPerDay, Funding, research.WeaponFunding);
 
             draw_chartxy_curve(1, 0, w, h, y_vals, n_y_vals, RESEARCH_COMPLETE_POINTS, y_trend_delta, 10);
@@ -691,8 +691,8 @@ ubyte show_research_graph(struct ScreenBox *box)
             mdefa = &mod_defs_a[research.CurrentMod + 1];
 
             const ushort Funding = use_classic_research
-				? mdefa->FundingClassic
-				: mdef->Funding;
+				        ? mdefa->FundingClassic
+				        : mdef->Funding;
             y_trend_delta = research_unkn_func_004(mdef->PercentPerDay, Funding, research.ModFunding);
 
             draw_chartxy_curve(1, 0, w, h, y_vals, n_y_vals, RESEARCH_COMPLETE_POINTS, y_trend_delta, 10);
