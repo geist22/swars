@@ -5,7 +5,7 @@
 /** @file app_text_cw.h
  *     Header file for app_text_cw.c.
  * @par Purpose:
- *     Allows drawing text coloured in a wave-like transsition.
+ *     Allows drawing text coloured in a wave-like transition.
  * @par Comment:
  *     None.
  * @author   Tomasz Lis
@@ -55,11 +55,6 @@ TbBool AppTextDrawColourWave(int posx, int posy, const char *text);
  * @return
  */
 TbBool AppTextDrawColourWaveResized(int posx, int posy, int units_per_px, const char *text);
-
-/** Altered version of LbFontCharSprite() which returns non-const reference.
- */
-struct TbSprite *AppFontCharSpriteRW(struct TbSprite *font,
-  const ulong chr);
 
 #ifdef __cplusplus
 };

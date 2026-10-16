@@ -38,6 +38,7 @@ enum AnimSlot {
   AniSl_CYBORG_BRTH = 8,
   AniSl_NETSCAN = 9,
   AniSl_SCRATCH = 10,	/**< scratch buffer for some transparent menu animations */
+  AniSl_SLOTS_COUNT,
 };
 
 /******************************************************************************/

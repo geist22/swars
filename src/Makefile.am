@@ -4,7 +4,6 @@ bindir = $(prefix)/$(PACKAGE)
 MKW = $(PYTHON) $(top_srcdir)/util/mkwrappers
 
 syndwarsfx_SOURCES = \
-	bflib_snd_mss_s.sx \
 	bflib_vidraw.c \
 	bflib_vidraw.h \
 	bflib_vidraw_s.sx \
@@ -61,8 +60,6 @@ syndwarsfx_SOURCES = \
 	engindrwlstm_wrp.h \
 	engindrwlstx_tng.c \
 	engindrwlstx_tng.h \
-	engintext.c \
-	engintext.h \
 	feappbar.c \
 	feappbar.h \
 	febrief.c \
@@ -161,6 +158,8 @@ syndwarsfx_SOURCES = \
 	pepgroup.h \
 	player.c \
 	player.h \
+	plyr_net.c \
+	plyr_net.h \
 	plyr_packet.c \
 	plyr_packet.h \
 	plyr_usrinp.c \

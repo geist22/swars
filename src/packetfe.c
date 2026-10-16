@@ -33,20 +33,21 @@
 #include "network.h"
 #include "packet.h"
 #include "player.h"
+#include "plyr_net.h"
 #include "swlog.h"
 /******************************************************************************/
 #pragma pack(1)
 
 #pragma pack()
 /******************************************************************************/
-extern struct NetworkPlayer network_players[8];
+struct NetworkPlayer network_players[8];
 
 TbBool net_local_player_hosts_the_game(void)
 {
     int plyr;
 
     plyr = LbNetworkPlayerNumber();
-    return (login_control__State == LognCt_Unkn6) || (plyr == net_host_player_no);
+    return (login_control[0].State == LognCt_Unkn6) || (plyr == net_host_player_no);
 }
 
 void net_players_all_set_no_action(void)
@@ -343,16 +344,16 @@ void net_player_copy_to_progress_packet(struct NetworkPlayer *p_netplyr)
     int i;
 
     plyr = net_host_player_no;
-    p_netplyr->U.Progress.SelectedCity = login_control__City;
+    p_netplyr->U.Progress.SelectedCity = login_control[0].City;
     if (((gameturn & 1) == 0) && ((net_game_play_flags & NGPF_Unkn08) != 0))
         p_netplyr->U.Progress.Credits = -ingame.Credits;
     else
-        p_netplyr->U.Progress.Credits = login_control__Money;
+        p_netplyr->U.Progress.Credits = login_control[0].Money;
 
-    p_netplyr->U.Progress.TechLevel = login_control__TechLevel;
+    p_netplyr->U.Progress.TechLevel = login_control[0].TechLevel;
     p_netplyr->U.Progress.val_flags_08 = net_game_play_flags;
-    p_netplyr->U.Progress.Team = login_control__Team;
-    p_netplyr->U.Progress.Faction = login_control__Faction;
+    p_netplyr->U.Progress.Team = login_control[0].Team;
+    p_netplyr->U.Progress.Faction = login_control[0].Faction;
     p_netplyr->U.Progress.SelectedUser = selected_net_user;
     p_netplyr->U.Progress.Expenditure = ingame.Expenditure;
 
@@ -375,11 +376,11 @@ void net_player_update_from_progress_packet(int plyr)
     if (net_host_player_no == plyr)
     {
         if ((net_game_play_flags & NGPF_Unkn02) == 0)
-            login_control__TechLevel = p_netplyr->U.Progress.TechLevel;
+            login_control[0].TechLevel = p_netplyr->U.Progress.TechLevel;
         if ((net_game_play_flags & NGPF_Unkn01) == 0) {
-            login_control__Money = abs(p_netplyr->U.Progress.Credits);
-            ingame.Credits = login_control__Money;
-            ingame.CashAtStart = login_control__Money;
+            login_control[0].Money = abs(p_netplyr->U.Progress.Credits);
+            ingame.Credits = login_control[0].Money;
+            ingame.CashAtStart = login_control[0].Money;
         }
         if ((net_game_play_flags & NGPF_Unkn08) != 0)
         {
@@ -387,7 +388,7 @@ void net_player_update_from_progress_packet(int plyr)
 
           credits = p_netplyr->U.Progress.Credits;
           if (credits >= 0) {
-              login_control__Money = credits;
+              login_control[0].Money = credits;
               ingame.CashAtStart = credits;
           } else {
               ingame.Credits = -credits;
@@ -408,13 +409,13 @@ void net_player_update_from_progress_packet_hostonly(void)
     struct NetworkPlayer *p_netplyr;
 
     p_netplyr = &network_players[net_host_player_no];
-    login_control__TechLevel = p_netplyr->U.Progress.TechLevel;
+    login_control[0].TechLevel = p_netplyr->U.Progress.TechLevel;
     net_game_play_flags = p_netplyr->U.Progress.val_flags_08;
-    login_control__City = p_netplyr->U.Progress.SelectedCity;
+    login_control[0].City = p_netplyr->U.Progress.SelectedCity;
     ingame.Expenditure = p_netplyr->U.Progress.Expenditure;
-    login_control__Money = abs(p_netplyr->U.Progress.Credits);
-    ingame.Credits = login_control__Money;
-    ingame.CashAtStart = login_control__Money;
+    login_control[0].Money = abs(p_netplyr->U.Progress.Credits);
+    ingame.Credits = login_control[0].Money;
+    ingame.CashAtStart = login_control[0].Money;
 }
 
 void net_player_action_prepare(int plyr)
@@ -454,13 +455,7 @@ TbBool net_players_immediate_exchange(int plyr)
     {
         LbNetworkSessionStop(plyr);
         net_new_game_prepare();
-        if (nsvc.I.Type != NetSvc_IPX)
-        {
-            if (byte_1C4A6F)
-                LbNetworkHangUp();
-            LbNetworkReset();
-            net_service_started = 0;
-        }
+        netgame_service_owned_link_reset();
         return false;
     }
     return true;
@@ -485,7 +480,7 @@ void net_player_action_execute(int plyr, int netplyr)
     switch (p_netplyr->Type & 0x1F)
     {
     case NPAct_NetReset:
-        login_control__State = LognCt_Unkn8;
+        login_control[0].State = LognCt_Unkn8;
         LbNetworkShutDownListeners();
         net_sessionlist_clear();
         break;
@@ -493,12 +488,12 @@ void net_player_action_execute(int plyr, int netplyr)
         net_grpaint_clear_op();
         break;
     case NPAct_SetTechLvl:
-        login_control__TechLevel = p_netplyr->U.Progress.TechLevel;
+        login_control[0].TechLevel = p_netplyr->U.Progress.TechLevel;
         break;
     case NPAct_SetStCredits:
         i = p_netplyr->U.Progress.Credits;
         ingame.Expenditure = 0;
-        login_control__Money = i;
+        login_control[0].Money = i;
         ingame.Credits = i;
         ingame.CashAtStart = i;
         break;
@@ -507,36 +502,17 @@ void net_player_action_execute(int plyr, int netplyr)
         net_game_play_flags = p_netplyr->U.Progress.val_flags_08;
         break;
     case NPAct_SetCity:
-        login_control__City = p_netplyr->U.Progress.SelectedCity;
+        login_control[0].City = p_netplyr->U.Progress.SelectedCity;
         break;
     case NPAct_MissionInit:
         lbSeed = p_netplyr->U.MissInit.Seed;
         ingame.GameMode = p_netplyr->U.MissInit.GameMode;
         break;
     case NPAct_ChatMsg:
-        // Free last net_players[] slot
-        {
-            struct NetPlayer2 *p_nplyr1;
-            struct NetPlayer2 *p_nplyr2;
-            p_nplyr2 = &net_players[1];
-            p_nplyr1 = &net_players[0];
-            for (i = 0; i < 3; i++)
-            {
-                byte_1C6DDC[i] = byte_1C6DDC[i+1];
-                strcpy(p_nplyr1->field_0, p_nplyr2->field_0);
-                p_nplyr1++;
-                p_nplyr2++;
-            }
-        }
+        // Free last player chat slot
+        net_player_chat_free_old_msg();
         // Fill the slot from packet
-        {
-            struct NetPlayer2 *p_nplyr1;
-            const char *p_text;
-            byte_1C6DDC[4] = plyr;
-            p_nplyr1 = &net_players[4];
-            p_text = p_netplyr->U.Text;
-            strcpy(p_nplyr1->field_0, p_text);
-        }
+        net_player_chat_set_last(plyr, p_netplyr->U.Text);
         break;
     case NPAct_GrPaintDrawLn:
         net_grpaint_draw_op(
@@ -565,11 +541,8 @@ void net_player_action_execute(int plyr, int netplyr)
             if (i != netplyr)
                 LbNetworkSessionStop(netplyr);
             net_new_game_prepare();
-            if (byte_1C4A6F)
-                LbNetworkHangUp();
-            LbNetworkReset();
-            net_service_started = 0;
         }
+        netgame_service_owned_link_reset();
         break;
     case NPAct_PlyrLogOut:
         if (nsvc.I.Type == NetSvc_IPX)
@@ -579,7 +552,7 @@ void net_player_action_execute(int plyr, int netplyr)
                 LbNetworkSessionStop(netplyr);
                 net_new_game_prepare();
                 net_sessionlist_clear();
-                net_unkn2_names_clear();
+                net_player_names_clear();
             }
             else
             {
@@ -590,12 +563,9 @@ void net_player_action_execute(int plyr, int netplyr)
         {
             LbNetworkSessionStop(netplyr);
             net_new_game_prepare();
-            net_unkn2_names_clear();
-            if (byte_1C4A6F)
-                LbNetworkHangUp();
-            LbNetworkReset();
-            net_service_started = 0;
+            net_player_names_clear();
         }
+        netgame_service_owned_link_reset();
         if (screentype == SCRT_CRYO)
         {
             update_flic_mods(flic_mods);
@@ -612,7 +582,7 @@ void net_player_action_execute(int plyr, int netplyr)
         {
             for (i = 0; i < PLAYERS_LIMIT; i++)
             {
-                if (unkn2_names[i][0] == '\0')
+                if (net_player_names[i][0] == '\0')
                     continue;
                 agents_copy_wepmod_netplayer_to_player(i, p_netplyr);
             }
@@ -638,7 +608,7 @@ void net_player_action_execute(int plyr, int netplyr)
         {
             for (i = 0; i < PLAYERS_LIMIT; i++)
             {
-                if (unkn2_names[i][0] == '\0')
+                if (net_player_names[i][0] == '\0')
                     continue;
                 agents_copy_fourpacks_netplayer_to_player(i, p_netplyr);
             }

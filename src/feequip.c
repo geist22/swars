@@ -64,13 +64,9 @@ struct ScreenInfoBox equip_cost_box = {0};
 extern struct ScreenButton equip_all_agents_button;
 extern struct ScreenShape equip_agent_select_shapes[5];
 
-extern ubyte byte_155174; // = 166;
-extern ubyte byte_155175[];
-extern ubyte byte_155180; // = 109;
-extern ubyte byte_155181[];
-extern ubyte cheat_research_weapon;
-extern ubyte equip_agents_panel_draw_state;
-extern ubyte equip_agent_name_draw_state;
+ubyte cheat_research_weapon = 0;
+ubyte equip_agents_panel_draw_state = 0;
+ubyte equip_agent_name_draw_state = 0;
 
 extern ubyte mo_from_agent;
 ubyte refresh_equip_list = 0;
@@ -154,7 +150,7 @@ void equip_name_box_redraw(struct ScreenTextBox *p_box)
     {
         text = NULL;
     }
-    else if (is_research_weapon_completed(selected_weapon) || (login_control__State != LognCt_Unkn6))
+    else if (is_research_weapon_completed(selected_weapon) || (login_control[0].State != LognCt_Unkn6))
     {
         text = weapon_full_name(selected_weapon);
     }
@@ -182,7 +178,7 @@ void equip_display_box_redraw(struct ScreenTextBox *p_box)
         p_box->Lines = 0;
         if (selected_weapon == 0) {
             text = NULL;
-        } else if (is_research_weapon_completed(selected_weapon) || (login_control__State != LognCt_Unkn6)) {
+        } else if (is_research_weapon_completed(selected_weapon) || (login_control[0].State != LognCt_Unkn6)) {
             text = weapon_description_text(selected_weapon);
         } else {
             text = gui_strings[536];
@@ -273,7 +269,7 @@ ubyte do_equip_offer_buy_weapon(ubyte click)
 
     if (nbought > 0)
     {
-        if ((login_control__State == LognCt_NetStarted && (net_game_play_flags & NGPF_Unkn08) != 0)) {
+        if ((login_control[0].State == LognCt_NetStarted && (net_game_play_flags & NGPF_Unkn08) != 0)) {
             net_players_copy_equip_and_cryo();
         }
     }
@@ -288,7 +284,7 @@ ubyte do_equip_offer_buy(ubyte click)
         return 0;
     }
 
-    if ((login_control__State == LognCt_NetStarted) && ((net_game_play_flags & NGPF_Unkn08) != 0))
+    if ((login_control[0].State == LognCt_NetStarted) && ((net_game_play_flags & NGPF_Unkn08) != 0))
     {
         if (!net_local_player_hosts_the_game())
             return 0;
@@ -313,7 +309,7 @@ ubyte sell_equipment(ubyte click)
 {
     TbBool sold;
 
-    if ((login_control__State == LognCt_NetStarted) && ((net_game_play_flags & NGPF_Unkn08) != 0))
+    if ((login_control[0].State == LognCt_NetStarted) && ((net_game_play_flags & NGPF_Unkn08) != 0))
     {
         if (!net_local_player_hosts_the_game())
             return 0;
@@ -346,7 +342,7 @@ ubyte sell_equipment(ubyte click)
             }
 
         }
-        if ((login_control__State == LognCt_NetStarted) && ((net_game_play_flags & NGPF_Unkn08) != 0))
+        if ((login_control[0].State == LognCt_NetStarted) && ((net_game_play_flags & NGPF_Unkn08) != 0))
         {
             net_players_copy_equip_and_cryo();
         }
@@ -373,7 +369,7 @@ ubyte equip_offer_can_buy_or_sell(WeaponType wtype)
         short plagent;
 
         if (is_research_weapon_completed(wtype) ||
-          (login_control__State != LognCt_Unkn6))
+          (login_control[0].State != LognCt_Unkn6))
             return 1;
 
         for (plagent = 0; plagent < 4; plagent++)
@@ -391,7 +387,7 @@ ubyte equip_offer_can_buy_or_sell(WeaponType wtype)
         return 2;
 
     if (is_research_weapon_completed(wtype) ||
-      (login_control__State != LognCt_Unkn6))
+      (login_control[0].State != LognCt_Unkn6))
         return 1;
 
     return 0;
@@ -506,7 +502,7 @@ TbBool weapon_available_for_purchase(WeaponType wtype)
     wdef = &weapon_defs[wtype];
 
     return ((wdef->Flags & WEPDFLG_CanPurchease) && (research.WeaponsCompleted & (1 << (wtype-1))))
-            || (login_control__State == LognCt_NetStarted && login_control__TechLevel >= weapon_tech_level[wtype]);
+            || (login_control[0].State == LognCt_NetStarted && login_control[0].TechLevel >= weapon_tech_level[wtype]);
 }
 
 ubyte flashy_draw_agent_panel_shape(struct ScreenShape *p_shape, ubyte gbstate)
@@ -1023,7 +1019,7 @@ ubyte display_weapon_info(struct ScreenTextBox *box)
     lbFontPtr = small_med_font;
 
     // Weapon category
-    if (is_research_weapon_completed(selected_weapon) || (login_control__State != LognCt_Unkn6))
+    if (is_research_weapon_completed(selected_weapon) || (login_control[0].State != LognCt_Unkn6))
         stridx = 59 + weapon_defs[selected_weapon].Category;
     else
         stridx = 65;

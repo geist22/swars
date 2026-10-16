@@ -31,12 +31,36 @@ extern "C" {
 #pragma pack()
 /******************************************************************************/
 
-void draw_line_transformed_col(int x1, int y1, int z1, int x2, int y2, int z2,
-  TbPixel colour);
-
-/** Draws simple purple rect directly, without drawlists.
+/** Draws a line between two map points.
  */
-void draw_purple_rect(int x, int y, int w, int h, ubyte active);
+void draw_mapcoord_line_col(int cor1_x, int cor1_y_m8, int cor1_z,
+  int cor2_x, int cor2_y_m8, int cor2_z, TbPixel colour);
+
+void draw_mapcoord_line_annotated(int cor1_x, int cor1_y_m8, int cor1_z,
+  int cor2_x, int cor2_y_m8, int cor2_z, const char *annot_text,
+  TbPixel lncol, TbPixel txcol);
+
+void draw_mapcoord_line_annotated_num(int cor1_x, int cor1_y_m8, int cor1_z,
+  int cor2_x, int cor2_y_m8, int cor2_z, int annot_num,
+  TbPixel lncol, TbPixel txcol);
+
+/** Draws a line between a map point and screen point.
+ */
+void draw_mapcoord_to_scrcoord_line(short scr_x, short scr_y,
+  int cor_x, int cor_y_m8, int cor_z, TbPixel colour);
+
+/** Draws a rectangle on a beveled box.
+ */
+void draw_bevel_rect(int scr_x, int scr_y,
+  int width, int height, TbPixel colour, TbPixel bvcolour);
+
+/** Draws a rectangle, but corners only.
+ */
+void draw_corner_rect(int scr_x, int scr_y,
+  int width, int height, int lnlen, int lnthick, TbPixel colour);
+
+void draw_mapcoord_flat_circle_outline(short cor_x, short cor_y_m8, short cor_z,
+  short radius, TbPixel colour);
 
 /******************************************************************************/
 #ifdef __cplusplus

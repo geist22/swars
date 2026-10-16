@@ -41,17 +41,22 @@ ubyte byte_154BB4[] = {
   220, 224, 224, 222, 220, 220,
 };
 
+ubyte anim_slots[] = {
+    0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+};
+
 ubyte billboard_anim_no;
 TbBool anim_can_change_palette = false;
 
 ubyte active_anim;
-extern ubyte anim_slots[];
-extern struct Animation animations[2];
+struct Animation animations[2];
 
 uint embanim_current_frame_number(ubyte anislot)
 {
     struct Animation *p_anim;
     ulong k;
+
+    assert(anislot < AniSl_SLOTS_COUNT);
 
     k = anim_slots[anislot];
     p_anim = &animations[k];
@@ -79,6 +84,8 @@ int embanim_do_next_frame(ubyte anislot)
 {
     struct Animation *p_anim;
     ushort k;
+
+    assert(anislot < AniSl_SLOTS_COUNT);
 
     k = anim_slots[anislot];
     active_anim = k;
@@ -114,6 +121,8 @@ int embanim_do_prev_frame(ubyte anislot)
     ubyte *p_frmbuf;
     uint i, rq_frame;
     ushort k;
+
+    assert(anislot < AniSl_SLOTS_COUNT);
 
     k = anim_slots[anislot];
     active_anim = k;
@@ -240,6 +249,8 @@ void embanim_clear_output_buffer(ubyte anislot)
     struct Animation *p_anim;
     int k;
 
+    assert(anislot < AniSl_SLOTS_COUNT);
+
     k = anim_slots[anislot];
     p_anim = &animations[k];
     if (anim_is_opened(p_anim))
@@ -263,6 +274,8 @@ void embanim_reinit(ubyte anislot)
     ubyte *p_frmbuf;
     PathInfo *pinfo;
     int k;
+
+    assert(anislot < AniSl_SLOTS_COUNT);
 
     k = anim_slots[anislot];
     p_anim = &animations[k];
@@ -356,6 +369,8 @@ void embanim_set_netscan_file(ubyte anislot, ubyte netno)
     PathInfo *pinfo;
     int k;
 
+    assert(anislot < AniSl_SLOTS_COUNT);
+
     k = anim_slots[anislot];
     p_anim = &animations[k];
 
@@ -369,6 +384,8 @@ void embanim_set_weapon_model_file(ubyte anislot, ubyte wtype)
     struct Animation *p_anim;
     PathInfo *pinfo;
     ulong k;
+
+    assert(anislot < AniSl_SLOTS_COUNT);
 
     k = anim_slots[anislot];
     p_anim = &animations[k];
@@ -397,6 +414,8 @@ void embanim_set_cyborg_part_file(ubyte anislot, ubyte part, ubyte stage)
     struct Animation *p_anim;
     PathInfo *pinfo;
     int k;
+
+    assert(anislot < AniSl_SLOTS_COUNT);
 
     k = anim_slots[anislot];
     p_anim = &animations[k];

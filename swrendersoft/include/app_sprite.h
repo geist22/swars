@@ -32,7 +32,7 @@ struct TbSprite;
 
 #pragma pack()
 
-extern long dword_1DC36C;
+extern s32 low_trans_grey_brightness;
 extern ubyte low_trans_grey_pal_bright[];
 extern ubyte low_trans_grey_bright_limit[];
 
@@ -58,6 +58,36 @@ TbResult ApSpriteDrawLowTransGreyRemap(long x, long y,
 TbResult ApSpriteDrawScaledLowTransGreyRemap(long xpos, long ypos,
   const struct TbSprite *sprite, long dest_width, long dest_height,
   const ubyte *transmap);
+
+static inline TbPixel LbBlendPixelLowTrans4Remap(const TbPixel *transmap,
+  ubyte sh1, ubyte sh2, TbPixel col1, TbPixel col2)
+{
+    uint pxmap;
+    short k0, k1;
+    ubyte brig;
+
+    k0 = (low_trans_grey_pal_bright[col1] >> sh1);
+    k1 = (low_trans_grey_pal_bright[col2] >> sh2);
+    brig = low_trans_grey_brightness + k0 + k1;
+    brig = low_trans_grey_bright_limit[brig];
+    pxmap = (brig << 8) | col1;
+    return transmap[pxmap];
+}
+
+static inline TbPixel LbBlendPixelLowTrans8Remap(const TbPixel *transmap,
+  ubyte sh1, ubyte sh2, TbPixel col1, TbPixel col2)
+{
+    uint pxmap;
+    short k0, k1;
+    ubyte brig;
+
+    k0 = (low_trans_grey_pal_bright[col1] >> sh1);
+    k1 = (low_trans_grey_pal_bright[col2] >> sh2);
+    brig = low_trans_grey_brightness + k0 + k1;
+    brig = low_trans_grey_bright_limit[brig];
+    pxmap = brig | (col1 << 8);
+    return transmap[pxmap];
+}
 
 #ifdef __cplusplus
 };

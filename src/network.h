@@ -20,8 +20,6 @@
 #define NETWORK_H
 
 #include "bftypes.h"
-#include "cybmod.h"
-#include "weapon.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -84,14 +82,6 @@ struct TbNetworkService { // sizeof=10
     };
 };
 
-// TODO maybe this only ocntains one string?
-struct NetPlayer2 {
-  char field_0[13];
-  char field_D;
-  char field_E[10];
-  char field_18;
-};
-
 struct ModemCommand {
   char cmd[80];
 };
@@ -144,7 +134,9 @@ struct TbSerialDev { // sizeof=4301
   ushort field_10A2;
   int baudrate;
   ubyte comdev_id;
-  ubyte field_10A9;
+  /** Whether the network session is owned by the local user.
+   */
+  ubyte SessionOwnerLocal;
   ubyte field_10AA;
   ubyte field_10AB;
   ubyte num_players;
@@ -216,7 +208,7 @@ struct TbIPXPlayerData { // sizeof=226
         struct TbIPXPlayerData3 Data3;
     };
     ubyte num_players;
-    ubyte field_10E; // offset=225 (within TbIPXPlayer offset=270)
+    ubyte MaxPlayers; // offset=225 (within TbIPXPlayer offset=270)
 };
 
 struct TbIPXPlayer { // sizeof=271
@@ -277,15 +269,11 @@ struct TbNetworkSessionList { // sizeof=218
 
 #pragma pack()
 /******************************************************************************/
-extern ubyte data_1c4a70;
-extern ubyte net_players_num;
+extern ubyte modem_is_configured;
 extern struct TbNetworkService NetworkServicePtr;
 extern ulong NetTimeoutTicks;
-extern struct NetPlayer2 net_players[5];
 // Application-accessible copy of the service structure?
 extern struct TbNetworkService nsvc;
-
-extern struct WeaponsFourPack net_agents__FourPacks[8][4]; // maybe a part of larger struct, maybe not
 
 TbResult LbNetworkReadConfig(const char *fname);
 TbResult LbNetworkSetBaud(int rate);

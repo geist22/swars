@@ -5,7 +5,7 @@
 /** @file app_text_sf.h
  *     Header file for app_text_sf.c.
  * @par Purpose:
- *     Allows drawing text coloured in a wave-like transsition.
+ *     Allows drawing text with one flash of brightness before TTL expires.
  * @par Comment:
  *     None.
  * @author   Tomasz Lis
@@ -46,7 +46,7 @@ TbBool AppTextDrawShadClFlash(int posx, int posy, const char *text);
  * @param text The text to be drawn.
  * @return
  */
-TbBool AppTextDrawShadClFlashResized(int posx, int *posy, int units_per_px,
+TbBool AppTextDrawShadClFlashResized(int posx, int posy, int units_per_px,
   ushort ttl_turns, const char *text);
 
 #ifdef __cplusplus

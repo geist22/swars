@@ -39,7 +39,7 @@
 #include "vehicle.h"
 /******************************************************************************/
 
-extern struct UnkPlayerGroup unkn_player_groups[8][5];
+struct UnkPlayerGroup unkn_player_groups[8][5];
 
 /******************************************************************************/
 short get_agent_move_direction_delta_x(const struct SpecialUserInput *p_usrinp)

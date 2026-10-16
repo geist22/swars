@@ -61,12 +61,23 @@ struct UnkFLight { // sizeof=0x0A
     ubyte unfulgt_9;
 };
 
+struct AnimPage { // sizeof=0x0A
+	ubyte PageNo;
+	ubyte X;
+	ubyte Y;
+	ubyte Width;
+	ubyte Height;
+	ubyte No;
+	u32 apunknfld_6;
+};
+
 #pragma pack()
 /******************************************************************************/
 
+struct UnkFLight unkn_full_lights[50];
 ushort next_unkn_full_light = 1;
-extern struct UnkFLight unkn_full_lights[50];
-extern u32 things_init_times; // = 0;
+
+u32 things_init_times = 0;
 
 ubyte debug_log_things = 0;
 
@@ -83,6 +94,12 @@ short static_radii[] = {
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+};
+
+struct AnimPage door_anim_page[] = {
+  {2,    0, 0x20, 0x20, 0x20, 5, 0},
+  {2, 0x60, 0x60, 0x10, 0x20, 5, 0},
+  {2, 0x60, 0x60, 0x10, 0x20, 5, 0},
 };
 
 const char *thing_type_names[] = {
@@ -151,6 +168,16 @@ const char *state_change_result_names[] = {
     "change denied",
     "goal unattainable",
 };
+
+struct Thing *things = NULL;
+ushort things_used;
+ThingIdx things_used_head;
+ThingIdx things_empty_head;
+
+struct SimpleThing *sthings = NULL;
+ushort sthings_used;
+ThingIdx sthings_used_head;
+ThingIdx sthings_empty_head;
 
 ThingIdx same_type_head[256 + PEOPLE_GROUPS_LIMIT + 1] = {0};
 
@@ -969,7 +996,7 @@ void process_carried_item(struct SimpleThing *p_item)
 
 void process_temp_light(struct SimpleThing *p_sthing)
 {
-    int bri, rng;
+    int brig, rng;
     short lgtng_x, lgtng_y, lgtng_z;
 
     p_sthing->Timer1--;
@@ -977,13 +1004,13 @@ void process_temp_light(struct SimpleThing *p_sthing)
         remove_sthing(p_sthing->ThingOffset);
         return;
     }
-    bri = p_sthing->U.ULight.MinBright;
+    brig = p_sthing->U.ULight.MinBright;
     if (p_sthing->U.ULight.RangeBright != 0) {
         rng = p_sthing->U.ULight.RangeBright;
-        bri += (ushort)LbRandomAnyShort() % rng;
+        brig += (ushort)LbRandomAnyShort() % rng;
     }
     get_thing_position_mapcoords(&lgtng_x, &lgtng_y, &lgtng_z, p_sthing->ThingOffset);
-    apply_full_light(lgtng_x, lgtng_y >> 3, lgtng_z, bri, 0);
+    apply_full_light(lgtng_x, lgtng_y >> 3, lgtng_z, brig, 0);
 }
 
 void set_thing_frame(struct Thing *p_thing, ushort anim_start)
@@ -1128,11 +1155,6 @@ void process_sthing(struct SimpleThing *p_sthing, ThingIdx thing)
 
 void process_things(void)
 {
-#if 0
-    asm volatile ("call ASM_process_things\n"
-        :  :  : "eax" );
-    return;
-#endif
     int i;
     ushort plyr;
 
@@ -1161,7 +1183,7 @@ void process_things(void)
         if (ingame.fld_unkCB7 > 150)
             process_things_mines_explode((rand() & 0x1F) + 2);
         if ((net_game_play_flags & NGPF_Unkn10) != 0 && (gameturn & 0xF) == 0)
-            process_things_unkn_sub2(login_control__TechLevel, ingame.fld_unkCB7 > 100);
+            process_things_unkn_sub2(login_control[0].TechLevel, ingame.fld_unkCB7 > 100);
         if (things_used > 900)
             process_things_bang(16);
         else if ( things_used > 700 || ((gameturn & 0xF) == 0))
@@ -1171,7 +1193,7 @@ void process_things(void)
     if ((gameturn & 0x1F) == 0)
     {
         for (i = 0; i < PEOPLE_GROUPS_LIMIT+1; i++) {
-            group_actions[i].Storming &= ~0x4000;
+            group_actions[i].Storming &= ~GrpAF_UnderAttack;
         }
     }
 

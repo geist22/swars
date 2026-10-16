@@ -27,6 +27,7 @@
 #include "bfini.h"
 
 #include "engincolour.h"
+#include "huddrwlstm.h"
 
 #include "bigmap.h"
 #include "campaign.h"
@@ -40,6 +41,7 @@
 #include "scanner.h"
 #include "scandraw.h"
 #include "game.h"
+#include "game_data.h"
 #include "game_options.h"
 #include "game_speed.h"
 #include "vehicle.h"
@@ -247,7 +249,10 @@ const struct TbNamedEnum missions_conf_netscan_objctv_params[] = {
 #define OBJECTIVE_TEXT_MAX 300
 
 struct NetscanObjective mission_netscan_objectives[MISSION_NETSCAN_OBV_COUNT];
-ushort next_mission_netscan_objective;
+ushort next_mission_netscan_objective = 1;
+
+struct NetscanObjective netscan_objectives[NETSCAN_OBJECTIVES_MAX_COUNT];
+ubyte netscan_objectives_count;
 
 struct Objective *game_used_objectives = NULL;
 ushort next_used_objective = 1;
@@ -586,8 +591,9 @@ void draw_objective_dirctly_on_engine_scene(ushort objectv)
     case GAME_OBJ_MEM_G_ARRIVES:
     case GAME_OBJ_ALL_G_ARRIVES:
         // Arrival place
-        draw_map_flat_circle(p_objectv->X, p_objectv->Y, p_objectv->Z, p_objectv->Radius << 6, colour_lookup[ColLU_RED]);
-        unkn_draw_transformed_point(draw_objectv_x - 10, draw_objectv_y,
+        enlist_hud_draw_mapcoord_flat_circle(p_objectv->X, p_objectv->Y, p_objectv->Z,
+          p_objectv->Radius << 6, 0, 1, colour_lookup[ColLU_RED]);
+        draw_mapcoord_to_scrcoord_line(draw_objectv_x - 10, draw_objectv_y,
           p_objectv->X, p_objectv->Y, p_objectv->Z, colour_lookup[colk]);
         break;
     case GAME_OBJ_P_ARRIVES:
@@ -597,8 +603,9 @@ void draw_objective_dirctly_on_engine_scene(ushort objectv)
         thing = p_objectv->Thing;
         draw_objective_point(draw_objectv_x - 10, draw_objectv_y, thing, 0, colour_lookup[colk]);
         // Arrival place
-        draw_map_flat_circle(p_objectv->X, p_objectv->Y, p_objectv->Z, p_objectv->Radius << 6, colour_lookup[ColLU_RED]);
-        unkn_draw_transformed_point(draw_objectv_x - 10, draw_objectv_y,
+        enlist_hud_draw_mapcoord_flat_circle(p_objectv->X, p_objectv->Y, p_objectv->Z,
+          p_objectv->Radius << 6, 0, 1, colour_lookup[ColLU_RED]);
+        draw_mapcoord_to_scrcoord_line(draw_objectv_x - 10, draw_objectv_y,
           p_objectv->X, p_objectv->Y, p_objectv->Z, colour_lookup[colk]);
         break;
     case GAME_OBJ_PERSUADE_P:
@@ -632,12 +639,12 @@ void draw_objective(ushort objectv, ubyte flag)
     if (!byte_1C844F)
     {
         if ((p_objectv->Flags & GObjF_HIDDEN) != 0)
-            scroll_text = "-";
+            scrollinfo_text = "-";
         else if (p_objectv->ObjText != 0) {
             assert(p_objectv->ObjText < OBJECTIVE_TEXT_MAX);
-            scroll_text = objective_text[p_objectv->ObjText];
+            scrollinfo_text = objective_text[p_objectv->ObjText];
         } else {
-            scroll_text = p_odef->DefText;
+            scrollinfo_text = p_odef->DefText;
         }
         ++dword_1C8464;
     }
@@ -654,7 +661,7 @@ void draw_objective(ushort objectv, ubyte flag)
             colk = dword_1C8460 & 7;
         else
             colk = 1;
-        draw_text(draw_objectv_x, draw_objectv_y, locstr, colour_lookup[colk]);
+        draw_simple_text(draw_objectv_x, draw_objectv_y, locstr, colour_lookup[colk]);
     }
 
     if (byte_1C844F) {
@@ -667,7 +674,7 @@ void draw_objective(ushort objectv, ubyte flag)
 TbBool screen_objective_text_set_failed(void)
 {
     if (ingame.fld_unkCB5 > 0) {
-        scroll_text = objective_text[ingame.fld_unkCB5];
+        scrollinfo_text = objective_text[ingame.fld_unkCB5];
         return true;
     }
     return false;

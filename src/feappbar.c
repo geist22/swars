@@ -33,6 +33,7 @@
 #include "feequip.h"
 #include "femail.h"
 #include "femain.h"
+#include "festorage.h"
 #include "game_options.h"
 #include "game_speed.h"
 #include "game_sprts.h"
@@ -51,7 +52,7 @@
 
 #define PURPLE_APPS_EMAIL_ICONS_LIMIT 10
 
-ubyte byte_155124[] = {
+ubyte app_icons_spr_id[] = {
   1, 17, 33, 39, 63, 148, 0, 0,
 };
 
@@ -59,12 +60,12 @@ ubyte byte_15512C[] = {
   8, 8, 3, 12, 8, 4, 0, 0, -1, 121,
 };
 
-extern ubyte byte_1C497E;
-extern ubyte byte_1C497F;
-extern ubyte byte_1C4980;
-extern ubyte byte_1C4984[];
-extern short word_1C498A;
-extern ubyte byte_1C498C;
+ubyte byte_1C497E;
+ubyte byte_1C497F;
+ubyte byte_1C4980 = 0;
+ubyte byte_1C4984[6];
+short word_1C498A = 0;
+ubyte byte_1C498C = 0;
 
 short app_icons_first_email = 0;
 short app_icons_first_brief = 0;
@@ -76,10 +77,10 @@ void draw_app_icon_hilight(short x, short y, ubyte iconid, ubyte aframe)
     struct TbSprite *spr;
 
     lbDisplay.DrawFlags |= 0x8000;
-    spr = &fe_icons_sprites[aframe + byte_155124[iconid] + byte_15512C[iconid]];
+    spr = &fe_icons_sprites[aframe + app_icons_spr_id[iconid] + byte_15512C[iconid]];
     draw_sprite_purple_list(x, y, spr);
     lbDisplay.DrawFlags = 0;
-    spr = &fe_icons_sprites[aframe + byte_155124[iconid]];
+    spr = &fe_icons_sprites[aframe + app_icons_spr_id[iconid]];
     draw_sprite_purple_list(x, y, spr);
     lbDisplay.DrawFlags = 0;
 }
@@ -89,7 +90,7 @@ void draw_app_icon_normal(short x, short y, ubyte iconid, ubyte aframe)
     struct TbSprite *spr;
 
     lbDisplay.DrawFlags |= 0x8000;
-    spr = &fe_icons_sprites[aframe + byte_155124[iconid] + byte_15512C[iconid]];
+    spr = &fe_icons_sprites[aframe + app_icons_spr_id[iconid] + byte_15512C[iconid]];
     draw_sprite_purple_list(x, y, spr);
     lbDisplay.DrawFlags = 0;
 }
@@ -150,7 +151,7 @@ TbBool is_purple_apps_utility_visible(short iconid)
     }
 
 
-    if (login_control__State == LognCt_NetStarted)
+    if (login_control[0].State == LognCt_NetStarted)
     {
         TbBool visible;
 
@@ -193,14 +194,14 @@ TbBool get_purple_apps_icon_rect(struct ScreenRect *p_rect, short iconid)
                 p_rect->Height = 0;
                 return false;
             }
-            spr = &fe_icons_sprites[byte_155124[cicnid]];
+            spr = &fe_icons_sprites[app_icons_spr_id[cicnid]];
             p_rect->Width = spr->SWidth;
             p_rect->Height = spr->SHeight;
             return true;
         }
         if (is_purple_apps_utility_space_reserved(cicnid))
         {
-            spr = &fe_icons_sprites[byte_155124[cicnid]];
+            spr = &fe_icons_sprites[app_icons_spr_id[cicnid]];
             cx += spr->SWidth + 3;
         }
     }

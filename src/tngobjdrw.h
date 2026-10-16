@@ -33,7 +33,7 @@ struct Thing;
 
 /** Array for mapping person SubTypes to multicolor shadow packs.
  */
-extern ubyte pers_subtype_to_shpak[32];
+extern ubyte pers_subtype_to_shpak[2 * 16];
 /******************************************************************************/
 
 void generate_shadows_for_multicolor_sprites(void);

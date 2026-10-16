@@ -30,6 +30,11 @@
 #include "game_options.h"
 /******************************************************************************/
 
+struct WarFlag war_flags[PEOPLE_GROUPS_LIMIT];
+struct GroupAction group_actions[PEOPLE_GROUPS_LIMIT+1];
+
+/******************************************************************************/
+
 TbBool things_check_same_group(ThingIdx tng1, ThingIdx tng2)
 {
     struct Thing *p_thing1;

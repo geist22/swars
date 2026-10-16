@@ -352,8 +352,8 @@ void draw_background_stars(void)
         simp_x = (LbRandomAnyShort() - (speed >> 6)) % 800 - 400;
         simp_y = LbRandomAnyShort() % 800 - 400;
 
-        scr_x = scr_x0 + ((simp_x * m * dword_176D14 - simp_y * m * dword_176D10) >> 16);
-        scr_y = scr_y0 - ((simp_x * m * dword_176D10 + simp_y * m * dword_176D14) >> 16);
+        scr_x = scr_x0 + ((simp_x * m * transf_vec_yaw_z - simp_y * m * transf_vec_yaw_x) >> 16);
+        scr_y = scr_y0 - ((simp_x * m * transf_vec_yaw_x + simp_y * m * transf_vec_yaw_z) >> 16);
 
         draw_distant_stars(scr_x, scr_y, dm, dm, 79 - (plane >> 1));
     }

@@ -30,6 +30,8 @@ extern "C" {
 #define SCANNER_BIG_BLIP_COUNT 16
 #define SCANNER_GROUP_COUNT 6
 #define SCANNER_ARC_COUNT 4
+#define SCANNER_POINTS_PER_ARC 5
+#define SCANNER_BBP_ADDS_COUNT 16
 
 #define SCANNER_MAPDATA_WIDTH 256
 #define SCANNER_MAPDATA_HEIGHT 256
@@ -37,6 +39,18 @@ extern "C" {
 struct Objective;
 struct NetscanObjective;
 struct PanelStyle;
+
+struct SimplePoint {
+    s32 X;
+    s32 Z;
+};
+
+struct MovingPoint {
+    s32 X;
+    s32 Z;
+    s32 VelX;
+    s32 VelZ;
+};
 
 struct BigBlip // sizeof=12
 {
@@ -83,12 +97,16 @@ struct Scanner // sizeof=0x467 (before resize)
 
 #pragma pack()
 /******************************************************************************/
+extern struct MovingPoint SCANNER_arcpoint[SCANNER_ARC_COUNT * SCANNER_POINTS_PER_ARC];
+extern struct SimplePoint SCANNER_bbpoint[SCANNER_BIG_BLIP_COUNT * SCANNER_BBP_ADDS_COUNT];
+
 extern s32 *SCANNER_width;
 extern ubyte SCANNER_data[SCANNER_MAPDATA_HEIGHT][SCANNER_MAPDATA_WIDTH];
 extern ushort SCANNER_base_zoom_factor;
 extern ushort SCANNER_user_zoom_factor;
 extern ubyte SCANNER_scale_dots;
 extern u32 dword_1DB1A0;
+extern s32 scanner_arrow_mode;
 
 void SCANNER_clear(void);
 void SCANNER_init(void);
@@ -99,6 +117,9 @@ void SCANNER_find_position(int x, int y, int *Ua, int *Vb);
 void SCANNER_data_to_screen(void);
 void SCANNER_set_zoom(int zoom);
 
+void SCANNER_fe_process_turn(void);
+void SCANNER_process_turn(void);
+
 /** Set screen location box coordinates of the scanner view.
  *
  * @param x Screen buffer location X coordinate.
@@ -108,6 +129,8 @@ void SCANNER_set_zoom(int zoom);
  * @param cutout Depth of bottom right cutout of the screen rectangle.
  */
 void SCANNER_set_screen_box(short x, short y, short width, short height, short cutout);
+
+void SCANNER_process_arcpoints(void);
 
 TbBool mouse_move_over_scanner(void);
 void clear_all_scanner_signals(void);

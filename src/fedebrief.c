@@ -27,6 +27,7 @@
 #include "febrief.h"
 #include "fecryo.h"
 #include "femain.h"
+#include "feresearch.h"
 #include "guiboxes.h"
 #include "guitext.h"
 #include "game_options.h"
@@ -53,8 +54,8 @@ struct ScreenBox debrief_people_box = {0};
 // Shared boxes
 extern struct ScreenTextBox world_city_info_box;
 
-extern ushort word_1C4846[8];
-extern ushort word_1C4856[8];
+ushort word_1C4846[8];
+ushort word_1C4856[8];
 
 void show_debrief_screen(void)
 {
@@ -544,7 +545,7 @@ void draw_mission_mp_players_names_column(struct ScreenBox *box,
     {
         int textw;
 
-        if (unkn2_names[plyr][0] == '\0')
+        if (net_player_names[plyr][0] == '\0')
             continue;
 
         word_1C4846[plyr] = stats_mp_count_net_players_agents_kills(plyr);
@@ -559,7 +560,7 @@ void draw_mission_mp_players_names_column(struct ScreenBox *box,
         draw_text_purple_list2(x1 - textw, y, text, 0);
         x2 = 140 + 40 * (used_num - 1);
         draw_text_purple_list2(x2 - textw, lnheight, text, 0);
-        text = unkn2_names[plyr];
+        text = net_player_names[plyr];
         draw_text_purple_list2(x3, y, text, 0);
         y += lnheight;
 
@@ -590,7 +591,7 @@ void draw_mission_mp_players_vals_column(struct ScreenBox *box,
         int textw;
         ushort plyr;
 
-        if (unkn2_names[i][0] == '\0')
+        if (net_player_names[i][0] == '\0')
             continue;
 
         x = 140;
@@ -599,7 +600,7 @@ void draw_mission_mp_players_vals_column(struct ScreenBox *box,
         p_mistat = &mission_status[plyr];
         for (k = 0; k < PLAYERS_LIMIT; k++)
         {
-            if (unkn2_names[k][0] == '\0')
+            if (net_player_names[k][0] == '\0')
                 continue;
 
             if (k == i)
@@ -643,7 +644,7 @@ void draw_mission_mp_players_vals_column(struct ScreenBox *box,
         ushort plyr;
         int n;
 
-        if (unkn2_names[i][0] == '\0')
+        if (net_player_names[i][0] == '\0')
             continue;
 
         plyr = (players[i].MyAgent[0]->U.UPerson.ComCur & 0x1C) >> 2;
