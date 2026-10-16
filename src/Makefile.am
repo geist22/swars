@@ -32,6 +32,8 @@ syndwarsfx_SOURCES = \
 	../bfsmacklib/src/bfsmacklib_s.sx \
 	linksmk.h \
 	linksmk.c \
+	agent_cosmetics.c \
+	agent_cosmetics.h \
 	config.h \
 	bmbang.c \
 	bmbang.h \
