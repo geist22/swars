@@ -168,7 +168,7 @@ struct WeaponDef {
  */
 struct WeaponDefAdd {
   char Name[12];
-  short FundingClassic;
+  ushort FundingClassic;
 };
 
 struct WeaponsFourPack {
