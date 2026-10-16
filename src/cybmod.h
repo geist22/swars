@@ -79,7 +79,7 @@ struct ModDef {
  */
 struct ModDefAdd {
   char Name[12];
-  short FundingClassic;
+  ushort FundingClassic;
 };
 
 /** Person Modifications.
