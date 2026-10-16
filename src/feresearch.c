@@ -704,7 +704,7 @@ ubyte show_research_graph(struct ScreenBox *box)
                 ? mdefa->FundingClassic
                 : mdef->Funding;
 
-            y_trend_delta = research_unkn_func_004(wdef->PercentPerDay,Funding,research.WeaponFunding);
+            y_trend_delta = research_unkn_func_004(mdef->PercentPerDay, Funding, research.ModFunding);
             /* 1 *************************/
 
             draw_chartxy_curve(1, 0, w, h, y_vals, n_y_vals, RESEARCH_COMPLETE_POINTS, y_trend_delta, 10);
