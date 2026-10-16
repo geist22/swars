@@ -426,22 +426,22 @@ int research_daily_progress_for_type(ubyte rstype)
         if (ingame.Credits < real_funding)
             real_funding = ingame.Credits;
         mdef = &mod_defs[research.CurrentMod + 1];
-	mdefa = &mod_defs_a[research.CurrentMod + 1];
+		mdefa = &mod_defs_a[research.CurrentMod + 1];
 
-	const ushort Funding = use_classic_research
-    	? mdefa->FundingClassic
-    	: mdef->Funding;
+		const ushort Funding = use_classic_research
+    		? mdefa->FundingClassic
+    		: mdef->Funding;
 
-	progress = research_unkn_func_004(mdef->PercentPerDay, Funding, real_funding);
+		progress = research_unkn_func_004(mdef->PercentPerDay, Funding, real_funding);
 		
-	/* 1 *************************
-	if (use_classic_research) {
-		progress = research_unkn_func_004(mdef->PercentPerDay, mdefa->FundingClassic, real_funding);
-	}
-	else {
-		progress = research_unkn_func_004(mdef->PercentPerDay, mdef->Funding, real_funding);
-	}
-	/* 1 *************************/
+		/* 1 *************************
+		if (use_classic_research) {
+			progress = research_unkn_func_004(mdef->PercentPerDay, mdefa->FundingClassic, real_funding);
+		}
+		else {
+			progress = research_unkn_func_004(mdef->PercentPerDay, mdef->Funding, real_funding);
+		}
+		/* 1 *************************/
 
         research_cymod_store_daily_progress(progress);
         if (research_cymod_get_progress(research.CurrentMod) < RESEARCH_COMPLETE_POINTS)
