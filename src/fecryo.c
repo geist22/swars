@@ -66,15 +66,15 @@ ubyte byte_1DDC40 = 0;
  */
 ubyte current_frame = 0;
 
+ubyte flic_mods[5];
+ubyte old_flic_mods[5];
+ubyte mod_draw_states[4];
+
 short word_15511E = -1;
 
-extern ubyte byte_155174; // = 166;
-extern ubyte byte_155175[];
-extern ubyte byte_155180; // = 109;
-extern ubyte byte_155181[];
-extern ubyte cheat_research_cybmods;
-extern ubyte byte_1C4978;
-extern ubyte byte_1C4979;
+ubyte cheat_research_cybmods = 0;
+ubyte byte_1C4978 = 0;
+ubyte byte_1C4979 = 0;
 
 // Shared with equip screen
 extern char equip_cost_text[20];
@@ -365,7 +365,7 @@ ubyte do_equip_offer_buy_cybmod(ubyte click)
 
     if (nbought > 0)
     {
-        if ((login_control__State == LognCt_NetStarted) && ((net_game_play_flags & NGPF_Unkn08) != 0)) {
+        if ((login_control[0].State == LognCt_NetStarted) && ((net_game_play_flags & NGPF_Unkn08) != 0)) {
             net_schedule_player_cryo_equip_sync();
         }
         selected_mod = 0;
@@ -1243,7 +1243,7 @@ ubyte show_cryo_agent_list(struct ScreenTextBox *p_box)
           {
               lbDisplay.LeftButton = 0;
 
-              if (login_control__State != LognCt_NetStarted) {
+              if (login_control[0].State != LognCt_NetStarted) {
                   PlayerInfo *p_locplayer;
 
                   play_sample_using_heap(0, 111, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 2u);
@@ -1273,7 +1273,7 @@ ubyte show_cryo_agent_list(struct ScreenTextBox *p_box)
           {
               lbDisplay.LeftButton = 0;
 
-              if (login_control__State != LognCt_NetStarted && selected_agent != -1) {
+              if (login_control[0].State != LognCt_NetStarted && selected_agent != -1) {
                   play_sample_using_heap(0, 111, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 2u);
 
                   switch_local_player_agents(plagent1, selected_agent);
@@ -1328,7 +1328,7 @@ TbBool cybmod_available_for_purchase(short mtype)
     p_locplayer = &players[local_player_no];
 
     if (!is_research_cymod_completed(mtype)
-      && ((login_control__State != LognCt_NetStarted) || mod_tech_level[mtype] > login_control__TechLevel))
+      && ((login_control[0].State != LognCt_NetStarted) || mod_tech_level[mtype] > login_control[0].TechLevel))
         return false;
 
     if (selected_agent < 0)

@@ -29,6 +29,12 @@
 #include "engincolour.h"
 /******************************************************************************/
 
+s32 low_trans_grey_brightness = 32;
+
+ubyte low_trans_grey_pal_bright[PALETTE_8b_COLORS];
+
+/******************************************************************************/
+
 void LowTransGrey_InitPaletteBright(void)
 {
     ubyte *pal;

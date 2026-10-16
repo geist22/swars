@@ -266,9 +266,9 @@ extern ushort people_frames[SubTT_PERS_COUNT][22];
 
 extern ushort word_1531DA;
 
-extern ushort head_my_path;
-extern ushort path_count;
 extern struct MyPath my_paths[1600];
+extern ushort path_count;
+extern ushort head_my_path;
 
 extern short unkn01_thing_idx;
 
@@ -392,6 +392,13 @@ void set_person_energy_stamina_type(struct Thing *p_person, ushort stype);
 void init_person_thing(struct Thing *p_person);
 void person_give_best_mods(struct Thing *p_person);
 short calc_person_speed(struct Thing *p_person);
+
+/** Returns angle of a deviation cone when shooting heavy weapons.
+ *
+ * The returned value is the opposite to accuracy, meaning the greater the
+ * value, the lower accuracy is.
+ */
+short calc_person_heavy_weapon_spread(struct Thing *p_person);
 
 void check_persons_target(struct Thing *p_person);
 void check_persons_target2(struct Thing *p_person);

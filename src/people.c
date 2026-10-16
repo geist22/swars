@@ -20,6 +20,7 @@
 
 #include "bfmath.h"
 #include "bfmemory.h"
+#include "bfpalette.h"
 #include "bffile.h"
 #include "bfini.h"
 #include "bfutility.h"
@@ -29,6 +30,7 @@
 
 #include "engincolour.h"
 #include "drawtext.h"
+#include "huddrwlstm.h"
 
 #include "bmbang.h"
 #include "bigmap.h"
@@ -214,16 +216,23 @@ ubyte sfx_woman_shot[] = {
 };
 
 ushort female_peep = 0x2028;
+
+struct MyPath my_paths[1600];
+ushort path_count = 0;
 ushort head_my_path = 1;
 ushort word_1531DA = 1;
 
 ushort word_17FA58[400];
 
-extern sbyte burning_timer_delatas[8];
+sbyte burning_timer_delatas[] = {
+  0, 0, 1, 0, 1, 0, 0, 0,
+};
 extern short word_1AA38E;
 extern short word_1AA390;
 extern short word_1AA392;
 extern short word_1AA394;
+
+short unkn01_thing_idx = 0;
 
 void read_people_conf_file(void)
 {
@@ -871,6 +880,14 @@ short calc_person_speed(struct Thing *p_person)
     return speed;
 }
 
+short calc_person_heavy_weapon_spread(struct Thing *p_person)
+{
+    // The wider the shooter's mood swing and the less arm mod level
+    // they have, the more the shot is allowed to stray off target.
+    return 60 + abs(p_person->U.UPerson.Mood)
+      - 16 * cybmod_arms_level(&p_person->U.UPerson.UMod);
+}
+
 void person_set_helath_to_max_limit(struct Thing *p_person)
 {
     p_person->U.UPerson.MaxHealth = PERSON_MAX_HEALTH_LIMIT;
@@ -1405,7 +1422,7 @@ void set_person_persuaded(struct Thing *p_person, struct Thing *p_attacker, usho
 
     p_person->Flag |= TngF_Unkn40000000 | TngF_Unkn0004;
     p_person->Owner = p_attacker->ThingOffset;
-    p_person->Flag &= ~(TngF_Unkn00800000|TngF_DangerFlee|TngF_Unkn00020000|TngF_TriggerUse|TngF_Unkn0080);
+    p_person->Flag &= ~(TngF_Unkn00800000|TngF_DangerFlee|TngF_Unkn00020000|TngF_TriggerUse|TngF_PersKeepPost);
 
     set_person_animmode_walk(p_person);
     p_person->U.UPerson.ComTimer = -1;
@@ -4679,10 +4696,6 @@ void alert_peeps(int cor_x, int cor_y, int cor_z, struct Thing *p_madman)
 
 void person_attempt_to_leave_ferry(struct Thing *p_person)
 {
-#if 0
-    asm volatile ("call ASM_person_attempt_to_leave_ferry\n"
-        : : "a" (p_person));
-#endif
     struct Command *p_cmd;
     struct Thing *p_vehicle;
     int radius_sqr;
@@ -4691,11 +4704,11 @@ void person_attempt_to_leave_ferry(struct Thing *p_person)
     p_cmd = &game_commands[p_person->U.UPerson.ComCur];
     radius_sqr = (p_cmd->Arg1 << 6) * (p_cmd->Arg1 << 6);
     p_vehicle = &things[p_person->U.UPerson.Vehicle];
-    func_6fd1c(PRCCOORD_TO_MAPCOORD(p_person->X),
+    draw_mapcoord_line_col2(PRCCOORD_TO_MAPCOORD(p_person->X),
       PRCCOORD_TO_MAPCOORD(p_person->Y),
       PRCCOORD_TO_MAPCOORD(p_person->Z),
       p_cmd->X, p_cmd->Y, p_cmd->Z, colour_lookup[ColLU_RED]);
-    func_6fd1c(PRCCOORD_TO_MAPCOORD(p_vehicle->X),
+    draw_mapcoord_line_col2(PRCCOORD_TO_MAPCOORD(p_vehicle->X),
       PRCCOORD_TO_MAPCOORD(p_vehicle->Y),
       PRCCOORD_TO_MAPCOORD(p_vehicle->Z),
       p_cmd->X, p_cmd->Y, p_cmd->Z, colour_lookup[ColLU_BLUE]);
@@ -5709,10 +5722,329 @@ void process_danger(struct Thing *p_person)
         : : "a" (p_person));
 }
 
+void peep_return_to_point(struct Thing *p_person)
+{
+    asm volatile ("call ASM_peep_return_to_point\n"
+        : : "a" (p_person));
+}
+
 void person_kill_target2(struct Thing *p_person)
 {
+#if 0
     asm volatile ("call ASM_person_kill_target2\n"
         : : "a" (p_person));
+    return;
+#else
+    struct Thing *p_target;
+    int wep_range;
+
+    if (((gameturn + p_person->ThingOffset) & 0x7F) == 0)
+    {
+        ushort rnd;
+        rnd = LbRandomAnyShort();
+        // Only police taunt their target with a speech sample while attacking.
+        if (p_person->SubType == SubTT_PERS_POLICE) {
+            play_dist_speech(p_person, 54 + (rnd % 3), 0x7Fu, 0x40u, 100, 0, 3);
+        }
+    }
+    if ((p_person->Flag & TngF_ShootAtPos) != 0)
+    {
+        p_person->Flag &= ~TngF_ShootAtPos;
+    }
+
+    p_target = &things[p_person->U.UPerson.Target2];
+    if (p_person->State == PerSt_PROTECT_PERSON)
+    {
+        struct Thing *p_prottng;
+
+        // A bodyguard currently protecting someone usually keeps attacking
+        // its own target2, but may instead take over the protected person's
+        // target, effectively delegating target selection to the protectee.
+        p_prottng = &things[p_person->GotoThingIndex];
+        if ((p_prottng->Flag2 & TgF2_IgnoreEnemies) != 0)
+        {
+            p_person->U.UPerson.Target2 = 0;
+            p_person->PTarget = NULL;
+            p_prottng->Flag2 |= TgF2_IgnoreEnemies;
+            return;
+        }
+        if ((p_prottng->Flag & TngF_PersSupShld) != 0)
+        {
+            p_person->U.UPerson.Target2 = 0;
+            p_person->PTarget = NULL;
+            p_prottng->Flag |= TngF_Unkn00200000|TngF_PersSupShld;
+            return;
+        }
+        if ((abs(p_person->U.UPerson.Mood) < 32) &&
+          (p_prottng->PTarget != NULL) &&
+          (p_prottng->U.UPerson.WeaponTurn != 0))
+        {
+            p_person->U.UPerson.Target2 = p_prottng->PTarget->ThingOffset;
+            p_person->PTarget = p_prottng->PTarget;
+        }
+    }
+    if ((p_person->U.UPerson.EffectiveGroup == p_target->U.UPerson.EffectiveGroup) ||
+      (p_person->Flag2 & TgF2_IgnoreEnemies) != 0)
+    {
+        p_person->U.UPerson.Target2 = 0;
+        return;
+    }
+
+    ushort bkp_State;
+    short bkp_GotoThingIndex;
+    TbBool person_in_ground_veh;
+    TbBool target_within_range;
+
+    person_in_ground_veh = false;
+    bkp_State = p_person->State;
+    bkp_GotoThingIndex = p_person->GotoThingIndex;
+
+    p_person->GotoThingIndex = p_person->U.UPerson.Target2;
+    wep_range = get_weapon_range(p_person);
+    if ((p_person->Flag & TngF_InVehicle) != 0)
+    {
+        struct Thing *p_vehicle;
+        p_vehicle = &things[p_person->U.UPerson.Vehicle];
+        if (p_vehicle->SubType == SubTT_VEH_GROUND)
+        {
+            person_in_ground_veh = true;
+            // only the driver gets to steer the vehicle towards the target
+            if ((p_vehicle->U.UVehicle.PassengerHead == p_person->ThingOffset) &&
+              ((gameturn + p_person->ThingOffset) & 0x7F) == 0) {
+                start_goto_vehicle(p_vehicle, p_target->X >> 8, p_target->Z >> 8);
+            }
+        }
+    }
+    if ((p_person->U.UPerson.Flag3 & PrsF3_Unkn01) != 0)
+    {
+        ushort grp;
+        ushort brain_lv;
+
+        grp = p_target->U.UPerson.EffectiveGroup & 0x1F;
+        if (((gameturn & 0xFF) != 0) && (group_actions[grp].Storming <= 5))
+        {
+            p_person->Flag &= ~TngF_Unkn0004;
+        }
+        else
+        {
+            p_person->U.UPerson.Flag3 &= ~(PrsF3_Unkn02|PrsF3_Unkn01);
+            p_person->U.UPerson.Flag3 |= PrsF3_Unkn02;
+            brain_lv = person_mod_brain_level(p_person);
+            if ((LbRandomAnyShort() & 3) < brain_lv + 1)
+                set_person_animmode_run(p_person);
+            if ((p_target->Flag & TngF_PlayerAgent) != 0)
+                ingame.fld_unkC8B = 1;
+        }
+    }
+    if ((p_person->U.UPerson.Flag3 & PrsF3_Unkn02) != 0)
+    {
+        p_person->Flag |= TngF_Unkn0004;
+    }
+
+    int target_dist_sq;
+
+    if ((((p_person->Flag & TngF_PlayerAgent) != 0) && ((p_person->U.UPerson.Flag3 & PrsF3_Unkn08) == 0))
+      || person_in_ground_veh || ((p_person->U.UPerson.Flag3 & PrsF3_Unkn01) != 0))
+    {
+        int dx, dy;
+
+        dx = (p_person->X - p_target->X) >> 8;
+        dy = (p_person->Z - p_target->Z) >> 8;
+        target_dist_sq = dy * dy + dx * dx;
+        if ((wep_range * wep_range < target_dist_sq) &&
+          ((p_person->Flag & TngF_Unkn00800000) == 0))
+        {
+            p_person->U.UPerson.Target2 = 0;
+            p_person->State = bkp_State;
+            p_person->GotoThingIndex = bkp_GotoThingIndex;
+            if ((p_person->Flag & TngF_PersKeepPost) != 0)
+                peep_return_to_point(p_person);
+            return;
+        }
+    }
+    else
+    {
+        struct Thing *p_vehicle;
+
+        p_vehicle = &things[p_person->U.UPerson.Vehicle];
+        target_dist_sq = 0;
+        if (((p_person->Flag & TngF_InVehicle) == 0) ||
+          (p_vehicle->U.UVehicle.PassengerHead == p_person->ThingOffset))
+        {
+            //TODO separate drawing from state update
+            if (p_person->U.UPerson.Target2 != p_person->GotoThingIndex) {
+                draw_map_flat_circle(p_person->X >> 8,
+                  p_person->Y >> 8, p_person->Z >> 8, 320, colour_lookup[0]);
+            }
+            target_dist_sq = person_goto_person_nav(p_person);
+        }
+        if ((p_person->U.UPerson.Within) && ((p_person->Flag2 & TgF2_Unkn0080) != 0))
+        {
+            p_person->Flag2 &= ~TgF2_Unkn0080;
+            p_person->U.UPerson.Target2 = 0;
+            p_person->State = bkp_State;
+            p_person->GotoThingIndex = bkp_GotoThingIndex;
+            if ((p_person->Flag & TngF_PersKeepPost) != 0)
+                peep_return_to_point(p_person);
+            return;
+        }
+    }
+    if ((p_person->Flag & TngF_Destroyed) != 0) {
+        return;
+    }
+
+    target_within_range = false;
+    if ((target_dist_sq != 0) && (wep_range * wep_range > target_dist_sq))
+        target_within_range = true;
+    else
+        p_person->Flag &= ~TngF_TriggerUse;
+
+    if (target_within_range && (p_person->U.UPerson.WeaponTurn <= 1) &&
+      (p_target->State != PerSt_DIEING) && ((p_target->Flag & TngF_Destroyed) == 0))
+    {
+        wep_range = get_weapon_range(p_person);
+        target_dist_sq = can_i_see_thing(p_person, p_target, wep_range * wep_range, 1u);
+        if (target_dist_sq > 0)
+        {
+            p_person->Flag &= ~(TngF_Unkn00200000|TngF_TriggerUse|TngF_PersSupShld);
+            p_person->Flag |= TngF_TriggerUse;
+            if ((p_person->Flag & TngF_InVehicle) != 0) {
+                struct Thing *p_vehicle;
+                p_vehicle = &things[p_person->U.UPerson.Vehicle];
+                p_vehicle->Flag |= TngF_Unkn01000000;
+            }
+            if ((p_person->U.UPerson.Flag3 & PrsF3_Unkn10) != 0) {
+                ushort grp;
+                grp = p_target->U.UPerson.EffectiveGroup & 0x1F;
+                group_actions[grp].Storming |= GrpAF_UnderAttack;
+                p_person->U.UPerson.Flag3 &= ~PrsF3_Unkn10;
+            }
+            if ((p_person->Flag & TngF_PlayerAgent) == 0) {
+                short range;
+                range = p_person->U.UPerson.ComRange + 2;
+                if (range > 20)
+                    range = 20;
+                p_person->U.UPerson.ComRange = range;
+            }
+        }
+        else
+        {
+            target_within_range = false;
+            p_person->Flag &= ~TngF_TriggerUse;
+        }
+
+        if ((p_person->Flag & TngF_PlayerAgent) != 0)
+        {
+          if (!target_within_range && ((gameturn & 0xF) == 0))
+            p_person->U.UPerson.Target2 = 0;
+        }
+        else if (((p_person->U.UPerson.Flag3 & PrsF3_Unkn40) != 0) ||
+          (!target_within_range && (p_person->U.UPerson.Flag3 & PrsF3_Unkn01) == 0))
+        {
+            if ((p_person->U.UPerson.Flag3 & PrsF3_Unkn02) != 0)
+            {
+                short range;
+                range = p_person->U.UPerson.ComRange - 2;
+                if (range < 2)
+                    range = 2;
+                p_person->U.UPerson.ComRange = range;
+            }
+            else
+            {
+                ushort path;
+                short pc;
+
+                path = p_person->U.UPerson.PathIndex;
+                pc = my_paths[path].Flag - p_person->PathOffset;
+                if ((pc == 2) || (pc == 3 && (gameturn & 7) == 0))
+                {
+                    ushort grp;
+                    p_person->U.UPerson.Flag3 |= PrsF3_Unkn01;
+                    grp = p_target->U.UPerson.EffectiveGroup & 0x1F;
+                    group_actions[grp].Storming++;
+                    p_person->Flag |= TngF_Unkn0004;
+                    set_person_animmode_walk(p_person);
+                }
+                else
+                {
+                    short range;
+                    range = p_person->U.UPerson.ComRange - 2;
+                    if (range < 2)
+                        range = 2;
+                    p_person->U.UPerson.ComRange = range;
+                }
+            }
+        }
+    }
+
+    if (p_person->State == PerSt_NONE) {
+        p_person->Flag &= ~TngF_TriggerUse;
+    }
+
+    if (((p_target->Flag & TngF_Destroyed) == 0) &&
+      ((p_person->Flag2 & (TgF2_Unkn00020000|TgF2_Unkn0040)) == 0) &&
+      ((3 * wep_range * wep_range >= target_dist_sq) || (bkp_State == PerSt_KILL_PERSON))) {
+        if ((p_person->Flag & TngF_Destroyed) == 0)
+            p_person->State = bkp_State;
+        p_person->GotoThingIndex = bkp_GotoThingIndex;
+        return;
+    }
+    if ((p_person->U.UPerson.Flag3 & (PrsF3_Unkn02|PrsF3_Unkn01)) != 0)
+    {
+        ushort grp;
+        p_person->U.UPerson.Flag3 &= ~(PrsF3_Unkn02|PrsF3_Unkn01);
+        grp = p_target->U.UPerson.EffectiveGroup & 0x1F;
+        group_actions[grp].Storming--;
+    }
+
+    p_target = NULL;
+    p_person->Flag2 &= ~TgF2_Unkn0040;
+    p_person->U.UPerson.Target2 = 0;
+
+    // We are giving up on Target2: if the person was mid-kill-mission on
+    // its PTarget, keep chasing it unless that target has since been destroyed.
+    // Otherwise, fall back to whatever target was being pursued before this
+    // kill-mission started (OldTarget).
+    if (bkp_State == PerSt_KILL_PERSON)
+    {
+        p_target = p_person->PTarget;
+        if (p_target != NULL)
+        {
+            if ((p_target->Flag & TngF_Destroyed) != 0) {
+                bkp_State = PerSt_NONE;
+                p_person->State = PerSt_NONE;
+            }
+        }
+    }
+    if (bkp_State != PerSt_KILL_PERSON)
+    {
+        struct Thing *p_ntarget;
+
+        p_ntarget = NULL;
+        if (p_person->OldTarget != 0)
+            p_ntarget = &things[p_person->OldTarget];
+        p_person->PTarget = p_ntarget;
+    }
+
+    p_person->Flag &= ~TngF_TriggerUse;
+    remove_path(p_person);
+
+    if (((p_person->Flag & TngF_PlayerAgent) == 0) &&
+      (p_person->U.UPerson.ComCur != 0))
+    {
+        if ((p_person->Flag & TngF_PersKeepPost) != 0) {
+            peep_return_to_point(p_person);
+            return;
+        }
+        person_init_command(p_person, PerSt_DROP_ITEM);
+    }
+    else
+    {
+        if ((p_person->Flag & TngF_Destroyed) == 0)
+            p_person->State = bkp_State;
+        p_person->GotoThingIndex = bkp_GotoThingIndex;
+    }
+#endif
 }
 
 void person_wait(struct Thing *p_person)
@@ -5870,13 +6202,13 @@ void person_persuade_person(struct Thing *p_person)
 #endif
     struct Thing *p_target;
     int dist_sq;
-    short weapon_range;
+    short wep_range;
     TbBool reached_target;
 
     if (person_carries_weapon(p_person, WEP_PERSUADER2))
-        weapon_range = get_hand_weapon_range(p_person, WEP_PERSUADER2);
+        wep_range = get_hand_weapon_range(p_person, WEP_PERSUADER2);
     else
-        weapon_range = get_hand_weapon_range(p_person, WEP_PERSUADRTRN);
+        wep_range = get_hand_weapon_range(p_person, WEP_PERSUADRTRN);
 
     if (((p_person->Flag & (TngF_TriggerUse|TngF_WepCharging)) != 0) &&
       (p_person->U.UPerson.WeaponTimer > 5)) {
@@ -5898,7 +6230,7 @@ void person_persuade_person(struct Thing *p_person)
     dist_sq = person_goto_person_nav(p_person);
 
     reached_target = 0;
-    if ((dist_sq != 0) && (dist_sq < weapon_range * weapon_range))
+    if ((dist_sq != 0) && (dist_sq < wep_range * wep_range))
         reached_target = 1;
 
     if (reached_target)
@@ -6110,10 +6442,10 @@ void person_destroy_building(struct Thing *p_person)
     if (in_range && (p_person->U.UPerson.WeaponTurn == 0) && ((p_target->Flag & TngF_Destroyed) == 0))
     {
         struct Thing *p_building;
-        int weapon_range;
-        weapon_range = get_weapon_range(p_person);
+        int wep_range;
+        wep_range = get_weapon_range(p_person);
         p_building = &things[p_person->GotoThingIndex];
-        if (can_i_see_building(p_person, p_building, weapon_range * weapon_range, 1) <= 0)
+        if (can_i_see_building(p_person, p_building, wep_range * wep_range, 1) <= 0)
         {
             in_range = 0;
             p_person->Flag &= ~TngF_TriggerUse;
@@ -6329,12 +6661,6 @@ void set_thing_height_on_ground_mesh(struct Thing *p_person, int x, int z)
 
 short person_move(struct Thing *p_person)
 {
-#if 0
-    short ret;
-    asm volatile ("call ASM_person_move\n"
-        : "=r" (ret) : "a" (p_person));
-    return ret;
-#endif
     int speed_x, speed_z;
     int x, y, z;
     short colvect;
@@ -6506,7 +6832,7 @@ short person_move(struct Thing *p_person)
     }
 
     if (debug_hud_collision || byte_1C844F) {
-        draw_line_transformed_at_ground(PRCCOORD_TO_MAPCOORD(p_person->X), PRCCOORD_TO_MAPCOORD(p_person->Z),
+        draw_mapcoord_line_at_ground(PRCCOORD_TO_MAPCOORD(p_person->X), PRCCOORD_TO_MAPCOORD(p_person->Z),
           PRCCOORD_TO_MAPCOORD(p_person->X) + PRCCOORD_TO_MAPCOORD(2 * speed_x),
           PRCCOORD_TO_MAPCOORD(p_person->Z) + PRCCOORD_TO_MAPCOORD(2 * speed_z),
           0xE6u);
@@ -6657,8 +6983,9 @@ void person_burning(struct Thing *p_person)
         : : "a" (p_person));
     return;
 #endif
-    p_person->U.UPerson.Brightness = 32;
-    apply_super_quick_light(p_person->X >> 8, p_person->Z >> 8, 16 + (LbRandomAnyShort() & 0xF));
+    p_person->U.UPerson.Brightness = PALETTE_FADE_LEVELS / 2;
+    apply_super_quick_light(PRCCOORD_TO_MAPCOORD(p_person->X),
+      PRCCOORD_TO_MAPCOORD(p_person->Z), 16 + (LbRandomAnyShort() & 0xF));
 
     if (((gameturn + p_person->ThingOffset) & 0xF) == 0)
     {
@@ -6822,11 +7149,6 @@ void people_intel(ubyte flag)
 
 void process_person(struct Thing *p_person)
 {
-#if 0
-    asm volatile ("call ASM_process_person\n"
-        : : "a" (p_person));
-    return;
-#endif
     struct MyMapElement *p_mapel;
     short state;
 
@@ -6865,8 +7187,10 @@ void process_person(struct Thing *p_person)
         {
             short pstng_x, pstng_y, pstng_z;
             make_peep_protect_peep(p_person, &things[p_person->Owner]);
+            //TODO separate drawing from state update
             get_thing_position_mapcoords(&pstng_x, &pstng_y, &pstng_z, p_person->ThingOffset);
-            draw_map_flat_circle(pstng_x, pstng_y, pstng_z, 200, colour_lookup[ColLU_WHITE]);
+            enlist_hud_draw_mapcoord_flat_circle(pstng_x, pstng_y, pstng_z,
+              200, 0, 1, colour_lookup[ColLU_WHITE]);
         }
     }
     if ((p_person->Flag2 & TgF2_Unkn0020) != 0)
@@ -7021,6 +7345,7 @@ void process_person(struct Thing *p_person)
     else
         process_weapon(p_person);
 
+    //TODO separate drawing from state update
     if ((debug_hud_collision == 1) && (p_person->Y != 0))
     {
         char locstr[150];
@@ -7052,7 +7377,9 @@ void process_person(struct Thing *p_person)
               break;
         case PerSt_GOTO_POINT:
               person_goto_point(p_person);
-              if ((p_person->State == 0) && ((p_person->U.UPerson.Flag3 & PrsF3_Unkn04) != 0) && ((p_person->Flag & TngF_SelectedAgent) == 0))
+              if ((p_person->State == 0) &&
+                ((p_person->U.UPerson.Flag3 & PrsF3_Unkn04) != 0) &&
+                ((p_person->Flag & TngF_SelectedAgent) == 0))
               {
                   p_person->State = PerSt_PROTECT_PERSON;
                   person_protect_update_follow_distance(p_person, p_person->GotoThingIndex);

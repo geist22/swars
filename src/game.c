@@ -75,6 +75,7 @@
 #include "dos.h"
 #include "drawshape.h"
 #include "drawtext.h"
+#include "drawtext_wrp.h"
 #include "embedanim.h"
 #include "enginbckt.h"
 #include "engindrwlstm_wrp.h"
@@ -89,7 +90,6 @@
 #include "enginsngtxtr.h"
 #include "enginpeff.h"
 #include "enginshadws.h"
-#include "engintext.h"
 #include "engintrns.h"
 #include "enginzoom.h"
 #include "game_data.h"
@@ -148,6 +148,7 @@
 #include "command.h"
 #include "packetfe.h"
 #include "player.h"
+#include "plyr_net.h"
 #include "plyr_usrinp.h"
 #include "plyr_packet.h"
 #include "research.h"
@@ -231,7 +232,7 @@ long dword_153194 = 0x100;
 
 ushort word_1531E0 = 1;
 
-s32 data_155704 = -1;
+s32 outro_last_played_smp = -1;
 
 ulong stored_l3d_next_object;
 ulong stored_l3d_next_object_face3;
@@ -245,30 +246,33 @@ ulong stored_level3d_inuse;
 
 TbPixel linear_vec_pal[PALETTE_8b_COLORS];
 
-extern int data_1c8428;
+int data_1c8428;
 const char *primvehobj_fname = "qdata/primveh.obj";
 
 extern s32 dword_152E38[5]; // = {-1, -1, -1, -1, -1,};
 
 u32 active_flags_general_unkn01 = 0;
 
-extern long dword_1DDECC;
+ubyte mouse_sprite_anim_frame;
+ushort replay_intro_timer = 0;
 
-u32 engine_mem_alloc_size = 5900000;
+extern long dword_1DDECC;
 
 extern struct GamePanel unknstrct7_arr2[];
 
-extern long gamep_unknval_10;
-extern long gamep_unknval_11;
-extern long gamep_unknval_12;
-extern long nav_stats__ThisTurn;
-extern long gamep_unknval_14;
-extern long gamep_unknval_15;
-extern long gamep_unknval_16;
+ubyte mouser = 0;
 
-extern long dword_155010;
-extern long dword_155014;
-extern long dword_155018;
+s32 gamep_unknval_10 = 0;
+s32 gamep_unknval_11 = 0;
+s32 gamep_unknval_12 = 0;
+u32 nav_stats__ThisTurn = 0;
+s32 gamep_unknval_14 = 0;
+s32 gamep_unknval_15 = 0;
+s32 gamep_unknval_16 = 0;
+
+s32 flyby_cam_x = TILE_TO_MAPCOORD(MAP_TILE_WIDTH/2, 0);
+s32 flyby_cam_z = TILE_TO_MAPCOORD(MAP_TILE_HEIGHT/2, 0);
+s32 flyby_cam_y = TILE_TO_MAPCOORD(0, 50);
 
 ubyte simulated_mouse_click;
 ubyte clear_left_button;
@@ -281,23 +285,40 @@ int mouse_map_x = 0x3200;
 int mouse_map_y = 0;
 int mouse_map_z = 0x3200;
 
-extern short last_map_for_lights_func_11;
+struct LoginControl login_control[4];
 
+struct LevelDef level_def;
+
+sbyte mission_result;
 char mission_status_text[100];
 
-char *data_15319c = mission_status_text;
+ubyte net_player_teams[8];
+ubyte group_factions[8];
+ubyte byte_1C6D4A;
 
 s32 navi2_unkn_counter = 0;
 s32 navi2_unkn_counter_max = 0;
 
 extern long dword_1AAB74;
 extern long dword_1AAB78;
-extern ushort word_1AABD0;
+ushort word_1AABD0 = 0;
+
+ubyte old_screentype;
+ubyte screentype = 0;
+ubyte data_1c498d = 0;
+
+ubyte exit_game = 0;
+
+ubyte in_network_game = 0;
+ubyte is_single_game = 0;
+ubyte cmdln_colour_tables = 0;
+ubyte cmdln_param_bcg = 0;
 
 ubyte unkn_flags_01 = 0;
 
 ubyte start_into_mission = false;
 ubyte edit_flag = 0;
+ubyte change_screen = 0;
 
 struct OutroHotChar outro_hot_chars[OUTRO_HOT_CHARS_COUNT];
 
@@ -1346,23 +1367,41 @@ void process_view_inputs(int thing)
     process_overall_scale(zoom);
 }
 
-void func_6fd1c(int a1, int a2, int a3, int a4, int a5, int a6, ubyte a7)
+void draw_mapcoord_line_col2(int cor1_x, int cor1_y, int cor1_z,
+  int cor2_x, int cor2_y, int cor2_z, TbPixel colour)
 {
+#if 0
     // Pushed through a register holding them: a "g" operand may be placed
     // relative to the stack pointer, which each push moves.
     int stkargs[3];
 
-    stkargs[0] = (int)(intptr_t)a5;
-    stkargs[1] = (int)(intptr_t)a6;
-    stkargs[2] = (int)(intptr_t)a7;
+    stkargs[0] = (int)(intptr_t)cor2_y;
+    stkargs[1] = (int)(intptr_t)cor2_z;
+    stkargs[2] = (int)(intptr_t)colour;
 
     asm volatile (
       "push 8(%4)\n"
       "push 4(%4)\n"
       "push 0(%4)\n"
-      "call ASM_func_6fd1c\n"
-        : : "a" (a1), "d" (a2), "b" (a3), "c" (a4), "S" (stkargs)
+      "call ASM_draw_mapcoord_line_col2\n"
+        : : "a" (cor1_x), "d" (cor1_y), "b" (cor1_z), "c" (cor2_x), "S" (stkargs)
         : "cc", "memory");
+    return;
+#endif
+    struct EnginePoint ep1;
+    struct EnginePoint ep2;
+
+    ep2.X3d = cor1_x - engn_xc;
+    ep2.Y3d = cor1_y; // subtracted within transform_point(): - 8 * engn_yc;
+    ep2.Z3d = cor1_z - engn_zc;
+    ep2.Flags = 0;
+    transform_point(&ep2);
+    ep1.X3d = cor2_x - engn_xc;
+    ep1.Y3d = cor2_y; // subtracted within transform_point(): - 8 * engn_yc;
+    ep1.Z3d = cor2_z - engn_zc;
+    ep1.Flags = 0;
+    transform_point(&ep1);
+    LbDrawLine(ep2.pp.X, ep2.pp.Y, ep1.pp.X, ep1.pp.Y, colour);
 }
 
 void check_mouse_overvehicle(struct Thing *p_thing, ubyte target_assign)
@@ -1456,10 +1495,183 @@ void process_sound_heap(void)
         :  :  : "eax" );
 }
 
-void func_cc0d4(char **str)
+/** Get fade level to be used while drawing next character of a text.
+ *
+ *  Computes the colour-remap fade level to be used while drawing the next
+ *  character of a text, advancing the shared letter-reveal counter
+ *  (cwa_revl_tm) towards the current progress (cwa_timer).
+ *
+ * @param fade Receives the computed fade level (0..63 range index offset) if
+ *     the character should be drawn. Write-only value.
+ * @return True if the character is already revealed and should be drawn.
+ */
+static TbBool credits_next_char_fade(s32 *fade, u32 *p_cwa_revl_tm,
+  u32 cwa_timer, u32 cw_shift)
 {
+    s32 f;
+
+    if (*p_cwa_revl_tm > cwa_timer)
+        return false;
+    (*p_cwa_revl_tm)++;
+    f = (cwa_timer - *p_cwa_revl_tm) * 2;
+    if (f > 0x1F)
+        f = 0x1F;
+    if (dword_1DDB6C)
+        f += lbSinTable[((*p_cwa_revl_tm + cw_shift) & 0xF) * 128] >> 13;
+    if (f < 0)
+        f = 0;
+    *fade = f;
+    return true;
+}
+
+/** @internal
+ * Puts colour wave text sprites with appearing animation on screen.
+ * @param sbuf
+ * @param ebuf
+ * @param x
+ * @param y
+ * @param space_len
+ */
+void put_down_colwavaprtext_sprites(const char *sbuf, const char *ebuf,
+  s32 x, s32 y, s32 space_len,
+  u32 *p_cwa_revl_tm, u32 cwa_timer, u32 cw_shift)
+{
+    const char *c;
+    s32 fade;
+    ubyte chr;
+
+    for (c=sbuf; c < ebuf; c++)
+    {
+        const TbSprite *p_spr;
+
+        chr = (ubyte)(*c);
+        p_spr = LbFontCharSprite(lbFontPtr, chr);
+
+        if (credits_next_char_fade(&fade, p_cwa_revl_tm, cwa_timer, cw_shift)) {
+            const TbPixel *pxmap;
+
+            pxmap = &pixmap.fade_table[256 * (0x3F - fade)];
+            LbSpriteDrawRemap(x, y, p_spr, pxmap);
+        }
+        x += p_spr->SWidth;
+    }
+}
+
+void put_down_colwavaprtext_ini_sprites(const char *sbuf, const char *ebuf,
+  s32 x, s32 y, s32 space_len,
+  u32 *p_cwa_revl_tm, u32 cwa_timer, u32 cw_shift)
+{
+    const char *c;
+    ubyte chr;
+
+    for (c=sbuf; c < ebuf; c++)
+    {
+        const TbSprite *p_spr;
+        s32 fade;
+
+        chr = (ubyte)(*c);
+        p_spr = LbFontCharSprite(lbFontPtr, chr);
+        if (chr == ' ')
+        {
+            ubyte *p_scan;
+            s32 word_w;
+            ubyte cs;
+
+            word_w = 0;
+            p_scan = (ubyte *)c + 1;
+            if (*p_scan != chr)
+            {
+                while (1)
+                {
+                    cs = *p_scan;
+                    if ((cs == 0) || (cs == '\n') || (cs == '['))
+                        break;
+                    word_w += LbTextCharWidth(cs);
+                    if (*(p_scan + 1) != ' ') {
+                        p_scan++;
+                    } else {
+                        break;
+                    }
+                }
+            }
+            if (x + word_w <= lbDisplay.PhysicalScreenWidth - 6) {
+                x += 4;
+            } else {
+                y += 6;
+                x = 12;
+            }
+            continue;
+        }
+
+        if (credits_next_char_fade(&fade, p_cwa_revl_tm, cwa_timer, cw_shift)) {
+            const TbPixel *pxmap;
+
+            pxmap = &pixmap.fade_table[256 * (0x3F - fade)];
+            LbSpriteDrawRemap(x, y, p_spr, pxmap);
+        }
+        x += p_spr->SWidth;
+    }
+}
+
+void func_cc0d4(char **text_pargr)
+{
+#if 0
     asm volatile ("call ASM_func_cc0d4\n"
-        : : "a" (str));
+        : : "a" (text_pargr));
+    return;
+#endif
+    ubyte *p_ids;
+    char *s;
+    s32 x, y;
+
+    dword_1DDB6C = 1;
+    colwavapr_reveal_tm = 0;
+
+    // Draw the credits group header (list of roles belonging to this group)
+    s = text_pargr[0];
+    x = 6;
+    y = 6;
+    lbFontPtr = med_font;
+    put_down_colwavaprtext_sprites(s, s + strlen(s), x, y, 4,
+      &colwavapr_reveal_tm, colwavapr_timer, gameturn);
+
+    // Draw every person assigned to this group (name, then description)
+    p_ids = (ubyte *)text_pargr[1];
+    y += 8;
+    while (*p_ids != 100)
+    {
+        char **p_person;
+
+        p_person = &dev_credits_desc[2 * (*p_ids)];
+        dword_1DDB6C = 1;
+        x = 12;
+
+        if (colwavapr_reveal_tm == colwavapr_timer)
+        {
+            short smp;
+
+            if (outro_last_played_smp != -1)
+                stop_sample_using_heap(0, outro_last_played_smp);
+            smp = 2 + (LbRandomAnyShort() % 5);
+            outro_last_played_smp = smp;
+            play_sample_using_heap(0, smp, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3u);
+        }
+
+        // Draw the person's name
+        s = p_person[0];
+        lbFontPtr = big_font;
+        put_down_colwavaprtext_sprites(s, s + strlen(s), x, y, 4,
+          &colwavapr_reveal_tm, colwavapr_timer, gameturn);
+        y += LbTextLineHeight();
+
+        // Draw the person's description, word-wrapped to the screen width
+        s = p_person[1];
+        lbFontPtr = med2_font;
+        put_down_colwavaprtext_ini_sprites(s, s + strlen(s), x, y, 4,
+          &colwavapr_reveal_tm, colwavapr_timer, gameturn);
+        y += 10;
+        p_ids++;
+    }
 }
 
 void screen_animate_draw_outro_text(void)
@@ -1486,67 +1698,6 @@ void screen_animate_draw_outro_text(void)
     func_cc638(text1, text2);
 }
 
-TbKeyCode screen_wait_seconds_or_until_continue_key(int sec)
-{
-    int i;
-    TbKeyCode key;
-
-    clear_key_pressed(KC_SPACE);
-    clear_key_pressed(KC_ESCAPE);
-    clear_key_pressed(KC_RETURN);
-
-    key = KC_UNASSIGNED;
-    for (i = sec*game_num_fps; i != 0; i--)
-    {
-        if (is_key_pressed(KC_SPACE, KMod_DONTCARE)) {
-            key = KC_SPACE;
-            break;
-        }
-        if (is_key_pressed(KC_ESCAPE, KMod_DONTCARE)) {
-            key = KC_ESCAPE;
-            break;
-        }
-        if (is_key_pressed(KC_RETURN, KMod_DONTCARE)) {
-            key = KC_RETURN;
-            break;
-        }
-
-        swap_wscreen();
-        game_update();
-    }
-    clear_key_pressed(key);
-
-    return key;
-}
-
-TbKeyCode screen_wait_seconds_or_until_yesno_key(int sec)
-{
-    int i;
-    TbKeyCode key;
-
-    clear_key_pressed(KC_Y);
-    clear_key_pressed(KC_N);
-
-    key = KC_UNASSIGNED;
-    for (i = sec*game_num_fps; i != 0; i--)
-    {
-        if (is_key_pressed(KC_Y, KMod_DONTCARE)) {
-            key = KC_Y;
-            break;
-        }
-        if (is_key_pressed(KC_N, KMod_DONTCARE)) {
-            key = KC_N;
-            break;
-        }
-
-        swap_wscreen();
-        game_update();
-    }
-    clear_key_pressed(key);
-
-    return key;
-}
-
 void init_outro(void)
 {
     gamep_scene_effect_type = ScEff_NONE;
@@ -1558,15 +1709,15 @@ void init_outro(void)
 
     screen_dark_curtain_down();
 
-    data_155704 = -1;
+    outro_last_played_smp = -1;
     init_things();
     //TODO hard-coded map ID
     change_current_map(51);
     load_outro_sprites();
 
     outro_credits_enabled = 0;
-    outro_unkn02 = 0;
-    outro_unkn03 = 0;
+    colwavapr_timer = 0;
+    dev_credits_group = 0;
     gameturn = 0;
     render_clock_set_turn(gameturn);
 
@@ -1605,7 +1756,8 @@ void init_outro(void)
                 outro_credits_enabled = 1;
         } else {
             // Randomly play seagull sample if applause is not currently playing
-            if (((LbRandomAnyShort() & 0xF) == 0) && (data_155704 == -1 || !IsSamplePlaying(0, data_155704, NULL)) )
+            if (((LbRandomAnyShort() & 0xF) == 0) &&
+              (outro_last_played_smp == -1 || !IsSamplePlaying(0, outro_last_played_smp, NULL)) )
             {
                 play_sample_using_heap(0, 7 + (LbRandomAnyShort() % 5), FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3u);
             }
@@ -1620,14 +1772,14 @@ void init_outro(void)
         engine_draw_whole_screen_flyby();
         if (outro_credits_enabled)
         {
-            outro_unkn02++;
-            func_cc0d4((char **)&dev_credits_groups[2 * outro_unkn03]);
-            if (outro_unkn02 > dword_1DDB68 + 50)
+            colwavapr_timer++;
+            func_cc0d4((char **)&dev_credits_groups[2 * dev_credits_group]);
+            if (colwavapr_timer > colwavapr_reveal_tm + 50)
             {
-                outro_unkn02 = 0;
-                outro_unkn03++;
-                if (outro_unkn03 == dev_credits_groups_count)
-                    outro_unkn03 = 0;
+                colwavapr_timer = 0;
+                dev_credits_group++;
+                if (dev_credits_group == dev_credits_groups_count)
+                    dev_credits_group = 0;
             }
           }
           swap_wscreen();
@@ -1947,10 +2099,35 @@ TbBool setup_host(void)
     return ret;
 }
 
+void calc_bul_offsets(void)
+{
+#if 1
+    asm volatile ("call ASM_calc_bul_offsets\n"
+        :  :  : "eax", "cc", "memory" );
+    return;
+#endif
+}
+
 void init_engine(void)
 {
-    asm volatile ("call ASM_init_engine\n"
-        :  :  : "eax" );
+    p_current_sort_sprite = game_sort_sprites;
+    p_current_draw_item = game_draw_list + 1;
+
+    calc_bul_offsets();
+
+    engn_xc = TILE_TO_MAPCOORD(60, 128);
+    engn_zc = TILE_TO_MAPCOORD(55, 128);
+    engn_yc = 0;
+    ingame.TrackX = engn_xc;
+    ingame.TrackZ = engn_zc;
+#if 0 // delete pending - no need to set those earlier
+    drwfloor_start_cor_x = (engn_xc & 0xFF00) - (render_area_a << 7);
+    drwfloor_start_cor_z = (engn_zc & 0xFF00) - (render_area_b << 7);
+#endif
+    ingame.NextRocket = 0;
+    setup_vecs(lbDisplay.WScreen, vec_tmap[0], lbDisplay.PhysicalScreenWidth,
+      lbDisplay.PhysicalScreenWidth, lbDisplay.PhysicalScreenHeight);
+    ingame.Flags |= GamF_HUDPanel | TngF_ProgressAction | GamF_RenderScene;
 }
 
 void net_player_colors_reassign(void)
@@ -2004,10 +2181,6 @@ void net_player_colors_reassign(void)
 
 void unkn_truce_groups(void)
 {
-#if 0
-    asm volatile ("call ASM_unkn_truce_groups\n"
-        :  :  : "eax" );
-#endif
     unkn_truce_groups_sub1();
     net_player_colors_reassign();
 }
@@ -2106,18 +2279,6 @@ void create_train_for_each_track(void)
         k++;
     }
 }
-
-/* no function - delete pending
-void clear_word_1774E8(void)
-{
-    short i;
-
-    for (i = 0; i < 150; i++)
-    {
-        word_1774E8[2 * i + 0] = 0;
-    }
-}
-*/
 
 void init_my_paths(void)
 {
@@ -2303,11 +2464,6 @@ void start_ingame_ambient_sound(void)
 
 void init_level(void)
 {
-#if 0
-    asm volatile ("call ASM_init_level\n"
-        :  :  : "eax" );
-    return;
-#endif
     short plyr_no;
 
     people_intel(1);
@@ -2377,7 +2533,6 @@ void init_level(void)
     gamep_unknval_16 = 0;
     ingame.fld_unkCB1 = 1;
     ingame.fld_unkCB2 = 1;
-    // clear_word_1774E8(); // no function - delete pending
     missions_clear_bank_tests();
     thing_groups_clear_all_actions();
     init_my_paths();
@@ -2386,11 +2541,7 @@ void init_level(void)
 
     VNAV_preprocess_bezier_turns(1);
     VNAV_init_new_traffic_system();
-#if 0
-    if (last_map_for_lights_func_11 != current_map) // maps are often reloaded, so we cannot skip lights update
-#endif
     map_lights_update();
-    last_map_for_lights_func_11 = current_map;
     init_scanner();
     find_the_tall_buildings();
     PlayCDTrack(ingame.CDTrack);
@@ -3035,9 +3186,9 @@ void game_startup_fail_screen(void)
     LbPaletteDraw(cent_x - embeded_square_dim/2, cent_y - embeded_square_dim/2, embeded_square_dim/16, embeded_square_dim/16, 0);
     LbDrawBox(cent_x - embeded_square_dim/6, cent_y - circle_diam*2/64, embeded_square_dim * 2 / 6, circle_diam*5/64, 0);
 
-    draw_text(cent_x - 40, cent_y - circle_diam*1/64, "U.T.O.P.I.A.", col_white);
-    draw_text(cent_x - 40, cent_y - circle_diam*0/64, "Game startup failed!", col_white);
-    draw_text(cent_x - 40, cent_y + circle_diam*1/64, "Check \"error.log\".", col_white);
+    draw_simple_text(cent_x - 40, cent_y - circle_diam*1/64, "U.T.O.P.I.A.", col_white);
+    draw_simple_text(cent_x - 40, cent_y - circle_diam*0/64, "Game startup failed!", col_white);
+    draw_simple_text(cent_x - 40, cent_y + circle_diam*1/64, "Check \"error.log\".", col_white);
 
     if (!was_locked)
         LbScreenUnlock();
@@ -3362,10 +3513,10 @@ void recalc_mouse_pos(void)
     short mag;
     short i;
 
-    cor_dy = (dword_176D18 >> 8);
-    fctr_xz = (dword_176D1C >> 8);
-    cor_dx = (fctr_xz * dword_176D10) >> 16;
-    cor_dz = (fctr_xz * dword_176D14) >> 16;
+    cor_dy = (transf_vec_tlt_y >> 8);
+    fctr_xz = (transf_vec_tlt_xz >> 8);
+    cor_dx = (fctr_xz * transf_vec_yaw_x) >> 16;
+    cor_dz = (fctr_xz * transf_vec_yaw_z) >> 16;
 
     chk_x = 200 * cor_dx + 16 * mouse_map_x;
     chk_y = 200 * cor_dy;
@@ -3450,11 +3601,6 @@ TbResult clear_vecs_screen(TbPixel colour)
 
 void gproc3_unknsub2(void)
 {
-#if 0
-    asm volatile ("call ASM_gproc3_unknsub2\n"
-        :  :  : "eax" );
-    return;
-#endif
     struct CameraState cam_bkp;
     short ms_x, ms_y, ms_limit;
     TbPixel *outbuf;
@@ -3466,11 +3612,11 @@ void gproc3_unknsub2(void)
     ingame.Flags &= ~GamF_BillboardMovies;
     if (is_key_pressed(KC_Q, KMod_DONTCARE))
     {
-        dword_155010 = 0x4000;
-        dword_155014 = 0x4000;
+        flyby_cam_x = 0x4000;
+        flyby_cam_z = 0x4000;
         dword_1AAB74 = 0;
         dword_1AAB78 = 0;
-        dword_155018 = 50;
+        flyby_cam_y = 50;
     }
 
     bkp_ingame_flags = ingame.Flags;
@@ -3498,8 +3644,8 @@ void gproc3_unknsub2(void)
 
     if (!lbDisplay.MRightButton)
     {
-        dword_155010 += lbSinTable[dword_1AAB74] >> 9;
-        dword_155014 += lbSinTable[dword_1AAB74 + LbFPMath_PI/2] >> 9;
+        flyby_cam_x += lbSinTable[dword_1AAB74] >> 9;
+        flyby_cam_z += lbSinTable[dword_1AAB74 + LbFPMath_PI/2] >> 9;
     }
 
     ms_limit = lbDisplay.MouseWindowY + lbDisplay.MouseWindowHeight * 1 / 3;
@@ -3513,24 +3659,24 @@ void gproc3_unknsub2(void)
     if (dword_1AAB78 < -300)
         dword_1AAB78 = -300;
 
-    i = (alt_at_point(dword_155010, dword_155014) >> 8) - 50;
-    if (i > dword_155018)
-        dword_155018 = i;
+    i = (alt_at_point(flyby_cam_x, flyby_cam_z) >> 8) - 50;
+    if (i > flyby_cam_y)
+        flyby_cam_y = i;
 
-    if (dword_155010 < 0)
-        dword_155010 = 0x8000;
-    if (dword_155010 > 0x8000)
-        dword_155010 = 0;
+    if (flyby_cam_x < 0)
+        flyby_cam_x = 0x8000;
+    if (flyby_cam_x > 0x8000)
+        flyby_cam_x = 0;
 
-    if (dword_155014 < 0)
-        dword_155014 = 0x8000;
-    if (dword_155014 > 0x8000)
-        dword_155014 = 0;
+    if (flyby_cam_z < 0)
+        flyby_cam_z = 0x8000;
+    if (flyby_cam_z > 0x8000)
+        flyby_cam_z = 0;
 
     engn_cam_tilt = dword_1AAB78;
-    engn_xc = dword_155010;
-    engn_yc = dword_155018;
-    engn_zc = dword_155014;
+    engn_xc = flyby_cam_x;
+    engn_yc = flyby_cam_y;
+    engn_zc = flyby_cam_z;
     engn_cam_yaw = 32 * dword_1AAB74;
 
 #if 0
@@ -3566,7 +3712,7 @@ ubyte load_game_slot(ubyte click)
     int ldslot;
     int ret;
 
-    if (login_control__State != LognCt_Unkn6) {
+    if (login_control[0].State != LognCt_Unkn6) {
         return 0;
     }
     if (save_slot == -1) {
@@ -3619,34 +3765,54 @@ ubyte load_game_slot(ubyte click)
 
 ubyte save_game_slot(ubyte click)
 {
+#if 0
     ubyte ret;
     asm volatile ("call ASM_save_game_slot\n"
         : "=r" (ret) : "a" (click));
     return ret;
+#endif
+    char *slot_str;
+    int ret;
+
+    if (login_control[0].State != LognCt_Unkn6) {
+        return 0;
+    }
+    if (save_slot == -1) {
+        alert_box_text_fmt("%s", gui_strings[564]);
+        return 1;
+    }
+    slot_str = save_slot_names[save_slot - save_slot_base - 1];
+    ret = save_game_write(save_slot, slot_str);
+    if (ret) {
+        alert_box_text_fmt("%s", gui_strings[566]);
+    } else {
+        alert_box_text_fmt("%s", gui_strings[571]);
+    }
+    return 1;
 }
 
 void reinit_unkn6_always_reset_variables(void)
 {
-    login_control__TechLevel = 4;
-    login_control__Money = starting_cash_amounts[login_control__TechLevel];
-    if (login_control__State == LognCt_Unkn6)
+    login_control[0].TechLevel = 4;
+    login_control[0].Money = starting_cash_amounts[login_control[0].TechLevel];
+    if (login_control[0].State == LognCt_Unkn6)
     {
         ingame.Credits = 50000;
         ingame.CashAtStart = 50000;
     }
     else
     {
-        ingame.Credits = login_control__Money;
-        ingame.CashAtStart = login_control__Money;
+        ingame.Credits = login_control[0].Money;
+        ingame.CashAtStart = login_control[0].Money;
     }
     ingame.Expenditure = 0;
-    login_control__State = LognCt_Unkn6;
+    login_control[0].State = LognCt_Unkn6;
     net_game_play_flags = NGPF_Unkn20 | NGPF_Unkn10 | NGPF_Unkn08 | NGPF_Unkn04;
 }
 
 void reinit_unkn6_adjustable_variables(void)
 {
-    login_control__City = -1;
+    login_control[0].City = -1;
 
     reinit_unkn6_always_reset_variables();
 }
@@ -3654,8 +3820,8 @@ void reinit_unkn6_adjustable_variables(void)
 void init_unkn6_adjustable_variables(void)
 {
     ingame.MissionStatus = ObvStatu_COMPLETED;
-    login_control__City = 19; // Tokyo
-    login_control__Team = 0;
+    login_control[0].City = 19; // Tokyo
+    login_control[0].Team = 0;
 
     reinit_unkn6_always_reset_variables();
 }
@@ -4414,14 +4580,6 @@ TbBool player_try_spend_money(long cost)
     return true;
 }
 
-void init_net_players(void)
-{
-    int i;
-    for (i = 0; i < 5; i++) {
-        LbMemorySet(&net_players[i], '\0', sizeof(struct NetPlayer2));
-    }
-}
-
 void campaign_new_game_prepare(void)
 {
     struct Campaign *p_campgn;
@@ -4499,13 +4657,13 @@ void net_new_game_prepare(void)
     srm_reset_research();
     init_agents();
 
-    init_net_players();
+    net_player_chat_init();
     net_grpaint_clear_op();
 }
 
 ubyte do_storage_NEW_MORTAL(ubyte click)
 {
-    if (login_control__State != LognCt_Unkn6)
+    if (login_control[0].State != LognCt_Unkn6)
         return 0;
 
     if (strlen(login_name) == 0)
@@ -5288,8 +5446,7 @@ ubyte do_user_interface(void)
                 p_locplayer->PanelState[mouser] = PANEL_STATE_SEND_MESSAGE;
                 reset_buffered_keys();
                 player_message_clear(local_player_no);
-                scanner_unkn370 = 0;
-                scanner_unkn3CC = 0;
+                panel_objective_info_start();
                 did_inp |= GINPUT_DIRECT;
             }
         }
@@ -5727,7 +5884,7 @@ void show_menu_screen_st0(void)
     player_mission_agents_toggle_reset(local_player_no);
     global_date_new_game_reset();
     ingame.Credits = 50000;
-    login_control__State = LognCt_Unkn6;
+    login_control[0].State = LognCt_Unkn6;
 
     debug_trace_place(17);
     // Need to set screen type before gfx background is reloaded
@@ -5869,8 +6026,8 @@ void show_load_and_prep_mission(void)
             ushort missi;
             ingame.MissionNo = 1;
             missi = 0;
-            if (login_control__City != -1)
-                missi = find_first_mission_with_map(cities[login_control__City].MapID);
+            if (login_control[0].City != -1)
+                missi = find_first_mission_with_map(cities[login_control[0].City].MapID);
             if (missi > 0) {
                 ingame.MissionNo = missi;
             }
@@ -5885,8 +6042,8 @@ void show_load_and_prep_mission(void)
             load_mission_name_text(missi);
             ingame.CurrentMission = missi;
             // The names are propagated by fenet only in network game
-            net_unkn2_names_clear();
-            strncpy(unkn2_names[0], login_name, 16);
+            net_player_names_clear();
+            net_player_name_set(0, login_name);
             debug_trace_place(12);
         }
     }
@@ -5953,7 +6110,7 @@ void show_load_and_prep_mission(void)
 
         if (in_network_game)
         {
-            if (nsvc.I.Type != NetSvc_IPX)
+            if (!netgame_service_is_multi_client_capable())
                 ingame.InNetGame_UNSURE = ((1 << 0) | (1 << 1)); // two players
             ingame.DetailLevel = 0;
             bang_set_detail(ingame.DetailLevel == 0);
@@ -6293,11 +6450,11 @@ void show_menu_screen(void)
 
     input_processing_end();
 
-    if (login_control__State == LognCt_NetStarted)
+    if (login_control[0].State == LognCt_NetStarted)
     {
         net_unkn_func_33();
     }
-    else if (login_control__State == LognCt_Unkn8)
+    else if (login_control[0].State == LognCt_Unkn8)
     {
         start_into_mission = 1;
         in_network_game = 1;
@@ -6306,7 +6463,7 @@ void show_menu_screen(void)
         net_players_num = LbNetworkSessionNumberPlayers();
         switch_net_screen_boxes_to_initiate();
         net_players_copy_equip_and_cryo_now();
-        init_net_players();
+        net_player_chat_init();
     }
 
     memcpy(lbDisplay.WScreen, back_buffer, lbDisplay.GraphicsScreenWidth * lbDisplay.GraphicsScreenHeight);
@@ -6430,22 +6587,11 @@ ubyte critical_action_input(void)
     TbKeyCode key;
 
     strcpy(locstr, "Confirm Critical Action Y/N?");
+
     DangerMusicFadeSwitch(2, 4u);
     SetMusicTempo(110, 1000);
-    {
-        int x, y, w, h;
-        short tx_height;
 
-        tx_height = my_char_height('A');
-        w = my_string_width(locstr) + 2 * tx_height;
-        h = 3 * tx_height;
-        x = (lbDisplay.GraphicsWindowWidth - w) / 2;
-        y = (lbDisplay.GraphicsWindowHeight - h) / 2;
-
-        draw_purple_rect(x, y, w, h, 0);
-        draw_text(x + tx_height, y + tx_height, locstr, 0xC);
-    }
-
+    draw_message_box(locstr);
     key = screen_wait_seconds_or_until_yesno_key(20);
 
     DangerMusicFadeSwitch(1, 1);
@@ -6567,8 +6713,8 @@ void draw_mission_concluded(void)
     if (ingame.fld_unkCB5)
     {
         sprintf(mission_status_text, "%s %s: %s ", gui_strings[GSTR_CHK_MISSION_STA_PRE],
-          gui_strings[GSTR_ENM_MISSION_STATUS + 1 + ingame.MissionStatus], scroll_text);
-        data_15319c = mission_status_text;
+          gui_strings[GSTR_ENM_MISSION_STATUS + 1 + ingame.MissionStatus], scrollinfo_text);
+        panel_conclusion_info_set(mission_status_text);
     }
     else
     {
@@ -6583,19 +6729,10 @@ void draw_mission_concluded(void)
           gui_strings[GSTR_CHK_MISSION_STA_SUF_KEYS], gui_strings[GSTR_CHK_MISSION_STA_TIME],
           tm_h, tm_m % 60, tm_s);
         LbStringToUpper(mission_status_text);
-        data_15319c = mission_status_text;
-        scroll_text = mission_status_text;
+        panel_conclusion_info_set(mission_status_text);
+        scrollinfo_text = mission_status_text;
     }
-    {
-        int scr_x, scr_y;
-
-        // TODO the text position should be computed based on position of panels loaded from file
-        scr_x = 11 * pop1_sprites_scale;
-        scr_y = 26 * pop1_sprites_scale;
-
-        lbDisplay.DrawColour = SCANNER_colour[ScnClr_Text];
-        AppTextDrawMissionStatus(scr_x, scr_y, data_15319c);
-    }
+    panel_conclusion_info_draw();
 }
 
 void input_mission_concluded(void)

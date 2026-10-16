@@ -37,8 +37,8 @@
 #include "game.h"
 #include "keyboard.h"
 #include "mydraw.h"
-#include "network.h"
 #include "player.h"
+#include "plyr_net.h"
 #include "purpldrw.h"
 #include "sound.h"
 #include "swlog.h"
@@ -49,7 +49,7 @@ struct ScreenButton controls_defaults_button = {0};
 struct ScreenButton controls_save_button = {0};
 struct ScreenButton controls_calibrate_button = {0};
 
-extern ubyte byte_1C4970;
+ubyte byte_1C4970 = 0;
 ubyte controls_hlight_gkey = 1;
 
 short sheet_columns_x[] = {4, 200, 300};
@@ -219,7 +219,7 @@ ubyte show_controls_joystick_box(struct ScreenBox *p_box)
         if (lbDisplay.LeftButton)
         {
             lbDisplay.LeftButton = 0;
-            if (login_control__State != LognCt_NetStarted || nsvc.I.Type == NetSvc_IPX)
+            if (login_control[0].State != LognCt_NetStarted || netgame_service_is_multi_client_capable())
             {
                 p_locplayer->DoubleMode++;
                 if (p_locplayer->DoubleMode >= LOCAL_USERS_MAX_COUNT)

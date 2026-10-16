@@ -27,6 +27,27 @@
 
 #define MAP_CRATERS_COUNT 128
 
+#pragma pack(1)
+
+struct CircleDetail {
+    s32 dangle;
+    s32 babynumber;
+};
+
+struct SphereDetail {
+    s32 dangley;
+    s32 babyshift;
+    s32 babynumber;
+};
+
+struct BangDetail {
+    struct CircleDetail circle[4];
+    struct SphereDetail sphere[4];
+    u32 mask;
+};
+
+#pragma pack()
+
 extern ubyte map_crater_next;
 extern struct MapCreater map_craters[MAP_CRATERS_COUNT];
 

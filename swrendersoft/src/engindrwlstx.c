@@ -101,59 +101,59 @@ void reset_drawlist(void)
 // Special non-textured draw; used during nuclear explosions?
 void draw_drawitem_1(ushort dihead)
 {
-    struct DrawItem *itm;
+    struct DrawItem *p_itm;
     ushort iidx;
 
-    for (iidx = dihead; iidx != 0; iidx = itm->Child)
+    for (iidx = dihead; iidx != 0; iidx = p_itm->Child)
     {
-      itm = &game_draw_list[iidx];
-      switch (itm->Type)
+      p_itm = &game_draw_list[iidx];
+      switch (p_itm->Type)
       {
       case DrIT_ObFace3Txtr:
       case DrIT_Unkn10:
-          draw_object_face3d_textrd_dk(itm->Offset);
+          draw_object_face3d_textrd_dk(p_itm->Offset);
           break;
       case DrIT_Unkn2:
       case DrIT_Unkn8:
           break;
       case DrIT_SFrmStatc:
-          draw_sort_sprite1a(itm->Offset);
+          draw_sort_sprite1a(p_itm->Offset);
           break;
       case DrIT_Unkn4:
-          draw_floor_tile1a(itm->Offset);
+          draw_floor_tile1a(p_itm->Offset);
           break;
       case DrIT_Unkn5:
-          draw_ex_face(itm->Offset);
+          draw_ex_face(p_itm->Offset);
           break;
       case DrIT_Unkn6:
-          draw_floor_tile1b(itm->Offset);
+          draw_floor_tile1b(p_itm->Offset);
           break;
       case DrIT_ObFace3G:
-          draw_object_face3g_textrd(itm->Offset);
+          draw_object_face3g_textrd(p_itm->Offset);
           break;
       case DrIT_ObFace4Txtr:
-          draw_object_face4d_textrd_dk(itm->Offset);
+          draw_object_face4d_textrd_dk(p_itm->Offset);
           break;
       case DrIT_Unkn11:
-          draw_sort_line1a(itm->Offset);
+          draw_sort_line1a(p_itm->Offset);
           break;
       case DrIT_SpObFace4:
-          draw_special_object_face4(itm->Offset);
+          draw_special_object_face4(p_itm->Offset);
           break;
       case DrIT_SFrmPersV:
-          draw_sort_sprite_frame_pers_v(itm->Offset);
+          draw_sort_sprite_frame_pers_v(p_itm->Offset);
           break;
       case DrIT_SFrmPersB:
-          draw_sort_sprite_frame_pers_b(itm->Offset);
+          draw_sort_sprite_frame_pers_b(p_itm->Offset);
           break;
       case DrIT_SFrmEfctV:
-          draw_sort_sprite_frame_efct_v(itm->Offset);
+          draw_sort_sprite_frame_efct_v(p_itm->Offset);
           break;
       case DrIT_ObFacePole:
-          draw_object_face4_pole(itm->Offset);
+          draw_object_face4_pole(p_itm->Offset);
           break;
       case DrIT_Unkn15:
-          draw_sort_sprite1c(itm->Offset);
+          draw_sort_sprite1c(p_itm->Offset);
           break;
       }
     }
@@ -161,7 +161,7 @@ void draw_drawitem_1(ushort dihead)
 
 void draw_drawitem_2(ushort dihead)
 {
-    struct DrawItem *itm;
+    struct DrawItem *p_itm;
     ushort iidx;
     ushort i;
 
@@ -170,92 +170,92 @@ void draw_drawitem_2(ushort dihead)
     assert(screen_sorted_sprite_persn_render_cb != NULL);
 
     i = 0;
-    for (iidx = dihead; iidx != 0; iidx = itm->Child)
+    for (iidx = dihead; iidx != 0; iidx = p_itm->Child)
     {
       i++;
       if (i > BUCKET_ITEMS_MAX)
           break;
-      itm = &game_draw_list[iidx];
-      switch (itm->Type)
+      p_itm = &game_draw_list[iidx];
+      switch (p_itm->Type)
       {
       case DrIT_ObFace3Txtr:
       case DrIT_Unkn10:
-          draw_object_face3d_textrd(itm->Offset);
+          draw_object_face3d_textrd(p_itm->Offset);
           break;
       case DrIT_SFrmStatc:
-          draw_sort_sprite1a(itm->Offset);
+          draw_sort_sprite1a(p_itm->Offset);
           break;
       case DrIT_Unkn4:
-          draw_floor_tile1a(itm->Offset);
+          draw_floor_tile1a(p_itm->Offset);
           break;
       case DrIT_Unkn5:
-          draw_ex_face(itm->Offset);
+          draw_ex_face(p_itm->Offset);
           break;
       case DrIT_Unkn6:
-          draw_floor_tile1b(itm->Offset);
+          draw_floor_tile1b(p_itm->Offset);
           break;
       case DrIT_ObFace3G:
-          draw_object_face3g_textrd(itm->Offset);
+          draw_object_face3g_textrd(p_itm->Offset);
           break;
       case DrIT_ObFace4Txtr:
-          draw_object_face4d_textrd(itm->Offset);
+          draw_object_face4d_textrd(p_itm->Offset);
           break;
       case DrIT_Unkn11:
-          draw_sort_line1a(itm->Offset);
+          draw_sort_line1a(p_itm->Offset);
           break;
       case DrIT_SpObFace4:
-          draw_special_object_face4(itm->Offset);
+          draw_special_object_face4(p_itm->Offset);
           break;
       case DrIT_SFrmPersV:
-          draw_sort_sprite_frame_pers_v(itm->Offset);
+          draw_sort_sprite_frame_pers_v(p_itm->Offset);
           break;
       case DrIT_SFrmPersB:
-          draw_sort_sprite_frame_pers_b(itm->Offset);
+          draw_sort_sprite_frame_pers_b(p_itm->Offset);
           break;
       case DrIT_SFrmEfctV:
-          draw_sort_sprite_frame_efct_v(itm->Offset);
+          draw_sort_sprite_frame_efct_v(p_itm->Offset);
           break;
       case DrIT_ObFacePole:
-          draw_object_face4_pole(itm->Offset);
+          draw_object_face4_pole(p_itm->Offset);
           break;
       case DrIT_Unkn15:
-          draw_sort_sprite1c(itm->Offset);
+          draw_sort_sprite1c(p_itm->Offset);
           break;
       case DrIT_ObFace4G:
-          draw_object_face4g_textrd(itm->Offset);
+          draw_object_face4g_textrd(p_itm->Offset);
           break;
       case DrIT_ObFace3Refl:
-          draw_object_face3_reflect(itm->Offset);
+          draw_object_face3_reflect(p_itm->Offset);
           break;
       case DrIT_ObFace4Refl:
-          draw_object_face4_reflect(itm->Offset);
+          draw_object_face4_reflect(p_itm->Offset);
           break;
       case DrIT_SPersShdw:
-          draw_sort_sprite_person_shadow(itm->Offset);
+          draw_sort_sprite_person_shadow(p_itm->Offset);
           break;
       case DrIT_SharpnlPoly:
-          draw_shrapnel(itm->Offset);
+          draw_shrapnel(p_itm->Offset);
           break;
       case DrIT_SFrmPhwoar:
-          draw_phwoar(itm->Offset);
+          draw_phwoar(p_itm->Offset);
           break;
       case DrIT_LongPropBar:
-          draw_sort_sprite_long_prop_bar(itm->Offset);
+          draw_sort_sprite_long_prop_bar(p_itm->Offset);
           break;
       case DrIT_ObFace4Tran:
-          draw_object_face4_tran_tint(itm->Offset);
+          draw_object_face4_tran_tint(p_itm->Offset);
           break;
       case DrIT_ObFace3Tran:
-          draw_object_face3_tran_tint(itm->Offset);
+          draw_object_face3_tran_tint(p_itm->Offset);
           break;
       case DrIT_SFireFlame:
-          draw_fire_flame(itm->Offset);
+          draw_fire_flame(p_itm->Offset);
           break;
       case DrIT_Number:
-          draw_sort_sprite_number(itm->Offset);
+          draw_sort_sprite_number(p_itm->Offset);
           break;
       case DrIT_ShortText:
-          draw_sort_sprite_short_text(itm->Offset);
+          draw_sort_sprite_short_text(p_itm->Offset);
           break;
       default:
           break;

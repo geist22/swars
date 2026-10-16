@@ -37,9 +37,12 @@
 #include "swlog.h"
 /******************************************************************************/
 
+struct ScreenPoint proj_origin = {319, 269};
+
 struct PurpleDrawItem *purple_draw_list = NULL;
 ushort purple_draw_index = 0;
 
+struct ScreenPoint *hotspot_buffer = NULL;
 ushort hotspot_next = 1;
 
 ubyte purple_joy_move = 0;
@@ -236,6 +239,139 @@ void screen_hotspot_add(int x, int y)
     hotspot_buffer[hs].Y = y;
 }
 
+static void draw_holo_box(struct DIBox *p_pdbox)
+{
+    short x, y;
+    short w, h;
+
+    x = p_pdbox->X;
+    y = p_pdbox->Y;
+    w = p_pdbox->Width;
+    h = p_pdbox->Height;
+
+    LbDrawBox(x, y, w, h, p_pdbox->Colour);
+
+    if ((lbDisplay.DrawFlags & 0x8000) != 0)
+    {
+        short shift_w, shift_h;
+
+        shift_w = (w >> 1);
+        shift_h = (h >> 1);
+        screen_hotspot_add(x + shift_w, y + shift_h);
+    }
+}
+
+static void draw_holo_text(struct DIText *p_pdtext)
+{
+    short x, y;
+
+    lbDisplay.DrawColour = p_pdtext->Colour;
+    lbFontPtr = p_pdtext->Font;
+    my_set_text_window(p_pdtext->WindowX, p_pdtext->WindowY,
+      p_pdtext->Width, p_pdtext->Height);
+    my_draw_text(p_pdtext->X, p_pdtext->Y,
+      p_pdtext->Text, p_pdtext->Line);
+
+    if ((lbDisplay.DrawFlags & 0x8000) != 0)
+    {
+        short text_w;
+        short shift_w, shift_h;
+
+        text_w = my_string_width(p_pdtext->Text);
+        if ((text_w >= p_pdtext->Width)
+          || ((lbDisplay.DrawFlags & Lb_TEXT_HALIGN_CENTER)) != 0)
+        {
+            x = p_pdtext->WindowX;
+            shift_w = p_pdtext->Width >> 1;
+        }
+        else
+        {
+            x = p_pdtext->X + p_pdtext->WindowX;
+            shift_w = text_w >> 1;
+        }
+        shift_h = my_char_height('A') >> 1;
+        y = p_pdtext->WindowY + p_pdtext->Y;
+        screen_hotspot_add(x + shift_w, y + shift_h);
+    }
+}
+
+static void draw_holo_copy_box(struct DIBox *p_pdbox)
+{
+    short x, y;
+    short w, h;
+
+    x = p_pdbox->X;
+    y = p_pdbox->Y;
+    w = p_pdbox->Width;
+    h = p_pdbox->Height;
+
+    LbScreenCopyBox(lbDisplay.WScreen, back_buffer,
+        x, y, x, y, w, h);
+}
+
+static void draw_holo_sprite(struct DISprite *p_pdsprite)
+{
+    const struct TbSprite *p_spr;
+    short x, y;
+
+    x = p_pdsprite->X;
+    y = p_pdsprite->Y;
+    p_spr = p_pdsprite->Sprite;
+    lbDisplay.DrawColour = p_pdsprite->Colour;
+    if ((lbDisplay.DrawFlags & Lb_TEXT_ONE_COLOR) != 0)
+        LbSpriteDrawOneColour(x, y, p_spr, lbDisplay.DrawColour);
+    else
+        LbSpriteDraw(x, y, p_spr);
+
+    if ((lbDisplay.DrawFlags & 0x8000) != 0)
+    {
+        short w, h;
+        short shift_w, shift_h;
+
+        w = p_spr->SWidth;
+        h = p_spr->SHeight;
+        shift_w = (w >> 1);
+        shift_h = (h >> 1);
+        screen_hotspot_add(x + shift_w, y + shift_h);
+    }
+}
+
+static void draw_holo_trig(struct PolyPoint *p_ptA,
+  struct PolyPoint *p_ptB, struct PolyPoint *p_ptC, TbPixel color)
+{
+    vec_colour = color;
+    if ((p_ptC->Y - p_ptB->Y) * (p_ptB->X - p_ptA->X)
+        - (p_ptB->Y - p_ptA->Y) * (p_ptC->X - p_ptB->X) > 0)
+        trig(p_ptA, p_ptB, p_ptC);
+    else
+        trig(p_ptA, p_ptC, p_ptB);
+}
+
+static void draw_holo_flic(struct DIFlic *p_pdflic)
+{
+    //TODO avoid function callbacks from render
+    p_pdflic->Function();
+}
+
+static void draw_holo_line(struct DILine *p_pdline)
+{
+    LbDrawLine(p_pdline->X1, p_pdline->Y1,
+      p_pdline->X2, p_pdline->Y2, p_pdline->Colour);
+}
+
+static void draw_holo_hvline(struct DILine *p_pdline)
+{
+    LbDrawHVLine(p_pdline->X1, p_pdline->Y1,
+      p_pdline->X2, p_pdline->Y2, p_pdline->Colour);
+}
+
+static void draw_holo_triangle(struct DITriangle *p_pdtrngl)
+{
+    LbDrawTriangle(p_pdtrngl->X1, p_pdtrngl->Y1,
+      p_pdtrngl->X2, p_pdtrngl->Y2,
+      p_pdtrngl->X3, p_pdtrngl->Y3, p_pdtrngl->Colour);
+}
+
 static void draw_purple_drawitems(void)
 {
     struct PolyPoint point_a;
@@ -252,9 +388,6 @@ static void draw_purple_drawitems(void)
     for (pditm = 0; pditm < purple_draw_index; pditm++)
     {
         struct PurpleDrawItem *p_pditem;
-        short x, y;
-        short w, h;
-        short shift_w, shift_h;
 
         p_pditem = &purple_draw_list[pditm];
 
@@ -263,102 +396,41 @@ static void draw_purple_drawitems(void)
         switch (p_pditem->Type)
         {
         case PuDT_BOX:
-            x = p_pditem->U.Box.X;
-            y = p_pditem->U.Box.Y;
-            w = p_pditem->U.Box.Width;
-            h = p_pditem->U.Box.Height;
-            LbDrawBox(x, y, w, h, p_pditem->U.Box.Colour);
-            if ((lbDisplay.DrawFlags & 0x8000) != 0)
-            {
-                shift_w = (w >> 1);
-                shift_h = (h >> 1);
-                screen_hotspot_add(x + shift_w, y + shift_h);
-            }
+            draw_holo_box(&p_pditem->U.Box);
             break;
         case PuDT_TEXT:
-            lbDisplay.DrawColour = p_pditem->U.Text.Colour;
-            lbFontPtr = p_pditem->U.Text.Font;
-            my_set_text_window(p_pditem->U.Text.WindowX, p_pditem->U.Text.WindowY,
-              p_pditem->U.Text.Width, p_pditem->U.Text.Height);
-            my_draw_text(p_pditem->U.Text.X, p_pditem->U.Text.Y,
-              p_pditem->U.Text.Text, p_pditem->U.Text.Line);
-            if ((lbDisplay.DrawFlags & 0x8000) != 0)
-            {
-                w = my_string_width(p_pditem->U.Text.Text);
-                if ((w >= p_pditem->U.Text.Width)
-                  || ((lbDisplay.DrawFlags & Lb_TEXT_HALIGN_CENTER)) != 0)
-                {
-                    x = p_pditem->U.Text.WindowX;
-                    shift_w = p_pditem->U.Text.Width >> 1;
-                }
-                else
-                {
-                    x = p_pditem->U.Text.X + p_pditem->U.Text.WindowX;
-                    shift_w = w >> 1;
-                }
-                shift_h = my_char_height('A') >> 1;
-                y = p_pditem->U.Text.Y + p_pditem->U.Text.WindowY;
-                screen_hotspot_add(x + shift_w, y + shift_h);
-            }
+            draw_holo_text(&p_pditem->U.Text);
             break;
         case PuDT_UNK03:
             break;
         case PuDT_COPYBOX:
-            x = p_pditem->U.Box.X;
-            y = p_pditem->U.Box.Y;
-            shift_w = p_pditem->U.Box.Width;
-            shift_h = p_pditem->U.Box.Height;
-            LbScreenCopyBox(lbDisplay.WScreen, back_buffer,
-                x, y, x, y, shift_w, shift_h);
+            draw_holo_copy_box(&p_pditem->U.Box);
             break;
         case PuDT_SPRITE:
-            x = p_pditem->U.Sprite.X;
-            y = p_pditem->U.Sprite.Y;
-            lbDisplay.DrawColour = p_pditem->U.Box.Colour;
-            if ((lbDisplay.DrawFlags & Lb_TEXT_ONE_COLOR) != 0)
-                LbSpriteDrawOneColour(x, y, p_pditem->U.Sprite.Sprite, lbDisplay.DrawColour);
-            else
-                LbSpriteDraw(x, y, p_pditem->U.Sprite.Sprite);
-            if ((lbDisplay.DrawFlags & 0x8000) != 0)
-            {
-                w = p_pditem->U.Sprite.Sprite->SWidth;
-                h = p_pditem->U.Sprite.Sprite->SHeight;
-                shift_w = (w >> 1);
-                shift_h = (h >> 1);
-                screen_hotspot_add(x + shift_w, y + shift_h);
-            }
+            draw_holo_sprite(&p_pditem->U.Sprite);
             break;
-        case PuDT_POTRIG:
-            vec_colour = p_pditem->U.Line.Colour;
+        case PuDT_HOLORAY:
             point_c.X = p_pditem->U.Line.X1;
             point_c.Y = p_pditem->U.Line.Y1;
             point_b.X = p_pditem->U.Line.X2;
             point_b.Y = p_pditem->U.Line.Y2;
-            if ((point_c.Y - point_b.Y) * (point_b.X - point_a.X)
-                - (point_b.Y - point_a.Y) * (point_c.X - point_b.X) > 0)
-                trig(&point_a, &point_b, &point_c);
-            else
-                trig(&point_a, &point_c, &point_b);
+            draw_holo_trig(&point_a, &point_b, &point_c, p_pditem->U.Line.Colour);
             break;
         case PuDT_FLIC:
-            p_pditem->U.Flic.Function();
+            draw_holo_flic(&p_pditem->U.Flic);
             break;
         case PuDT_NOISEBOX:
             draw_noise_box(p_pditem->U.Box.X, p_pditem->U.Box.Y,
               p_pditem->U.Box.Width, p_pditem->U.Box.Height);
             break;
         case PuDT_LINE:
-            LbDrawLine(p_pditem->U.Line.X1, p_pditem->U.Line.Y1,
-                p_pditem->U.Line.X2, p_pditem->U.Line.Y2, p_pditem->U.Line.Colour);
+            draw_holo_line(&p_pditem->U.Line);
             break;
         case PuDT_HVLINE:
-            LbDrawHVLine(p_pditem->U.Line.X1, p_pditem->U.Line.Y1,
-                p_pditem->U.Line.X2, p_pditem->U.Line.Y2, p_pditem->U.Line.Colour);
+            draw_holo_hvline(&p_pditem->U.Line);
             break;
         case PuDT_TRIANGLE:
-            LbDrawTriangle(p_pditem->U.Triangle.X1, p_pditem->U.Triangle.Y1,
-                p_pditem->U.Triangle.X2, p_pditem->U.Triangle.Y2,
-                p_pditem->U.Triangle.X3, p_pditem->U.Triangle.Y3, p_pditem->U.Triangle.Colour);
+            draw_holo_triangle(&p_pditem->U.Triangle);
             break;
         case PuDT_HOTSPOT:
             screen_hotspot_add(p_pditem->U.Hotspot.X, p_pditem->U.Hotspot.Y);

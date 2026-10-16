@@ -48,9 +48,11 @@ ubyte *save_game_buffer = NULL;
 extern ubyte save_crypto_tables_state[3];
 extern ubyte save_crypto_data_state[3];
 
+char login_name[16] = "";
 char save_slot_names[SAVE_SLOTS_VISIBLE_COUNT][25] = {0};
 char save_active_desc[25];
 s32 save_slot_base = 0;
+short save_slot = -1;
 
 /******************************************************************************/
 
@@ -888,7 +890,7 @@ ubyte load_game(int slot, char *desc)
     }
 
     read_user_settings();
-    login_control__Money = ingame.Credits;
+    login_control[0].Money = ingame.Credits;
     ingame.CashAtStart = ingame.Credits;
     ingame.Expenditure = 0;
     return 0;

@@ -200,11 +200,16 @@ struct InGame {
 extern struct InGame ingame;
 extern ubyte net_game_play_flags;
 
+extern ubyte game_gfx_advanced_lights;
+extern ubyte game_billboard_movies;
+extern ubyte game_gfx_deep_radar;
+
 /** User set in-game brightess. */
 extern short user_sel_brightness;
 
 extern TbPixel deep_radar_surface_col;
 extern TbPixel deep_radar_line_col;
+
 /******************************************************************************/
 
 /** Gives national text with description of the action.

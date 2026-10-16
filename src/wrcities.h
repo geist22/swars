@@ -66,7 +66,7 @@ struct City { // sizeof=40
 #pragma pack()
 /******************************************************************************/
 extern ubyte num_cities;
-extern struct City cities[];
+extern struct City cities[50];
 extern sbyte selected_city_id;
 
 extern char *memload_city_prop_text;

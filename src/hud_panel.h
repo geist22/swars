@@ -149,15 +149,17 @@ extern struct GamePanel *game_panel;
 extern struct PanelStyle *game_panel_style;
 extern struct TbPoint *game_panel_shifts;
 extern ubyte byte_153198;
-extern long scanner_unkn370;
-
-extern long scanner_unkn3CC;
 
 /** Scale factor for figuring out GUI size.
  */
 extern short gui_scale;
 
-int SCANNER_objective_info_height(void);
+void panel_conclusion_info_set(const char *text);
+void panel_conclusion_info_draw(void);
+
+/** Resets panel text scrolling to the beginning.
+ */
+void panel_objective_info_start(void);
 
 TbBool panel_any_visible(void);
 void draw_new_panel(void);

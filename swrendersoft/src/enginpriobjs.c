@@ -46,6 +46,10 @@ ushort prim_unknprop01 = 0;
 
 ushort word_19CB58[66];
 
+ushort unkn2_pos_x;
+ushort unkn2_pos_y;
+ushort unkn2_pos_z;
+
 ushort old_next_object, old_next_object_face3, old_next_object_point,
   old_next_normal, old_next_face_texture;
 

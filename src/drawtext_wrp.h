@@ -31,9 +31,17 @@ extern "C" {
 #pragma pack()
 /******************************************************************************/
 
-void draw_line_transformed_at_ground(int x1, int y1, int x2, int y2, TbPixel colour);
-void draw_number_transformed_at_ground(int coord_x, int coord_z, int num);
-void draw_text_transformed_at_ground(int coord_x, int coord_z, const char *text);
+/** Draws simple purple rect directly, without drawlists.
+ */
+void draw_purple_rect(int x, int y, int w, int h, ubyte active);
+
+void draw_message_box(const char *text);
+void show_message(const char *text);
+
+void draw_mapcoord_line_at_ground(int cor1_x, int cor1_z,
+  int cor2_x, int cor2_z, TbPixel colour);
+void draw_mapcoord_simple_text_number_at_ground(int cor_x, int cor_z, int num);
+void draw_mapcoord_simple_text_at_ground(int cor_x, int cor_z, const char *text);
 
 /******************************************************************************/
 #ifdef __cplusplus

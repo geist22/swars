@@ -27,6 +27,8 @@ extern "C" {
 /******************************************************************************/
 #pragma pack(1)
 
+#define SINGLE_TEXTURE_DIM 32
+
 struct PolyPoint;
 
 #pragma pack()

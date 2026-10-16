@@ -129,12 +129,14 @@ const char *packet_action_name[] = {
 
 void (*my_build_packet)(struct Packet *packet, ushort action, u32 param1, s32 x, s32 y, s32 z);
 
-/******************************************************************************/
+struct Packet packets[8];
 
-extern TbFileHandle packet_rec_fh;
+TbFileHandle packet_rec_fh = INVALID_FILE;
 ushort packet_rec_no = 0;
 ubyte packet_rec_use_levelno = 0;
 ubyte pktrec_mode = 0;
+
+/******************************************************************************/
 
 const char * get_packet_action_name(ushort atype)
 {

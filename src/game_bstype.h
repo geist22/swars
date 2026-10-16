@@ -54,7 +54,7 @@ typedef ubyte PlayerIdx;
 typedef ubyte WeaponType;
 
 /** Coordinate on the screen surface.
- * The type shall allow safety store values beyond (below/above) real screen
+ * The type shall allow safely store values beyond (below/above) real screen
  * coordinates, up to another screen size. This means it needs to allow to
  * store -MAX_SUPPORTED_SCREEN_WIDTH .. 2*MAX_SUPPORTED_SCREEN_WIDTH, or the
  * same for height.

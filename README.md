@@ -17,10 +17,27 @@ the DOS-specific parts with platform-independent code, using [SDL](https://www.l
 for input and video display, [Vorbis](https://xiph.org/vorbis/) for music and
 [OpenAL](https://www.openal.org/) for sound.
 
+## Completeness
+
+### In term of game files
+
 An executable and some, but not all, neccessary data files are provided with this
 port. This means that some of game data are not included. To install the
 **SyndWarsFX**, you will need to have the original data from either
 *Syndicate Wars CD*, or digital distribution.
+
+The file packages provided with this port do contain new resources, which
+were not part of the original game. This includes extra sounds and higher
+resolution graphics assets.
+
+### In term of gameplay
+
+Nothing is missing from the single player gameplay, since the port uses original
+code for parts which are not remade yet. In fact, some cut and beta features were
+revived.
+
+Multiplayer is not working though - network code is missing. It will allow to
+start a new MP game, but with one player only and no real network connection.
 
 ## Community
 

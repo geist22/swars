@@ -117,16 +117,18 @@ extern TbPixel face_transp_tinted_line_col;
 
 extern ubyte engine_render_lights;
 
-extern short word_1A5834;
-extern short word_1A5836;
+extern short anim_el_pos_min_x;
+extern short anim_el_pos_min_y;
 
 extern ScreenTriangleRenderCallback screen_position_face_render_cb;
 extern ScreenSortSpriteRenderCallback screen_sorted_sprite_statc_render_cb;
 extern ScreenSortSpriteRenderCallback screen_sorted_sprite_persn_render_cb;
 /******************************************************************************/
 
-void draw_frame_scaled_alpha(int scr_x, int scr_y, ushort frm,
-  ushort scale, ushort alpha);
+void draw_frame_unscaled(int scr_x, int scr_y, ushort frm);
+
+void draw_frame_unscaled_one_colour(int scr_x, int scr_y, ushort frm,
+  TbPixel colour);
 
 /** Draw given frame, standing at given position and with brightness.
  *
@@ -134,16 +136,22 @@ void draw_frame_scaled_alpha(int scr_x, int scr_y, ushort frm,
  * the position at which the drawn object stands - so it is generally bottom
  * center, but pixels can be drawn below that position if the drawn thing
  * has part of it in front of the point of standing.
- * Honors overall_scale when sizing the frame.
  *
+ * @param scr_x On-screen Coordinate of the standing position.
+ * @param scr_y On-screen Coordinate of the standing position.
  * @param frm Frame to be drawn.
- * @param x On-screen Coordinate of the standing position.
- * @param y On-screen Coordinate of the standing position.
+ * @param scale Scale at which the frame is drawn, 100% is 256.
  * @param bright Brightness of the drawn sprite.
  */
-void draw_sorted_sprite1a(ushort frm, short x, short y, ubyte bright);
+void draw_frame_alpha(short scr_x, short scr_y, ushort frm,
+  short scale, ubyte bright);
 
 void draw_sort_sprite1a(ushort sspr);
+
+/** Draw sprites in given NULL-term list in quarters around radius.
+ */
+void draw_sprites_in_quarters_unscaled(int scr_x, int scr_y,
+  struct TbSprite * const p_sprlst[], int radius);
 
 void draw_floor_tile1a(ushort tl);
 void draw_floor_tile1b(ushort tl);
