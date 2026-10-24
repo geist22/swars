@@ -30,8 +30,6 @@ syndwarsfx_SOURCES = \
 	../bfsmacklib/src/smack2ail.c \
 	../bfsmacklib/src/smailfile.c \
 	../bfsmacklib/src/bfsmacklib_s.sx \
-	linksmk.h \
-	linksmk.c \
 	config.h \
 	bmbang.c \
 	bmbang.h \
@@ -48,6 +46,8 @@ syndwarsfx_SOURCES = \
 	command.h \
 	cybmod.c \
 	cybmod.h \
+	devcreds.c \
+	devcreds.h \
 	display.c \
 	display.h \
 	dos.c \
@@ -94,6 +94,8 @@ syndwarsfx_SOURCES = \
 	festorage.h \
 	feworld.c \
 	feworld.h \
+	fmvplay.c \
+	fmvplay.h \
 	guiboxes.c \
 	guiboxes.h \
 	guigraph.c \
@@ -198,7 +200,6 @@ syndwarsfx_SOURCES = \
 	thing_fire.h \
 	thing_fire_s.sx \
 	thing_debug.c \
-	thing_debug_s.sx \
 	thing_onface.h \
 	thing_onface.c \
 	thing_ovmous.h \

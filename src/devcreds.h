@@ -1,14 +1,14 @@
 /******************************************************************************/
 // Syndicate Wars Fan Expansion, source port of the classic game from Bullfrog.
 /******************************************************************************/
-/** @file linksmk.c
- *     Link between the main game and smacker playback library.
+/** @file devcreds.h
+ *     Header file for devcreds.c.
  * @par Purpose:
- *     Callback and setup functions to integrate bfsmacklib with the game.
+ *     Developer team credits list display.
  * @par Comment:
- *     None.
+ *     Just a header file - #defines, typedefs, function prototypes etc.
  * @author   Tomasz Lis
- * @date     12 Nov 2011 - 13 Jun 2024
+ * @date     17 Sep 2023 - 17 Oct 2026
  * @par  Copying and copyrights:
  *     This program is free software; you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -16,46 +16,36 @@
  *     (at your option) any later version.
  */
 /******************************************************************************/
-#include "linksmk.h"
+#ifndef DEVCREDS_H
+#define DEVCREDS_H
 
-#include <assert.h>
+#include "bftypes.h"
 
-#include "bfsmack.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+/******************************************************************************/
+#pragma pack(1)
 
-#include "game_data.h"
+struct TbSprite;
+
+#pragma pack()
+/******************************************************************************/
+extern u32 colwavapr_timer;
+extern u32 colwavapr_reveal_tm;
+extern TbBool colwav_enable;
+/******************************************************************************/
+
+int load_devteam_credits_text(ubyte *buf);
+void draw_colwavapr_text_paragraph(int scr_x, int *p_scr_y,
+  const struct TbSprite *p_font, const char *text);
+
+void devteam_credits_show(void);
+
+void init_outro(void);
 
 /******************************************************************************/
-u32 smack_malloc_used_tot = 0;
-
-/******************************************************************************/
-
-/** Primitive but very fast mem allocation.
- */
-void *opti_smack_malloc(uint32_t msize)
-{
-    void *ptr;
-
-    assert(smack_malloc_used_tot + msize < scratch_malloc_size);
-    ptr = scratch_malloc_mem + smack_malloc_used_tot;
-    smack_malloc_used_tot += msize;
-    return ptr;
+#ifdef __cplusplus
 }
-
-void opti_smack_mfree(void *ptr)
-{
-    // Do not free any memory - we have enough space to play one video
-}
-
-void smack_malloc_free_all(void)
-{
-    smack_malloc_used_tot = 0;
-}
-
-void smack_malloc_setup(void)
-{
-    smack_malloc_used_tot = 0;
-    set_smack_malloc(opti_smack_malloc);
-    set_smack_free(opti_smack_mfree);
-}
-
-/******************************************************************************/
+#endif
+#endif

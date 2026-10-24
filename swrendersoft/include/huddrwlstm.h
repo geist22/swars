@@ -32,6 +32,17 @@ extern "C" {
 #pragma pack()
 /******************************************************************************/
 
+/**  Enlist drawing a line between two points on screen.
+ *
+ * @param beg_x First point screen coordinate.
+ * @param beg_y First point screen coordinate.
+ * @param end_x Second point screen coordinate.
+ * @param end_y Second point screen coordinate.
+ * @param drwflags DrawFlags to be set before drawing.
+ * @param thickness Thickness of the line drawn, in pixels.
+ * @param bright Brightness of the drawn colour.
+ * @param colour Base colour of the drawn pixels.
+ */
 TbBool enlist_hud_draw_line(short beg_x, short beg_y, short end_x, short end_y,
   ushort drwflags, ubyte thickness, short brig, TbPixel colour);
 
@@ -62,6 +73,18 @@ TbBool enlist_hud_draw_textured_flow_slant_box(short px, short py,
   short width, short height, ubyte vecmode,
   ubyte brig, ubyte tmapno, ushort num_ua, ushort num_vb);
 
+/** Enlist drawing given frame, standing at given position and with brightness.
+ *
+ * The function accepts precise scale parameter, with 8 bits used
+ * for fractional part, unlike most other functions.
+ *
+ * @param px On-screen Coordinate of the standing position.
+ * @param py On-screen Coordinate of the standing position.
+ * @param frm Index of the frame to be drawn.
+ * @param drwflags DrawFlags to be set before drawing.
+ * @param scale Scale at which the frame is drawn, 100% is 256.
+ * @param bright Brightness of the drawn sprite.
+ */
 TbBool enlist_hud_draw_frame_alpha(short px, short py, ushort frm,
   ushort drwflags, short scale, short brig);
 
@@ -96,21 +119,42 @@ TbBool enlist_hud_draw_colour_wave_wrapped_text(short px, short py,
 
 /** Enlist drawing line between the provided map coordinates.
  */
-TbBool enlist_hud_draw_mapcoord_line(short cor1_x, short cor1_y_m8,
-  short cor1_z, short cor2_x, short cor2_y_m8, short cor2_z,
+TbBool enlist_hud_draw_mapcoord_line(
+  short cor1_x, short cor1_y_m8, short cor1_z,
+  short cor2_x, short cor2_y_m8, short cor2_z,
   ushort drwflags, ubyte thickness, TbPixel colour);
 
+/** Enlist drawing line between the map coords, only if visible in whole.
+ */
+TbBool enlist_hud_draw_mapcoord_line_only_whole(
+  short cor1_x, short cor1_y_m8, short cor1_z,
+  short cor2_x, short cor2_y_m8, short cor2_z,
+  ushort drwflags, ubyte thickness, TbPixel colour);
+
+/** Enlist drawing a flat box facing the camera, centered on given map coords.
+ *
+ * Accepts the radius in map coord units, but draws the box facing the camera.
+ */
 TbBool enlist_hud_draw_mapcoord_corner_rect(short cor_x, short cor_y_m8,
   short cor_z, short width, short height, short lnlen, ubyte thickness,
   ushort drwflags, TbPixel colour);
 
-/** Enlist drawing a flat circle centered on given map coords.
+/** Enlist drawing a flat circle on XZ plane, centered on given map coords.
  *
  * Accepts the radius in map coord units, and draws the circle in the
  * perspective of the map.
  */
 TbBool enlist_hud_draw_mapcoord_flat_circle(short cor_x,
   short cor_y_m8, short cor_z, short radius,
+  ushort drwflags, ubyte thickness, TbPixel colour);
+
+/** Enlist drawing a flat box on XZ plane, centered on given map coords.
+ *
+ * Accepts the radius in map coord units, and draws the box in the
+ * perspective of the map.
+ */
+TbBool enlist_hud_draw_mapcoord_flat_box(short cor_x,
+  short cor_y_m8, short cor_z, short width, short height,
   ushort drwflags, ubyte thickness, TbPixel colour);
 
 /** Enlist drawing line between map coordinates and screen coordinates.

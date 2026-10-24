@@ -256,8 +256,7 @@ void init_scanner(void)
 {
     LOGDBG("Begin");
     init_scanner_colour();
-    dword_1AA5C4 = 0;
-    dword_1AA5C8 = 0;
+    redo_scanner_init();
     ingame.Scanner.Brightness = 8;
     ingame.Scanner.Contrast = 5;
     SCANNER_width = ingame.Scanner.Width;
@@ -1793,28 +1792,18 @@ void draw_agent_grouping_bars(short panel)
     }
 }
 
-void draw_rect_around_map_coords(int cor_x, int cor_y_m8, int cor_z, int width, int height, TbPixel colour)
+void draw_rect_around_map_coords(int cor_x, int cor_y_m8, int cor_z,
+  int half_width, int half_height, TbPixel colour)
 {
-    int cor_beg_x, cor_beg_z;
-    int cor_end_x, cor_end_z;
     int thickness;
     ushort drwflags;
 
-    cor_beg_x = cor_x - width;
-    cor_end_x = cor_x + width;
-    cor_beg_z = cor_z - height;
-    cor_end_z = cor_z + height;
     drwflags = 0;
     thickness = 1;
 
-    enlist_hud_draw_mapcoord_line(cor_beg_x, cor_y_m8, cor_beg_z,
-      cor_end_x, cor_y_m8, cor_beg_z, drwflags, thickness, colour);
-    enlist_hud_draw_mapcoord_line(cor_end_x, cor_y_m8, cor_beg_z,
-      cor_end_x, cor_y_m8, cor_end_z, drwflags, thickness, colour);
-    enlist_hud_draw_mapcoord_line(cor_end_x, cor_y_m8, cor_end_z,
-      cor_beg_x, cor_y_m8, cor_end_z, drwflags, thickness, colour);
-    enlist_hud_draw_mapcoord_line(cor_beg_x, cor_y_m8, cor_end_z,
-      cor_beg_x, cor_y_m8, cor_beg_z, drwflags, thickness, colour);
+    enlist_hud_draw_mapcoord_flat_box(cor_x - half_width, cor_y_m8,
+      cor_z - half_height, 2 * half_width, 2 * half_height,
+      drwflags, thickness, colour);
 }
 
 void draw_health_level(short x, short y, ushort w, ushort h,

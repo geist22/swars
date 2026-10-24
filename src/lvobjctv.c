@@ -260,10 +260,10 @@ ushort next_used_objective = 1;
 struct Objective *game_objectives = NULL;
 ushort next_objective = 1;
 
-extern ulong dword_1C8460;
-extern ulong dword_1C8464;
-extern short draw_objectv_x;
-extern short draw_objectv_y;
+u32 dword_1C8460 = 0;
+u32 dword_1C8464 = 0;
+short draw_objectv_x;
+short draw_objectv_y;
 
 char *objective_text[OBJECTIVE_TEXT_MAX];
 

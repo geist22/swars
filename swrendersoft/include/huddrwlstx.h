@@ -141,7 +141,7 @@ struct DIHudMap2ScrCoordLine {
     ubyte Col;
 };
 
-struct DIHudMapCoordRect {
+struct DIHudMapCoordBox {
     struct DIMapPoint Pt;
     short Width;
     short Height;
@@ -192,7 +192,7 @@ struct DrawItemHud {
         struct DIHudMapCoordLine MapCorLine;
         struct DIHudMap2ScrCoordLine M2SCorLine;
         struct DIHudMapCoordAnnotLine MapCorAntLine;
-        struct DIHudMapCoordRect MapCorRect;
+        struct DIHudMapCoordBox MapCorBox;
         struct DIHudMapCoordCircle MapCorCircl;
         struct DIHudMapCoordFrame MapCorFrame;
         struct DIHudMapCoordSprList MapCorSprLst;
@@ -227,10 +227,12 @@ int hud_width_shad_cl_flash_wrapped_text(short px, short py,
   struct TbSprite *p_font, const char *text, ushort drwflags, short units_per_px);
 
 void hud_draw_mapcoord_line(struct DIHudMapCoordLine *p_diMapCorLine);
+void hud_draw_mapcoord_line_only_whole(struct DIHudMapCoordLine *p_diMapCorLine);
 void hud_draw_mapcoord_line_annotated_num(struct DIHudMapCoordAnnotLine *p_diMapCorAntLine);
 void hud_draw_mapcoord_to_scrcoord_line(struct DIHudMap2ScrCoordLine *p_diM2SCorLine);
-void hud_draw_mapcoord_corner_rect(struct DIHudMapCoordRect *p_diMapCorRect);
+void hud_draw_mapcoord_corner_rect(struct DIHudMapCoordBox *p_diMapCorBox);
 void hud_draw_mapcoord_flat_circle(struct DIHudMapCoordCircle *p_diMapCorCircl);
+void hud_draw_mapcoord_flat_box(struct DIHudMapCoordBox *p_diMapCorBox);
 void hud_draw_mapcoord_frame(struct DIHudMapCoordFrame *p_diMapCorFrame);
 void hud_draw_mapcoord_sprites_in_quarters(struct DIHudMapCoordSprList *p_diMapCorSprLst);
 

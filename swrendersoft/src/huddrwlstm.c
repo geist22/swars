@@ -421,8 +421,9 @@ TbBool enlist_hud_draw_colour_wave_wrapped_text(short px, short py,
     return true;
 }
 
-TbBool enlist_hud_draw_mapcoord_line(short cor1_x, short cor1_y_m8,
-  short cor1_z, short cor2_x, short cor2_y_m8, short cor2_z,
+TbBool enlist_hud_draw_mapcoord_line(
+  short cor1_x, short cor1_y_m8, short cor1_z,
+  short cor2_x, short cor2_y_m8, short cor2_z,
   ushort drwflags, ubyte thickness, TbPixel colour)
 {
     struct DrawItemHud dih;
@@ -442,6 +443,31 @@ TbBool enlist_hud_draw_mapcoord_line(short cor1_x, short cor1_y_m8,
 
     //TODO enlist instead of drawing directly
     hud_draw_mapcoord_line(&p_di->U.MapCorLine);
+    return true;
+}
+
+TbBool enlist_hud_draw_mapcoord_line_only_whole(
+  short cor1_x, short cor1_y_m8, short cor1_z,
+  short cor2_x, short cor2_y_m8, short cor2_z,
+  ushort drwflags, ubyte thickness, TbPixel colour)
+{
+    struct DrawItemHud dih;
+    struct DrawItemHud *p_di;
+
+    p_di = &dih;
+
+    p_di->U.MapCorLine.PtBeg.X = cor1_x;
+    p_di->U.MapCorLine.PtBeg.Y = cor1_y_m8;
+    p_di->U.MapCorLine.PtBeg.Z = cor1_z;
+    p_di->U.MapCorLine.PtEnd.X = cor2_x;
+    p_di->U.MapCorLine.PtEnd.Y = cor2_y_m8;
+    p_di->U.MapCorLine.PtEnd.Z = cor2_z;
+    p_di->U.MapCorLine.DrwFlags = drwflags;
+    p_di->U.MapCorLine.Thick = thickness;
+    p_di->U.MapCorLine.Col = colour;
+
+    //TODO enlist instead of drawing directly
+    hud_draw_mapcoord_line_only_whole(&p_di->U.MapCorLine);
     return true;
 }
 
@@ -504,19 +530,19 @@ TbBool enlist_hud_draw_mapcoord_corner_rect(short cor_x, short cor_y_m8,
 
     p_di = &dih;
 
-    p_di->U.MapCorRect.Pt.X = cor_x;
-    p_di->U.MapCorRect.Pt.Y = cor_y_m8;
-    p_di->U.MapCorRect.Pt.Z = cor_z;
-    p_di->U.MapCorRect.Width = width;
-    p_di->U.MapCorRect.Height = height;
-    p_di->U.MapCorRect.LnLen = lnlen;
-    p_di->U.MapCorRect.DrwFlags = drwflags;
-    p_di->U.MapCorRect.Bright = 32;
-    p_di->U.MapCorRect.Thick = thickness;
-    p_di->U.MapCorRect.Col = colour;
+    p_di->U.MapCorBox.Pt.X = cor_x;
+    p_di->U.MapCorBox.Pt.Y = cor_y_m8;
+    p_di->U.MapCorBox.Pt.Z = cor_z;
+    p_di->U.MapCorBox.Width = width;
+    p_di->U.MapCorBox.Height = height;
+    p_di->U.MapCorBox.LnLen = lnlen;
+    p_di->U.MapCorBox.DrwFlags = drwflags;
+    p_di->U.MapCorBox.Bright = 32;
+    p_di->U.MapCorBox.Thick = thickness;
+    p_di->U.MapCorBox.Col = colour;
 
     //TODO enlist instead of drawing directly
-    hud_draw_mapcoord_corner_rect(&p_di->U.MapCorRect);
+    hud_draw_mapcoord_corner_rect(&p_di->U.MapCorBox);
     return true;
 }
 
@@ -540,6 +566,30 @@ TbBool enlist_hud_draw_mapcoord_flat_circle(short cor_x,
 
     //TODO enlist instead of drawing directly
     hud_draw_mapcoord_flat_circle(&p_di->U.MapCorCircl);
+    return true;
+}
+
+TbBool enlist_hud_draw_mapcoord_flat_box(short cor_x,
+  short cor_y_m8, short cor_z, short width, short height,
+  ushort drwflags, ubyte thickness, TbPixel colour)
+{
+    struct DrawItemHud dih;
+    struct DrawItemHud *p_di;
+
+    p_di = &dih;
+
+    p_di->U.MapCorBox.Pt.X = cor_x;
+    p_di->U.MapCorBox.Pt.Y = cor_y_m8;
+    p_di->U.MapCorBox.Pt.Z = cor_z;
+    p_di->U.MapCorBox.Width = width;
+    p_di->U.MapCorBox.Height = height;
+    p_di->U.MapCorBox.DrwFlags = drwflags;
+    p_di->U.MapCorBox.Bright = 32;
+    p_di->U.MapCorBox.Thick = thickness;
+    p_di->U.MapCorBox.Col = colour;
+
+    //TODO enlist instead of drawing directly
+    hud_draw_mapcoord_flat_box(&p_di->U.MapCorBox);
     return true;
 }
 
