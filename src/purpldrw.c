@@ -145,11 +145,6 @@ void draw_text_purple_list2(int x, int y, const char *text, ushort line)
 
 void draw_sprite_purple_list(int x, int y, const struct TbSprite *p_sprite)
 {
-#if 0
-    asm volatile (
-      "call ASM_draw_sprite_purple_list\n"
-        : : "a" (x), "d" (y), "b" (p_sprite));
-#endif
     struct PurpleDrawItem *p_pditem;
 
     p_pditem = &purple_draw_list[purple_draw_index];
@@ -433,16 +428,6 @@ short get_text_box_lines_visible(struct ScreenTextBox *p_box)
 
 TbBool flashy_draw_text(int x, int y, const char *text, ubyte speed, int top_line, short *textpos, int cyan_flag)
 {
-#if 0
-    TbBool ret;
-    asm volatile (
-      "push %7\n"
-      "push %6\n"
-      "push %5\n"
-      "call ASM_flashy_draw_text\n"
-        : "=r" (ret) : "a" (x), "d" (y), "b" (text), "c" (speed), "g" (top_line), "g" (textpos), "g" (cyan_flag));
-    return ret;
-#endif
     char *gtext;
     int text_tot_len, chunk_end;
     int i, pos;
@@ -1465,12 +1450,6 @@ ubyte label_text(struct ScreenButton *p_btn)
 
 ubyte button_text(struct ScreenButton *p_btn)
 {
-#if 0
-    ubyte ret;
-    asm volatile ("call ASM_button_text\n"
-        : "=r" (ret) : "a" (p_btn));
-    return ret;
-#endif
     short text_x, text_y;
     short text_w, text_h;
 

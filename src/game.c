@@ -63,9 +63,9 @@
 #include "enginprops.h"
 #include "engintxtrmap.h"
 
-#include "linksmk.h"
 #include "bat.h"
 #include "bmbang.h"
+#include "devcreds.h"
 #include "svesa.h"
 #include "swlog.h"
 #include "bflib_vidraw.h"
@@ -115,6 +115,7 @@
 #include "feshared.h"
 #include "festorage.h"
 #include "feworld.h"
+#include "fmvplay.h"
 #include "hud_panecfg.h"
 #include "hud_panel.h"
 #include "purpldrw.h"
@@ -166,15 +167,6 @@
 #include "weapon.h"
 #include "wrcities.h"
 
-/** Expected sizes for font DAT/TAB files for resolution 320x200.
- * Each file has 205 sprites, TAB has 6 bytes per entry, DAT varies to use empirical value.
- */
-#define EXPECTED_FONT_DAT_TAB_SIZE_8 (205 * 6 + 205 * 34)
-
-/** Expected sizes for translation strings TXT files.
- */
-#define EXPECTED_LANG_TXT_SIZE 8000
-
 /** How many game turns should pass before intro is replayed.
  */
 #define INTRO_REPLAY_TURNS 1100
@@ -203,8 +195,6 @@ enum ReloadMenuFlags {
     RelMnuF_ScrBoxesFull = 0x04,
 };
 
-#define OUTRO_HOT_CHARS_COUNT 8
-
 #pragma pack(1)
 
 /** A character of the outro text which was already drawn, and is still
@@ -230,8 +220,6 @@ char user_name[50] = "TEMP";
 long dword_153194 = 0x100;
 
 ushort word_1531E0 = 1;
-
-s32 outro_last_played_smp = -1;
 
 ulong stored_l3d_next_object;
 ulong stored_l3d_next_object_face3;
@@ -298,8 +286,8 @@ ubyte byte_1C6D4A;
 s32 navi2_unkn_counter = 0;
 s32 navi2_unkn_counter_max = 0;
 
-extern long dword_1AAB74;
-extern long dword_1AAB78;
+s32 flyby_cam_yaw = 0;
+s32 flyby_cam_tilt = 0;
 ushort word_1AABD0 = 0;
 
 ubyte old_screentype;
@@ -313,13 +301,9 @@ ubyte is_single_game = 0;
 ubyte cmdln_colour_tables = 0;
 ubyte cmdln_param_bcg = 0;
 
-ubyte unkn_flags_01 = 0;
-
 ubyte start_into_mission = false;
 ubyte edit_flag = 0;
 ubyte change_screen = 0;
-
-struct OutroHotChar outro_hot_chars[OUTRO_HOT_CHARS_COUNT];
 
 ubyte input_char;
 
@@ -372,10 +356,6 @@ struct TbLoadFiles missionspr_load_files[] =
   { "qdata/pal.pal",	(void **)&display_palette,	(void **)NULL,				0, 0, 0 },
   { "",					(void **)NULL, 				(void **)NULL,				0, 0, 0 }
 };
-
-char unk_credits_text_s[] = "";
-char unk_credits_text_z[] = "";
-char unk_credits_text_p[] = "";
 
 ubyte reload_menu_flags = 0;
 
@@ -618,526 +598,6 @@ void update_danger_music(ubyte a1)
     ingame.fld_unkC8B = 0;
 }
 
-void sprint_fmv_filename(ushort vid_type, char *fnbuf, ulong buflen)
-{
-    const char *fname;
-    PathInfo *pinfo;
-    struct Campaign *p_campgn;
-
-    fname = NULL;
-    switch (vid_type)
-    {
-    case MPly_Intro:
-        // Intro name is hard-coded, as it is played before any campaign is loaded
-        fname = "intro.smk";
-        pinfo = &game_dirs[DirPlace_LangData];
-        if (game_dirs[DirPlace_Sound].use_cd == 1)
-            sprintf(fnbuf, "%s%s/%s", cd_drive, pinfo->directory, fname);
-        else
-            sprintf(fnbuf, "intro/%s", fname);
-        break;
-    case MPly_MissiComplete:
-        switch (background_type)
-        {
-        case 0:
-            fname = "syn_mc.smk";
-            sprintf(fnbuf, "qdata/%s", fname);
-            break;
-        case 1:
-            fname = "zel-mc.smk";
-            sprintf(fnbuf, "qdata/%s", fname);
-            break;
-        default:
-            fnbuf[0] = '\0';
-            break;
-        }
-        break;
-    case MPly_MPartComplete:
-        switch (background_type)
-        {
-        case 0:
-            // TODO MAPNO case for a specific map, remove
-            if (current_map == 46)
-            {
-                fname = "syn_ele.smk";
-                pinfo = &game_dirs[DirPlace_LangData];
-                if (game_dirs[DirPlace_Data].use_cd == 1)
-                    sprintf(fnbuf, "%s%s/%s", cd_drive, pinfo->directory, fname);
-                else
-                    sprintf(fnbuf, "data/%s", fname);
-            }
-            else
-            {
-                fnbuf[0] = '\0';
-            }
-            break;
-        case 1:
-            // TODO MAPNO case for a specific map, remove
-            if (current_map == 46)
-            {
-                fname = "chu_ele.smk";
-                pinfo = &game_dirs[DirPlace_LangData];
-                if (game_dirs[DirPlace_Data].use_cd == 1)
-                    sprintf(fnbuf, "%s%s/%s", cd_drive, pinfo->directory, fname);
-                else
-                    sprintf(fnbuf, "data/%s", fname);
-            }
-            else
-            {
-                fnbuf[0] = '\0';
-            }
-            break;
-        default:
-            fnbuf[0] = '\0';
-            break;
-        }
-        break;
-    case MPly_MissiFail:
-        switch (background_type)
-        {
-        case 0:
-            fname = "syn_fail.smk";
-            sprintf(fnbuf, "qdata/%s", fname);
-            break;
-        case 1:
-            fname = "syn_fail.smk";
-            sprintf(fnbuf, "qdata/%s", fname);
-            break;
-        default:
-            fnbuf[0] = '\0';
-            break;
-        }
-        break;
-    case MPly_GameOver:
-        switch (background_type)
-        {
-        case 0:
-            fname = "syn_go.smk";
-            sprintf(fnbuf, "qdata/%s", fname);
-            break;
-        case 1:
-            fname = "zel-go.smk";
-            sprintf(fnbuf, "qdata/%s", fname);
-            break;
-        default:
-            fnbuf[0] = '\0';
-            break;
-        }
-        break;
-    case MPly_Outro:
-        p_campgn = &campaigns[background_type];
-        //TODO should support use_cd like intro
-        sprintf(fnbuf, "%s", p_campgn->OutroFMV);
-        break;
-    default:
-        fnbuf[0] = '\0';
-        break;
-    }
-}
-
-static void clear_smacker_skip_keys(void)
-{
-    clear_key_pressed(KC_SPACE);
-    clear_key_pressed(KC_RETURN);
-    clear_key_pressed(KC_ESCAPE);
-}
-
-void play_smacker(ushort vid_type)
-{
-    char fname[FILENAME_MAX];
-    u32 plyflags;
-    TbScreenMode scr_md_fmvid;
-    TbBool prepare_draw_on_last_frame;
-
-    update_danger_music(2);
-
-    sprint_fmv_filename(vid_type, fname, sizeof(fname));
-
-    // For outro, last frame of the video should stay on screen
-    // and the screen should be prepared for further drawing
-    prepare_draw_on_last_frame = (vid_type == MPly_Outro);
-
-    if ((vid_type == MPly_Intro) || (vid_type == MPly_Outro)) {
-        scr_md_fmvid = screen_mode_fmvid_lo;
-    } else {
-        scr_md_fmvid = screen_mode_fmvid_hi;
-    }
-
-    if (prepare_draw_on_last_frame) {
-        // If we need to prepare drawing after, do a full mode change
-        if (lbDisplay.ScreenMode != scr_md_fmvid)
-            setup_screen_mode(scr_md_fmvid);
-    } else {
-        // Do simple mode change, we will switch again after the video
-        // also skip the mode change entirely if no video to play
-        if ((lbDisplay.ScreenMode != scr_md_fmvid) && (fname[0] != '\0'))
-            setup_simple_screen_mode(scr_md_fmvid);
-    }
-    LbMouseChangeSprite(NULL);
-
-    plyflags = 0;
-
-    if (fname[0] != '\0') {
-        show_black_screen();
-        clear_smacker_skip_keys();
-        play_smk(fname, 13, plyflags);
-        smack_malloc_free_all();
-    }
-
-    if (prepare_draw_on_last_frame) {
-            struct Campaign *p_campgn;
-            short raw_w, raw_h;
-            short x, y;
-            raw_w = 300;
-            raw_h = 150;
-            x = (lbDisplay.GraphicsScreenWidth - raw_w) / 2;
-            y = (lbDisplay.GraphicsScreenHeight - raw_h) / 2 - 1;
-
-            p_campgn = &campaigns[background_type];
-            LbScreenClear(0);
-            cover_screen_rect_with_raw_file(x, y, raw_w, raw_h, p_campgn->OutroBkFn);
-
-            ingame_palette_load(0);
-            LbScreenWaitVbi();
-            LbPaletteSet(display_palette);
-            swap_wscreen();
-    } else {
-        show_black_screen();
-    }
-    game_hacky_update();
-    clear_smacker_skip_keys();
-}
-
-void play_smacker_then_back_to_engine(ushort vid_type)
-{
-    TbScreenMode bkpmode;
-
-    bkpmode = lbDisplay.ScreenMode;
-    play_smacker(vid_type);
-    setup_screen_mode(bkpmode);
-}
-
-void play_smacker_then_back_to_menu(ushort vid_type)
-{
-    stop_sample_using_heap(0, 122);
-    stop_sample_using_heap(0, 122);
-
-    play_smacker(vid_type);
-    setup_screen_mode(screen_mode_menu);
-
-    play_sample_using_heap(0, 122, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_4EVER, 3);
-    play_sample_using_heap(0, 122, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_4EVER, 3);
-}
-
-void play_intro(void)
-{
-    LOGSYNC("Starting");
-    if ( (cmdln_param_bcg || is_single_game) &&
-      ((ingame.Flags & GamF_SkipIntro) == 0))
-    {
-        // After this function, we return either to engine or to menu,
-        // depending on how the app was started
-        if (cmdln_param_bcg)
-            play_smacker_then_back_to_menu(MPly_Intro);
-        else
-            play_smacker_then_back_to_engine(MPly_Intro);
-    }
-}
-
-void outro_hot_chars_shift(void)
-{
-    ushort i;
-
-    for (i = 0; i < OUTRO_HOT_CHARS_COUNT - 1; i++)
-    {
-        LbMemoryCopy(&outro_hot_chars[i], &outro_hot_chars[i+1], sizeof(struct OutroHotChar));
-        if (outro_hot_chars[i].fade_lv > 32)
-            outro_hot_chars[i].fade_lv -= 4;
-    }
-    outro_hot_chars[OUTRO_HOT_CHARS_COUNT - 1].chr = 0;
-}
-
-char func_cc638(const char *text1, const char *text2)
-{
-    char ret;
-    asm volatile ("call ASM_func_cc638\n"
-        : "=r" (ret) : "a" (text1), "d" (text2));
-    return ret;
-}
-
-void screen_dark_curtain_down(void)
-{
-#if 0
-    asm volatile ("call ASM_screen_dark_curtain_down\n"
-        :  :  : "eax" );
-    return;
-#endif
-    int w;
-    ushort range_beg[MAX_SUPPORTED_SCREEN_WIDTH];
-    ushort range_len[MAX_SUPPORTED_SCREEN_WIDTH];
-    uint already_count;
-    short angl_A, angl_B, angl_C;
-    short dt_angl_A, dt_angl_B, dt_angl_C;
-
-    dt_angl_B = 20 + (LbRandomAnyShort() & 0x1F);
-    dt_angl_A = 20 + (LbRandomAnyShort() & 0x1F);
-    dt_angl_C = 20 + (LbRandomAnyShort() & 0x1F);
-    angl_B = LbRandomAnyShort() & LbFPMath_AngleMask;
-    angl_A = LbRandomAnyShort() & LbFPMath_AngleMask;
-    angl_C = LbRandomAnyShort() & LbFPMath_AngleMask;
-    for (w = 0; w < 320; w++)
-    {
-        int mag;
-
-        range_beg[w] = 0;
-        mag = lbSinTable[(angl_A & LbFPMath_AngleMask) + 512];
-        mag += lbSinTable[angl_B & LbFPMath_AngleMask];
-        mag -= lbSinTable[angl_C & LbFPMath_AngleMask];
-        range_len[w] = abs(mag) >> 14;
-
-        angl_C += dt_angl_C;
-        angl_A += dt_angl_A;
-        angl_B += dt_angl_B;
-    }
-
-    do
-    {
-        int h_beg, h_end, h;
-
-        already_count = 0;
-        for (w = 0; w < 320; w++)
-        {
-            h_beg = range_beg[w] / game_num_fps;
-            if (h_beg >= lbDisplay.GraphicsScreenHeight) {
-                already_count++;
-                continue;
-            }
-            h_end = (range_beg[w] + range_len[w]) / game_num_fps;
-            for (h = h_beg; h < h_end; h++)
-            {
-                TbPixel px;
-                uint scr_pos;
-
-                if (h >= lbDisplay.GraphicsScreenHeight)
-                    break;
-
-                scr_pos = 320 * h + w;
-                px = lbDisplay.WScreen[scr_pos];
-                lbDisplay.WScreen[scr_pos] = pixmap.fade_table[px + 4096];
-            }
-            range_beg[w] += range_len[w];
-            range_len[w] += 1 + (range_len[w] >> 5);
-            if (range_len[w] > MAX_SUPPORTED_SCREEN_HEIGHT * 4)
-                range_len[w] = MAX_SUPPORTED_SCREEN_HEIGHT * 4;
-        }
-        swap_wscreen();
-        game_update();
-    }
-    while (already_count < 320);
-}
-
-int load_outro_text(ubyte *buf)
-{
-    int totlen;
-    char *s;
-    int i;
-
-    totlen = load_file_alltext("outtro.txt", buf);
-    if (totlen == -1) {
-        buf[0] = '\0';
-        return 0;
-    }
-    buf[totlen] = '\0';
-    s = (char *)buf;
-    // The font can handle lower case letters, upper case just looks better
-    for (i = 0; i < totlen; i++) {
-        s[i] = my_char_to_upper(s[i]);
-    }
-
-    s = (char *)buf;
-    while ((*s != ']') && (*s != '\0')) {
-        s++;
-    }
-    s++;
-    outro_text_s = s;
-
-    while ((*s != ']') && (*s != '\0')) {
-        s++;
-    }
-    s++;
-    outro_text_z = s;
-
-    return totlen + 1;
-}
-
-int load_people_text(ubyte *buf)
-{
-    int totlen;
-    int peptxt_len;
-    int groupno;
-    char *name;
-    char *desc;
-    char *s;
-    int i;
-
-    totlen = LbFileLoadAt("data/people.txt", buf);
-    if (totlen == -1) {
-        buf[0] = '\0';
-        return 0;
-    }
-    peptxt_len = totlen;
-
-    s = (char *)buf;
-    for (i = 0; i < peptxt_len; i++)
-    {
-        if (*s == ']')
-            *s = '\0';
-        s++;
-    }
-
-    // List of people
-    groupno = 0;
-    s = (char *)buf;
-    while ( 1 )
-    {
-        if (*s == '[')
-        {
-            s++;
-            name = s;
-            if (strcmp(name, "END") == 0) {
-              s += 4;
-              break;
-            }
-            dev_credits_desc[2 * groupno + 0] = name;
-
-            while (*s != '[')
-            {
-                if (*s == '#') {
-                    groupno = strtol(s + 1, &desc, 10);
-                    s = desc;
-                }
-                s++;
-            }
-            s++;
-            desc = s;
-            dev_credits_desc[2 * groupno + 1] = desc;
-            continue;
-        }
-        if (*s == '#') {
-            groupno = strtol(s + 1, &desc, 10);
-            s = desc;
-        }
-        s++;
-    }
-
-    // Assignment of people to groups
-    while ( 1 )
-    {
-        if (*s == '[')
-        {
-            ubyte *g;
-
-            s++;
-            if (strcmp(s, "END") == 0) {
-                s += 4;
-                break;
-            }
-            dev_credits_groups[2 * groupno + 0] = s;
-
-            while (*s != '[')
-            {
-                if (*s == '#') {
-                    groupno = strtol(s + 1, &desc, 10);
-                    s = desc;
-                }
-                s++;
-            }
-            s++;
-            g = &buf[totlen];
-            dev_credits_groups[2 * groupno + 1] = (char *)g; // TODO we should really use a struct here
-
-            // Recognize the list of integers, store them in g
-            while ( 1 )
-            {
-              *g = strtol(s, &desc, 10);
-              if (desc > s) {
-                  totlen++;
-                  s = desc;
-                  g++;
-              }
-              if (*s == '\0')
-                  break;
-              s++;
-            }
-            *g = 100; // end-of-list marker
-            totlen++;
-            continue;
-        }
-        if (*s == '#')
-        {
-            groupno = strtol(s + 1, &desc, 10);
-            s = desc;
-        }
-        s++;
-    }
-    dev_credits_groups_count = groupno + 1;
-
-    return totlen;
-}
-
-TbResult load_outro_sprites(void)
-{
-    PathInfo *pinfo;
-    ubyte *p_buf;
-    ubyte *outtxt_ptr;
-    ubyte *peptxt_ptr;
-    int next_pos, next_len;
-    int total_allocs;
-    TbResult tret, ret;
-    short max_detail;
-
-    max_detail = 0;//UNKN_sprites_scale / 2;
-    tret = Lb_OK;
-
-    pinfo = &game_dirs[DirPlace_Data];
-
-    total_allocs = 3 * EXPECTED_FONT_DAT_TAB_SIZE_8 + 2 * EXPECTED_LANG_TXT_SIZE;
-    next_pos = engine_mem_alloc_size - 64000 - total_allocs;
-
-    assert(next_pos >= 0);
-    p_buf = engine_mem_alloc_ptr + next_pos;
-
-    ret = load_sprites_med_font(&p_buf, pinfo->directory, 7, max_detail);
-    if (tret == Lb_OK)
-        tret = ret;
-
-    ret = load_sprites_big_font(&p_buf, pinfo->directory, 6, max_detail + 1);
-    if (tret == Lb_OK)
-        tret = ret;
-
-    ret = load_sprites_med2_font(&p_buf, pinfo->directory, 12, max_detail);
-    if (tret == Lb_OK)
-        tret = ret;
-
-    setup_sprites_med_font();
-    setup_sprites_med2_font();
-    setup_sprites_big_font();
-
-    outtxt_ptr = p_buf;
-    next_len = load_outro_text(outtxt_ptr);
-    p_buf += next_len;
-
-    peptxt_ptr = p_buf;
-    next_len = load_people_text(peptxt_ptr);
-    p_buf += next_len;
-
-    assert((p_buf - ((ubyte *)engine_mem_alloc_ptr + next_pos)) <= total_allocs);
-    if (tret == Lb_FAIL) {
-        LOGERR("Some files were not loaded successfully");
-    }
-    return tret;
-}
-
 void fill_floor_textures(void)
 {
 #if 0
@@ -1274,14 +734,6 @@ void load_level_wrap(short level, short missi, ubyte reload)
         unkn_f_pressed_func();
 }
 
-int sub_73C64(char *a1, ubyte a2)
-{
-    char ret;
-    asm volatile ("call ASM_sub_73C64\n"
-        : "=r" (ret) : "a" (a1), "d" (a2));
-    return ret;
-}
-
 void update_map_thing_and_traffic_refs(void)
 {
     asm volatile ("call ASM_update_map_thing_and_traffic_refs\n"
@@ -1311,12 +763,6 @@ void change_current_map(ushort mapno)
         render_floor_flags |= RendFlrF_WobblyTerrain;
     else
         render_floor_flags &= ~RendFlrF_WobblyTerrain;
-}
-
-void traffic_unkn_func_01(void)
-{
-    asm volatile ("call ASM_traffic_unkn_func_01\n"
-        :  :  : "eax" );
 }
 
 /** Step overall scale towards given zoom value.
@@ -1364,43 +810,6 @@ void process_view_inputs(int thing)
         zoom = ingame.UserZoom;
 
     process_overall_scale(zoom);
-}
-
-void draw_mapcoord_line_col2(int cor1_x, int cor1_y, int cor1_z,
-  int cor2_x, int cor2_y, int cor2_z, TbPixel colour)
-{
-#if 0
-    // Pushed through a register holding them: a "g" operand may be placed
-    // relative to the stack pointer, which each push moves.
-    int stkargs[3];
-
-    stkargs[0] = (int)(intptr_t)cor2_y;
-    stkargs[1] = (int)(intptr_t)cor2_z;
-    stkargs[2] = (int)(intptr_t)colour;
-
-    asm volatile (
-      "push 8(%4)\n"
-      "push 4(%4)\n"
-      "push 0(%4)\n"
-      "call ASM_draw_mapcoord_line_col2\n"
-        : : "a" (cor1_x), "d" (cor1_y), "b" (cor1_z), "c" (cor2_x), "S" (stkargs)
-        : "cc", "memory");
-    return;
-#endif
-    struct EnginePoint ep1;
-    struct EnginePoint ep2;
-
-    ep2.X3d = cor1_x - engn_xc;
-    ep2.Y3d = cor1_y; // subtracted within transform_point(): - 8 * engn_yc;
-    ep2.Z3d = cor1_z - engn_zc;
-    ep2.Flags = 0;
-    transform_point(&ep2);
-    ep1.X3d = cor2_x - engn_xc;
-    ep1.Y3d = cor2_y; // subtracted within transform_point(): - 8 * engn_yc;
-    ep1.Z3d = cor2_z - engn_zc;
-    ep1.Flags = 0;
-    transform_point(&ep1);
-    LbDrawLine(ep2.pp.X, ep2.pp.Y, ep1.pp.X, ep1.pp.Y, colour);
 }
 
 void check_mouse_overvehicle(struct Thing *p_thing, ubyte target_assign)
@@ -1486,312 +895,6 @@ void process_engine_unk3(void)
     // state - no simulation code reads it. Advanced here, after the frame was
     // enlisted, it keeps the pace it had within process_things().
     animate_textures();
-}
-
-void process_sound_heap(void)
-{
-    asm volatile ("call ASM_process_sound_heap\n"
-        :  :  : "eax" );
-}
-
-/** Get fade level to be used while drawing next character of a text.
- *
- *  Computes the colour-remap fade level to be used while drawing the next
- *  character of a text, advancing the shared letter-reveal counter
- *  (cwa_revl_tm) towards the current progress (cwa_timer).
- *
- * @param fade Receives the computed fade level (0..63 range index offset) if
- *     the character should be drawn. Write-only value.
- * @return True if the character is already revealed and should be drawn.
- */
-static TbBool credits_next_char_fade(s32 *fade, u32 *p_cwa_revl_tm,
-  u32 cwa_timer, u32 cw_shift)
-{
-    s32 f;
-
-    if (*p_cwa_revl_tm > cwa_timer)
-        return false;
-    (*p_cwa_revl_tm)++;
-    f = (cwa_timer - *p_cwa_revl_tm) * 2;
-    if (f > 0x1F)
-        f = 0x1F;
-    if (dword_1DDB6C)
-        f += lbSinTable[((*p_cwa_revl_tm + cw_shift) & 0xF) * 128] >> 13;
-    if (f < 0)
-        f = 0;
-    *fade = f;
-    return true;
-}
-
-/** @internal
- * Puts colour wave text sprites with appearing animation on screen.
- * @param sbuf
- * @param ebuf
- * @param x
- * @param y
- * @param space_len
- */
-void put_down_colwavaprtext_sprites(const char *sbuf, const char *ebuf,
-  s32 x, s32 y, s32 space_len,
-  u32 *p_cwa_revl_tm, u32 cwa_timer, u32 cw_shift)
-{
-    const char *c;
-    s32 fade;
-    ubyte chr;
-
-    for (c=sbuf; c < ebuf; c++)
-    {
-        const TbSprite *p_spr;
-
-        chr = (ubyte)(*c);
-        p_spr = LbFontCharSprite(lbFontPtr, chr);
-
-        if (credits_next_char_fade(&fade, p_cwa_revl_tm, cwa_timer, cw_shift)) {
-            const TbPixel *pxmap;
-
-            pxmap = &pixmap.fade_table[256 * (0x3F - fade)];
-            LbSpriteDrawRemap(x, y, p_spr, pxmap);
-        }
-        x += p_spr->SWidth;
-    }
-}
-
-void put_down_colwavaprtext_ini_sprites(const char *sbuf, const char *ebuf,
-  s32 x, s32 y, s32 space_len,
-  u32 *p_cwa_revl_tm, u32 cwa_timer, u32 cw_shift)
-{
-    const char *c;
-    ubyte chr;
-
-    for (c=sbuf; c < ebuf; c++)
-    {
-        const TbSprite *p_spr;
-        s32 fade;
-
-        chr = (ubyte)(*c);
-        p_spr = LbFontCharSprite(lbFontPtr, chr);
-        if (chr == ' ')
-        {
-            ubyte *p_scan;
-            s32 word_w;
-            ubyte cs;
-
-            word_w = 0;
-            p_scan = (ubyte *)c + 1;
-            if (*p_scan != chr)
-            {
-                while (1)
-                {
-                    cs = *p_scan;
-                    if ((cs == 0) || (cs == '\n') || (cs == '['))
-                        break;
-                    word_w += LbTextCharWidth(cs);
-                    if (*(p_scan + 1) != ' ') {
-                        p_scan++;
-                    } else {
-                        break;
-                    }
-                }
-            }
-            if (x + word_w <= lbDisplay.PhysicalScreenWidth - 6) {
-                x += 4;
-            } else {
-                y += 6;
-                x = 12;
-            }
-            continue;
-        }
-
-        if (credits_next_char_fade(&fade, p_cwa_revl_tm, cwa_timer, cw_shift)) {
-            const TbPixel *pxmap;
-
-            pxmap = &pixmap.fade_table[256 * (0x3F - fade)];
-            LbSpriteDrawRemap(x, y, p_spr, pxmap);
-        }
-        x += p_spr->SWidth;
-    }
-}
-
-void func_cc0d4(char **text_pargr)
-{
-#if 0
-    asm volatile ("call ASM_func_cc0d4\n"
-        : : "a" (text_pargr));
-    return;
-#endif
-    ubyte *p_ids;
-    char *s;
-    s32 x, y;
-
-    dword_1DDB6C = 1;
-    colwavapr_reveal_tm = 0;
-
-    // Draw the credits group header (list of roles belonging to this group)
-    s = text_pargr[0];
-    x = 6;
-    y = 6;
-    lbFontPtr = med_font;
-    put_down_colwavaprtext_sprites(s, s + strlen(s), x, y, 4,
-      &colwavapr_reveal_tm, colwavapr_timer, gameturn);
-
-    // Draw every person assigned to this group (name, then description)
-    p_ids = (ubyte *)text_pargr[1];
-    y += 8;
-    while (*p_ids != 100)
-    {
-        char **p_person;
-
-        p_person = &dev_credits_desc[2 * (*p_ids)];
-        dword_1DDB6C = 1;
-        x = 12;
-
-        if (colwavapr_reveal_tm == colwavapr_timer)
-        {
-            short smp;
-
-            if (outro_last_played_smp != -1)
-                stop_sample_using_heap(0, outro_last_played_smp);
-            smp = 2 + (LbRandomAnyShort() % 5);
-            outro_last_played_smp = smp;
-            play_sample_using_heap(0, smp, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3u);
-        }
-
-        // Draw the person's name
-        s = p_person[0];
-        lbFontPtr = big_font;
-        put_down_colwavaprtext_sprites(s, s + strlen(s), x, y, 4,
-          &colwavapr_reveal_tm, colwavapr_timer, gameturn);
-        y += LbTextLineHeight();
-
-        // Draw the person's description, word-wrapped to the screen width
-        s = p_person[1];
-        lbFontPtr = med2_font;
-        put_down_colwavaprtext_ini_sprites(s, s + strlen(s), x, y, 4,
-          &colwavapr_reveal_tm, colwavapr_timer, gameturn);
-        y += 10;
-        p_ids++;
-    }
-}
-
-void screen_animate_draw_outro_text(void)
-{
-    const char *text1;
-    const char *text2;
-
-    switch (background_type)
-    {
-    case 0:
-    default:
-        text1 = unk_credits_text_s;
-        text2 = outro_text_s;
-        break;
-    case 1:
-        text1 = unk_credits_text_z;
-        text2 = outro_text_z;
-        break;
-    case 2:
-        text1 = unk_credits_text_p;
-        text2 = outro_text_z;
-        break;
-    }
-    func_cc638(text1, text2);
-}
-
-void init_outro(void)
-{
-    gamep_scene_effect_type = ScEff_NONE;
-    gamep_scene_effect_intensity = 1000;
-    StopAllSamples();
-    StopCD();
-
-    play_smacker(MPly_Outro);
-
-    screen_dark_curtain_down();
-
-    outro_last_played_smp = -1;
-    init_things();
-    //TODO hard-coded map ID
-    change_current_map(51);
-    load_outro_sprites();
-
-    outro_credits_enabled = 0;
-    colwavapr_timer = 0;
-    dev_credits_group = 0;
-    gameturn = 0;
-    render_clock_set_turn(gameturn);
-
-    screen_animate_draw_outro_text();
-    // Sleep for up to 10 seconds
-    screen_wait_seconds_or_until_continue_key(10);
-
-    LbPaletteFade(0, 200, 1);
-
-    show_black_screen();
-    StopAllSamples();
-    reset_heaps();
-    setup_heaps(SHSC_CreditsSnd, language_3str);
-    play_sample_using_heap(0, 1, FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_4EVER, 3);
-
-    data_1dd91c = 0;
-    unkn_flags_01 = 1;
-    overall_scale = 40;
-    set_brightness_fadedout();
-
-    while (1)
-    {
-        if (is_key_pressed(KC_SPACE, KMod_DONTCARE))
-            break;
-        if (is_key_pressed(KC_ESCAPE, KMod_DONTCARE))
-            break;
-        if (is_key_pressed(KC_RETURN, KMod_DONTCARE))
-            break;
-
-        if (gameturn < 128)
-        {
-            // 64 steps of brightness increase - fade in
-            if (gameturn & 1)
-                change_brightness(1);
-            if (gameturn == 127)
-                outro_credits_enabled = 1;
-        } else {
-            // Randomly play seagull sample if applause is not currently playing
-            if (((LbRandomAnyShort() & 0xF) == 0) &&
-              (outro_last_played_smp == -1 || !IsSamplePlaying(0, outro_last_played_smp, NULL)) )
-            {
-                play_sample_using_heap(0, 7 + (LbRandomAnyShort() % 5), FULL_VOL, EQUL_PAN, NORM_PTCH, LOOP_NO, 3u);
-            }
-        }
-
-        gameturn++;
-        render_clock_set_turn(gameturn);
-        traffic_unkn_func_01();
-        camera_apply_velocity();
-        prepare_drawlist();
-        process_sound_heap();
-        engine_draw_whole_screen_flyby();
-        if (outro_credits_enabled)
-        {
-            colwavapr_timer++;
-            func_cc0d4((char **)&dev_credits_groups[2 * dev_credits_group]);
-            if (colwavapr_timer > colwavapr_reveal_tm + 50)
-            {
-                colwavapr_timer = 0;
-                dev_credits_group++;
-                if (dev_credits_group == dev_credits_groups_count)
-                    dev_credits_group = 0;
-            }
-          }
-          swap_wscreen();
-          game_update();
-          LbScreenClear(0);
-    }
-    clear_key_pressed(KC_SPACE);
-    clear_key_pressed(KC_ESCAPE);
-    clear_key_pressed(KC_RETURN);
-
-    StopAllSamples();
-    reset_heaps();
-    setup_heaps(SHSC_GameSndBestQ, language_3str);
 }
 
 /**
@@ -2593,10 +1696,71 @@ void init_level_3d(ubyte flag)
     }
 }
 
-void unkn1_handle_agent_groups(void)
+void place_multiplayer_agent_groups(void)
 {
-    asm volatile ("call ASM_unkn1_handle_agent_groups\n"
+#if 0
+    asm volatile ("call ASM_place_multiplayer_agent_groups\n"
         :  :  : "eax" );
+    return;
+#endif
+    PlayerIdx plyr;
+
+    for (plyr = 0; plyr < 8; plyr++)
+    {
+        ushort grp;
+        grp = level_def.PlayableGroups[plyr];
+        fill_netgame_agent_pos(plyr, grp, 4);
+    }
+
+    for (plyr = 0; plyr < 8; plyr++)
+    {
+        ushort grp;
+
+        if ((ingame.InNetGame_UNSURE & (1 << plyr)) == 0)
+            continue;
+
+        grp = level_def.PlayableGroups[plyr];
+        playable_agents = 4;
+        make_group_into_players(grp, plyr, 4, group_factions[plyr]);
+    }
+
+    for (plyr = 0; plyr < 8; plyr++)
+    {
+        struct Thing *p_thing;
+        ThingIdx thing, nxthing;
+        int remain;
+        ushort grp;
+
+        if ((ingame.InNetGame_UNSURE & (1 << plyr)) == 0)
+            continue;
+
+        grp = level_def.PlayableGroups[plyr];
+        remain = things_used;
+        for (thing = things_used_head; thing > 0; thing = nxthing)
+        {
+            if (--remain == -1) {
+                break;
+            }
+            p_thing = &things[thing];
+            nxthing = p_thing->LinkChild;
+
+            if ((p_thing->U.UPerson.Group == grp) &&
+              (p_thing->Type == TT_PERSON) &&
+              ((p_thing->Flag & TngF_PlayerAgent) == 0))
+            {
+                remove_thing(p_thing->ThingOffset);
+                delete_node(p_thing);
+            }
+        }
+    }
+
+    if ((net_game_play_flags & 0x10) != 0)
+    {
+        int i;
+        for (i = 0; i < 45; i++) {
+            process_things_unkn_sub2(login_control[0].TechLevel, 0);
+        }
+    }
 }
 
 void init_game_controls(void)
@@ -2611,10 +1775,100 @@ void init_game_controls(void)
     init_user_input_local_controls();
 }
 
+struct Thing *unkn_create_random_person(int cor_x, int cor_y, int cor_z,
+  int a4, int a5, int a6)
+{
+    struct Thing *p_person;
+    ushort rnd;
+    ushort subtype;
+    WeaponType wtype;
+
+    subtype = things_used % 12;
+    if (subtype == 0)
+        subtype = 1;
+    p_person = new_sim_person(cor_x, cor_y, cor_z, subtype);
+
+    rnd = things_used;
+    p_person->U.UPerson.StartTimer2 = 10;
+    p_person->U.UPerson.Angle = rnd & 7;
+    p_person->U.UPerson.Timer2 = 10;
+    p_person->State = PerSt_WANDER;
+
+    wtype = p_person->U.UPerson.CurrentWeapon;
+    weapons_add_one_for_npc(&p_person->U.UPerson.WeaponsCarried, wtype);
+    reset_person_frame(p_person);
+
+    return p_person;
+}
+
 void simulated_level(void)
 {
+#if 0
     asm volatile ("call ASM_simulated_level\n"
         :  :  : "eax" );
+    return;
+#endif
+    int i;
+    ushort tl_z, tl_x;
+    MapCoord cor_x, cor_y, cor_z;
+
+    for (i = 0; i < PEOPLE_GROUPS_LIMIT; i++)
+    {
+        war_flags[i].KillOnSight = 0;
+        war_flags[i].Guardians[0] = 6;
+        war_flags[i].Guardians[1] = 0;
+    }
+
+    for (tl_x = 10; tl_x < 122; tl_x += 8)
+    {
+        cor_x = TILE_TO_MAPCOORD(tl_x, 0);
+        for (tl_z = 10; tl_z < 122; tl_z += 8)
+        {
+            cor_z = TILE_TO_MAPCOORD(tl_z, 0);
+            if (!is_this_a_nice_place_for_a_picnic(
+              MAPCOORD_TO_PRCCOORD(cor_x,0),
+              MAPCOORD_TO_PRCCOORD(cor_z,0)))
+                continue;
+            unkn_create_random_person(cor_x, 0, cor_z, 0, 50, 64);
+        }
+    }
+
+    for (i = 0; i < 100; i++)
+    {
+        struct SimpleThing *p_item;
+        ushort wtype;
+
+        tl_x = 10 + (LbRandomAnyShort() % 100);
+        tl_z = 10 + (LbRandomAnyShort() % 100);
+        cor_x = TILE_TO_MAPCOORD(tl_x, 127);
+        cor_z = TILE_TO_MAPCOORD(tl_z, 127);
+        cor_y = alt_at_point(cor_x, cor_z) >> 8;
+
+        if (!is_this_a_nice_place_for_a_picnic(
+          MAPCOORD_TO_PRCCOORD(cor_x,0),
+          MAPCOORD_TO_PRCCOORD(cor_z,0)))
+            continue;
+
+        wtype = (i % 26) + 1;
+        if (((1 << (i % 26)) & ~0xC0042000) == 0)
+            continue;
+
+        p_item = create_item(cor_x, cor_y, cor_z, 1004u, wtype);
+        if (p_item != NULL)
+        {
+            if ((wtype == WEP_EXPLMINE) || (wtype == WEP_ELEMINE))
+            {
+                p_item->Owner2 = 0;
+                p_item->Timer1 = 999;
+                p_item->StartTimer1 = 999;
+                if (wtype <= WEP_ELEMINE)
+                    p_item->SubType = 7;
+                else
+                    p_item->SubType = 3;
+                p_item->Radius = 50;
+            }
+        }
+    }
 }
 
 void init_local_player_group(void)
@@ -2814,7 +2068,7 @@ void init_player(void)
     init_level();
     if (in_network_game)
     {
-        unkn1_handle_agent_groups();
+        place_multiplayer_agent_groups();
         unkn_truce_groups();
     }
     else
@@ -3011,12 +2265,6 @@ void post_process_blips(void)
 
 short test_missions(ubyte flag)
 {
-#if 0
-    short ret;
-    asm volatile ("call ASM_test_missions\n"
-        : "=r" (ret) : "a" (flag));
-    return ret;
-#endif
     ushort mslot;
     short missi;
     short res;
@@ -3605,20 +2853,18 @@ void gproc3_unknsub2(void)
     int i;
 
     u32 bkp_ingame_flags;
-    ubyte bkp_unkn_flags_01;
 
     ingame.Flags &= ~GamF_BillboardMovies;
     if (is_key_pressed(KC_Q, KMod_DONTCARE))
     {
         flyby_cam_x = 0x4000;
         flyby_cam_z = 0x4000;
-        dword_1AAB74 = 0;
-        dword_1AAB78 = 0;
+        flyby_cam_yaw = 0;
+        flyby_cam_tilt = 0;
         flyby_cam_y = 50;
     }
 
     bkp_ingame_flags = ingame.Flags;
-    bkp_unkn_flags_01 = unkn_flags_01;
 
     camera_save_backup_state(&cam_bkp);
 
@@ -3626,7 +2872,6 @@ void gproc3_unknsub2(void)
     render_area_b = 24;
     overall_scale = 18;
 
-    unkn_flags_01 = 1;
     ingame.Flags = 0;
 
     ms_x = lbDisplay.MMouseX;
@@ -3634,28 +2879,28 @@ void gproc3_unknsub2(void)
 
     ms_limit = lbDisplay.MouseWindowX + lbDisplay.MouseWindowWidth * 1 / 3;
     if (ms_x < ms_limit)
-        dword_1AAB74 -= 16;
+        flyby_cam_yaw -= 16;
     ms_limit = lbDisplay.MouseWindowX + lbDisplay.MouseWindowWidth * 2 / 3;
     if (ms_x > ms_limit)
-        dword_1AAB74 += 16;
-    dword_1AAB74 &= 0x7FF;
+        flyby_cam_yaw += 16;
+    flyby_cam_yaw &= 0x7FF;
 
     if (!lbDisplay.MRightButton)
     {
-        flyby_cam_x += lbSinTable[dword_1AAB74] >> 9;
-        flyby_cam_z += lbSinTable[dword_1AAB74 + LbFPMath_PI/2] >> 9;
+        flyby_cam_x += lbSinTable[flyby_cam_yaw] >> 9;
+        flyby_cam_z += lbSinTable[flyby_cam_yaw + LbFPMath_PI/2] >> 9;
     }
 
     ms_limit = lbDisplay.MouseWindowY + lbDisplay.MouseWindowHeight * 1 / 3;
     if (ms_y < ms_limit)
-        dword_1AAB78 -= (ms_limit - ms_y) >> 5;
+        flyby_cam_tilt -= (ms_limit - ms_y) >> 5;
     ms_limit = lbDisplay.MouseWindowY + lbDisplay.MouseWindowHeight * 2 / 3;
     if (ms_y > ms_limit)
-        dword_1AAB78 -= (ms_limit - ms_y) >> 5;
-    if (dword_1AAB78 > 300)
-        dword_1AAB78 = 300;
-    if (dword_1AAB78 < -300)
-        dword_1AAB78 = -300;
+        flyby_cam_tilt -= (ms_limit - ms_y) >> 5;
+    if (flyby_cam_tilt > 300)
+        flyby_cam_tilt = 300;
+    if (flyby_cam_tilt < -300)
+        flyby_cam_tilt = -300;
 
     i = (alt_at_point(flyby_cam_x, flyby_cam_z) >> 8) - 50;
     if (i > flyby_cam_y)
@@ -3671,11 +2916,11 @@ void gproc3_unknsub2(void)
     if (flyby_cam_z > 0x8000)
         flyby_cam_z = 0;
 
-    engn_cam_tilt = dword_1AAB78;
+    engn_cam_tilt = flyby_cam_tilt;
     engn_xc = flyby_cam_x;
     engn_yc = flyby_cam_y;
     engn_zc = flyby_cam_z;
-    engn_cam_yaw = 32 * dword_1AAB74;
+    engn_cam_yaw = 32 * flyby_cam_yaw;
 
 #if 0
     outbuf = vec_tmap[5];
@@ -3699,7 +2944,6 @@ void gproc3_unknsub2(void)
     camera_load_backup_state(&cam_bkp);
 
     ingame.Flags = bkp_ingame_flags;
-    unkn_flags_01 = bkp_unkn_flags_01;
 
     prepare_drawlist();
 }
@@ -3851,32 +3095,6 @@ void init_agents(void)
         p_player = &players[plyr];
         player_update_agents_from_cryo(p_player);
     }
-}
-
-/** Initializes the research data for a new game.
- */
-void srm_reset_research(void)
-{
-    struct Campaign *p_campgn;
-    int i;
-
-    p_campgn = &campaigns[background_type];
-
-    for (i = 0; i < 32; i++)
-    {
-        research.WeaponDaysDone[i] = 0;
-        research.ModDaysDone[i] = 0;
-        research.WeaponProgress[i][0] = 0;
-        research.ModProgress[i][0] = 0;
-    }
-    research.WeaponsCompleted = p_campgn->StandardWeapons;
-    research.WeaponsAllowed = p_campgn->ResearchWeapons;
-    research.ModsCompleted = p_campgn->StandardMods;
-    research.ModsAllowed = p_campgn->ResearchMods;
-    research.CurrentWeapon = -1;
-    research.CurrentMod = -1;
-    research.Scientists = 0;
-    research.NumBases = 0;
 }
 
 void mission_over_give_extra_reward(ushort missi)
@@ -4431,7 +3649,6 @@ void play_post_mission_fmv(ubyte misend)
     case OMiSta_CampaignDone:
         init_outro();
         overall_scale = get_overall_scale_max();
-        unkn_flags_01 &= ~0x01;
         break;
     }
 }
@@ -6284,8 +5501,8 @@ void apply_change_screen(void)
         update_cybmod_cost_text();
         redraw_screen_flag = 1;
         reset_mod_draw_states_flag08();
-        current_drawing_mod = 0;
-        new_current_drawing_mod = 0;
+        current_drawing_mod = ModDPt_CHEST;
+        new_current_drawing_mod = ModDPt_CHEST;
         edit_flag = 0;
         change_screen = ChSCRT_NONE;
     }

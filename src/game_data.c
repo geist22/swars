@@ -65,6 +65,8 @@ u32 engine_mem_alloc_size = 5900000;
 
 ubyte *game_user_heap = NULL;
 
+ubyte *spare_map_buffer = NULL;
+
 /******************************************************************************/
 
 MemSystem mem_game[] = {

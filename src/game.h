@@ -96,15 +96,6 @@ enum OpenMissionEndStatus {
   OMiSta_CampaignDone,
 };
 
-enum MissionFMVPlay {
-    MPly_Intro,
-    MPly_MissiComplete,
-    MPly_MissiFail,
-    MPly_MPartComplete,
-    MPly_GameOver,
-    MPly_Outro,
-};
-
 struct Thing;
 
 struct BezierPt { // sizeof=28
@@ -164,25 +155,11 @@ extern ubyte *scratch_buf1;
 
 extern ushort word_1531E0;
 
-extern ubyte *spare_map_buffer;
-
 extern ubyte byte_1C6D4A;
 extern ushort word_1C8446;
 
 extern ubyte old_screentype;
 extern ubyte screentype;
-extern char *outro_text_s;
-extern char *outro_text_z;
-extern s32 data_1dd91c;
-extern s32 outro_credits_enabled;
-extern s32 dev_credits_group;
-extern s32 dev_credits_groups_count;
-extern u32 colwavapr_timer;
-extern u32 colwavapr_reveal_tm;
-extern s32 dword_1DDB6C;
-
-extern char *dev_credits_desc[];
-extern char *dev_credits_groups[];
 
 extern sbyte mission_result;
 
@@ -190,19 +167,14 @@ extern ubyte net_player_teams[8];
 extern long dword_153194;
 
 extern ubyte group_factions[8];
-extern ubyte data_1c4aa2;
 extern ubyte start_into_mission;
 extern ubyte edit_flag;
 extern ubyte change_screen;
-extern ubyte current_drawing_mod;
-extern ubyte new_current_drawing_mod;
 
 extern struct LevelDef level_def;
 
 /** Index of the local user who controls mouse. */
 extern ubyte mouser;
-extern long dword_1AA5C4;
-extern long dword_1AA5C8;
 
 extern ushort next_mission;
 
@@ -231,22 +203,18 @@ void init_unkn6_adjustable_variables(void);
 void init_agents(void);
 void srm_reset_research(void);
 void net_new_game_prepare(void);
+void change_current_map(ushort mapno);
 
 TbBool player_try_spend_money(long cost);
 void campaign_new_game_prepare(void);
 
-void process_sound_heap(void);
 void update_danger_music(ubyte a1);
 
 void check_mouse_overvehicle(struct Thing *p_thing, ubyte target_assign);
 
-void draw_new_panel(void);
-
 void update_map_thing_and_traffic_refs(void);
 void unkn_lights_processing(void);
 void bang_set_detail(int a1);
-int sub_73C64(char *a1, ubyte a2);
-void draw_mapcoord_line_col2(int a1, int a2, int a3, int a4, int a5, int a6, ubyte a7);
 
 void ingame_palette_reload(void);
 void game_set_cam_track_thing_xz(ThingIdx thing);
