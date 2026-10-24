@@ -32,6 +32,7 @@
 #include "bigmap.h"
 #include "campaign.h"
 #include "drawtext.h"
+#include "hud_draw.h"
 #include "keyboard.h"
 #include "lvfiles.h"
 #include "thing.h"
@@ -870,9 +871,10 @@ ubyte mem_group_arrived_square2(struct Thing *p_person, ushort group, short x, s
     return ret;
 }
 
-ubyte mem_group_arrived(ushort group, short x, short y, short z,
+ubyte mem_group_arrived(ushort group, short cor_x, short cor_y, short cor_z,
   int radius, int count)
 {
+#if 0
     ubyte ret;
     // Pushed through a register holding them: a "g" operand may be placed
     // relative to the stack pointer, which each push moves.
@@ -886,9 +888,63 @@ ubyte mem_group_arrived(ushort group, short x, short y, short z,
       "push 0(%5)\n"
       "call ASM_mem_group_arrived\n"
         : "=r" (ret)
-        : "a" (group), "d" (x), "b" (y), "c" (z), "S" (stkargs)
+        : "a" (group), "d" (cor_x), "b" (cor_y), "c" (cor_z), "S" (stkargs)
         : "cc", "memory");
     return ret;
+#endif
+    struct Thing *p_thing;
+    ThingIdx thing;
+    PlayerIdx plyr;
+    int m;
+    int dist_sq;
+
+    m = 0;
+    dist_sq = (radius * radius) << 12;
+    if (!in_network_game || (group != 0))
+    {
+        for (thing = same_type_head[256 + group]; thing != 0; thing = p_thing->LinkSameGroup)
+        {
+            p_thing = &things[thing];
+            if (ingame.DisplayMode == DpM_UNKN_3B) {
+                enlist_hud_draw_line_from_thing_to_mapcoord(thing,
+                  cor_x, cor_y, cor_z, 0, ColLU_WHITE);
+            }
+            if ((p_thing->Flag & TngF_Destroyed) == 0) {
+                if (thing_arrived_at_obj_radius(thing, cor_x, cor_y, cor_z, dist_sq)) {
+                    m++;
+                }
+            }
+            if (m >= count)
+                return 1;
+        }
+        return 0;
+    }
+
+    for (plyr = 0; plyr < 8; plyr++)
+    {
+        ushort grp;
+
+        if ( ((1 << plyr) & ingame.InNetGame_UNSURE) == 0)
+            continue;
+        grp = level_def.PlayableGroups[plyr];
+
+        for (thing = same_type_head[256 + grp]; thing != 0; thing = p_thing->LinkSameGroup)
+        {
+            p_thing = &things[thing];
+            if (ingame.DisplayMode == DpM_UNKN_3B) {
+                enlist_hud_draw_line_from_thing_to_mapcoord(thing,
+                  cor_x, cor_y, cor_z, 0, ColLU_WHITE);
+            }
+            if ((p_thing->Flag & TngF_Destroyed) == 0) {
+                if (thing_arrived_at_obj_radius(thing, cor_x, cor_y, cor_z, dist_sq)) {
+                    m++;
+                }
+            }
+            if (m >= count)
+                return 1;
+        }
+    }
+    return 0;
 }
 
 TbBool person_is_near_thing(ThingIdx neartng, ThingIdx thing, ushort radius)
