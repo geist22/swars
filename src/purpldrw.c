@@ -1469,10 +1469,46 @@ ubyte button_text(struct ScreenButton *p_btn)
 
 ubyte info_box_text(struct ScreenInfoBox *p_box)
 {
+#if 0
     ubyte ret;
     asm volatile ("call ASM_info_box_text\n"
         : "=r" (ret) : "a" (p_box));
     return ret;
+#endif
+    short txwidth, lnheight;
+    short scr1_x, scr1_y;
+    short scr2_x, scr2_y;
+    ubyte drawn;
+
+    if ((p_box->Flags & 0x0080) != 0)
+    {
+        p_box->TextFadePos1 = -5;
+        p_box->TextFadePos2 = -5;
+        p_box->Flags &= ~0x0080;
+    }
+    {
+        lbFontPtr = p_box->Font1;
+        lnheight = my_char_height('A');
+        scr1_x = p_box->X + 3;
+        scr1_y = p_box->Y + 3;
+        scr2_x = p_box->X + p_box->Width;
+        scr2_y = p_box->Y + 3 + lnheight;
+        my_set_text_window(scr1_x, scr1_y, scr2_x, scr2_y);
+        drawn = flashy_draw_text(0, 0, p_box->Text1, p_box->TextSpeed, 0, &p_box->TextFadePos1, 0);
+    }
+    if (drawn != 0)
+    {
+        lbFontPtr = p_box->Font2;
+        lnheight = my_char_height('A');
+        scr2_x = p_box->X + p_box->Width;
+        scr2_y = p_box->Y + p_box->Height;
+        txwidth = my_string_width(p_box->Text2);
+        scr1_x = scr2_x - txwidth - 2;
+        scr1_y = p_box->Y + ((p_box->Height - 1 - lnheight) >> 1);
+        my_set_text_window(scr1_x, scr1_y, scr2_x, scr2_y);
+        drawn = flashy_draw_text(0, 0, p_box->Text2, p_box->TextSpeed, 0, &p_box->TextFadePos2, 0);
+    }
+    return drawn;
 }
 
 void draw_triangle_purple_list(int x1, int y1, int x2, int y2, int x3, int y3, TbPixel colour)
