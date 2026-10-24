@@ -135,11 +135,6 @@ s32 (*get_flat_surface_height_below_point_cb)(struct SortMapPoint *p_cor) = NULL
 
 void do_car_glare(struct Thing *p_car)
 {
-#if 0
-    asm volatile ("call ASM_do_car_glare\n"
-        : : "a" (p_car));
-    return;
-#endif
     struct M31 vec_src, vec_dst;
     struct M33 *p_matx;
     ushort glare_beg, glare_num, i;

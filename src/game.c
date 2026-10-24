@@ -2265,12 +2265,6 @@ void post_process_blips(void)
 
 short test_missions(ubyte flag)
 {
-#if 0
-    short ret;
-    asm volatile ("call ASM_test_missions\n"
-        : "=r" (ret) : "a" (flag));
-    return ret;
-#endif
     ushort mslot;
     short missi;
     short res;

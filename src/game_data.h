@@ -75,6 +75,8 @@ extern u32 scratch_malloc_size;
 extern void *engine_mem_alloc_ptr;
 extern u32 engine_mem_alloc_size;
 
+extern ubyte *spare_map_buffer;
+
 /******************************************************************************/
 
 /** Returns absolute path to user files directory for the application.

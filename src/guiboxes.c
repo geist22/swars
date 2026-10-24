@@ -287,15 +287,6 @@ void init_screen_text_box(struct ScreenTextBox *p_box, ScrCoord x, ScrCoord y,
 void init_screen_button(struct ScreenButton *p_box, ScrCoord x, ScrCoord y,
   const char *text, int drawspeed, struct TbSprite *p_font, int textspeed, int flags)
 {
-#if 0
-    asm volatile (
-      "push %7\n"
-      "push %6\n"
-      "push %5\n"
-      "push %4\n"
-      "call ASM_init_screen_button\n"
-        : : "a" (p_box), "d" (x), "b" (y), "c" (text), "g" (drawspeed), "g" (p_font), "g" (textspeed), "g" (flags));
-#endif
     lbFontPtr = p_font;
     p_box->Y = y;
     p_box->Width = my_string_width(text) + 4;
@@ -324,17 +315,6 @@ void init_screen_button(struct ScreenButton *p_box, ScrCoord x, ScrCoord y,
 void init_screen_info_box(struct ScreenInfoBox *p_box, ScrCoord x, ScrCoord y, ushort width,
   char *text1, char *text2, int drawspeed, struct TbSprite *p_font1, struct TbSprite *p_font2, int textspeed)
 {
-#if 0
-    asm volatile (
-      "push %9\n"
-      "push %8\n"
-      "push %7\n"
-      "push %6\n"
-      "push %5\n"
-      "push %4\n"
-      "call ASM_init_screen_info_box\n"
-        : : "a" (p_box), "d" (x), "b" (y), "c" (width), "g" (text1), "g" (text2), "g" (drawspeed), "g" (font1), "g" (font2), "g" (textspeed));
-#endif
     short font1_h, font2_h, font_h;
 
     lbFontPtr = p_font1;

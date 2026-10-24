@@ -6743,13 +6743,6 @@ ubyte check_person_within(struct Command *p_cmd, int x, int z)
  */
 short do_move_colide(struct Thing *p_person, int dx, int dz, struct MyMapElement *p_mapel)
 {
-#if 0
-    short ret;
-    asm volatile (
-      "call ASM_do_move_colide\n"
-        : "=r" (ret) : "a" (p_person), "d" (dx), "b" (dz), "c" (p_mapel));
-    return ret;
-#endif
     int tl_x, tl_z, tl_idx;
     ushort cur_colv;
     int iter;
