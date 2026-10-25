@@ -28,6 +28,7 @@
 #include "thing.h"
 #include "game.h"
 #include "game_options.h"
+#include "agent_cosmetics.h"
 /******************************************************************************/
 
 struct WarFlag war_flags[PEOPLE_GROUPS_LIMIT];
