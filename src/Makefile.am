@@ -31,6 +31,8 @@ syndwarsfx_SOURCES = \
 	../bfsmacklib/src/smailfile.c \
 	../bfsmacklib/src/bfsmacklib_s.sx \
 	config.h \
+	agent_cosmetics.h \
+	agent_cosmetics.c \
 	bmbang.c \
 	bmbang.h \
 	bat_s.sx \
